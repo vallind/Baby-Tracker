@@ -15,3 +15,7 @@
 - 构建：Gradle 9.5.1 + AGP 8.9.3
 - 语言：Kotlin 1.9.22, Java 17
 - compileSdk / targetSdk: 34, minSdk: 24
+
+## 文档规范
+- 所有文档（README、设计文档、实施计划等）统一使用中文
+- commit message 使用中文（项目现有风格）

@@ -1,30 +1,30 @@
-# Baby Tracker Implementation Plan
+# Baby Tracker 实施计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a complete baby tracking Android app with 14 screens for recording feeding, sleep, growth, vaccines, and more.
+**目标:** 构建一个完整的宝宝记录 Android 应用，包含喂养、睡眠、生长、疫苗等 14 个页面。
 
-**Architecture:** MVVM with Room (local storage), Koin (DI), Navigation Compose (routing), Paging 3 (lists), Vico Chart (growth trends), DataStore (preferences). Each feature module has its own ViewModel + Screen composables.
+**架构:** MVVM + Room（本地存储）、Koin（DI）、Navigation Compose（路由）、Paging 3（列表）、Vico Chart（生长趋势图）、DataStore（偏好设置）。每个功能模块拥有独立的 ViewModel + Screen 组件。
 
-**Tech Stack:** Jetpack Compose + Material 3, Navigation Compose, Paging 3, Vico Chart, DataStore, Room 2.6.1 + KSP, Koin 3.5.6, Kotlin 1.9.22, Gradle 9.5.1 + AGP 8.9.3
+**技术栈:** Jetpack Compose + Material 3, Navigation Compose, Paging 3, Vico Chart, DataStore, Room 2.6.1 + KSP, Koin 3.5.6, Kotlin 1.9.22, Gradle 9.5.1 + AGP 8.9.3
 
 ---
 
-### Task 1: Update dependencies in app/build.gradle.kts
+### 任务 1：更新 app/build.gradle.kts 依赖
 
-**Files:**
-- Modify: `app/build.gradle.kts` (add navigation, paging, vico, datastore)
+**文件:**
+- 修改: `app/build.gradle.kts`（添加 navigation, paging, vico, datastore）
 
-- [ ] **Add new dependencies**
+- [ ] **添加新依赖**
 
-Add to `app/build.gradle.kts` after `val coilVersion` line:
+在 `app/build.gradle.kts` 中 `val coilVersion` 之后添加：
 ```kotlin
 val navVersion = "2.7.7"
 val pagingVersion = "3.2.1"
 val vicoVersion = "1.13.1"
 ```
 
-Add to `dependencies {}` block before the closing `}`, after existing Koin lines:
+在 `dependencies {}` 块中现有 Koin 依赖之后添加：
 ```kotlin
 // Navigation
 implementation("androidx.navigation:navigation-compose:$navVersion")
@@ -40,7 +40,7 @@ implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
 implementation("androidx.datastore:datastore-preferences:1.0.0")
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/build.gradle.kts
@@ -49,13 +49,13 @@ git commit -m "chore: add nav, paging, vico, datastore deps"
 
 ---
 
-### Task 2: Create Application class and Koin modules
+### 任务 2：创建 Application 类和 Koin 模块
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/MyApp.kt`
-- Create: `app/src/main/java/com/example/myapp/di/AppModule.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/MyApp.kt`
+- 创建: `app/src/main/java/com/example/myapp/di/AppModule.kt`
 
-- [ ] **Create `MyApp.kt`**
+- [ ] **创建 `MyApp.kt`**
 
 ```kotlin
 package com.example.myapp
@@ -76,7 +76,7 @@ class MyApp : Application() {
 }
 ```
 
-- [ ] **Create `di/AppModule.kt`** (initial stub, populated in later tasks)
+- [ ] **创建 `di/AppModule.kt`**（初始骨架，后续任务填充）
 
 ```kotlin
 package com.example.myapp.di
@@ -88,11 +88,11 @@ val appModule = module {
 }
 ```
 
-- [ ] **Register `MyApp` in `AndroidManifest.xml`**
+- [ ] **在 `AndroidManifest.xml` 中注册 `MyApp`**
 
-Read `AndroidManifest.xml` first to find `<application>` tag, then add `android:name=".MyApp"`.
+找到 `<application>` 标签，添加 `android:name=".MyApp"`。
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/MyApp.kt app/src/main/java/com/example/myapp/di/AppModule.kt
@@ -101,24 +101,24 @@ git commit -m "feat: add Application class and Koin module skeleton"
 
 ---
 
-### Task 3: Create Room database, entities, and DAOs
+### 任务 3：创建 Room 数据库、实体和 DAO
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/data/room/AppDatabase.kt`
-- Create: `app/src/main/java/com/example/myapp/data/room/FeedingEntity.kt`
-- Create: `app/src/main/java/com/example/myapp/data/room/SleepEntity.kt`
-- Create: `app/src/main/java/com/example/myapp/data/room/GrowthEntity.kt`
-- Create: `app/src/main/java/com/example/myapp/data/room/FeedingDao.kt`
-- Create: `app/src/main/java/com/example/myapp/data/room/SleepDao.kt`
-- Create: `app/src/main/java/com/example/myapp/data/room/GrowthDao.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/data/room/AppDatabase.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/room/FeedingEntity.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/room/SleepEntity.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/room/GrowthEntity.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/room/FeedingDao.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/room/SleepDao.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/room/GrowthDao.kt`
 
-- [ ] **Create `data/room/` directory**
+- [ ] **创建 `data/room/` 目录**
 
 ```bash
 mkdir -p app/src/main/java/com/example/myapp/data/room
 ```
 
-- [ ] **Create `FeedingEntity.kt`**
+- [ ] **创建 `FeedingEntity.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -135,7 +135,7 @@ data class FeedingEntity(
 )
 ```
 
-- [ ] **Create `SleepEntity.kt`**
+- [ ] **创建 `SleepEntity.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -151,7 +151,7 @@ data class SleepEntity(
 )
 ```
 
-- [ ] **Create `GrowthEntity.kt`**
+- [ ] **创建 `GrowthEntity.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -169,7 +169,7 @@ data class GrowthEntity(
 )
 ```
 
-- [ ] **Create `FeedingDao.kt`**
+- [ ] **创建 `FeedingDao.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -194,7 +194,7 @@ interface FeedingDao {
 }
 ```
 
-- [ ] **Create `SleepDao.kt`**
+- [ ] **创建 `SleepDao.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -219,7 +219,7 @@ interface SleepDao {
 }
 ```
 
-- [ ] **Create `GrowthDao.kt`**
+- [ ] **创建 `GrowthDao.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -244,7 +244,7 @@ interface GrowthDao {
 }
 ```
 
-- [ ] **Create `AppDatabase.kt`**
+- [ ] **创建 `AppDatabase.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -273,7 +273,7 @@ abstract class AppDatabase : RoomDatabase() {
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/data/room/
@@ -282,20 +282,20 @@ git commit -m "feat: add Room entities, DAOs, and database"
 
 ---
 
-### Task 4: Create Repositories
+### 任务 4：创建 Repository
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/data/repository/FeedingRepository.kt`
-- Create: `app/src/main/java/com/example/myapp/data/repository/SleepRepository.kt`
-- Create: `app/src/main/java/com/example/myapp/data/repository/GrowthRepository.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/data/repository/FeedingRepository.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/repository/SleepRepository.kt`
+- 创建: `app/src/main/java/com/example/myapp/data/repository/GrowthRepository.kt`
 
-- [ ] **Create `data/repository/` directory**
+- [ ] **创建 `data/repository/` 目录**
 
 ```bash
 mkdir -p app/src/main/java/com/example/myapp/data/repository
 ```
 
-- [ ] **Create `FeedingRepository.kt`**
+- [ ] **创建 `FeedingRepository.kt`**
 
 ```kotlin
 package com.example.myapp.data.repository
@@ -311,7 +311,7 @@ class FeedingRepository(private val dao: FeedingDao) {
 }
 ```
 
-- [ ] **Create `SleepRepository.kt`**
+- [ ] **创建 `SleepRepository.kt`**
 
 ```kotlin
 package com.example.myapp.data.repository
@@ -327,7 +327,7 @@ class SleepRepository(private val dao: SleepDao) {
 }
 ```
 
-- [ ] **Create `GrowthRepository.kt`**
+- [ ] **创建 `GrowthRepository.kt`**
 
 ```kotlin
 package com.example.myapp.data.repository
@@ -343,7 +343,7 @@ class GrowthRepository(private val dao: GrowthDao) {
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/data/repository/
@@ -352,14 +352,14 @@ git commit -m "feat: add repositories for feeding, sleep, growth"
 
 ---
 
-### Task 5: Create ViewModels for core modules
+### 任务 5：创建核心模块 ViewModel
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/ui/feeding/FeedingViewModel.kt`
-- Create: `app/src/main/java/com/example/myapp/ui/sleep/SleepViewModel.kt`
-- Create: `app/src/main/java/com/example/myapp/ui/growth/GrowthViewModel.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/ui/feeding/FeedingViewModel.kt`
+- 创建: `app/src/main/java/com/example/myapp/ui/sleep/SleepViewModel.kt`
+- 创建: `app/src/main/java/com/example/myapp/ui/growth/GrowthViewModel.kt`
 
-- [ ] **Create `ui/feeding/FeedViewModel.kt`**
+- [ ] **创建 `ui/feeding/FeedingViewModel.kt`**
 
 ```kotlin
 package com.example.myapp.ui.feeding
@@ -393,7 +393,7 @@ class FeedingViewModel(
 }
 ```
 
-- [ ] **Create `ui/sleep/SleepViewModel.kt`**
+- [ ] **创建 `ui/sleep/SleepViewModel.kt`**
 
 ```kotlin
 package com.example.myapp.ui.sleep
@@ -427,7 +427,7 @@ class SleepViewModel(
 }
 ```
 
-- [ ] **Create `ui/growth/GrowthViewModel.kt`**
+- [ ] **创建 `ui/growth/GrowthViewModel.kt`**
 
 ```kotlin
 package com.example.myapp.ui.growth
@@ -463,7 +463,7 @@ class GrowthViewModel(
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/ui/feeding/FeedingViewModel.kt app/src/main/java/com/example/myapp/ui/sleep/SleepViewModel.kt app/src/main/java/com/example/myapp/ui/growth/GrowthViewModel.kt
@@ -472,13 +472,13 @@ git commit -m "feat: add ViewModels for core modules"
 
 ---
 
-### Task 6: Create data classes and shared components
+### 任务 6：创建数据类和共享组件
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/data/room/FeedingType.kt`
-- Create: `app/src/main/java/com/example/myapp/ui/components/CommonComponents.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/data/room/FeedingType.kt`
+- 创建: `app/src/main/java/com/example/myapp/ui/components/CommonComponents.kt`
 
-- [ ] **Create `FeedingType.kt`**
+- [ ] **创建 `FeedingType.kt`**
 
 ```kotlin
 package com.example.myapp.data.room
@@ -491,7 +491,7 @@ enum class FeedingType(val label: String) {
 }
 ```
 
-- [ ] **Create `ui/components/CommonComponents.kt`**
+- [ ] **创建 `ui/components/CommonComponents.kt`**
 
 ```kotlin
 package com.example.myapp.ui.components
@@ -527,7 +527,7 @@ fun AppScaffold(
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/data/room/FeedingType.kt app/src/main/java/com/example/myapp/ui/components/CommonComponents.kt
@@ -536,13 +536,13 @@ git commit -m "feat: add FeedingType enum and shared UI components"
 
 ---
 
-### Task 7: Implement Feeding screens
+### 任务 7：实现喂养页面
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/ui/feeding/FeedingScreen.kt`
-- Create: `app/src/main/java/com/example/myapp/ui/feeding/AddFeedingScreen.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/ui/feeding/FeedingScreen.kt`
+- 创建: `app/src/main/java/com/example/myapp/ui/feeding/AddFeedingScreen.kt`
 
-- [ ] **Create `FeedingScreen.kt`**
+- [ ] **创建 `FeedingScreen.kt`**
 
 ```kotlin
 package com.example.myapp.ui.feeding
@@ -632,7 +632,7 @@ fun FeedingRecordCard(record: FeedingEntity) {
 }
 ```
 
-- [ ] **Create `AddFeedingScreen.kt`**
+- [ ] **创建 `AddFeedingScreen.kt`**
 
 ```kotlin
 package com.example.myapp.ui.feeding
@@ -727,7 +727,7 @@ fun AddFeedingScreen(
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/ui/feeding/
@@ -736,13 +736,13 @@ git commit -m "feat: implement Feeding screens"
 
 ---
 
-### Task 8: Implement Sleep screens
+### 任务 8：实现睡眠页面
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/ui/sleep/SleepScreen.kt`
-- Create: `app/src/main/java/com/example/myapp/ui/sleep/AddSleepScreen.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/ui/sleep/SleepScreen.kt`
+- 创建: `app/src/main/java/com/example/myapp/ui/sleep/AddSleepScreen.kt`
 
-- [ ] **Create `SleepScreen.kt`**
+- [ ] **创建 `SleepScreen.kt`**
 
 ```kotlin
 package com.example.myapp.ui.sleep
@@ -830,7 +830,7 @@ fun SleepRecordCard(record: SleepEntity) {
 }
 ```
 
-- [ ] **Create `AddSleepScreen.kt`**
+- [ ] **创建 `AddSleepScreen.kt`**
 
 ```kotlin
 package com.example.myapp.ui.sleep
@@ -922,7 +922,7 @@ fun AddSleepScreen(
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/ui/sleep/
@@ -931,13 +931,13 @@ git commit -m "feat: implement Sleep screens"
 
 ---
 
-### Task 9: Implement Growth screens (with Vico chart)
+### 任务 9：实现生长页面（含 Vico 图表）
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/ui/growth/GrowthScreen.kt`
-- Create: `app/src/main/java/com/example/myapp/ui/growth/AddGrowthScreen.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/ui/growth/GrowthScreen.kt`
+- 创建: `app/src/main/java/com/example/myapp/ui/growth/AddGrowthScreen.kt`
 
-- [ ] **Create `GrowthScreen.kt`**
+- [ ] **创建 `GrowthScreen.kt`**
 
 ```kotlin
 package com.example.myapp.ui.growth
@@ -1039,7 +1039,7 @@ fun GrowthScreen(
 }
 ```
 
-- [ ] **Create `AddGrowthScreen.kt`**
+- [ ] **创建 `AddGrowthScreen.kt`**
 
 ```kotlin
 package com.example.myapp.ui.growth
@@ -1107,7 +1107,7 @@ fun AddGrowthScreen(
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/ui/growth/
@@ -1116,15 +1116,15 @@ git commit -m "feat: implement Growth screens with Vico chart"
 
 ---
 
-### Task 10: Create Navigation and HomeScreen
+### 任务 10：创建导航和首页
 
-**Files:**
-- Create: `app/src/main/java/com/example/myapp/navigation/Route.kt`
-- Create: `app/src/main/java/com/example/myapp/navigation/AppNavGraph.kt`
-- Create: `app/src/main/java/com/example/myapp/ui/home/HomeScreen.kt`
-- Modify: `app/src/main/java/com/example/myapp/MainActivity.kt`
+**文件:**
+- 创建: `app/src/main/java/com/example/myapp/navigation/Route.kt`
+- 创建: `app/src/main/java/com/example/myapp/navigation/AppNavGraph.kt`
+- 创建: `app/src/main/java/com/example/myapp/ui/home/HomeScreen.kt`
+- 修改: `app/src/main/java/com/example/myapp/MainActivity.kt`
 
-- [ ] **Create `Route.kt`**
+- [ ] **创建 `Route.kt`**
 
 ```kotlin
 package com.example.myapp.navigation
@@ -1140,7 +1140,7 @@ sealed interface Route {
 }
 ```
 
-- [ ] **Create `AppNavGraph.kt`**
+- [ ] **创建 `AppNavGraph.kt`**
 
 ```kotlin
 package com.example.myapp.navigation
@@ -1193,12 +1193,6 @@ fun AppNavGraph(navController: NavHostController) {
                 onAddClick = { navController.navigate("add_sleep") }
             )
         }
-        composable("sleep") {
-            SleepScreen(
-                viewModel = koinViewModel(),
-                onAddClick = { navController.navigate("add_sleep") }
-            )
-        }
         composable("add_sleep") {
             val vm: SleepViewModel = viewModel()
             AddSleepScreen(
@@ -1227,7 +1221,7 @@ fun AppNavGraph(navController: NavHostController) {
 }
 ```
 
-- [ ] **Create `HomeScreen.kt`**
+- [ ] **创建 `HomeScreen.kt`**
 
 ```kotlin
 package com.example.myapp.ui.home
@@ -1303,7 +1297,7 @@ fun FunctionGrid(onNavigate: (String) -> Unit) {
 }
 ```
 
-- [ ] **Update `MainActivity.kt`**
+- [ ] **修改 `MainActivity.kt`**
 
 ```kotlin
 package com.example.myapp
@@ -1334,9 +1328,9 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
-- [ ] **Register Koin ViewModels in AppModule**
+- [ ] **在 AppModule 中注册 Koin ViewModel**
 
-Update `di/AppModule.kt`:
+更新 `di/AppModule.kt`：
 
 ```kotlin
 package com.example.myapp.di
@@ -1366,7 +1360,7 @@ val appModule = module {
 }
 ```
 
-- [ ] **Commit**
+- [ ] **提交**
 
 ```bash
 git add app/src/main/java/com/example/myapp/navigation/ app/src/main/java/com/example/myapp/ui/home/ app/src/main/java/com/example/myapp/MainActivity.kt app/src/main/java/com/example/myapp/di/AppModule.kt
@@ -1375,9 +1369,9 @@ git commit -m "feat: add Navigation, HomeScreen, and wire up Koin DI"
 
 ---
 
-### Task 11: Build and verify
+### 任务 11：编译验证
 
-- [ ] **Run assembleDebug**
+- [ ] **执行 assembleDebug**
 
 ```bash
 export JAVA_HOME=/data/data/com.termux/files/usr/lib/jvm/java-21-openjdk
@@ -1386,16 +1380,16 @@ export ANDROID_AAPT2_DAEMON_MODE=false
 ./gradlew assembleDebug
 ```
 
-Expected: BUILD SUCCESSFUL
+预期结果：BUILD SUCCESSFUL
 
-- [ ] **If build fails**, fix compilation errors (missing imports, type mismatches, etc.) and re-run.
+- [ ] **若编译失败**，修复编译错误（缺少 import、类型不匹配等）后重新编译。
 
 ---
 
-### Self-Review Checklist
+### 自查清单
 
-After writing all tasks, verify:
+编写完所有任务后验证：
 
-1. **Spec coverage**: Entity/DAO/Repository created for each core module (feeding, sleep, growth). Navigation covers all 3 destination screens + add screens. HomeScreen has function grid. Koin wires everything. ✓
-2. **Placeholder scan**: No "TBD", "TODO", or vague steps. All code is inline. ✓
-3. **Type consistency**: Route sealed interface → string routes in NavHost match. ViewModel names match repository types. ✓
+1. **Spec 覆盖**: Entity/DAO/Repository 覆盖所有核心模块（喂养、睡眠、生长）。导航覆盖 3 个目标页面 + 新增页面。首页有功能网格。Koin 连接所有依赖。✓
+2. **占位符检查**: 无 "TBD"、"TODO" 或模糊步骤。所有代码已内联。✓
+3. **类型一致性**: Route sealed interface → 字符串路由与 NavHost 匹配。ViewModel 名称与 Repository 类型一致。✓
