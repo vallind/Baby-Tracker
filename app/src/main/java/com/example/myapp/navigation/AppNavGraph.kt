@@ -42,7 +42,6 @@ import com.example.myapp.ui.settings.SettingsScreen
 import com.example.myapp.ui.stats.StatsScreen
 import com.example.myapp.ui.vaccine.VaccineScreen
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.material3.ExperimentalMaterial3Api
 
 private data class BottomNavItem(
     val label: String,

@@ -23,6 +23,5 @@ sealed class Route(val route: String) {
 
     companion object {
         val bottomNavRoutes = listOf(Home, Records, Stats, Messages, Profile)
-        fun isTopLevel(route: String) = bottomNavRoutes.any { it.route == route }
     }
 }
