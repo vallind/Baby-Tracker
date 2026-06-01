@@ -50,12 +50,10 @@ private data class BottomNavItem(
     val route: Route
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val showBottomBar = currentRoute?.let { Route.isTopLevel(it) } ?: true
 
     val bottomItems = listOf(
         BottomNavItem("首页", Icons.Default.Home, Route.Home),
@@ -67,26 +65,24 @@ fun AppNavGraph(navController: NavHostController) {
 
     Scaffold(
         bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    bottomItems.forEach { item ->
-                        NavigationBarItem(
-                            selected = currentRoute == item.route.route,
-                            onClick = {
-                                if (currentRoute != item.route.route) {
-                                    navController.navigate(item.route.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
+            NavigationBar {
+                bottomItems.forEach { item ->
+                    NavigationBarItem(
+                        selected = currentRoute == item.route.route,
+                        onClick = {
+                            if (currentRoute != item.route.route) {
+                                navController.navigate(item.route.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
                                     }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                            },
-                            icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) }
-                        )
-                    }
+                            }
+                        },
+                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        label = { Text(item.label) }
+                    )
                 }
             }
         }
@@ -96,7 +92,6 @@ fun AppNavGraph(navController: NavHostController) {
             startDestination = Route.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            // 底部 Tab
             composable(Route.Home.route) {
                 HomeScreen(
                     viewModel = koinViewModel(),
@@ -115,81 +110,49 @@ fun AppNavGraph(navController: NavHostController) {
             composable(Route.Profile.route) {
                 ProfileScreen(onNavigate = { navController.navigate(it) })
             }
-
-            // 功能页面
             composable(Route.Feeding.route) {
-                FeedingScreen(
-                    viewModel = koinViewModel(),
-                    onAddClick = { navController.navigate(Route.AddFeeding.route) }
-                )
+                FeedingScreen(viewModel = koinViewModel(), onAddClick = { navController.navigate(Route.AddFeeding.route) })
             }
             composable(Route.AddFeeding.route) {
                 val vm = koinViewModel<com.example.myapp.ui.feeding.FeedingViewModel>()
-                AddFeedingScreen(
-                    onSave = { type, amount, unit, note ->
-                        vm.onEvent(FeedingEvent.Add(type, amount, unit, note))
-                        navController.popBackStack()
-                    },
-                    onBack = { navController.popBackStack() }
-                )
+                AddFeedingScreen(onSave = { type, amount, unit, note ->
+                    vm.onEvent(FeedingEvent.Add(type, amount, unit, note))
+                    navController.popBackStack()
+                }, onBack = { navController.popBackStack() })
             }
             composable(Route.Sleep.route) {
-                SleepScreen(
-                    viewModel = koinViewModel(),
-                    onAddClick = { navController.navigate(Route.AddSleep.route) }
-                )
+                SleepScreen(viewModel = koinViewModel(), onAddClick = { navController.navigate(Route.AddSleep.route) })
             }
             composable(Route.AddSleep.route) {
                 val vm = koinViewModel<com.example.myapp.ui.sleep.SleepViewModel>()
-                AddSleepScreen(
-                    onSave = { startTime, endTime, type ->
-                        vm.onEvent(SleepEvent.Add(startTime, endTime, type))
-                        navController.popBackStack()
-                    },
-                    onBack = { navController.popBackStack() }
-                )
+                AddSleepScreen(onSave = { startTime, endTime, type ->
+                    vm.onEvent(SleepEvent.Add(startTime, endTime, type))
+                    navController.popBackStack()
+                }, onBack = { navController.popBackStack() })
             }
             composable(Route.Growth.route) {
-                GrowthScreen(
-                    viewModel = koinViewModel(),
-                    onAddClick = { navController.navigate(Route.AddGrowth.route) }
-                )
+                GrowthScreen(viewModel = koinViewModel(), onAddClick = { navController.navigate(Route.AddGrowth.route) })
             }
             composable(Route.AddGrowth.route) {
                 val vm = koinViewModel<com.example.myapp.ui.growth.GrowthViewModel>()
-                AddGrowthScreen(
-                    onSave = { height, weight, head, date ->
-                        vm.onEvent(GrowthEvent.Add(height, weight, head, date))
-                        navController.popBackStack()
-                    },
-                    onBack = { navController.popBackStack() }
-                )
+                AddGrowthScreen(onSave = { height, weight, head, date ->
+                    vm.onEvent(GrowthEvent.Add(height, weight, head, date))
+                    navController.popBackStack()
+                }, onBack = { navController.popBackStack() })
             }
             composable(Route.Vaccine.route) {
-                VaccineScreen(
-                    viewModel = koinViewModel(),
-                    onAddClick = { navController.navigate(Route.AddVaccine.route) }
-                )
+                VaccineScreen(viewModel = koinViewModel(), onAddClick = { navController.navigate(Route.AddVaccine.route) })
             }
             composable(Route.AddVaccine.route) {
                 val vm = koinViewModel<com.example.myapp.ui.vaccine.VaccineViewModel>()
-                AddVaccineScreen(
-                    onSave = { name, dose, plannedDate ->
-                        vm.onEvent(VaccineEvent.Add(name, dose, plannedDate))
-                        navController.popBackStack()
-                    },
-                    onBack = { navController.popBackStack() }
-                )
+                AddVaccineScreen(onSave = { name, dose, plannedDate ->
+                    vm.onEvent(VaccineEvent.Add(name, dose, plannedDate))
+                    navController.popBackStack()
+                }, onBack = { navController.popBackStack() })
             }
-            composable(Route.Health.route) {
-                HealthScreen(viewModel = koinViewModel())
-            }
-            composable(Route.Settings.route) {
-                SettingsScreen(viewModel = koinViewModel())
-            }
-            composable(Route.About.route) {
-                AboutScreen()
-            }
+            composable(Route.Health.route) { HealthScreen(viewModel = koinViewModel()) }
+            composable(Route.Settings.route) { SettingsScreen(viewModel = koinViewModel()) }
+            composable(Route.About.route) { AboutScreen() }
         }
     }
 }
