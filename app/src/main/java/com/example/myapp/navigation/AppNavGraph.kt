@@ -10,10 +10,14 @@ import com.example.myapp.ui.feeding.FeedingScreen
 import com.example.myapp.ui.growth.AddGrowthScreen
 import com.example.myapp.ui.growth.GrowthEvent
 import com.example.myapp.ui.growth.GrowthScreen
+import com.example.myapp.ui.health.HealthScreen
 import com.example.myapp.ui.home.HomeScreen
 import com.example.myapp.ui.sleep.AddSleepScreen
 import com.example.myapp.ui.sleep.SleepEvent
 import com.example.myapp.ui.sleep.SleepScreen
+import com.example.myapp.ui.vaccine.AddVaccineScreen
+import com.example.myapp.ui.vaccine.VaccineEvent
+import com.example.myapp.ui.vaccine.VaccineScreen
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -72,6 +76,22 @@ fun AppNavGraph(navController: NavHostController) {
                 },
                 onBack = { navController.popBackStack() }
             )
+        }
+        composable(Route.Vaccine.route) {
+            VaccineScreen(viewModel = koinViewModel(), onAddClick = { navController.navigate(Route.AddVaccine.route) })
+        }
+        composable(Route.AddVaccine.route) {
+            val vaccineViewModel = koinViewModel<com.example.myapp.ui.vaccine.VaccineViewModel>()
+            AddVaccineScreen(
+                onSave = { name, dose, plannedDate ->
+                    vaccineViewModel.onEvent(VaccineEvent.Add(name, dose, plannedDate))
+                    navController.popBackStack()
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Route.Health.route) {
+            HealthScreen(viewModel = koinViewModel())
         }
     }
 }

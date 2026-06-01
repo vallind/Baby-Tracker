@@ -1,5 +1,7 @@
 package com.example.myapp.di
 
+import com.example.myapp.data.datastore.NotificationPreference
+import com.example.myapp.data.datastore.ThemePreference
 import com.example.myapp.data.room.AppDatabase
 import com.example.myapp.data.repository.BabyRepository
 import com.example.myapp.data.repository.FeedingRepository
@@ -16,8 +18,10 @@ import com.example.myapp.domain.sleep.AddSleepUseCase
 import com.example.myapp.domain.sleep.DeleteSleepUseCase
 import com.example.myapp.ui.feeding.FeedingViewModel
 import com.example.myapp.ui.growth.GrowthViewModel
+import com.example.myapp.ui.health.HealthViewModel
 import com.example.myapp.ui.home.HomeViewModel
 import com.example.myapp.ui.sleep.SleepViewModel
+import com.example.myapp.ui.vaccine.VaccineViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -48,8 +52,13 @@ val appModule = module {
     single { AddGrowthUseCase(get()) }
     single { DeleteGrowthUseCase(get()) }
 
+    single { ThemePreference(androidContext()) }
+    single { NotificationPreference(androidContext()) }
+
     viewModel { HomeViewModel(get(), get(), get(), get()) }
     viewModel { FeedingViewModel(get(), get(), get()) }
     viewModel { SleepViewModel(get(), get(), get()) }
     viewModel { GrowthViewModel(get(), get(), get()) }
+    viewModel { VaccineViewModel(get()) }
+    viewModel { HealthViewModel(get()) }
 }
