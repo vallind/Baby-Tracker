@@ -47,6 +47,10 @@ val koinVersion = "3.5.6"
 val coilVersion = "2.6.0"
 
 dependencies {
+    // Module dependencies
+    implementation(project(":core:data"))
+    implementation(project(":core:designsystem"))
+
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
     implementation(composeBom)
@@ -83,4 +87,20 @@ dependencies {
     // Koin (依赖注入)
     implementation("io.insert-koin:koin-android:$koinVersion")
     implementation("io.insert-koin:koin-androidx-compose:$koinVersion")
+
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // Paging 3
+    implementation("androidx.paging:paging-runtime-ktx:3.2.1")
+    implementation("androidx.paging:paging-compose:3.2.1")
+
+    // Vico Chart
+    implementation("com.patrykandpatrick.vico:compose-m3:1.13.1")
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }
