@@ -50,6 +50,7 @@ private data class BottomNavItem(
     val route: Route
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
