@@ -21,6 +21,8 @@ import com.example.myapp.ui.growth.GrowthViewModel
 import com.example.myapp.ui.health.HealthViewModel
 import com.example.myapp.ui.home.HomeViewModel
 import com.example.myapp.ui.sleep.SleepViewModel
+import com.example.myapp.ui.settings.SettingsViewModel
+import com.example.myapp.ui.stats.StatsViewModel
 import com.example.myapp.ui.vaccine.VaccineViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -61,4 +63,6 @@ val appModule = module {
     viewModel { GrowthViewModel(get(), get(), get()) }
     viewModel { VaccineViewModel(get()) }
     viewModel { HealthViewModel(get()) }
+    viewModel { StatsViewModel(get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get()) }
 }

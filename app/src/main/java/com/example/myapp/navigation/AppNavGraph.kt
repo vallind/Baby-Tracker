@@ -17,6 +17,9 @@ import com.example.myapp.ui.sleep.SleepEvent
 import com.example.myapp.ui.sleep.SleepScreen
 import com.example.myapp.ui.vaccine.AddVaccineScreen
 import com.example.myapp.ui.vaccine.VaccineEvent
+import com.example.myapp.ui.about.AboutScreen
+import com.example.myapp.ui.settings.SettingsScreen
+import com.example.myapp.ui.stats.StatsScreen
 import com.example.myapp.ui.vaccine.VaccineScreen
 import org.koin.androidx.compose.koinViewModel
 
@@ -92,6 +95,15 @@ fun AppNavGraph(navController: NavHostController) {
         }
         composable(Route.Health.route) {
             HealthScreen(viewModel = koinViewModel())
+        }
+        composable(Route.Stats.route) {
+            StatsScreen(viewModel = koinViewModel())
+        }
+        composable(Route.Settings.route) {
+            SettingsScreen(viewModel = koinViewModel())
+        }
+        composable(Route.About.route) {
+            AboutScreen()
         }
     }
 }
