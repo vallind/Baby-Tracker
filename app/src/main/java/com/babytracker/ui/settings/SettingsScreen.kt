@@ -1,0 +1,467 @@
+package com.babytracker.ui.settings
+
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.documentfile.provider.DocumentFile
+import com.babytracker.core.database.entity.BabyEntity
+import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.LocalThemeColors
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import com.babytracker.core.backup.BackupManager
+import com.babytracker.core.theme.AppTheme
+import com.babytracker.core.theme.ThemeController
+import com.babytracker.core.util.DateUtils
+import com.babytracker.data.repository.BabyRepository
+import com.babytracker.ui.navigation.Screen
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+
+@Composable
+fun SettingsScreen(navController: NavController) {
+    val babyRepo: BabyRepository = koinInject()
+    val themeCtrl: ThemeController = koinInject()
+    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
+    val baby = babies.firstOrNull()
+    var showPicker by remember { mutableStateOf(false) }
+
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).windowInsetsPadding(WindowInsets.statusBars)) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = DT.pageMargin.dp)) {
+        Spacer(Modifier.height(24.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                Text(baby?.name?.take(1) ?: "?", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+            }
+            Spacer(Modifier.width(14.dp))
+            Column {
+                Text(baby?.name ?: "未设置", style = MaterialTheme.typography.titleMedium)
+                Text("${baby?.let { DateUtils.monthAge(java.time.LocalDate.parse(it.birthDate)) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+
+        SectionTitle("设置")
+        Card(
+            Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.small,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        ) {
+            Column {
+                SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                SettingsRow("☁️", "数据备份", onClick = { navController.navigate(Screen.Backup.route) })
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                SettingsRow("🎨", "主题", trailing = { ThemeDots(themeCtrl.currentTheme.name, onClick = { showPicker = true }) }, onClick = { showPicker = true })
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                SettingsRow("🔔", "通知提醒", trailing = { Switch(checked = true, onCheckedChange = {}, colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary, checkedThumbColor = Color.White)) })
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+
+        SectionTitle("其他")
+        Card(
+            Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.small,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        ) {
+            Column {
+                SettingsRow("ℹ️", "关于我们", onClick = { })
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
+                SettingsRow("⭐", "给我们评分", onClick = { })
+            }
+        }
+        Spacer(Modifier.height(40.dp))
+    }
+    }
+
+    if (showPicker) {
+        ThemePickerSheet(themeCtrl = themeCtrl, onDismiss = { showPicker = false })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
+    val names = mapOf("pure" to "纯净蓝", "aurora" to "极光紫", "warm" to "暖阳粉", "sunny" to "阳光黄", "night" to "暗夜深", "morandi" to "莫兰迪")
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 16.dp)) {
+            Text("选择主题", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                AppTheme.all.forEach { theme ->
+                    val selected = themeCtrl.currentTheme.name == theme.name
+                    Card(
+                        onClick = { themeCtrl.switchTheme(theme.name) },
+                        modifier = Modifier.width(120.dp).height(96.dp),
+                        shape = MaterialTheme.shapes.small,
+                        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        colors = CardDefaults.cardColors(containerColor = theme.colors.card),
+                    ) {
+                        Box(Modifier.fillMaxSize().padding(12.dp)) {
+                            Column {
+                                Box(Modifier.size(36.dp).clip(RoundedCornerShape(12.dp)).background(theme.colors.primary))
+                                Spacer(Modifier.height(6.dp))
+                                Text(names[theme.name] ?: theme.name, style = MaterialTheme.typography.bodySmall, color = theme.colors.textPrimary)
+                            }
+                            if (selected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun SectionTitle(title: String) {
+    Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+}
+
+@Composable
+fun SettingsRow(emoji: String, label: String, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
+    Row(
+        Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 16.dp).clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(emoji, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.width(12.dp))
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+        if (trailing != null) {
+            trailing()
+        } else {
+            Text("›", color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
+    val themesColors = mapOf(
+        "pure" to 0xFF2563EB, "aurora" to 0xFF7C3AED, "warm" to 0xFFFF8A80,
+        "sunny" to 0xFFF59E0B, "night" to 0xFF1E293B, "morandi" to 0xFF94A3B8,
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        themesColors.forEach { (name, colorInt) ->
+            Box(
+                Modifier.size(20.dp).clip(CircleShape).background(Color(colorInt))
+                    .then(if (name == currentTheme) Modifier.border(2.dp, Color(0xFF2563EB), CircleShape) else Modifier),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BabyManagementScreen(navController: NavController) {
+    val c = LocalThemeColors.current
+    val babyRepo: BabyRepository = koinInject()
+    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
+    val scope = rememberCoroutineScope()
+
+    var showForm by remember { mutableStateOf(false) }
+    var editingBaby by remember { mutableStateOf<BabyEntity?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf<BabyEntity?>(null) }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("宝宝管理") },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showForm = true; editingBaby = null }) {
+                Icon(Icons.Default.Add, contentDescription = "添加宝宝")
+            }
+        },
+    ) { padding ->
+        if (babies.isEmpty()) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text("还没有添加宝宝", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = 8.dp)) {
+                babies.forEach { b ->
+                    Card(
+                        onClick = { editingBaby = b; showForm = true },
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        shape = MaterialTheme.shapes.small,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    ) {
+                        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                                Text(b.name.take(1), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(b.name, style = MaterialTheme.typography.titleSmall)
+                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            IconButton(onClick = { showDeleteConfirm = b }) {
+                                Icon(Icons.Default.Delete, contentDescription = "删除", tint = c.tagText)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showForm) {
+        BabyFormDialog(
+            baby = editingBaby,
+            onDismiss = { showForm = false; editingBaby = null },
+            onSave = { baby ->
+                scope.launch {
+                    if (editingBaby != null) babyRepo.update(baby)
+                    else babyRepo.insert(baby)
+                }
+                showForm = false
+                editingBaby = null
+            },
+        )
+    }
+
+    showDeleteConfirm?.let { baby ->
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = null },
+            title = { Text("确认删除") },
+            text = { Text("确定要删除 ${baby.name} 的所有数据吗？") },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch { babyRepo.delete(baby) }
+                    showDeleteConfirm = null
+                }) { Text("删除", color = c.tagText) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = null }) { Text("取消") }
+            },
+        )
+    }
+}
+
+@Composable
+fun BabyFormDialog(baby: BabyEntity?, onDismiss: () -> Unit, onSave: (BabyEntity) -> Unit) {
+    val isEdit = baby != null
+    var name by remember { mutableStateOf(baby?.name ?: "") }
+    var gender by remember { mutableStateOf(baby?.gender ?: "男") }
+    var birthDate by remember { mutableStateOf(baby?.birthDate ?: java.time.LocalDate.now().toString()) }
+    var birthWeight by remember { mutableStateOf(baby?.birthWeight?.toString() ?: "") }
+    var birthHeight by remember { mutableStateOf(baby?.birthHeight?.toString() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (isEdit) "编辑宝宝" else "添加宝宝") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("姓名") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("男", "女").forEach { g ->
+                        FilterChip(
+                            selected = gender == g,
+                            onClick = { gender = g },
+                            label = { Text(g) },
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = birthDate,
+                    onValueChange = { birthDate = it },
+                    label = { Text("出生日期 (yyyy-MM-dd)") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
+                )
+
+                OutlinedTextField(
+                    value = birthWeight,
+                    onValueChange = { birthWeight = it },
+                    label = { Text("出生体重 (kg，可选)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
+                )
+
+                OutlinedTextField(
+                    value = birthHeight,
+                    onValueChange = { birthHeight = it },
+                    label = { Text("出生身高 (cm，可选)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onSave(BabyEntity(
+                        id = baby?.id ?: 0,
+                        name = name,
+                        gender = gender,
+                        birthDate = birthDate,
+                        birthWeight = birthWeight.toDoubleOrNull(),
+                        birthHeight = birthHeight.toDoubleOrNull(),
+                        createdAt = baby?.createdAt ?: java.time.LocalDateTime.now().toString(),
+                    ))
+                },
+                enabled = name.isNotBlank(),
+            ) { Text(if (isEdit) "保存" else "添加") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BackupScreen(navController: NavController) {
+    val backupManager: BackupManager = koinInject()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    var backupPath by remember { mutableStateOf("") }
+    var selectedDirUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedDirName by remember { mutableStateOf("") }
+
+    val dirPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            context.contentResolver.takePersistableUriPermission(it, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            selectedDirUri = it
+            val doc = DocumentFile.fromTreeUri(context, it)
+            selectedDirName = doc?.name ?: doc?.uri?.lastPathSegment ?: "已选择目录"
+        }
+    }
+
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(title = { Text("备份管理") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
+    }) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = DT.pageMargin.dp)) {
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("本地备份", style = MaterialTheme.typography.titleSmall)
+                            Text("选择备份保存位置", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = { dirPicker.launch(null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small,
+                    ) {
+                        Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("选择目录", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    if (selectedDirName.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("📁", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(Modifier.width(8.dp))
+                            Text(selectedDirName, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1)
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val path = if (selectedDirUri != null) {
+                                    backupManager.createLocalBackupToUri(context, selectedDirUri!!)
+                                } else {
+                                    backupManager.createLocalBackup(context)
+                                }
+                                backupPath = path ?: ""
+                                Toast.makeText(context, if (path != null) "备份完成" else "备份失败", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small,
+                    ) { Text("开始备份") }
+                }
+            }
+            if (backupPath.isNotEmpty()) {
+                Text("上次备份: $backupPath", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+            }
+            Spacer(Modifier.height(DT.cardGap.dp))
+
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.tertiaryContainer), contentAlignment = Alignment.Center) {
+                            Text("☁️", style = MaterialTheme.typography.titleMedium)
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("WebDAV 云备份", style = MaterialTheme.typography.titleSmall)
+                            Text("未配置", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = { },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small,
+                    ) {
+                        Text("配置 WebDAV", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+    }
+}

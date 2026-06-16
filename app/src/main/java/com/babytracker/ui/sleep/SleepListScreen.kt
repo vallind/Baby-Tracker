@@ -1,0 +1,183 @@
+package com.babytracker.ui.sleep
+
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import com.babytracker.core.database.entity.SleepEntity
+import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.LocalThemeColors
+import com.babytracker.core.util.DateUtils
+import com.babytracker.data.repository.SleepRepository
+import com.babytracker.data.repository.BabyRepository
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun SleepListScreen(navController: NavController) {
+    val sleepRepo: SleepRepository = koinInject()
+    val babyRepo: BabyRepository = koinInject()
+    val scope = rememberCoroutineScope()
+    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
+    val babyId = babies.firstOrNull()?.id ?: return
+    val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
+    var showForm by remember { mutableStateOf(false) }
+    var deletingSleep by remember { mutableStateOf<SleepEntity?>(null) }
+
+    val night = sleeps.filter { it.type == "night" }.firstOrNull()
+    val nightDurSec = night?.let { DateUtils.durationToTotalSeconds(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)) } ?: 0
+    val nightRange = night?.let {
+        val s = LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
+        val e = LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
+        "$s-$e"
+    } ?: ""
+
+    Scaffold(topBar = {
+        CenterAlignedTopAppBar(title = { Text("睡眠记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
+    }, floatingActionButton = {
+        FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary) {
+            Icon(Icons.Default.Add, contentDescription = null)
+        }
+    }) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+            Card(
+                Modifier.fillMaxWidth().padding(horizontal = DT.pageMargin.dp, vertical = 16.dp),
+                shape = MaterialTheme.shapes.small,
+                border = BorderStroke(1.dp, Color(0xFF312E81)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B)),
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                        Column(Modifier.weight(1f)) {
+                            Text("今日睡眠", style = MaterialTheme.typography.bodySmall, color = Color(0xFFA5B4FC))
+                            Spacer(Modifier.height(4.dp))
+                            Text(DateUtils.durationFullText(nightDurSec), style = MaterialTheme.typography.headlineMedium, color = Color.White)
+                            Spacer(Modifier.height(2.dp))
+                            Text(nightRange, style = MaterialTheme.typography.bodySmall, color = Color(0xFFA5B4FC))
+                        }
+                        Text("🌙", style = MaterialTheme.typography.headlineLarge)
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    val goalPercent = (nightDurSec.toFloat() / (14 * 3600).toFloat()).coerceAtMost(1f)
+                    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.1f))) {
+                        Box(Modifier.fillMaxWidth(goalPercent).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF60A5FA), Color(0xFF2563EB)))))
+                    }
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            val grouped = sleeps.groupBy { it.startTime.take(10) }
+            grouped.forEach { (date, items) ->
+                Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
+                items.forEach { s ->
+                val start = LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME)
+                val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
+                Card(
+                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().combinedClickable(onLongClick = { deletingSleep = s }, onClick = {}),
+                    shape = MaterialTheme.shapes.small,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                ) {
+                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall)
+                            Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleSmall)
+                    }
+                }
+                }
+            }
+            Spacer(Modifier.height(80.dp))
+        }
+    }
+
+    if (showForm) {
+        SleepFormDialog(babyId = babyId, sleepRepo = sleepRepo, onDismiss = { showForm = false })
+    }
+
+    deletingSleep?.let { s ->
+        AlertDialog(
+            onDismissRequest = { deletingSleep = null },
+            title = { Text("确认删除") },
+            text = { Text("确定要删除这条睡眠记录吗？") },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch { sleepRepo.delete(s) }
+                    deletingSleep = null
+                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingSleep = null }) { Text("取消") }
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SleepFormDialog(babyId: Int, sleepRepo: SleepRepository, onDismiss: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var selectedType by remember { mutableStateOf("night") }
+    val now = LocalDateTime.now()
+    var startTime by remember { mutableStateOf(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
+    var endTime by remember { mutableStateOf(now.plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
+    var note by remember { mutableStateOf("") }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = { Text("🌙 夜间睡眠") })
+                FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("☀️ 小睡") })
+            }
+            Spacer(Modifier.height(16.dp))
+            OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text("开始时间 (yyyy-MM-dd HH:mm)") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small)
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text("结束时间 (yyyy-MM-dd HH:mm)") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small)
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small)
+            Spacer(Modifier.height(20.dp))
+            Button(onClick = {
+                scope.launch {
+                    sleepRepo.insert(SleepEntity(
+                        babyId = babyId,
+                        type = selectedType,
+                        startTime = startTime.replace(" ", "T") + ":00",
+                        endTime = endTime.replace(" ", "T") + ":00",
+                        note = note.ifBlank { null },
+                    ))
+                    onDismiss()
+                }
+            }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = MaterialTheme.shapes.small) {
+                Text("保存")
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+fun RowScope.SleepStatCell(label: String, value: String) {
+    Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
