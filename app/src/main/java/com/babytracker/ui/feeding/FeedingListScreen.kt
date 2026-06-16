@@ -14,6 +14,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -131,6 +134,8 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
     var brand by remember { mutableStateOf("") }
     val now = LocalDateTime.now()
     var feedingDateTime by remember { mutableStateOf(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
@@ -152,8 +157,22 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                         listOf("左侧", "右侧", "双侧").forEach { s ->
                             FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
-                        }
-                    }
+    }
+}
+
+@Composable
+fun NumberPicker(value: Int, onValueChange: (Int) -> Unit, range: IntRange, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        IconButton(onClick = { val n = value - 1; if (n >= range.first) onValueChange(n) }, modifier = Modifier.size(36.dp)) {
+            Text("▲", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Text("%02d".format(value), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 4.dp))
+        IconButton(onClick = { val n = value + 1; if (n <= range.last) onValueChange(n) }, modifier = Modifier.size(36.dp)) {
+            Text("▼", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
                     OutlinedTextField(
                         value = durationMin, onValueChange = { durationMin = it },
                         label = { Text("时长 (分钟)") }, singleLine = true,
@@ -198,7 +217,7 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
             }
 
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = feedingDateTime, onValueChange = { feedingDateTime = it }, label = { Text("时间 (yyyy-MM-dd HH:mm)") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small)
+            OutlinedTextField(value = feedingDateTime, onValueChange = {}, readOnly = true, label = { Text("时间 (yyyy-MM-dd HH:mm)") }, modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.small, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
@@ -218,6 +237,54 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
             ) { Text("保存") }
             Spacer(Modifier.height(24.dp))
         }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
+            TextButton(onClick = {
+                showDatePicker = false
+                datePickerState.selectedDateMillis?.let { millis ->
+                    val instant = java.time.Instant.ofEpochMilli(millis)
+                    val date = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    val timePart = feedingDateTime.substring(11)
+                    feedingDateTime = "$date $timePart"
+                }
+                showTimePicker = true
+            }) { Text("下一步") }
+        }, dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    if (showTimePicker) {
+        var hour by remember { mutableIntStateOf(feedingDateTime.substring(11, 13).toIntOrNull() ?: 12) }
+        var minute by remember { mutableIntStateOf(feedingDateTime.substring(14, 16).toIntOrNull() ?: 0) }
+        AlertDialog(onDismissRequest = { showTimePicker = false }, title = { Text("选择时间") }, text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        TextButton(onClick = { if (hour < 23) hour++ }) { Text("▲") }
+                        Text("%02d".format(hour), style = MaterialTheme.typography.headlineMedium)
+                        TextButton(onClick = { if (hour > 0) hour-- }) { Text("▼") }
+                        Text("时", style = MaterialTheme.typography.labelSmall)
+                    }
+                    Text(" : ", style = MaterialTheme.typography.headlineMedium)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        TextButton(onClick = { if (minute < 59) minute++ }) { Text("▲") }
+                        Text("%02d".format(minute), style = MaterialTheme.typography.headlineMedium)
+                        TextButton(onClick = { if (minute > 0) minute-- }) { Text("▼") }
+                        Text("分", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+        }, confirmButton = {
+            TextButton(onClick = {
+                val datePart = feedingDateTime.take(10)
+                feedingDateTime = "$datePart ${"%02d".format(hour)}:${"%02d".format(minute)}"
+                showTimePicker = false
+            }) { Text("确定") }
+        }, dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("取消") } })
     }
 }
 
