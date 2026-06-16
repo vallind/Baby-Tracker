@@ -392,6 +392,7 @@ fun BackupScreen(navController: NavController) {
     var showWebDAV by remember { mutableStateOf(false) }
     var showRestoreConfirm by remember { mutableStateOf(false) }
     var restoreFileUri by remember { mutableStateOf<Uri?>(null) }
+    var showWebdavRestoreConfirm by remember { mutableStateOf(false) }
     var restoring by remember { mutableStateOf(false) }
 
     val restorePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -535,6 +536,9 @@ fun BackupScreen(navController: NavController) {
                             }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small) {
                                 Text("备份", style = MaterialTheme.typography.bodyMedium)
                             }
+                            Button(onClick = { showWebdavRestoreConfirm = true }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small) {
+                                Text("恢复", style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
                     }
                 }
@@ -596,5 +600,22 @@ fun BackupScreen(navController: NavController) {
                 TextButton(onClick = { showRestoreConfirm = false }) { Text("取消") }
             },
         )
+    if (showWebdavRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = { showWebdavRestoreConfirm = false },
+            title = { Text("云端恢复") },
+            text = { Text("将从 WebDAV 下载最新备份并恢复") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showWebdavRestoreConfirm = false; restoring = true
+                    scope.launch {
+                        backupManager.restoreFromWebDAV().onSuccess { Toast.makeText(context, "云端恢复完成", Toast.LENGTH_SHORT).show() }.onFailure { Toast.makeText(context, "恢复失败: ${it.message}", Toast.LENGTH_SHORT).show() }
+                        restoring = false
+                    }
+                }) { Text("恢复", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { showWebdavRestoreConfirm = false }) { Text("取消") } },
+        )
+    }
     }
 }

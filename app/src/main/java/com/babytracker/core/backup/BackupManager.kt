@@ -80,6 +80,49 @@ class BackupManager(private val db: AppDatabase) {
         } catch (e: Exception) { Result.failure(e) }
     }
 
+    suspend fun restoreFromWebDAV(): Result<Int> = withContext(Dispatchers.IO) {
+        try {
+            val config = db.backupConfigDao().get() ?: return@withContext Result.failure(Exception("未配置"))
+            val url = requireNotNull(config.webdavUrl) { "服务器地址未设置" }
+            val user = requireNotNull(config.webdavUser) { "用户名未设置" }
+            val pass = requireNotNull(config.webdavPass) { "密码未设置" }
+            val baseUrl = url.trimEnd('/')
+
+            val client = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).build()
+
+            // Try to find backup files via PROPFIND
+            val propfindXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><displayname/><getcontentlength/><getlastmodified/></prop></propfind>"
+            val listRequest = Request.Builder().url(baseUrl).method("PROPFIND", propfindXml.toRequestBody("application/xml".toMediaType())).header("Authorization", Credentials.basic(user, pass)).header("Depth", "1").build()
+            val listResponse = client.newCall(listRequest).execute()
+            val body = listResponse.body?.string() ?: return@withContext Result.failure(Exception("无法获取文件列表"))
+            val backupFiles = Regex("babytracker_backup_\\d{8}_\\d{6}\\.zip").findAll(body).map { it.value }.sorted().toList()
+
+            if (backupFiles.isEmpty()) return@withContext Result.failure(Exception("未找到备份文件"))
+            val latestFile = backupFiles.last()
+            val fileUrl = "$baseUrl/$latestFile"
+
+            val getRequest = Request.Builder().url(fileUrl).get().header("Authorization", Credentials.basic(user, pass)).build()
+            val getResponse = client.newCall(getRequest).execute()
+            val zipBytes = getResponse.body?.bytes() ?: return@withContext Result.failure(Exception("下载失败"))
+
+            val jsonStr = java.io.ByteArrayInputStream(zipBytes).use { input ->
+                val zip = ZipInputStream(input)
+                var entry = zip.nextEntry
+                while (entry != null) {
+                    if (entry.name == "data.json") {
+                        return@use zip.bufferedReader().readText()
+                    }
+                    zip.closeEntry()
+                    entry = zip.nextEntry
+                }
+                null
+            } ?: return@withContext Result.failure(Exception("备份文件缺少 data.json"))
+
+            val data = JSONObject(jsonStr)
+            doRestore(data)
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
     private data class ResultHolder(val result: Result<Int>)
     suspend fun restoreFromUri(context: Context, uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
