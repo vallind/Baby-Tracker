@@ -33,7 +33,10 @@ import com.babytracker.core.backup.BackupManager
 import com.babytracker.core.theme.AppTheme
 import com.babytracker.core.theme.ThemeController
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
+import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.data.repository.BabyRepository
+import com.babytracker.data.repository.VaccinationRepository
 import com.babytracker.ui.navigation.Screen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -182,6 +185,8 @@ fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
 fun BabyManagementScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val babyRepo: BabyRepository = koinInject()
+    val babyCtrl: BabyController = koinInject()
+    val vacRepo: VaccinationRepository = koinInject()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val scope = rememberCoroutineScope()
 
@@ -209,11 +214,12 @@ fun BabyManagementScreen(navController: NavController) {
         } else {
             Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = 8.dp)) {
                 babies.forEach { b ->
+                    val isCurrent = b.id == babyCtrl.currentBabyId
                     Card(
                         onClick = { editingBaby = b; showForm = true },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         shape = MaterialTheme.shapes.small,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        border = BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -222,8 +228,21 @@ fun BabyManagementScreen(navController: NavController) {
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(b.name, style = MaterialTheme.typography.titleSmall)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(b.name, style = MaterialTheme.typography.titleSmall)
+                                    if (isCurrent) {
+                                        Spacer(Modifier.width(8.dp))
+                                        Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(8.dp)) {
+                                            Text("当前", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                                        }
+                                    }
+                                }
                                 Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (!isCurrent) {
+                                TextButton(onClick = { babyCtrl.selectBaby(b.id) }) {
+                                    Text("切换", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                }
                             }
                             IconButton(onClick = { showDeleteConfirm = b }) {
                                 Icon(Icons.Default.Delete, contentDescription = "删除", tint = c.tagText)
@@ -242,7 +261,10 @@ fun BabyManagementScreen(navController: NavController) {
             onSave = { baby ->
                 scope.launch {
                     if (editingBaby != null) babyRepo.update(baby)
-                    else babyRepo.insert(baby)
+                    else {
+                        val babyId = babyRepo.insert(baby).toInt()
+                        VaccineSchedule.createForBaby(babyId, baby.birthDate).forEach { vacRepo.insert(it) }
+                    }
                 }
                 showForm = false
                 editingBaby = null
