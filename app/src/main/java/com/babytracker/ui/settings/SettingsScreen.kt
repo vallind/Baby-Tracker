@@ -240,7 +240,7 @@ fun BabyManagementScreen(navController: NavController) {
                                 Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (!isCurrent) {
-                                TextButton(onClick = { babyCtrl.selectBaby(b.id) }) {
+                                TextButton(onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() }) {
                                     Text("切换", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
