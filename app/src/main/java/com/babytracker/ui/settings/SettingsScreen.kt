@@ -390,6 +390,14 @@ fun BackupScreen(navController: NavController) {
     var webdavPass by remember { mutableStateOf("") }
     var webdavStatus by remember { mutableStateOf("未配置") }
     var showWebDAV by remember { mutableStateOf(false) }
+    var showRestoreConfirm by remember { mutableStateOf(false) }
+    var restoreFileUri by remember { mutableStateOf<Uri?>(null) }
+    var restoring by remember { mutableStateOf(false) }
+
+    val restorePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        restoreFileUri = uri
+        if (uri != null) showRestoreConfirm = true
+    }
 
     LaunchedEffect(Unit) {
         backupManager.loadConfig()?.let { c ->
@@ -531,6 +539,62 @@ fun BackupScreen(navController: NavController) {
                     }
                 }
             }
+            Spacer(Modifier.height(DT.cardGap.dp))
+
+            Card(
+                Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.small,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.errorContainer), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Restore, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        }
+                        Spacer(Modifier.width(14.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("恢复备份", style = MaterialTheme.typography.titleSmall)
+                            Text("从 zip 文件导入数据", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = { restorePicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small,
+                        enabled = !restoring,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    ) { Text(if (restoring) "恢复中..." else "选择备份文件", style = MaterialTheme.typography.bodyMedium) }
+                }
+            }
         }
+    }
+
+    if (showRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = { showRestoreConfirm = false },
+            title = { Text("恢复数据") },
+            text = { Text("恢复将导入备份中的宝宝和记录数据，已有数据不受影响。确定继续？") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showRestoreConfirm = false
+                    restoring = true
+                    scope.launch {
+                        restoreFileUri?.let { uri ->
+                            backupManager.restoreFromUri(context, uri).onSuccess {
+                                Toast.makeText(context, "恢复完成", Toast.LENGTH_SHORT).show()
+                            }.onFailure {
+                                Toast.makeText(context, "恢复失败: ${it.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        restoring = false
+                    }
+                }) { Text("恢复", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestoreConfirm = false }) { Text("取消") }
+            },
+        )
     }
 }
