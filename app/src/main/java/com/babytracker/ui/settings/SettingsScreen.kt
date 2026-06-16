@@ -44,9 +44,10 @@ import org.koin.compose.koinInject
 @Composable
 fun SettingsScreen(navController: NavController) {
     val babyRepo: BabyRepository = koinInject()
+    val babyCtrl: BabyController = koinInject()
     val themeCtrl: ThemeController = koinInject()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val baby = babies.firstOrNull()
+    val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
     var showPicker by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).windowInsetsPadding(WindowInsets.statusBars)) {
