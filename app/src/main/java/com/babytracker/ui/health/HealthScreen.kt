@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.HealthRepository
 import com.babytracker.data.repository.BabyRepository
 import kotlinx.coroutines.launch
@@ -30,9 +31,9 @@ val healthCategoryIcons = mapOf("allergy" to "🤧", "medicalHistory" to "📋",
 @Composable
 fun HealthScreen(navController: NavController) {
     val healthRepo: HealthRepository = koinInject()
-    val babyRepo: BabyRepository = koinInject()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val babyId = babies.firstOrNull()?.id ?: return
+    val babyCtrl: BabyController = koinInject()
+    val babyId = babyCtrl.currentBabyId
+    if (babyId == 0) return
     val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var deletingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }

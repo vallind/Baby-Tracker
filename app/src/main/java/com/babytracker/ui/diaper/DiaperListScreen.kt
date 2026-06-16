@@ -17,6 +17,7 @@ import com.babytracker.core.database.entity.DiaperEntity
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.DiaperRepository
 import com.babytracker.data.repository.BabyRepository
 import kotlinx.coroutines.launch
@@ -28,10 +29,10 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DiaperListScreen(navController: NavController) {
     val diaperRepo: DiaperRepository = koinInject()
-    val babyRepo: BabyRepository = koinInject()
+    val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val babyId = babies.firstOrNull()?.id ?: return
+    val babyId = babyCtrl.currentBabyId
+    if (babyId == 0) return
     val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var deletingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }

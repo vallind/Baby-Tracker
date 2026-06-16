@@ -5,12 +5,21 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.database.AppDatabase
 import com.babytracker.core.database.entity.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import okhttp3.Credentials
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -42,6 +51,38 @@ class BackupManager(private val db: AppDatabase) {
             }
         }
         return file.uri.toString()
+    }
+
+    suspend fun createWebDAVBackup(): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val config = db.backupConfigDao().get() ?: return@withContext Result.failure(Exception("未配置"))
+            val url = requireNotNull(config.webdavUrl) { "服务器地址未设置" }
+            val user = requireNotNull(config.webdavUser) { "用户名未设置" }
+            val pass = requireNotNull(config.webdavPass) { "密码未设置" }
+            val ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
+            val fileName = "babytracker_backup_$ts.zip"
+            val json = exportAll()
+            val zipBytes = ByteArrayOutputStream().use { bos ->
+                ZipOutputStream(bos).use { zos -> zos.putNextEntry(ZipEntry("data.json")); zos.write(json.toString(2).toByteArray()); zos.closeEntry() }
+                bos.toByteArray()
+            }
+            val targetUrl = "${url.trimEnd('/')}/$fileName"
+            val client = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS).writeTimeout(30, TimeUnit.SECONDS).build()
+            val request = Request.Builder().url(targetUrl).put(zipBytes.toRequestBody("application/zip".toMediaType())).header("Authorization", Credentials.basic(user, pass)).build()
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                val backupAt = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+                db.backupConfigDao().insert(config.copy(lastBackupAt = backupAt))
+                Result.success(targetUrl)
+            } else Result.failure(Exception("HTTP ${response.code}"))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    suspend fun loadConfig() = db.backupConfigDao().get()
+    suspend fun saveConfig(url: String, user: String, pass: String) {
+        val c = db.backupConfigDao().get()?.copy(webdavUrl = url, webdavUser = user, webdavPass = pass)
+            ?: BackupConfigEntity(webdavUrl = url, webdavUser = user, webdavPass = pass, autoBackup = false)
+        db.backupConfigDao().insert(c)
     }
 
     private suspend fun exportAll(): JSONObject {

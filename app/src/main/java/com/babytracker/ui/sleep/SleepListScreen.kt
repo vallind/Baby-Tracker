@@ -20,6 +20,7 @@ import com.babytracker.core.database.entity.SleepEntity
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.SleepRepository
 import com.babytracker.data.repository.BabyRepository
 import kotlinx.coroutines.launch
@@ -31,10 +32,10 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun SleepListScreen(navController: NavController) {
     val sleepRepo: SleepRepository = koinInject()
-    val babyRepo: BabyRepository = koinInject()
+    val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val babyId = babies.firstOrNull()?.id ?: return
+    val babyId = babyCtrl.currentBabyId
+    if (babyId == 0) return
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var deletingSleep by remember { mutableStateOf<SleepEntity?>(null) }

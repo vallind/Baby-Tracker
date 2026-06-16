@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.documentfile.provider.DocumentFile
@@ -361,6 +362,23 @@ fun BackupScreen(navController: NavController) {
     var backupPath by remember { mutableStateOf("") }
     var selectedDirUri by remember { mutableStateOf<Uri?>(null) }
     var selectedDirName by remember { mutableStateOf("") }
+    var webdavUrl by remember { mutableStateOf("") }
+    var webdavUser by remember { mutableStateOf("") }
+    var webdavPass by remember { mutableStateOf("") }
+    var webdavStatus by remember { mutableStateOf("未配置") }
+    var showWebDAV by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        backupManager.loadConfig()?.let { c ->
+            webdavUrl = c.webdavUrl ?: ""
+            webdavUser = c.webdavUser ?: ""
+            webdavPass = c.webdavPass ?: ""
+            if (c.webdavUrl != null) {
+                showWebDAV = true
+                webdavStatus = c.lastBackupAt?.let { "上次: $it" } ?: "已配置"
+            }
+        }
+    }
 
     val dirPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
@@ -449,16 +467,44 @@ fun BackupScreen(navController: NavController) {
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text("WebDAV 云备份", style = MaterialTheme.typography.titleSmall)
-                            Text("未配置", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(webdavStatus, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    OutlinedButton(
-                        onClick = { },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.small,
-                    ) {
-                        Text("配置 WebDAV", style = MaterialTheme.typography.bodyMedium)
+                    if (!showWebDAV) {
+                        OutlinedButton(onClick = { showWebDAV = true }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small) {
+                            Text("配置 WebDAV", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    } else {
+                        OutlinedTextField(value = webdavUrl, onValueChange = { webdavUrl = it }, label = { Text("服务器地址") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small)
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(value = webdavUser, onValueChange = { webdavUser = it }, label = { Text("用户名") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small)
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(value = webdavPass, onValueChange = { webdavPass = it }, label = { Text("密码") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small, visualTransformation = PasswordVisualTransformation())
+                        Spacer(Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = {
+                                scope.launch {
+                                    backupManager.saveConfig(webdavUrl, webdavUser, webdavPass)
+                                    webdavStatus = "已保存"
+                                    Toast.makeText(context, "配置已保存", Toast.LENGTH_SHORT).show()
+                                }
+                            }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small) {
+                                Text("保存", style = MaterialTheme.typography.bodyMedium)
+                            }
+                            Button(onClick = {
+                                scope.launch {
+                                    backupManager.createWebDAVBackup().onSuccess {
+                                        webdavStatus = "上次: ${java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}"
+                                        Toast.makeText(context, "备份完成", Toast.LENGTH_SHORT).show()
+                                    }.onFailure {
+                                        Toast.makeText(context, "备份失败: ${it.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small) {
+                                Text("备份", style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
                     }
                 }
             }

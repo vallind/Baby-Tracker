@@ -16,6 +16,7 @@ import com.babytracker.core.theme.LocalThemeColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.BabyRepository
 import org.koin.compose.koinInject
 
@@ -26,9 +27,9 @@ fun StatsScreen(navController: NavController) {
     val viewModel: StatsViewModel = koinInject()
     val state by viewModel.state.collectAsState()
 
-    val babyRepo: BabyRepository = koinInject()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val babyId = babies.firstOrNull()?.id ?: return
+    val babyCtrl: BabyController = koinInject()
+    val babyId = babyCtrl.currentBabyId
+    if (babyId == 0) return
 
     LaunchedEffect(babyId) {
         viewModel.loadData(babyId)

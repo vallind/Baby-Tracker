@@ -18,6 +18,7 @@ import com.babytracker.core.database.entity.VaccinationEntity
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.VaccinationRepository
 import com.babytracker.data.repository.BabyRepository
 import org.koin.compose.koinInject
@@ -31,9 +32,9 @@ import kotlinx.coroutines.launch
 fun VaccinationListScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val vacRepo: VaccinationRepository = koinInject()
-    val babyRepo: BabyRepository = koinInject()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val babyId = babies.firstOrNull()?.id ?: return
+    val babyCtrl: BabyController = koinInject()
+    val babyId = babyCtrl.currentBabyId
+    if (babyId == 0) return
     val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
 
     var filter by remember { mutableStateOf("pending") }

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.Settings
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
 import com.babytracker.ui.components.BabyIllustration
 import com.babytracker.ui.components.BabyPose
 import com.babytracker.ui.navigation.Screen
@@ -39,12 +40,17 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val babyRepo: BabyRepository = koinInject()
+    val babyCtrl: BabyController = koinInject()
     val viewModel: HomeViewModel = koinInject()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val baby = babies.firstOrNull()
+    val currentBabyId = babyCtrl.currentBabyId
+    val baby = babies.find { it.id == currentBabyId } ?: babies.firstOrNull()
     val state by viewModel.state.collectAsState()
     LaunchedEffect(baby) {
-        if (baby != null) viewModel.loadData(baby.id)
+        if (baby != null) {
+            if (babyCtrl.currentBabyId != baby.id) babyCtrl.selectBaby(baby.id)
+            viewModel.loadData(baby.id)
+        }
     }
 
     Scaffold(

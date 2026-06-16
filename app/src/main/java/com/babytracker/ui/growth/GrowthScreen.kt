@@ -27,6 +27,7 @@ import com.babytracker.core.database.entity.GrowthEntity
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.GrowthRepository
 import com.babytracker.data.repository.BabyRepository
 import kotlinx.coroutines.launch
@@ -39,10 +40,10 @@ import java.time.format.DateTimeFormatter
 fun GrowthScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val growthRepo: GrowthRepository = koinInject()
-    val babyRepo: BabyRepository = koinInject()
+    val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val babyId = babies.firstOrNull()?.id ?: return
+    val babyId = babyCtrl.currentBabyId
+    if (babyId == 0) return
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var deletingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
