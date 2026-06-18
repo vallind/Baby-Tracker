@@ -4,7 +4,9 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-System.getenv("ANDROID_AAPT2_OVERRIDE")?.let { project.ext.set("android.aapt2FromMavenOverride", it) }
+System.getenv("ANDROID_AAPT2_OVERRIDE")?.let {
+    project.ext.set("android.aapt2FromMavenOverride", it)
+}
 
 android {
     namespace = "com.babytracker"
@@ -20,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
