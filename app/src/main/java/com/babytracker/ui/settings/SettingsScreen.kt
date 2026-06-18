@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.documentfile.provider.DocumentFile
-import com.babytracker.core.database.entity.BabyEntity
+import com.babytracker.domain.model.Baby
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import androidx.compose.material.icons.Icons
@@ -60,7 +60,7 @@ fun SettingsScreen(navController: NavController) {
             Spacer(Modifier.width(14.dp))
             Column {
                 Text(baby?.name ?: "未设置", style = MaterialTheme.typography.titleMedium)
-                Text("${baby?.let { DateUtils.monthAge(java.time.LocalDate.parse(it.birthDate)) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${baby?.let { DateUtils.monthAge(it.birthDate) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(24.dp))
@@ -192,8 +192,8 @@ fun BabyManagementScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     var showForm by remember { mutableStateOf(false) }
-    var editingBaby by remember { mutableStateOf<BabyEntity?>(null) }
-    var showDeleteConfirm by remember { mutableStateOf<BabyEntity?>(null) }
+    var editingBaby by remember { mutableStateOf<Baby?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf<Baby?>(null) }
 
     Scaffold(
         topBar = {
@@ -238,7 +238,7 @@ fun BabyManagementScreen(navController: NavController) {
                                         }
                                     }
                                 }
-                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${b.gender} · ${DateUtils.monthAge(b.birthDate)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (!isCurrent) {
                                 TextButton(onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() }) {
@@ -264,7 +264,7 @@ fun BabyManagementScreen(navController: NavController) {
                     if (editingBaby != null) babyRepo.update(baby)
                     else {
                         val babyId = babyRepo.insert(baby).toInt()
-                        VaccineSchedule.createForBaby(babyId, baby.birthDate).forEach { vacRepo.insert(it) }
+                        VaccineSchedule.createForBaby(babyId, baby.birthDate.toString()).forEach { vacRepo.insert(it) }
                     }
                 }
                 showForm = false
@@ -292,11 +292,11 @@ fun BabyManagementScreen(navController: NavController) {
 }
 
 @Composable
-fun BabyFormDialog(baby: BabyEntity?, onDismiss: () -> Unit, onSave: (BabyEntity) -> Unit) {
+fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
     val isEdit = baby != null
     var name by remember { mutableStateOf(baby?.name ?: "") }
     var gender by remember { mutableStateOf(baby?.gender ?: "男") }
-    var birthDate by remember { mutableStateOf(baby?.birthDate ?: java.time.LocalDate.now().toString()) }
+    var birthDate by remember { mutableStateOf(baby?.birthDate?.toString() ?: java.time.LocalDate.now().toString()) }
     var birthWeight by remember { mutableStateOf(baby?.birthWeight?.toString() ?: "") }
     var birthHeight by remember { mutableStateOf(baby?.birthHeight?.toString() ?: "") }
 
@@ -357,14 +357,14 @@ fun BabyFormDialog(baby: BabyEntity?, onDismiss: () -> Unit, onSave: (BabyEntity
         confirmButton = {
             TextButton(
                 onClick = {
-                    onSave(BabyEntity(
+                    onSave(Baby(
                         id = baby?.id ?: 0,
                         name = name,
                         gender = gender,
-                        birthDate = birthDate,
+                        birthDate = java.time.LocalDate.parse(birthDate),
                         birthWeight = birthWeight.toDoubleOrNull(),
                         birthHeight = birthHeight.toDoubleOrNull(),
-                        createdAt = baby?.createdAt ?: java.time.LocalDateTime.now().toString(),
+                        createdAt = baby?.createdAt ?: java.time.LocalDateTime.now(),
                     ))
                 },
                 enabled = name.isNotBlank(),

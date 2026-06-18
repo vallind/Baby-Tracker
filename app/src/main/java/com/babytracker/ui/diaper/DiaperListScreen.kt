@@ -13,7 +13,7 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.DiaperEntity
+import com.babytracker.domain.model.Diaper
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
@@ -35,7 +35,7 @@ fun DiaperListScreen(navController: NavController) {
     if (babyId == 0) return
     val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
+    var deletingDiaper by remember { mutableStateOf<Diaper?>(null) }
 
     Scaffold(topBar = {
         CenterAlignedTopAppBar(title = { Text("尿布记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
@@ -45,7 +45,7 @@ fun DiaperListScreen(navController: NavController) {
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            val grouped = diapers.groupBy { it.timestamp.take(10) }
+            val grouped = diapers.groupBy { it.timestamp.toLocalDate().toString() }
             grouped.forEach { (date, items) ->
                 Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
                 items.forEach { d ->
@@ -60,7 +60,7 @@ fun DiaperListScreen(navController: NavController) {
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall)
-                            Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(d.timestamp.format(DateTimeFormatter.ofPattern("MM-dd HH:mm")), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -101,7 +101,7 @@ fun DiaperListScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiaperFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (DiaperEntity) -> Unit) {
+fun DiaperFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Diaper) -> Unit) {
     var selectedType by remember { mutableStateOf("wet") }
     val now = LocalDateTime.now()
     var diaperDateTime by remember { mutableStateOf(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
@@ -131,10 +131,10 @@ fun DiaperFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (DiaperEntity) 
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
-                    onSave(DiaperEntity(
+                    onSave(Diaper(
                         babyId = babyId,
                         type = selectedType,
-                        timestamp = diaperDateTime.replace(" ", "T") + ":00",
+                        timestamp = LocalDateTime.parse(diaperDateTime.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
                         note = note.ifBlank { null },
                     ))
                 },

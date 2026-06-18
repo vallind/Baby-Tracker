@@ -21,7 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.navigation.NavController
-import com.babytracker.core.database.entity.FeedingEntity
+import com.babytracker.domain.model.Feeding
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
@@ -43,7 +43,7 @@ fun FeedingListScreen(navController: NavController) {
     if (babyId == 0) return
     val feedings by feedingRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
+    var deletingFeeding by remember { mutableStateOf<Feeding?>(null) }
 
     Scaffold(
         topBar = {
@@ -70,12 +70,12 @@ fun FeedingListScreen(navController: NavController) {
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp).verticalScroll(rememberScrollState())) {
-            val grouped = feedings.groupBy { it.timestamp.take(10) }
+            val grouped = feedings.groupBy { it.timestamp.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) }
             grouped.forEach { (date, items) ->
                 Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
                 items.forEach { f ->
                 TimelineItem(
-                    time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" },
+                    time = f.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")),
                     color = when (f.type) { "breast" -> c.blue; "formula" -> c.green; "food" -> c.yellow; else -> c.cyan },
                     emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" },
                     title = DateUtils.feedingTypeLabel(f.type),
@@ -124,7 +124,7 @@ fun FeedingListScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity) -> Unit) {
+fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Feeding) -> Unit) {
     var type by remember { mutableStateOf("breast") }
     var amountMl by remember { mutableStateOf("") }
     var durationMin by remember { mutableStateOf("") }
@@ -207,7 +207,7 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
-                    onSave(FeedingEntity(
+                    onSave(Feeding(
                         babyId = babyId, type = type,
                         amountMl = amountMl.toIntOrNull(),
                         durationMin = durationMin.toIntOrNull(),
@@ -215,7 +215,7 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
                         foodName = if (type == "food") foodName else null,
                         amountG = amountG.toIntOrNull(),
                         brand = brand.ifBlank { null },
-                        timestamp = feedingDateTime.replace(" ", "T") + ":00",
+                        timestamp = LocalDateTime.parse(feedingDateTime.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
                     ))
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),

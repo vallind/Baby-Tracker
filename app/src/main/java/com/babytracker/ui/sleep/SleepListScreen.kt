@@ -16,7 +16,7 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.SleepEntity
+import com.babytracker.domain.model.Sleep
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
@@ -41,14 +41,14 @@ fun SleepListScreen(navController: NavController) {
     if (babyId == 0) return
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingSleep by remember { mutableStateOf<SleepEntity?>(null) }
+    var deletingSleep by remember { mutableStateOf<Sleep?>(null) }
 
     val today = java.time.LocalDate.now().toString()
-    val night = sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }.firstOrNull()
-    val nightDurSec = night?.let { DateUtils.durationToTotalSeconds(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)) } ?: 0
+    val night = sleeps.filter { it.type == "night" && it.startTime.toLocalDate().toString() == today }.firstOrNull()
+    val nightDurSec = night?.let { java.time.Duration.between(it.startTime, it.endTime).seconds.coerceAtLeast(0) } ?: 0L
     val nightRange = night?.let {
-        val s = LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
-        val e = LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
+        val s = it.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        val e = it.endTime.format(DateTimeFormatter.ofPattern("HH:mm"))
         "$s-$e"
     } ?: ""
 
@@ -86,12 +86,12 @@ fun SleepListScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(16.dp))
-            val grouped = sleeps.groupBy { it.startTime.take(10) }
+            val grouped = sleeps.groupBy { it.startTime.toLocalDate().toString() }
             grouped.forEach { (date, items) ->
                 Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
                 items.forEach { s ->
-                val start = LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME)
-                val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
+                val start = s.startTime
+                val end = s.endTime
                 Card(
                     Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().combinedClickable(onLongClick = { deletingSleep = s }, onClick = {}),
                     shape = MaterialTheme.shapes.small,
@@ -165,11 +165,11 @@ fun SleepFormDialog(babyId: Int, sleepRepo: SleepRepository, onDismiss: () -> Un
             Spacer(Modifier.height(20.dp))
             Button(onClick = {
                 scope.launch {
-                    sleepRepo.insert(SleepEntity(
+                    sleepRepo.insert(Sleep(
                         babyId = babyId,
                         type = selectedType,
-                        startTime = startTime.replace(" ", "T") + ":00",
-                        endTime = endTime.replace(" ", "T") + ":00",
+                        startTime = LocalDateTime.parse(startTime.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
+                        endTime = LocalDateTime.parse(endTime.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
                         note = note.ifBlank { null },
                     ))
                     onDismiss()

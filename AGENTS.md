@@ -11,32 +11,32 @@ Android 原生宝宝护理记录 App。Jetpack Compose + Material 3（完整 M3 
 | 数据库 | Room 2.6.1 + KSP | 8 张表，Migration 增量升级 |
 | 异步 | Kotlin Coroutines + Flow | — |
 | DI | Koin 3.5.6 | — |
-| 架构 | MVVM（ViewModel + StateFlow） | 2 个 ViewModel |
+| 架构 | MVVM + Domain Model（ViewModel + StateFlow + Repository 映射） | 2 个 ViewModel |
 | 网络 | Retrofit 2.9.0 + OkHttp 4.12.0 | WebDAV 备份 |
 | 文件 | DocumentFile 1.0.1 | SAF 目录选择 |
 | 图片 | Coil 2.6.0 | — |
 | 构建 | Gradle 9.5.1 + AGP 8.9.3 | — |
 | 编译 | Kotlin 2.1.0, Java 17, SDK 34, minSdk 24 | — |
 
-## 项目结构
+## 架构分层
 
 ```
 app/src/main/java/com/babytracker/
 ├── BabyTrackerApp.kt           # Application + Koin 启动
 ├── MainActivity.kt             # Compose Activity（dynamicColor=false）
+├── domain/model/Models.kt      # 纯数据类，无框架注解（LocalDateTime/LocalDate 类型）
+├── data/
+│   ├── mapper/Mappers.kt       # Entity ↔ Domain 转换扩展函数
+│   └── repository/Repositories.kt  # 7 个 Repository 接口 + 实现
 ├── core/
-│   ├── theme/
-│   │   ├── DesignTokens.kt     # DT 布局令牌 + 6 个 AppTheme + ThemeColors
-│   │   ├── Theme.kt            # MaterialTheme 封装 + ColorScheme/Typography/Shapes
-│   │   └── ThemeController.kt  # SharedPreferences 主题持久化
+│   ├── theme/...
 │   ├── database/
-│   │   ├── Entities.kt         # 8 个实体
+│   │   ├── Entities.kt         # 8 个 Room 实体（含注解）
 │   │   ├── dao/Daos.kt         # 8 个 DAO
 │   │   └── AppDatabase.kt      # Room DB（Migration 1→2）
 │   ├── di/Modules.kt           # Koin appModule + databaseModule
 │   ├── backup/BackupManager.kt # 本地备份 + SAF 目录备份 + JSON 导入数据
 │   └── util/DateUtils.kt       # 日期格式化 + 时长（支持秒级）
-├── data/repository/Repositories.kt  # 7 个 Repository 接口 + 实现
 └── ui/
     ├── navigation/AppNavigation.kt   # 路由定义（sealed class Screen）
     ├── home/                   # HomeScreen + HomeViewModel（含今日概览/最近记录/功能宫格）

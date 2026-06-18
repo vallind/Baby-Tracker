@@ -22,9 +22,10 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.HealthRepository
 
 import kotlinx.coroutines.launch
-import com.babytracker.core.database.entity.HealthRecordEntity
+import com.babytracker.domain.model.HealthRecord
 import org.koin.compose.koinInject
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -41,7 +42,7 @@ fun HealthScreen(navController: NavController) {
     if (babyId == 0) return
     val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }
+    var deletingRecord by remember { mutableStateOf<HealthRecord?>(null) }
     val scope = rememberCoroutineScope()
 
     Scaffold(topBar = {
@@ -64,7 +65,7 @@ fun HealthScreen(navController: NavController) {
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text(r.description, fontWeight = FontWeight.Medium, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
-                        Text("${healthCategoryLabels[r.category] ?: r.category} · ${DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${healthCategoryLabels[r.category] ?: r.category} · ${r.recordDate}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -107,7 +108,7 @@ fun HealthScreen(navController: NavController) {
 fun HealthFormDialog(
     babyId: Int,
     onDismiss: () -> Unit,
-    onSave: (HealthRecordEntity) -> Unit,
+    onSave: (HealthRecord) -> Unit,
 ) {
     var category by remember { mutableStateOf("allergy") }
     var description by remember { mutableStateOf("") }
@@ -178,7 +179,7 @@ fun HealthFormDialog(
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
-                    onSave(HealthRecordEntity(babyId = babyId, category = category, description = description, doctorName = doctorName.ifBlank { null }, recordDate = recordDate + "T00:00:00", note = note.ifBlank { null }))
+                    onSave(HealthRecord(babyId = babyId, category = category, description = description, doctorName = doctorName.ifBlank { null }, recordDate = LocalDate.parse(recordDate), note = note.ifBlank { null }))
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = MaterialTheme.shapes.small,

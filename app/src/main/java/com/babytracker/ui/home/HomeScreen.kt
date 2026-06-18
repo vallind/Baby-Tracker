@@ -75,7 +75,7 @@ fun HomeScreen(navController: NavController) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(baby.name, style = MaterialTheme.typography.headlineSmall)
                             Spacer(Modifier.width(8.dp))
-                            Text(DateUtils.monthAge(java.time.LocalDate.parse(baby.birthDate)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(DateUtils.monthAge(baby.birthDate), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.navigate(Screen.BabyManagement.route) }) {
@@ -233,9 +233,9 @@ fun RecentRecordsSection(items: List<RecentItem>) {
             val recentItems = items.take(5)
             val grouped = recentItems.groupBy { item ->
                 when (item) {
-                    is RecentItem.Feeding -> item.entity.timestamp.take(10)
-                    is RecentItem.Sleep -> item.entity.startTime.take(10)
-                    is RecentItem.Diaper -> item.entity.timestamp.take(10)
+                    is RecentItem.Feeding -> item.entity.timestamp.toLocalDate().toString()
+                    is RecentItem.Sleep -> item.entity.startTime.toLocalDate().toString()
+                    is RecentItem.Diaper -> item.entity.timestamp.toLocalDate().toString()
                 }
             }
             val showDates = grouped.size > 1
@@ -256,7 +256,7 @@ fun RecentRecordsSection(items: List<RecentItem>) {
                                 Text(DateUtils.feedingTypeLabel(e.type), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                                 Text(if (e.type == "breast") "${e.durationMin ?: 0}分钟" else "${e.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(e.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                            Text(e.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")), fontSize = 12.sp, color = c.textHint)
                         }
                         is RecentItem.Sleep -> {
                             val e = item.entity
@@ -264,9 +264,9 @@ fun RecentRecordsSection(items: List<RecentItem>) {
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(if (e.type == "night") "夜间睡眠" else "小睡", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(LocalDateTime.parse(e.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(e.endTime, DateTimeFormatter.ISO_DATE_TIME))), fontSize = 12.sp, color = c.textSecondary)
+                                Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(e.startTime, e.endTime)), fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(e.startTime.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                            Text(e.startTime.format(DateTimeFormatter.ofPattern("HH:mm")), fontSize = 12.sp, color = c.textHint)
                         }
                         is RecentItem.Diaper -> {
                             val e = item.entity
@@ -276,7 +276,7 @@ fun RecentRecordsSection(items: List<RecentItem>) {
                                 Text("换尿布", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                                 Text(DateUtils.diaperTypeLabel(e.type), fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(e.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                            Text(e.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")), fontSize = 12.sp, color = c.textHint)
                         }
                     }
                 }

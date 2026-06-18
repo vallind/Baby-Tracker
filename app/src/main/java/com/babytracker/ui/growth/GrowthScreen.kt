@@ -23,7 +23,7 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.GrowthEntity
+import com.babytracker.domain.model.Growth
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
@@ -45,7 +45,7 @@ fun GrowthScreen(navController: NavController) {
     val babyId = babyCtrl.currentBabyId
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
+    var deletingGrowth by remember { mutableStateOf<Growth?>(null) }
 
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
@@ -107,7 +107,7 @@ fun GrowthScreen(navController: NavController) {
                         chartData.forEachIndexed { i, g ->
                             if (i % maxOf(1, chartData.size / 5) == 0 || i == chartData.size - 1) {
                                 Text(
-                                    try { LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM/dd")) } catch (_: Exception) { "" },
+                                    g.measuredAt.format(DateTimeFormatter.ofPattern("MM/dd")),
                                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -116,7 +116,7 @@ fun GrowthScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(8.dp))
-            growths.filter { it.type == types[tab] }.sortedByDescending { it.measuredAt }.groupBy { it.measuredAt.take(10) }.forEach { (date, items) ->
+            growths.filter { it.type == types[tab] }.sortedByDescending { it.measuredAt }.groupBy { it.measuredAt.toLocalDate().toString() }.forEach { (date, items) ->
                 Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
                 items.forEach { g ->
                 AnimatedVisibility(
@@ -134,7 +134,7 @@ fun GrowthScreen(navController: NavController) {
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall)
-                            Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(DateUtils.formatDate(g.measuredAt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -176,7 +176,7 @@ fun GrowthScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) -> Unit) {
+fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Growth) -> Unit) {
     var type by remember { mutableStateOf("height") }
     var value by remember { mutableStateOf("") }
     var measuredAt by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
@@ -225,10 +225,10 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) 
 
             Button(
                 onClick = {
-                    onSave(GrowthEntity(
+                    onSave(Growth(
                         babyId = babyId, type = type,
                         value = value.toDoubleOrNull() ?: 0.0,
-                        measuredAt = measuredAt.replace(" ", "T") + ":00",
+                        measuredAt = LocalDateTime.parse(measuredAt.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
                         note = note.ifBlank { null },
                     ))
                 },

@@ -14,10 +14,9 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.VaccinationEntity
+import com.babytracker.domain.model.Vaccination
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
-import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.data.repository.BabyRepository
@@ -26,7 +25,6 @@ import com.babytracker.data.repository.VaccinationRepository
 import org.koin.compose.koinInject
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
@@ -44,7 +42,7 @@ fun VaccinationListScreen(navController: NavController) {
 
     var filter by remember { mutableStateOf("pending") }
     var showForm by remember { mutableStateOf(false) }
-    var deletingVac by remember { mutableStateOf<VaccinationEntity?>(null) }
+    var deletingVac by remember { mutableStateOf<Vaccination?>(null) }
     val scope = rememberCoroutineScope()
 
     Scaffold(topBar = {
@@ -72,7 +70,7 @@ fun VaccinationListScreen(navController: NavController) {
                             OutlinedButton(onClick = {
                                 scope.launch {
                                     val baby = babyRepo.getById(babyId)
-                                    val birthDate = baby?.birthDate ?: java.time.LocalDate.now().toString()
+                                    val birthDate = (baby?.birthDate ?: java.time.LocalDate.now()).toString()
                                     VaccineSchedule.createForBaby(babyId, birthDate).forEach { vacRepo.insert(it) }
                                 }
                             }, shape = MaterialTheme.shapes.small) {
@@ -94,7 +92,7 @@ fun VaccinationListScreen(navController: NavController) {
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text(v.name, style = MaterialTheme.typography.titleSmall)
-                            Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${v.scheduledDate}" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Box(Modifier.background(if (v.status == "done") c.green.copy(alpha = 0.1f) else c.tagBg, RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
                             Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = if (v.status == "done") c.green else c.tagText)
@@ -144,7 +142,7 @@ fun VaccinationListScreen(navController: NavController) {
 @Composable
 fun VaccinationFormDialog(
     babyId: Int,
-    onSave: (VaccinationEntity) -> Unit,
+    onSave: (Vaccination) -> Unit,
 ) {
     val c = LocalThemeColors.current
     var name by remember { mutableStateOf("") }
@@ -186,14 +184,14 @@ fun VaccinationFormDialog(
 
         Button(
             onClick = {
-                val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
-                val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
-                onSave(VaccinationEntity(
+                val scheduledDateObj = if (scheduledDate.isNotBlank()) LocalDate.parse(scheduledDate) else null
+                val administeredDateObj = if (administeredDate.isNotBlank()) LocalDate.parse(administeredDate) else null
+                onSave(Vaccination(
                     babyId = babyId,
                     name = name,
                     dose = dose.ifBlank { null },
-                    scheduledDate = scheduledDateTime,
-                    administeredDate = administeredDateTime,
+                    scheduledDate = scheduledDateObj,
+                    administeredDate = administeredDateObj,
                     status = status,
                     note = note.ifBlank { null }
                 ))
