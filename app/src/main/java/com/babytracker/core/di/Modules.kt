@@ -10,7 +10,7 @@ import com.babytracker.data.repository.*
 import com.babytracker.ui.stats.StatsViewModel
 import com.babytracker.ui.home.HomeViewModel
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
