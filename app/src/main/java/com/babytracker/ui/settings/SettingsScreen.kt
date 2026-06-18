@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.documentfile.provider.DocumentFile
-import com.babytracker.domain.model.Baby
+import com.babytracker.core.database.entity.BabyEntity
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import androidx.compose.material.icons.Icons
@@ -60,7 +60,7 @@ fun SettingsScreen(navController: NavController) {
             Spacer(Modifier.width(14.dp))
             Column {
                 Text(baby?.name ?: "未设置", style = MaterialTheme.typography.titleMedium)
-                Text("${baby?.let { DateUtils.monthAge(it.birthDate) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${baby?.let { DateUtils.monthAge(java.time.LocalDate.parse(it.birthDate)) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(24.dp))
@@ -68,9 +68,8 @@ fun SettingsScreen(navController: NavController) {
         SectionTitle("设置")
         Card(
             Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            shape = MaterialTheme.shapes.medium,
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Column {
                 SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
@@ -87,9 +86,8 @@ fun SettingsScreen(navController: NavController) {
         SectionTitle("其他")
         Card(
             Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            shape = MaterialTheme.shapes.medium,
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         ) {
             Column {
                 SettingsRow("ℹ️", "关于我们", onClick = { })
@@ -120,9 +118,9 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                     Card(
                         onClick = { themeCtrl.switchTheme(theme.name) },
                         modifier = Modifier.width(120.dp).height(96.dp),
-                        shape = MaterialTheme.shapes.small,
+                        shape = MaterialTheme.shapes.medium,
                         border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         colors = CardDefaults.cardColors(containerColor = theme.colors.card),
                     ) {
                         Box(Modifier.fillMaxSize().padding(12.dp)) {
@@ -192,14 +190,19 @@ fun BabyManagementScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     var showForm by remember { mutableStateOf(false) }
-    var editingBaby by remember { mutableStateOf<Baby?>(null) }
-    var showDeleteConfirm by remember { mutableStateOf<Baby?>(null) }
+    var editingBaby by remember { mutableStateOf<BabyEntity?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf<BabyEntity?>(null) }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("宝宝管理") },
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
             )
         },
         floatingActionButton = {
@@ -219,9 +222,9 @@ fun BabyManagementScreen(navController: NavController) {
                     Card(
                         onClick = { editingBaby = b; showForm = true },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        shape = MaterialTheme.shapes.small,
+                        shape = MaterialTheme.shapes.medium,
                         border = BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
@@ -238,7 +241,7 @@ fun BabyManagementScreen(navController: NavController) {
                                         }
                                     }
                                 }
-                                Text("${b.gender} · ${DateUtils.monthAge(b.birthDate)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (!isCurrent) {
                                 TextButton(onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() }) {
@@ -264,7 +267,7 @@ fun BabyManagementScreen(navController: NavController) {
                     if (editingBaby != null) babyRepo.update(baby)
                     else {
                         val babyId = babyRepo.insert(baby).toInt()
-                        VaccineSchedule.createForBaby(babyId, baby.birthDate.toString()).forEach { vacRepo.insert(it) }
+                        VaccineSchedule.createForBaby(babyId, baby.birthDate).forEach { vacRepo.insert(it) }
                     }
                 }
                 showForm = false
@@ -292,11 +295,11 @@ fun BabyManagementScreen(navController: NavController) {
 }
 
 @Composable
-fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
+fun BabyFormDialog(baby: BabyEntity?, onDismiss: () -> Unit, onSave: (BabyEntity) -> Unit) {
     val isEdit = baby != null
     var name by remember { mutableStateOf(baby?.name ?: "") }
     var gender by remember { mutableStateOf(baby?.gender ?: "男") }
-    var birthDate by remember { mutableStateOf(baby?.birthDate?.toString() ?: java.time.LocalDate.now().toString()) }
+    var birthDate by remember { mutableStateOf(baby?.birthDate ?: java.time.LocalDate.now().toString()) }
     var birthWeight by remember { mutableStateOf(baby?.birthWeight?.toString() ?: "") }
     var birthHeight by remember { mutableStateOf(baby?.birthHeight?.toString() ?: "") }
 
@@ -311,7 +314,7 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                     label = { Text("姓名") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.small,
+                    shape = MaterialTheme.shapes.medium,
                 )
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -330,7 +333,7 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                     label = { Text("出生日期 (yyyy-MM-dd)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.small,
+                    shape = MaterialTheme.shapes.medium,
                 )
 
                 OutlinedTextField(
@@ -340,7 +343,7 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.small,
+                    shape = MaterialTheme.shapes.medium,
                 )
 
                 OutlinedTextField(
@@ -350,21 +353,21 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.small,
+                    shape = MaterialTheme.shapes.medium,
                 )
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    onSave(Baby(
+                    onSave(BabyEntity(
                         id = baby?.id ?: 0,
                         name = name,
                         gender = gender,
-                        birthDate = java.time.LocalDate.parse(birthDate),
+                        birthDate = birthDate,
                         birthWeight = birthWeight.toDoubleOrNull(),
                         birthHeight = birthHeight.toDoubleOrNull(),
-                        createdAt = baby?.createdAt ?: java.time.LocalDateTime.now(),
+                        createdAt = baby?.createdAt ?: java.time.LocalDateTime.now().toString(),
                     ))
                 },
                 enabled = name.isNotBlank(),
@@ -424,19 +427,23 @@ fun BackupScreen(navController: NavController) {
     }
 
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("备份管理") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
+        CenterAlignedTopAppBar(title = { Text("备份管理") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ))
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = DT.pageMargin.dp)) {
             Card(
                 Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Folder, contentDescription = "本地备份", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
@@ -448,7 +455,7 @@ fun BackupScreen(navController: NavController) {
                     OutlinedButton(
                         onClick = { dirPicker.launch(null) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.small,
+                        shape = MaterialTheme.shapes.medium,
                     ) {
                         Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
@@ -476,7 +483,7 @@ fun BackupScreen(navController: NavController) {
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.small,
+                        shape = MaterialTheme.shapes.medium,
                     ) { Text("开始备份") }
                 }
             }
@@ -487,9 +494,8 @@ fun BackupScreen(navController: NavController) {
 
             Card(
                 Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -512,7 +518,7 @@ fun BackupScreen(navController: NavController) {
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(value = webdavUser, onValueChange = { webdavUser = it }, label = { Text("用户名") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small)
                         Spacer(Modifier.height(8.dp))
-                        OutlinedTextField(value = webdavPass, onValueChange = { webdavPass = it }, label = { Text("密码") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.small, visualTransformation = PasswordVisualTransformation())
+                        OutlinedTextField(value = webdavPass, onValueChange = { webdavPass = it }, label = { Text("密码") }, modifier = Modifier.fillMaxWidth(), singleLine = true, shape = MaterialTheme.shapes.medium, visualTransformation = PasswordVisualTransformation())
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(onClick = {
@@ -547,9 +553,8 @@ fun BackupScreen(navController: NavController) {
 
             Card(
                 Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                shape = MaterialTheme.shapes.medium,
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -566,7 +571,7 @@ fun BackupScreen(navController: NavController) {
                     Button(
                         onClick = { restorePicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.small,
+                        shape = MaterialTheme.shapes.medium,
                         enabled = !restoring,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                     ) { Text(if (restoring) "恢复中..." else "选择备份文件", style = MaterialTheme.typography.bodyMedium) }

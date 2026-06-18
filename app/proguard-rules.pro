@@ -1,28 +1,44 @@
-# --- Room ---
--keep class * extends androidx.room.RoomDatabase
--keep @androidx.room.Entity class *
--keep @androidx.room.Dao class *
--dontwarn androidx.room.paging.**
+# === Project-specific keep rules ===
 
-# --- Koin ---
+# Room entities (反射访问字段)
+-keep class com.babytracker.core.database.entity.** { *; }
+
+# Koin (反射实例化 ViewModel / Repository)
+-keep class com.babytracker.** { <init>(...); }
 -keep class org.koin.** { *; }
--keep class com.babytracker.core.di.** { *; }
+-dontwarn org.koin.**
 
-# --- Retrofit / OkHttp ---
--keepattributes Signature, *Annotation*, InnerClasses, EnclosingMethod
--keep class retrofit2.** { *; }
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
+# Retrofit / OkHttp
+-keepattributes Signature, InnerClasses, EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
+-keepclassmembers,allowshrinking,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
 -dontwarn okhttp3.**
 -dontwarn okio.**
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keep class okhttp3.** { *; }
+-keep class okio.** { *; }
 
-# --- JSON ---
--keep class org.json.** { *; }
+# Gson (Retrofit converter)
+-keepattributes Signature
+-keep class com.google.gson.** { *; }
+-keep class sun.misc.Unsafe { *; }
 
-# --- App entities (Room / Gson / reflection) ---
--keep class com.babytracker.core.database.entity.** { *; }
--keep class com.babytracker.core.backup.** { *; }
+# Coroutines
+-keep class kotlinx.coroutines.android.AndroidExceptionPreHandler { *; }
+-keep class kotlinx.coroutines.android.AndroidDispatcherFactory { *; }
+-dontwarn kotlinx.coroutines.**
 
-# --- Coroutines ---
--keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
--keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+# Compose
+-keep class androidx.compose.** { *; }
+-dontwarn androidx.compose.**
+
+# Coil
+-keep class coil.** { *; }
+-dontwarn coil.**
+
+# Keep R class
+-keep class **.R { *; }
+-keep class **.R$* { *; }

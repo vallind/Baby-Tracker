@@ -23,14 +23,17 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.domain.model.Growth
+import com.babytracker.core.database.entity.GrowthEntity
 import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.GrowthRepository
-
 import kotlinx.coroutines.launch
+import com.babytracker.ui.components.rememberHaptic
+import com.babytracker.ui.components.longPressDeletable
+import com.babytracker.ui.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -41,25 +44,25 @@ fun GrowthScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val growthRepo: GrowthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
+    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
+    if (babyId == 0) return
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingGrowth by remember { mutableStateOf<Growth?>(null) }
+    var deletingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
 
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
     val types = listOf("height", "weight", "head")
 
-    if (babyId == 0) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("请先添加宝宝", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        return
-    }
-
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("生长记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
+        CenterAlignedTopAppBar(title = { Text("生长记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ))
     }, floatingActionButton = {
         FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary) {
             Icon(Icons.Default.Add, contentDescription = "添加记录", tint = Color.White)
@@ -75,39 +78,82 @@ fun GrowthScreen(navController: NavController) {
             }
             Spacer(Modifier.height(8.dp))
             val chartData = remember(growths, tab) { growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt } }
+            if (chartData.isEmpty()) {
+                EmptyState(
+                    emoji = when (tab) { 0 -> "📏"; 1 -> "⚖️"; else -> "📐" },
+                    title = "还没有${tabs[tab]}记录",
+                    subtitle = "点击右下角按钮，记录宝宝的${tabs[tab]}变化",
+                )
+            }
             val chartProgress by animateFloatAsState(
                 targetValue = if (chartData.size > 1) 1f else 0f,
                 animationSpec = tween(durationMillis = 800),
             )
-            val minVal = remember(chartData) { chartData.minOfOrNull { it.value } }
-            val maxVal = remember(chartData) { chartData.maxOfOrNull { it.value } }
             val gridColor = MaterialTheme.colorScheme.outlineVariant
             val lineColor = MaterialTheme.colorScheme.primary
             val bgColor = MaterialTheme.colorScheme.background
+            val areaBrush = Gradients.chartArea(c)
+            // 动态刻度：基于实际数据 min/max
+            val minVal = chartData.minOfOrNull { it.value } ?: 0.0
+            val maxVal = chartData.maxOfOrNull { it.value } ?: 100.0
+            val range = (maxVal - minVal).coerceAtLeast(1.0)
+            val yLabels = remember(minVal, maxVal) {
+                (0..3).map { i ->
+                    val v = maxVal - (range * i / 3)
+                    String.format("%.1f", v)
+                }
+            }
             Box(Modifier.fillMaxWidth().height(300.dp)) {
                 Column(Modifier.fillMaxHeight().width(36.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.SpaceBetween) {
-                    val labels = if (minVal != null && maxVal != null) {
-                        (0..4).map { i -> "%.1f".format(maxVal - (maxVal - minVal) * i / 4.0) }
-                    } else listOf("--", "--", "--", "--", "--")
-                    labels.forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    yLabels.forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
                     val w = size.width; val h = size.height
+                    // 网格线
                     for (i in 0..3) { drawLine(gridColor, Offset(0f, h * i / 4), Offset(w, h * i / 4), strokeWidth = 1f) }
-                    if (chartData.size > 1 && chartProgress > 0f && minVal != null && maxVal != null) {
-                        val range = (maxVal - minVal).coerceAtLeast(1.0)
+                    // WHO 参考百分位虚线（仅当有数据且类型为 weight/height 时显示）
+                    val whoLines = whoReferenceLines(types[tab], minVal, maxVal, range)
+                    whoLines.forEach { percentile ->
+                        val y = h * (1f - ((percentile - minVal) / range).toFloat()).coerceIn(0f, h)
+                        val dashed = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                        drawLine(
+                            color = lineColor.copy(alpha = 0.25f),
+                            start = Offset(0f, y),
+                            end = Offset(w, y),
+                            strokeWidth = 1f,
+                            pathEffect = dashed,
+                        )
+                    }
+                    if (chartData.size > 1 && chartProgress > 0f) {
                         val points = chartData.mapIndexed { i, g -> Offset(w * i / (chartData.size - 1), h * (1f - ((g.value - minVal) / range).toFloat())) }
                         val visibleCount = ((points.size - 1) * chartProgress).toInt().coerceIn(0, points.size - 1)
-                        for (i in 0 until visibleCount) { drawLine(lineColor, points[i], points[i + 1], strokeWidth = 3.dp.toPx()) }
-                        for (i in 0..visibleCount) { drawCircle(lineColor, 4.dp.toPx(), points[i]); drawCircle(bgColor, 2.dp.toPx(), points[i]) }
+                        // 渐变填充区域
+                        val areaPath = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(points[0].x, h)
+                            for (i in 0..visibleCount) { lineTo(points[i].x, points[i].y) }
+                            lineTo(points[visibleCount].x, h)
+                            close()
+                        }
+                        drawPath(areaPath, brush = areaBrush)
+                        // 折线
+                        for (i in 0 until visibleCount) { drawLine(lineColor, points[i], points[i + 1], strokeWidth = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round) }
+                        // 数据点：双层圆
+                        for (i in 0..visibleCount) {
+                            drawCircle(lineColor, 5.dp.toPx(), points[i])
+                            drawCircle(bgColor, 2.5.dp.toPx(), points[i])
+                        }
+                    } else if (chartData.size == 1) {
+                        drawCircle(lineColor, 5.dp.toPx(), Offset(w / 2, h / 2))
+                        drawCircle(bgColor, 2.5.dp.toPx(), Offset(w / 2, h / 2))
                     }
                 }
-                if (chartData.size > 1) {
+                val data2 = chartData  // 复用同一变量，避免重复计算
+                if (data2.size > 1) {
                     Row(Modifier.fillMaxWidth().padding(start = 36.dp, top = 300.dp - 20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        chartData.forEachIndexed { i, g ->
-                            if (i % maxOf(1, chartData.size / 5) == 0 || i == chartData.size - 1) {
+                        data2.forEachIndexed { i, g ->
+                            if (i % maxOf(1, data2.size / 5) == 0 || i == data2.size - 1) {
                                 Text(
-                                    g.measuredAt.format(DateTimeFormatter.ofPattern("MM/dd")),
+                                    try { LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM/dd")) } catch (_: Exception) { "" },
                                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -116,7 +162,7 @@ fun GrowthScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(8.dp))
-            growths.filter { it.type == types[tab] }.sortedByDescending { it.measuredAt }.groupBy { it.measuredAt.toLocalDate().toString() }.forEach { (date, items) ->
+            growths.filter { it.type == types[tab] }.sortedByDescending { it.measuredAt }.groupBy { it.measuredAt.take(10) }.forEach { (date, items) ->
                 Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
                 items.forEach { g ->
                 AnimatedVisibility(
@@ -124,17 +170,16 @@ fun GrowthScreen(navController: NavController) {
                     enter = fadeIn() + slideInVertically { it / 2 },
                 ) {
                 Card(
-                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().combinedClickable(onLongClick = { deletingGrowth = g }, onClick = {}),
-                    shape = MaterialTheme.shapes.small,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingGrowth = g },
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
                     Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(c.green.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall)
-                            Text(DateUtils.formatDate(g.measuredAt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -176,7 +221,7 @@ fun GrowthScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Growth) -> Unit) {
+fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) -> Unit) {
     var type by remember { mutableStateOf("height") }
     var value by remember { mutableStateOf("") }
     var measuredAt by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
@@ -204,14 +249,14 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Growth) -> Uni
                 label = { Text("数值") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                shape = MaterialTheme.shapes.small,
+                shape = MaterialTheme.shapes.medium,
             )
 
             OutlinedTextField(
                 value = measuredAt, onValueChange = {}, readOnly = true,
                 label = { Text("测量时间") }, singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showDatePicker = true },
-                shape = MaterialTheme.shapes.small, enabled = false,
+                shape = MaterialTheme.shapes.medium, enabled = false,
                 colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant),
             )
 
@@ -219,21 +264,21 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Growth) -> Uni
                 value = note, onValueChange = { note = it },
                 label = { Text("备注 (可选)") }, singleLine = false,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                shape = MaterialTheme.shapes.small,
+                shape = MaterialTheme.shapes.medium,
                 minLines = 2,
             )
 
             Button(
                 onClick = {
-                    onSave(Growth(
+                    onSave(GrowthEntity(
                         babyId = babyId, type = type,
                         value = value.toDoubleOrNull() ?: 0.0,
-                        measuredAt = LocalDateTime.parse(measuredAt.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
+                        measuredAt = measuredAt.replace(" ", "T") + ":00",
                         note = note.ifBlank { null },
                     ))
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = MaterialTheme.shapes.small,
+                shape = MaterialTheme.shapes.medium,
             ) { Text("保存") }
             Spacer(Modifier.height(24.dp))
         }
@@ -286,4 +331,24 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Growth) -> Uni
             }) { Text("确定") }
         }, dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("取消") } })
     }
+}
+/**
+ * WHO 0-2 岁参考百分位（简化版，仅作图表参考虚线使用）。
+ * 返回当前数据范围内可见的百分位值列表。
+ *
+ * 数据来源：WHO Child Growth Standards（男孩/女孩 0-2 岁平均值，取近似中位 ± 偏移）。
+ * 简化处理：只返回与当前数据 [minVal, maxVal] 范围有交集的中位/15th/85th 三条线。
+ */
+private fun whoReferenceLines(type: String, minVal: Double, maxVal: Double, range: Double): List<Double> {
+    // 各类型 6 月龄参考值（中位数）
+    val median = when (type) {
+        "height" -> 67.0  // 6 月龄身高中位 cm
+        "weight" -> 7.5   // 6 月龄体重中位 kg
+        "head" -> 43.0    // 6 月龄头围中位 cm
+        else -> return emptyList()
+    }
+    // 生成 3 条参考线：85th / 50th / 15th
+    val offsets = listOf(0.10, 0.0, -0.10)  // +10% / 中位 / -10%
+    return offsets.map { median * (1 + it) }
+        .filter { it in (minVal - range * 0.2)..(maxVal + range * 0.2) }
 }

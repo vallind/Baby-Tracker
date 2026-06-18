@@ -1,34 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">宝宝记录</string>
-
-    <!-- Diets -->
-    <string name="feeding">喂养记录</string>
-    <string name="add_feeding">记录喂养</string>
-    <string name="sleep">睡眠记录</string>
-    <string name="diaper">尿布记录</string>
-    <string name="growth">生长记录</string>
-    <string name="vaccination">疫苗接种</string>
-    <string name="health">健康档案</string>
-    <string name="stats">统计分析</string>
-    <string name="settings">设置</string>
-
-    <!-- Actions -->
-    <string name="save">保存</string>
-    <string name="cancel">取消</string>
-    <string name="delete">删除</string>
-    <string name="confirm_delete">确定要删除这条记录吗？</string>
-    <string name="add_baby">添加宝宝</string>
-
-    <!-- Empty states -->
-    <string name="no_records">暂无记录</string>
-    <string name="no_baby">请先添加宝宝</string>
-
-    <!-- Backup -->
-    <string name="backup">备份管理</string>
-    <string name="local_backup">本地备份</string>
-    <string name="webdav_backup">WebDAV 云备份</string>
-    <string name="restore">恢复备份</string>
-    <string name="backup_success">备份完成</string>
-    <string name="backup_failed">备份失败</string>
+    <color name="splash_bg">#FFE8E0</color>
 </resources>

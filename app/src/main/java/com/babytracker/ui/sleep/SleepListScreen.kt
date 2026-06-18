@@ -16,55 +16,69 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.domain.model.Sleep
+import com.babytracker.core.database.entity.SleepEntity
 import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.SleepRepository
-
 import kotlinx.coroutines.launch
+import com.babytracker.ui.components.longPressDeletable
+import com.babytracker.ui.components.EmptyState
+import com.babytracker.ui.components.rememberHaptic
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-private const val NIGHT_GOAL_HOURS = 14
-private const val NIGHT_GOAL_SECONDS = NIGHT_GOAL_HOURS * 3600
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SleepListScreen(navController: NavController) {
+    val c = LocalThemeColors.current
     val sleepRepo: SleepRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
+    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingSleep by remember { mutableStateOf<Sleep?>(null) }
+    var deletingSleep by remember { mutableStateOf<SleepEntity?>(null) }
 
     val today = java.time.LocalDate.now().toString()
-    val night = sleeps.filter { it.type == "night" && it.startTime.toLocalDate().toString() == today }.firstOrNull()
-    val nightDurSec = night?.let { java.time.Duration.between(it.startTime, it.endTime).seconds.coerceAtLeast(0) } ?: 0L
+    val night = sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }.firstOrNull()
+    val nightDurSec = night?.let { DateUtils.durationToTotalSeconds(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)) } ?: 0
     val nightRange = night?.let {
-        val s = it.startTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-        val e = it.endTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        val s = LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
+        val e = LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
         "$s-$e"
-    } ?: ""
+    } ?: "--"
 
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("睡眠记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
+        CenterAlignedTopAppBar(title = { Text("睡眠记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ))
     }, floatingActionButton = {
         FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary) {
-            Icon(Icons.Default.Add, contentDescription = "添加睡眠记录")
+            Icon(Icons.Default.Add, contentDescription = null)
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+            if (sleeps.isEmpty()) {
+                EmptyState(
+                    emoji = "😴",
+                    title = "还没有睡眠记录",
+                    subtitle = "点击右下角按钮，记录宝宝的睡眠时间",
+                )
+            }
             Card(
                 Modifier.fillMaxWidth().padding(horizontal = DT.pageMargin.dp, vertical = 16.dp),
-                shape = MaterialTheme.shapes.small,
+                shape = MaterialTheme.shapes.medium,
                 border = BorderStroke(1.dp, Color(0xFF312E81)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1B4B)),
             ) {
                 Column(Modifier.padding(20.dp)) {
@@ -79,24 +93,24 @@ fun SleepListScreen(navController: NavController) {
                         Text("🌙", style = MaterialTheme.typography.headlineLarge)
                     }
                     Spacer(Modifier.height(16.dp))
-                    val goalPercent = (nightDurSec.toFloat() / NIGHT_GOAL_SECONDS.toFloat()).coerceIn(0f, 1f)
+                    val goalSeconds = 14L * 3600L  // 14h 推荐夜间睡眠时长
+                    val goalPercent = (nightDurSec.toFloat() / goalSeconds.toFloat()).coerceIn(0f, 1f)
                     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.1f))) {
-                        Box(Modifier.fillMaxWidth(goalPercent).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF60A5FA), Color(0xFF2563EB)))))
+                        Box(Modifier.fillMaxWidth(goalPercent).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(Gradients.progress(c)))
                     }
                 }
             }
             Spacer(Modifier.height(16.dp))
-            val grouped = sleeps.groupBy { it.startTime.toLocalDate().toString() }
+            val grouped = sleeps.groupBy { it.startTime.take(10) }
             grouped.forEach { (date, items) ->
                 Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
                 items.forEach { s ->
-                val start = s.startTime
-                val end = s.endTime
+                val start = LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME)
+                val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
                 Card(
-                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().combinedClickable(onLongClick = { deletingSleep = s }, onClick = {}),
-                    shape = MaterialTheme.shapes.small,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingSleep = s },
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
                     Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge)
@@ -157,19 +171,19 @@ fun SleepFormDialog(babyId: Int, sleepRepo: SleepRepository, onDismiss: () -> Un
                 FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("☀️ 小睡") })
             }
             Spacer(Modifier.height(16.dp))
-            OutlinedTextField(value = startTime, onValueChange = {}, readOnly = true, label = { Text("开始时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.small, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
+            OutlinedTextField(value = startTime, onValueChange = {}, readOnly = true, label = { Text("开始时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = endTime, onValueChange = {}, readOnly = true, label = { Text("结束时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.small, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
+            OutlinedTextField(value = endTime, onValueChange = {}, readOnly = true, label = { Text("结束时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small)
             Spacer(Modifier.height(20.dp))
             Button(onClick = {
                 scope.launch {
-                    sleepRepo.insert(Sleep(
+                    sleepRepo.insert(SleepEntity(
                         babyId = babyId,
                         type = selectedType,
-                        startTime = LocalDateTime.parse(startTime.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
-                        endTime = LocalDateTime.parse(endTime.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
+                        startTime = startTime.replace(" ", "T") + ":00",
+                        endTime = endTime.replace(" ", "T") + ":00",
                         note = note.ifBlank { null },
                     ))
                     onDismiss()

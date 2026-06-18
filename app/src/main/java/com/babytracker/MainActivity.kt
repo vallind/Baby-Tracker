@@ -9,6 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.babytracker.core.theme.BabyTrackerTheme
 import com.babytracker.core.theme.ThemeController
 import com.babytracker.ui.navigation.AppNavigation
@@ -18,11 +19,13 @@ class MainActivity : ComponentActivity() {
     private val themeController: ThemeController by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // SplashScreen 必须在 super.onCreate 之前调用
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             val theme = themeController.currentTheme
-            BabyTrackerTheme(theme) {
+            BabyTrackerTheme(theme, dynamicColor = false) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     AppNavigation()
                 }

@@ -5,6 +5,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Period
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 object DateUtils {
     private val dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -18,6 +19,25 @@ object DateUtils {
     fun formatDateTime(dt: LocalDateTime) = dt.format(dateTimeFmt)
     fun parseDate(s: String) = LocalDate.parse(s, dateFmt)
     fun parseDateTime(s: String) = LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME)
+
+    /**
+     * 安全解析 ISO 日期时间字符串。失败返回 null。
+     * 用于 UI 层避免散落 try-catch。
+     */
+    fun safeParseDateTime(s: String?): LocalDateTime? {
+        if (s.isNullOrBlank()) return null
+        return try { LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME) } catch (_: DateTimeParseException) { null } catch (_: Exception) { null }
+    }
+
+    /**
+     * 安全解析日期字符串（yyyy-MM-dd 或 ISO_DATE_TIME）。失败返回 null。
+     */
+    fun safeParseDate(s: String?): LocalDate? {
+        if (s.isNullOrBlank()) return null
+        return try {
+            if (s.length >= 10) LocalDate.parse(s.take(10), dateFmt) else null
+        } catch (_: DateTimeParseException) { null } catch (_: Exception) { null }
+    }
 
     fun monthAge(birthDate: LocalDate): String {
         val now = LocalDate.now()

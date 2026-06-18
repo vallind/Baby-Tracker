@@ -42,17 +42,16 @@ val BabyTrackerTypography = Typography(
 )
 
 val BabyTrackerShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(24.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(32.dp),
 )
 
-fun AppTheme.toColorScheme(): androidx.compose.material3.ColorScheme {
+fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.ColorScheme {
     val c = colors
-    val useDark = name == "night"
-    val scheme = if (useDark) darkColorScheme(
+    return if (isDark) darkColorScheme(
         primary = c.primary,
         onPrimary = c.card,
         primaryContainer = c.primaryLight,
@@ -97,17 +96,18 @@ fun AppTheme.toColorScheme(): androidx.compose.material3.ColorScheme {
         errorContainer = c.tagBg,
         scrim = Color.Black.copy(alpha = 0.32f),
     )
-    return scheme
 }
 
 @Composable
 fun BabyTrackerTheme(
     theme: AppTheme = AppTheme.pure,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val colorScheme = theme.toColorScheme()
     val darkTheme = theme.name == "night"
+
+    val colorScheme = theme.toColorScheme(isDark = darkTheme)
 
     SideEffect {
         val activity = context as? Activity

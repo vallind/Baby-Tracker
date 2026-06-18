@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -21,13 +22,18 @@ import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.ui.components.BabyIllustration
 import com.babytracker.ui.components.BabyPose
+import com.babytracker.ui.components.EmptyState
 import com.babytracker.ui.navigation.Screen
 import com.babytracker.data.repository.BabyRepository
+import com.babytracker.core.database.entity.FeedingEntity
+import com.babytracker.core.database.entity.SleepEntity
+import com.babytracker.core.database.entity.DiaperEntity
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -38,7 +44,7 @@ fun HomeScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val viewModel: HomeViewModel = koinInject()
+    val viewModel: HomeViewModel = org.koin.androidx.compose.koinViewModel()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val currentBabyId = babyCtrl.currentBabyId
     val baby = babies.find { it.id == currentBabyId } ?: babies.firstOrNull()
@@ -54,40 +60,39 @@ fun HomeScreen(navController: NavController) {
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
         if (baby == null) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("还没有添加宝宝", fontSize = 14.sp, color = c.textSecondary)
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { navController.navigate(Screen.BabyManagement.route) }, shape = RoundedCornerShape(DT.buttonRadius.dp)) {
-                        Text("添加宝宝")
-                    }
-                }
-            }
+            EmptyState(
+                emoji = "🍼",
+                title = "还没有添加宝宝",
+                subtitle = "点击下方按钮，记录宝宝成长的每一个瞬间",
+                actionText = "添加宝宝",
+                onAction = { navController.navigate(Screen.BabyManagement.route) },
+                modifier = Modifier.padding(padding),
+            )
             return@Scaffold
         }
 
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             Box(
-                Modifier.fillMaxWidth().background(c.primaryLight).padding(horizontal = DT.pageMargin.dp),
+                Modifier.fillMaxWidth().background(Gradients.primarySoft(c)).padding(horizontal = DT.pageMargin.dp),
             ) {
                 Row(Modifier.padding(vertical = 24.dp)) {
                     Column(Modifier.weight(1f).fillMaxHeight().padding(end = 16.dp), verticalArrangement = Arrangement.Center) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(baby.name, style = MaterialTheme.typography.headlineSmall)
+                            Text(baby.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.width(8.dp))
-                            Text(DateUtils.monthAge(baby.birthDate), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(DateUtils.monthAge(java.time.LocalDate.parse(baby.birthDate)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { navController.navigate(Screen.BabyManagement.route) }) {
-                            Text("宝宝资料", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Text("宝宝资料", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                             Text(" →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                     Box(
-                        Modifier.size(72.dp).clip(CircleShape).background(c.primary.copy(alpha = 0.15f)),
+                        Modifier.size(72.dp).clip(CircleShape).background(Gradients.primary(c)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text(baby.name.take(1), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = c.primary)
+                        Text(baby.name.take(1), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -138,19 +143,20 @@ fun BottomNavBar(navController: NavController) {
 
 @Composable
 fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
+    val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
+    val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
     Card(
         Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().height(120.dp),
-        shape = MaterialTheme.shapes.small,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Row {
-            StatCell("🍼", feedCount.toString(), "喂养次数")
+            StatCell("🍼", animatedFeed.toString(), "喂养次数")
             StatDivider()
             StatCell("😴", sleepHours, "睡眠时长")
             StatDivider()
-            StatCell("🧷", diaperCount.toString(), "换尿布")
+            StatCell("🧷", animatedDiaper.toString(), "换尿布")
         }
     }
 }
@@ -189,26 +195,28 @@ fun FeatureGrid(navController: NavController) {
         Spacer(Modifier.height(14.dp))
         Card(
             Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            shape = MaterialTheme.shapes.medium,
+            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        row.forEach { (screenAndEmoji, label) ->
-                            val (screen, emoji) = screenAndEmoji
-                            Column(
-                                Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(12.dp)).clickable { navController.navigate(screen.route) },
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
-                            ) {
-                                Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(colors[items.indexOf(screenAndEmoji to label) % colors.size].copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
-                                    Text(emoji, fontSize = 22.sp)
+                items.forEachIndexed { globalIndex, (screenAndEmoji, label) ->
+                    val (screen, emoji) = screenAndEmoji
+                    // 每行 3 个；用 weight 布局
+                    if (globalIndex % 3 == 0) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            // 当前项
+                            FeatureGridItem(screen, emoji, label, colors[globalIndex % colors.size], navController, Modifier.weight(1f))
+                            // 占位后续 2 个
+                            for (j in 1..2) {
+                                val nextIdx = globalIndex + j
+                                if (nextIdx < items.size) {
+                                    val (nScreen, nEmoji) = items[nextIdx].first
+                                    val nLabel = items[nextIdx].second
+                                    FeatureGridItem(nScreen, nEmoji, nLabel, colors[nextIdx % colors.size], navController, Modifier.weight(1f))
+                                } else {
+                                    Spacer(Modifier.weight(1f))
                                 }
-                                Spacer(Modifier.height(8.dp))
-                                Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                             }
                         }
                     }
@@ -219,23 +227,45 @@ fun FeatureGrid(navController: NavController) {
 }
 
 @Composable
-fun RecentRecordsSection(items: List<RecentItem>) {
+private fun FeatureGridItem(
+    screen: com.babytracker.ui.navigation.Screen,
+    emoji: String,
+    label: String,
+    color: androidx.compose.ui.graphics.Color,
+    navController: NavController,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier.aspectRatio(1f).clip(RoundedCornerShape(16.dp)).clickable { navController.navigate(screen.route) },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(color.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+            Text(emoji, fontSize = 22.sp)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+fun RecentRecordsSection(items: List<Any>) {
     val c = LocalThemeColors.current
     Card(
         Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth(),
-        shape = RoundedCornerShape(DT.cardRadius.dp),
-        border = BorderStroke(1.dp, c.cardBorder),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(Modifier.padding(20.dp)) {
             Text("最近记录", fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 14.dp))
             val recentItems = items.take(5)
             val grouped = recentItems.groupBy { item ->
                 when (item) {
-                    is RecentItem.Feeding -> item.entity.timestamp.toLocalDate().toString()
-                    is RecentItem.Sleep -> item.entity.startTime.toLocalDate().toString()
-                    is RecentItem.Diaper -> item.entity.timestamp.toLocalDate().toString()
+                    is FeedingEntity -> item.timestamp.take(10)
+                    is SleepEntity -> item.startTime.take(10)
+                    is DiaperEntity -> item.timestamp.take(10)
+                    else -> ""
                 }
             }
             val showDates = grouped.size > 1
@@ -248,35 +278,32 @@ fun RecentRecordsSection(items: List<RecentItem>) {
                 groupItems.forEach { item ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     when (item) {
-                        is RecentItem.Feeding -> {
-                            val e = item.entity
-                            Text(when (e.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }, fontSize = 20.sp)
+                        is FeedingEntity -> {
+                            Text(when (item.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }, fontSize = 20.sp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(DateUtils.feedingTypeLabel(e.type), fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(if (e.type == "breast") "${e.durationMin ?: 0}分钟" else "${e.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
+                                Text(DateUtils.feedingTypeLabel(item.type), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text(if (item.type == "breast") "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(e.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")), fontSize = 12.sp, color = c.textHint)
+                            Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
                         }
-                        is RecentItem.Sleep -> {
-                            val e = item.entity
-                            Text(if (e.type == "night") "🌙" else "☀️", fontSize = 20.sp)
+                        is SleepEntity -> {
+                            Text(if (item.type == "night") "🌙" else "☀️", fontSize = 20.sp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(if (e.type == "night") "夜间睡眠" else "小睡", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(e.startTime, e.endTime)), fontSize = 12.sp, color = c.textSecondary)
+                                Text(if (item.type == "night") "夜间睡眠" else "小睡", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(LocalDateTime.parse(item.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(item.endTime, DateTimeFormatter.ISO_DATE_TIME))), fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(e.startTime.format(DateTimeFormatter.ofPattern("HH:mm")), fontSize = 12.sp, color = c.textHint)
+                            Text(item.startTime.substring(11, 16), fontSize = 12.sp, color = c.textHint)
                         }
-                        is RecentItem.Diaper -> {
-                            val e = item.entity
+                        is DiaperEntity -> {
                             Text("🧷", fontSize = 20.sp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text("换尿布", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(DateUtils.diaperTypeLabel(e.type), fontSize = 12.sp, color = c.textSecondary)
+                                Text(DateUtils.diaperTypeLabel(item.type), fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(e.timestamp.format(DateTimeFormatter.ofPattern("HH:mm")), fontSize = 12.sp, color = c.textHint)
+                            Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
                         }
                     }
                 }

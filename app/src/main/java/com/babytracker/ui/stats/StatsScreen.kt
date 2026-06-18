@@ -17,14 +17,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.util.BabyController
-import com.babytracker.data.repository.BabyRepository
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(navController: NavController) {
     val c = LocalThemeColors.current
-    val viewModel: StatsViewModel = koinInject()
+    val viewModel: StatsViewModel = org.koin.androidx.compose.koinViewModel()
     val state by viewModel.state.collectAsState()
 
     val babyCtrl: BabyController = koinInject()
@@ -36,7 +35,12 @@ fun StatsScreen(navController: NavController) {
     }
 
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("统计分析") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
+        CenterAlignedTopAppBar(title = { Text("统计分析") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ))
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             Row(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -78,9 +82,8 @@ fun StatsScreen(navController: NavController) {
 fun RowScope.StatCard(title: String, value: String, points: List<Float>, accent: Color) {
     Card(
         Modifier.weight(1f),
-        shape = MaterialTheme.shapes.small,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(Modifier.padding(20.dp)) {
             Text(title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -13,14 +13,16 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.domain.model.Diaper
+import com.babytracker.core.database.entity.DiaperEntity
 import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.DiaperRepository
-
 import kotlinx.coroutines.launch
+import com.babytracker.ui.components.rememberHaptic
+import com.babytracker.ui.components.longPressDeletable
+import com.babytracker.ui.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -30,37 +32,49 @@ import java.time.format.DateTimeFormatter
 fun DiaperListScreen(navController: NavController) {
     val diaperRepo: DiaperRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
+    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var deletingDiaper by remember { mutableStateOf<Diaper?>(null) }
+    var deletingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
 
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("尿布记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
+        CenterAlignedTopAppBar(title = { Text("尿布记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            ))
     }, floatingActionButton = {
         FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary) {
             Icon(Icons.Default.Add, null, tint = Color.White)
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            val grouped = diapers.groupBy { it.timestamp.toLocalDate().toString() }
+            if (diapers.isEmpty()) {
+                EmptyState(
+                    emoji = "🧷",
+                    title = "还没有尿布记录",
+                    subtitle = "点击右下角按钮，记录每次换尿布",
+                )
+            }
+            val grouped = diapers.groupBy { it.timestamp.take(10) }
             grouped.forEach { (date, items) ->
                 Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
                 items.forEach { d ->
                 Card(
-                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().combinedClickable(onLongClick = { deletingDiaper = d }, onClick = {}),
-                    shape = MaterialTheme.shapes.small,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingDiaper = d },
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                 ) {
                     Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("🧷", style = MaterialTheme.typography.titleLarge)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall)
-                            Text(d.timestamp.format(DateTimeFormatter.ofPattern("MM-dd HH:mm")), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -101,7 +115,7 @@ fun DiaperListScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiaperFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Diaper) -> Unit) {
+fun DiaperFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (DiaperEntity) -> Unit) {
     var selectedType by remember { mutableStateOf("wet") }
     val now = LocalDateTime.now()
     var diaperDateTime by remember { mutableStateOf(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
@@ -125,21 +139,21 @@ fun DiaperFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (Diaper) -> Uni
             }
 
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = diaperDateTime, onValueChange = {}, readOnly = true, label = { Text("时间") }, modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.small, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
+            OutlinedTextField(value = diaperDateTime, onValueChange = {}, readOnly = true, label = { Text("时间") }, modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注 (可选)") }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small)
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
-                    onSave(Diaper(
+                    onSave(DiaperEntity(
                         babyId = babyId,
                         type = selectedType,
-                        timestamp = LocalDateTime.parse(diaperDateTime.replace(" ", "T"), DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")),
+                        timestamp = diaperDateTime.replace(" ", "T") + ":00",
                         note = note.ifBlank { null },
                     ))
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = MaterialTheme.shapes.small,
+                shape = MaterialTheme.shapes.medium,
             ) { Text("保存") }
             Spacer(Modifier.height(24.dp))
         }

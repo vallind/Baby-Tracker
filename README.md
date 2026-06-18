@@ -6,45 +6,63 @@ Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koi
 
 | 模块 | 说明 |
 |---|---|
-| 首页 | 渐变宝宝头部 220dp · 4 列宫格 · 3 等分概览 |
-| 喂养 | 时间轴样式 · 左时间+彩色圆点+右卡片 |
-| 睡眠 | 蓝渐变 180dp 顶卡 · 入睡/起床/小睡统计 |
-| 生长 | 圆角 Tab · Canvas 折线图 · WHO 参考线 |
-| 疫苗 | 接种计划/记录双 Tab · 红/绿状态标签 |
-| 健康 | 列表式 · emoji + 标题 + 日期 |
-| 统计 | 4 个 110dp 卡片 + 迷你趋势条 |
+| 首页 | 渐变宝宝头部 · 今日概览（数字动画）· 最近记录 · 功能宫格 |
+| 喂养 | 时间轴样式 · 左时间+彩色圆点+右卡片 · 长按触觉反馈删除 · leadingIcon+校验 |
+| 睡眠 | 蓝渐变顶卡 · 今日夜间睡眠 · 进度条渐变 · 双向 clamp |
+| 生长 | 圆角 Tab · Canvas 折线图 · 渐变填充 · 动态 Y 轴刻度 · WHO 参考虚线 |
+| 疫苗 | 接种计划/记录双 Tab · 一键生成接种计划 · DatePicker |
+| 健康 | 列表式 · emoji + 标题 + 日期 · DatePicker · 空状态引导 |
+| 统计 | 4 个卡片 + 迷你趋势线 |
 | 我的 | 80dp 头像 · 功能区/系统区 · 主题切换 · 备份 |
 
 ## 设计系统
 
 ```kotlin
-// DesignTokens.kt 统一管理
-DT.pageMargin = 20.dp
-DT.cardRadius = 8.dp
-DT.cardGap    = 16.dp
+// DesignTokens.kt 统一管理几何常量
+DT.pageMargin = 20
+DT.cardGap = 16
+DT.cardRadius = 8
+DT.buttonRadius = 8
+DT.iconSize = 22
+DT.iconBgSize = 40
+DT.appBarHeight = 56
+
+// Theme.kt — M3 Shapes 层级
+small      = 16dp  // 列表 Card
+medium     = 20dp  // 容器 Card
+large      = 28dp  // 弹窗
+extraLarge = 32dp
+
+// Gradients.kt — 渐变 Brush 工具
+Gradients.primary(c)        // 主色横向渐变
+Gradients.primarySoft(c)    // 主色到背景的纵向渐变（首页头部）
+Gradients.chartArea(c)      // 图表下方填充渐变
+Gradients.progress(c)       // 进度条渐变
 ```
 
-6 套主题（纯净蓝 #2563EB / 极光紫 #7C6CF0 / 暖阳粉 #FF8A80 / 阳光黄 #F59E0B / 暗夜深 #5C6BC0 / 莫兰迪 #B0BEC5）+ 完整 M3 ColorScheme。
+6 套主题（纯净/极光/暖阳/阳光黄/暗夜/莫兰迪）+ 自定义主色。AppBar 统一使用 `primaryContainer` 主题色化。
 
 ## 技术栈
 
 | 层面 | 选型 |
 |---|---|
 | UI | Jetpack Compose + Material 3 |
+| 启动屏 | androidx.core:core-splashscreen 1.0.1 |
 | 导航 | Navigation Compose |
 | 数据库 | Room 2.6.1 + KSP |
-| DI | Koin 3.5.6 |
+| DI | Koin 3.5.6（ViewModel 用 `viewModel { }` + `koinViewModel()`） |
 | 架构 | MVVM + ViewModel + StateFlow |
 | 异步 | Kotlin Coroutines + Flow |
 | 网络 | Retrofit 2.9.0 + OkHttp 4.12.0 |
 | 图片 | Coil 2.6.0 |
-| 构建 | Kotlin 2.1.0, Java 17, Gradle 9.5.1, AGP 8.9.3, SDK 34 |
+| 构建 | Gradle 9.5.1 + AGP 8.9.3, Java 17, SDK 34 |
+| 发布 | R8 minify + resource shrinking + 自定义 ProGuard 规则 |
 
 ## 构建
 
 ```bash
 ./gradlew assembleDebug
-./gradlew assembleRelease
+./gradlew assembleRelease   # 启用 R8 + 资源压缩
 ./gradlew lint
 ```
 
@@ -53,24 +71,29 @@ DT.cardGap    = 16.dp
 ```
 app/src/main/java/com/babytracker/
 ├── BabyTrackerApp.kt
-├── MainActivity.kt
+├── MainActivity.kt              # SplashScreen 安装
 ├── core/
-│   ├── theme/           # DT + 5主题 + ThemeController
-│   ├── database/        # Room 实体 + DAO + AppDatabase
-│   ├── di/              # Koin 模块
-│   ├── backup/          # 备份管理器
-│   └── util/            # 日期工具
-├── data/repository/     # 7个 Repository
+│   ├── theme/                   # DT + 6 主题 + ThemeController + Gradients
+│   ├── database/                # Room 实体 + DAO + AppDatabase
+│   ├── di/Modules.kt            # Koin 模块（viewModel { } 注册）
+│   ├── backup/BackupManager.kt  # 备份管理器
+│   └── util/                    # DateUtils (含 safeParse) + VaccineSchedule + BabyController
+├── data/
+│   ├── repository/Repositories.kt  # 7 个 Repository 接口 + 实现
+│   └── database/mapper/Mappers.kt  # Entity ↔ Domain Model 映射（占位）
+├── domain/
+│   └── model/Models.kt          # Domain Model + 枚举（占位）
 └── ui/
-    ├── navigation/      # 路由
-    ├── home/            # 首页
-    ├── feeding/         # 喂养
-    ├── sleep/           # 睡眠
-    ├── growth/          # 生长
-    ├── vaccination/     # 疫苗
-    ├── health/          # 健康
-    ├── stats/           # 统计
-    └── settings/        # 设置
+    ├── navigation/              # 路由
+    ├── home/                    # 首页
+    ├── feeding/                 # 喂养
+    ├── sleep/                   # 睡眠
+    ├── growth/                  # 生长
+    ├── vaccination/             # 疫苗
+    ├── health/                  # 健康
+    ├── stats/                   # 统计
+    ├── settings/                # 设置
+    └── components/              # EmptyState / HapticExtensions / BabyIllustration
 ```
 
 ## 数据库

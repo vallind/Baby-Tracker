@@ -2,28 +2,23 @@ package com.babytracker.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.babytracker.core.database.entity.*
 import com.babytracker.data.repository.*
-import com.babytracker.domain.model.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
-import java.time.Duration
+import kotlinx.coroutines.launch
 import java.time.LocalDate
-
-sealed class RecentItem {
-    data class Feeding(val entity: com.babytracker.domain.model.Feeding) : RecentItem()
-    data class Sleep(val entity: com.babytracker.domain.model.Sleep) : RecentItem()
-    data class Diaper(val entity: com.babytracker.domain.model.Diaper) : RecentItem()
-}
+import java.time.LocalDateTime
+import java.time.Duration
+import java.time.format.DateTimeFormatter
 
 data class HomeUiState(
     val feedCount: Int = 0,
     val sleepHours: String = "--",
     val diaperCount: Int = 0,
-    val recentItems: List<RecentItem> = emptyList(),
+    val recentItems: List<Any> = emptyList(),
     val loading: Boolean = true,
 )
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
     private val feedingRepo: FeedingRepository,
     private val sleepRepo: SleepRepository,
@@ -38,33 +33,36 @@ class HomeViewModel(
         _trigger
             .filterNotNull()
             .flatMapLatest { babyId ->
-                feedingRepo.watchByBaby(babyId)
-                    .combine(sleepRepo.watchByBaby(babyId)) { feedings, sleeps -> feedings to sleeps }
-                    .combine(diaperRepo.watchByBaby(babyId)) { (feedings, sleeps), diapers ->
-                        val today = LocalDate.now()
-                        val todayFeedings = feedings.filter { it.timestamp.toLocalDate() == today }
-                        val todaySleeps = sleeps.filter { it.startTime.toLocalDate() == today }
-                        val nightSleepMin = todaySleeps.filter { it.type == "night" }.sumOf {
-                            Duration.between(it.startTime, it.endTime).toMinutes().coerceAtLeast(0)
-                        }.toInt()
-                        val todayDiapers = diapers.filter { it.timestamp.toLocalDate() == today }
+                combine(
+                    feedingRepo.watchByBaby(babyId),
+                    sleepRepo.watchByBaby(babyId),
+                    diaperRepo.watchByBaby(babyId),
+                ) { feedings, sleeps, diapers ->
+                    val today = LocalDate.now().toString()
+                    val todayFeedings = feedings.filter { it.timestamp.startsWith(today) }
+                    val todaySleeps = sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }
+                    val nightSleepMin = todaySleeps.sumOf {
+                        try { Duration.between(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)).toMinutes() } catch (_: Exception) { 0L }
+                    }.toInt()
+                    val todayDiapers = diapers.filter { it.timestamp.startsWith(today) }
 
-                        val allItems = (feedings.map { RecentItem.Feeding(it) } + sleeps.map { RecentItem.Sleep(it) } + diapers.map { RecentItem.Diaper(it) }).sortedByDescending {
-                            when (it) {
-                                is RecentItem.Feeding -> it.entity.timestamp
-                                is RecentItem.Sleep -> it.entity.startTime
-                                is RecentItem.Diaper -> it.entity.timestamp
-                            }
-                        }.take(8)
+                    val allItems = (feedings + sleeps + diapers).sortedByDescending {
+                        when (it) {
+                            is FeedingEntity -> it.timestamp
+                            is SleepEntity -> it.startTime
+                            is DiaperEntity -> it.timestamp
+                            else -> ""
+                        }
+                    }.take(8)
 
-                        HomeUiState(
-                            feedCount = todayFeedings.size,
-                            sleepHours = if (nightSleepMin > 0) "${nightSleepMin / 60}h${nightSleepMin % 60}min" else "--",
-                            diaperCount = todayDiapers.size,
-                            recentItems = allItems,
-                            loading = false,
-                        )
-                    }
+                    HomeUiState(
+                        feedCount = todayFeedings.size,
+                        sleepHours = if (nightSleepMin > 0) "${nightSleepMin / 60}h${nightSleepMin % 60}min" else "--",
+                        diaperCount = todayDiapers.size,
+                        recentItems = allItems,
+                        loading = false,
+                    )
+                }
             }
             .onEach { _state.value = it }
             .launchIn(viewModelScope)
