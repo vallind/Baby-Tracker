@@ -16,7 +16,7 @@ Android 原生宝宝护理记录 App。Jetpack Compose + Material 3（完整 M3 
 | 文件 | DocumentFile 1.0.1 | SAF 目录选择 |
 | 图片 | Coil 2.6.0 | — |
 | 构建 | Gradle 9.5.1 + AGP 8.9.3 | — |
-| 编译 | Kotlin 1.9.24, Java 17, SDK 34, minSdk 24 | — |
+| 编译 | Kotlin 2.1.0, Java 17, SDK 34, minSdk 24 | — |
 
 ## 项目结构
 

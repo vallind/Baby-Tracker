@@ -38,7 +38,7 @@ DT.cardGap    = 16.dp
 | 异步 | Kotlin Coroutines + Flow |
 | 网络 | Retrofit 2.9.0 + OkHttp 4.12.0 |
 | 图片 | Coil 2.6.0 |
-| 构建 | Gradle 9.5.1 + AGP 8.9.3, Java 17, SDK 34 |
+| 构建 | Kotlin 2.1.0, Java 17, Gradle 9.5.1, AGP 8.9.3, SDK 34 |
 
 ## 构建
 
