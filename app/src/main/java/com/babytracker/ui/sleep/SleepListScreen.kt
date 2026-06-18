@@ -22,11 +22,14 @@ import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.SleepRepository
-import com.babytracker.data.repository.BabyRepository
+
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+private const val NIGHT_GOAL_HOURS = 14
+private const val NIGHT_GOAL_SECONDS = NIGHT_GOAL_HOURS * 3600
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -40,7 +43,8 @@ fun SleepListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var deletingSleep by remember { mutableStateOf<SleepEntity?>(null) }
 
-    val night = sleeps.filter { it.type == "night" }.firstOrNull()
+    val today = java.time.LocalDate.now().toString()
+    val night = sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }.firstOrNull()
     val nightDurSec = night?.let { DateUtils.durationToTotalSeconds(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)) } ?: 0
     val nightRange = night?.let {
         val s = LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
@@ -52,7 +56,7 @@ fun SleepListScreen(navController: NavController) {
         CenterAlignedTopAppBar(title = { Text("睡眠记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
     }, floatingActionButton = {
         FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary) {
-            Icon(Icons.Default.Add, contentDescription = null)
+            Icon(Icons.Default.Add, contentDescription = "添加睡眠记录")
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
@@ -75,7 +79,7 @@ fun SleepListScreen(navController: NavController) {
                         Text("🌙", style = MaterialTheme.typography.headlineLarge)
                     }
                     Spacer(Modifier.height(16.dp))
-                    val goalPercent = (nightDurSec.toFloat() / (14 * 3600).toFloat()).coerceAtMost(1f)
+                    val goalPercent = (nightDurSec.toFloat() / NIGHT_GOAL_SECONDS.toFloat()).coerceIn(0f, 1f)
                     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = 0.1f))) {
                         Box(Modifier.fillMaxWidth(goalPercent).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(Brush.horizontalGradient(listOf(Color(0xFF60A5FA), Color(0xFF2563EB)))))
                     }

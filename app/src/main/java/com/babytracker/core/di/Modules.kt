@@ -10,12 +10,13 @@ import com.babytracker.data.repository.*
 import com.babytracker.ui.stats.StatsViewModel
 import com.babytracker.ui.home.HomeViewModel
 import org.koin.android.ext.koin.androidContext
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
     single<SharedPreferences> { androidContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     single { ThemeController(get()) }
-    single { BabyController(get()) }
+    single { BabyController(get(), get()) }
     single { BackupManager(get()) }
     single<BabyRepository> { BabyRepositoryImpl(get()) }
     single<FeedingRepository> { FeedingRepositoryImpl(get()) }
@@ -24,8 +25,8 @@ val appModule = module {
     single<VaccinationRepository> { VaccinationRepositoryImpl(get()) }
     single<HealthRepository> { HealthRepositoryImpl(get()) }
     single<DiaperRepository> { DiaperRepositoryImpl(get()) }
-    single { StatsViewModel(get(), get(), get(), get()) }
-    single { HomeViewModel(get(), get(), get(), get()) }
+    viewModel { StatsViewModel(get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get()) }
 }
 
 val databaseModule = module {

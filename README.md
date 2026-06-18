@@ -19,13 +19,12 @@ Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koi
 
 ```kotlin
 // DesignTokens.kt 统一管理
-DT.bg         = #F8F9FC
-DT.primary    = #6C8DFF
-DT.cardRadius = 24.dp
 DT.pageMargin = 20.dp
+DT.cardRadius = 8.dp
+DT.cardGap    = 16.dp
 ```
 
-5 套主题（纯净/极光/暖宝/极夜/莫兰迪）+ 自定义主色。
+6 套主题（纯净蓝 #2563EB / 极光紫 #7C6CF0 / 暖阳粉 #FF8A80 / 阳光黄 #F59E0B / 暗夜深 #5C6BC0 / 莫兰迪 #B0BEC5）+ 完整 M3 ColorScheme。
 
 ## 技术栈
 
@@ -61,7 +60,7 @@ app/src/main/java/com/babytracker/
 │   ├── di/              # Koin 模块
 │   ├── backup/          # 备份管理器
 │   └── util/            # 日期工具
-├── data/repository/     # 6个 Repository
+├── data/repository/     # 7个 Repository
 └── ui/
     ├── navigation/      # 路由
     ├── home/            # 首页
@@ -76,7 +75,7 @@ app/src/main/java/com/babytracker/
 
 ## 数据库
 
-7 张 Room 实体表：babies, feedings, sleeps, growths, vaccinations, health_records, backup_config。DAO 通过 Flow 暴露数据。
+8 张 Room 实体表：babies, feedings, sleeps, growths, vaccinations, health_records, diapers, backup_config。DAO 通过 Flow 暴露数据。
 
 ## 许可
 

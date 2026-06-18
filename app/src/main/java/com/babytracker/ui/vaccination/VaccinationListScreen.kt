@@ -19,11 +19,15 @@ import com.babytracker.core.theme.DT
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
-import com.babytracker.data.repository.VaccinationRepository
+import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.data.repository.BabyRepository
+import com.babytracker.data.repository.VaccinationRepository
+
 import org.koin.compose.koinInject
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
@@ -32,6 +36,7 @@ import kotlinx.coroutines.launch
 fun VaccinationListScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val vacRepo: VaccinationRepository = koinInject()
+    val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
@@ -49,7 +54,7 @@ fun VaccinationListScreen(navController: NavController) {
             Icon(Icons.Default.Add, null, tint = Color.White)
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             Row(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 12.dp).fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(DT.buttonRadius.dp)).padding(4.dp)) {
                 listOf("pending" to "接种计划", "done" to "接种记录").forEach { (s, l) ->
                     Box(Modifier.weight(1f).background(if (filter == s) MaterialTheme.colorScheme.surface else Color.Transparent, MaterialTheme.shapes.small).clickable { filter = s }.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
@@ -57,7 +62,27 @@ fun VaccinationListScreen(navController: NavController) {
                     }
                 }
             }
-            vaccinations.filter { it.status == filter }.forEach { v ->
+            val filtered = vaccinations.filter { it.status == filter }
+            if (filtered.isEmpty()) {
+                Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("暂无记录", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (filter == "pending") {
+                            Spacer(Modifier.height(16.dp))
+                            OutlinedButton(onClick = {
+                                scope.launch {
+                                    val baby = babyRepo.getById(babyId)
+                                    val birthDate = baby?.birthDate ?: java.time.LocalDate.now().toString()
+                                    VaccineSchedule.createForBaby(babyId, birthDate).forEach { vacRepo.insert(it) }
+                                }
+                            }, shape = MaterialTheme.shapes.small) {
+                                Text("生成接种计划")
+                            }
+                        }
+                    }
+                }
+            } else {
+                filtered.forEach { v ->
                     Card(
                         Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().combinedClickable(onLongClick = { deletingVac = v }, onClick = {}),
                         shape = MaterialTheme.shapes.small,
@@ -76,7 +101,9 @@ fun VaccinationListScreen(navController: NavController) {
                         }
                     }
                 }
+                }
             }
+            Spacer(Modifier.height(80.dp))
         }
     }
 
@@ -126,6 +153,8 @@ fun VaccinationFormDialog(
     var scheduledDate by remember { mutableStateOf(LocalDate.now().toString()) }
     var administeredDate by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var datePickerTarget by remember { mutableIntStateOf(0) }
 
     Column(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 0.dp).padding(bottom = 32.dp)) {
         Text("添加疫苗", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 16.dp))
@@ -146,11 +175,12 @@ fun VaccinationFormDialog(
             }
         }
 
-        OutlinedTextField(value = scheduledDate, onValueChange = { scheduledDate = it }, label = { Text("接种日期 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.small)
+        OutlinedTextField(value = scheduledDate, onValueChange = {}, readOnly = true, label = { Text("接种日期 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { datePickerTarget = 0; showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.small, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
 
         if (status == "done") {
-            OutlinedTextField(value = administeredDate, onValueChange = { administeredDate = it }, label = { Text("实际接种日期 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.small)
+            OutlinedTextField(value = administeredDate, onValueChange = {}, readOnly = true, label = { Text("实际接种日期 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { datePickerTarget = 1; showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.small, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
         }
+
 
         OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), singleLine = true, shape = MaterialTheme.shapes.small)
 
@@ -174,6 +204,21 @@ fun VaccinationFormDialog(
             enabled = name.isNotBlank()
         ) {
             Text("保存", color = Color.White, style = MaterialTheme.typography.titleSmall)
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    val date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                    if (datePickerTarget == 0) scheduledDate = date else administeredDate = date
+                }
+                showDatePicker = false
+            }) { Text("确定") }
+        }, dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }) {
+            DatePicker(state = datePickerState)
         }
     }
 }

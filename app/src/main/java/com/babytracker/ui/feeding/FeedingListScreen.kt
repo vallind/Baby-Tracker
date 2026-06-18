@@ -62,7 +62,7 @@ fun FeedingListScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     shape = MaterialTheme.shapes.small,
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Add, contentDescription = "添加喂养记录", modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text("记录喂养", style = MaterialTheme.typography.titleSmall)
                 }
@@ -157,22 +157,8 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                         listOf("左侧", "右侧", "双侧").forEach { s ->
                             FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
-    }
-}
-
-@Composable
-fun NumberPicker(value: Int, onValueChange: (Int) -> Unit, range: IntRange, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        IconButton(onClick = { val n = value - 1; if (n >= range.first) onValueChange(n) }, modifier = Modifier.size(36.dp)) {
-            Text("▲", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Text("%02d".format(value), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 4.dp))
-        IconButton(onClick = { val n = value + 1; if (n <= range.last) onValueChange(n) }, modifier = Modifier.size(36.dp)) {
-            Text("▼", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
+                        }
+                    }
                     OutlinedTextField(
                         value = durationMin, onValueChange = { durationMin = it },
                         label = { Text("时长 (分钟)") }, singleLine = true,

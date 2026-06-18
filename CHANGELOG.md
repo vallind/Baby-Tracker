@@ -17,4 +17,4 @@
 
 **架构：** MVVM + Koin + Room + Navigation Compose + Material 3
 
-**技术栈：** Kotlin 1.9.22, Java 17, Gradle 9.5.1, AGP 8.9.3, SDK 34
+**技术栈：** Kotlin 1.9.24, Java 17, Gradle 9.5.1, AGP 8.9.3, SDK 34

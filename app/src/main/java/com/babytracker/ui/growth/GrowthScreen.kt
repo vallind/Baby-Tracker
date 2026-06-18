@@ -29,7 +29,7 @@ import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.GrowthRepository
-import com.babytracker.data.repository.BabyRepository
+
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -43,7 +43,6 @@ fun GrowthScreen(navController: NavController) {
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var deletingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
@@ -51,6 +50,13 @@ fun GrowthScreen(navController: NavController) {
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
     val types = listOf("height", "weight", "head")
+
+    if (babyId == 0) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("请先添加宝宝", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        return
+    }
 
     Scaffold(topBar = {
         CenterAlignedTopAppBar(title = { Text("生长记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } })
@@ -73,29 +79,33 @@ fun GrowthScreen(navController: NavController) {
                 targetValue = if (chartData.size > 1) 1f else 0f,
                 animationSpec = tween(durationMillis = 800),
             )
+            val minVal = remember(chartData) { chartData.minOfOrNull { it.value } }
+            val maxVal = remember(chartData) { chartData.maxOfOrNull { it.value } }
             val gridColor = MaterialTheme.colorScheme.outlineVariant
             val lineColor = MaterialTheme.colorScheme.primary
             val bgColor = MaterialTheme.colorScheme.background
             Box(Modifier.fillMaxWidth().height(300.dp)) {
                 Column(Modifier.fillMaxHeight().width(36.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.SpaceBetween) {
-                    listOf("90", "75", "60", "45").forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    val labels = if (minVal != null && maxVal != null) {
+                        (0..4).map { i -> "%.1f".format(maxVal - (maxVal - minVal) * i / 4.0) }
+                    } else listOf("--", "--", "--", "--", "--")
+                    labels.forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
                     val w = size.width; val h = size.height
                     for (i in 0..3) { drawLine(gridColor, Offset(0f, h * i / 4), Offset(w, h * i / 4), strokeWidth = 1f) }
-                    if (chartData.size > 1 && chartProgress > 0f) {
-                        val minVal = chartData.minOf { it.value }; val maxVal = chartData.maxOf { it.value }; val range = (maxVal - minVal).coerceAtLeast(1.0)
+                    if (chartData.size > 1 && chartProgress > 0f && minVal != null && maxVal != null) {
+                        val range = (maxVal - minVal).coerceAtLeast(1.0)
                         val points = chartData.mapIndexed { i, g -> Offset(w * i / (chartData.size - 1), h * (1f - ((g.value - minVal) / range).toFloat())) }
                         val visibleCount = ((points.size - 1) * chartProgress).toInt().coerceIn(0, points.size - 1)
                         for (i in 0 until visibleCount) { drawLine(lineColor, points[i], points[i + 1], strokeWidth = 3.dp.toPx()) }
                         for (i in 0..visibleCount) { drawCircle(lineColor, 4.dp.toPx(), points[i]); drawCircle(bgColor, 2.dp.toPx(), points[i]) }
                     }
                 }
-                val data2 = growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt }
-                if (data2.size > 1) {
+                if (chartData.size > 1) {
                     Row(Modifier.fillMaxWidth().padding(start = 36.dp, top = 300.dp - 20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        data2.forEachIndexed { i, g ->
-                            if (i % maxOf(1, data2.size / 5) == 0 || i == data2.size - 1) {
+                        chartData.forEachIndexed { i, g ->
+                            if (i % maxOf(1, chartData.size / 5) == 0 || i == chartData.size - 1) {
                                 Text(
                                     try { LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM/dd")) } catch (_: Exception) { "" },
                                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

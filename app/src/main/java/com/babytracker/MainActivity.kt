@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val theme = themeController.currentTheme
-            BabyTrackerTheme(theme, dynamicColor = false) {
+            BabyTrackerTheme(theme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     AppNavigation()
                 }

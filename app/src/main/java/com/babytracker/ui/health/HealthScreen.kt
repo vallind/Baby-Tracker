@@ -1,7 +1,10 @@
 package com.babytracker.ui.health
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,11 +20,13 @@ import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.HealthRepository
-import com.babytracker.data.repository.BabyRepository
+
 import kotlinx.coroutines.launch
 import com.babytracker.core.database.entity.HealthRecordEntity
 import org.koin.compose.koinInject
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 val healthCategoryLabels = mapOf("allergy" to "过敏史", "medicalHistory" to "既往病史", "exam" to "体检记录", "note" to "备注", "birth_info" to "出生信息", "visit" to "就诊记录", "medication" to "用药记录", "doctor_note" to "医生备注")
@@ -59,13 +64,12 @@ fun HealthScreen(navController: NavController) {
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text(r.description, fontWeight = FontWeight.Medium, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
-                            Text("${healthCategoryLabels[r.category] ?: r.category} · ${DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Text("›", color = MaterialTheme.colorScheme.outline)
+                        Text("${healthCategoryLabels[r.category] ?: r.category} · ${DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
+    }
     }
     if (showForm) {
         HealthFormDialog(
@@ -110,6 +114,7 @@ fun HealthFormDialog(
     var doctorName by remember { mutableStateOf("") }
     var recordDate by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) }
     var note by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     val categories = listOf(
         "allergy" to "🤧 过敏史",
@@ -156,11 +161,11 @@ fun HealthFormDialog(
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
-                value = recordDate,
-                onValueChange = { recordDate = it },
+                value = recordDate, onValueChange = {}, readOnly = true,
                 label = { Text("记录日期") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
+                shape = MaterialTheme.shapes.small, enabled = false,
+                colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant),
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
@@ -181,6 +186,20 @@ fun HealthFormDialog(
             ) {
                 Text("保存", style = MaterialTheme.typography.titleSmall)
             }
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    recordDate = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                }
+                showDatePicker = false
+            }) { Text("确定") }
+        }, dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }) {
+            DatePicker(state = datePickerState)
         }
     }
 }

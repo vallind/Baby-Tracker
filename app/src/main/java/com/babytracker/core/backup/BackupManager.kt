@@ -123,16 +123,14 @@ class BackupManager(private val db: AppDatabase) {
         } catch (e: Exception) { Result.failure(e) }
     }
 
-    private data class ResultHolder(val result: Result<Int>)
     suspend fun restoreFromUri(context: Context, uri: Uri): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val jsonStr: String
             context.contentResolver.openInputStream(uri)?.use { input ->
                 val zip = ZipInputStream(input)
                 var entry = zip.nextEntry
                 while (entry != null) {
                     if (entry.name == "data.json") {
-                        jsonStr = zip.bufferedReader().readText()
+                        val jsonStr = zip.bufferedReader().readText()
                         zip.closeEntry()
                         val data = JSONObject(jsonStr)
                         return@withContext doRestore(data)
@@ -142,7 +140,6 @@ class BackupManager(private val db: AppDatabase) {
                 }
                 return@withContext Result.failure(Exception("备份文件缺少 data.json"))
             } ?: return@withContext Result.failure(Exception("无法读取文件"))
-            Result.failure(Exception("未知错误"))
         } catch (e: Exception) { Result.failure(e) }
     }
 

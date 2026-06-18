@@ -4,6 +4,8 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+System.getenv("ANDROID_AAPT2_OVERRIDE")?.let { project.ext.set("android.aapt2FromMavenOverride", it) }
+
 android {
     namespace = "com.babytracker"
     compileSdk = 34

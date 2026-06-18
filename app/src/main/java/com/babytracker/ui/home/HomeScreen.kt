@@ -28,9 +28,6 @@ import com.babytracker.ui.components.BabyIllustration
 import com.babytracker.ui.components.BabyPose
 import com.babytracker.ui.navigation.Screen
 import com.babytracker.data.repository.BabyRepository
-import com.babytracker.core.database.entity.FeedingEntity
-import com.babytracker.core.database.entity.SleepEntity
-import com.babytracker.core.database.entity.DiaperEntity
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -222,7 +219,7 @@ fun FeatureGrid(navController: NavController) {
 }
 
 @Composable
-fun RecentRecordsSection(items: List<Any>) {
+fun RecentRecordsSection(items: List<RecentItem>) {
     val c = LocalThemeColors.current
     Card(
         Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth(),
@@ -236,10 +233,9 @@ fun RecentRecordsSection(items: List<Any>) {
             val recentItems = items.take(5)
             val grouped = recentItems.groupBy { item ->
                 when (item) {
-                    is FeedingEntity -> item.timestamp.take(10)
-                    is SleepEntity -> item.startTime.take(10)
-                    is DiaperEntity -> item.timestamp.take(10)
-                    else -> ""
+                    is RecentItem.Feeding -> item.entity.timestamp.take(10)
+                    is RecentItem.Sleep -> item.entity.startTime.take(10)
+                    is RecentItem.Diaper -> item.entity.timestamp.take(10)
                 }
             }
             val showDates = grouped.size > 1
@@ -252,32 +248,35 @@ fun RecentRecordsSection(items: List<Any>) {
                 groupItems.forEach { item ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     when (item) {
-                        is FeedingEntity -> {
-                            Text(when (item.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }, fontSize = 20.sp)
+                        is RecentItem.Feeding -> {
+                            val e = item.entity
+                            Text(when (e.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }, fontSize = 20.sp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(DateUtils.feedingTypeLabel(item.type), fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(if (item.type == "breast") "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
+                                Text(DateUtils.feedingTypeLabel(e.type), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text(if (e.type == "breast") "${e.durationMin ?: 0}分钟" else "${e.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                            Text(e.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
                         }
-                        is SleepEntity -> {
-                            Text(if (item.type == "night") "🌙" else "☀️", fontSize = 20.sp)
+                        is RecentItem.Sleep -> {
+                            val e = item.entity
+                            Text(if (e.type == "night") "🌙" else "☀️", fontSize = 20.sp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(if (item.type == "night") "夜间睡眠" else "小睡", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(LocalDateTime.parse(item.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(item.endTime, DateTimeFormatter.ISO_DATE_TIME))), fontSize = 12.sp, color = c.textSecondary)
+                                Text(if (e.type == "night") "夜间睡眠" else "小睡", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(LocalDateTime.parse(e.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(e.endTime, DateTimeFormatter.ISO_DATE_TIME))), fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(item.startTime.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                            Text(e.startTime.substring(11, 16), fontSize = 12.sp, color = c.textHint)
                         }
-                        is DiaperEntity -> {
+                        is RecentItem.Diaper -> {
+                            val e = item.entity
                             Text("🧷", fontSize = 20.sp)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text("换尿布", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text(DateUtils.diaperTypeLabel(item.type), fontSize = 12.sp, color = c.textSecondary)
+                                Text(DateUtils.diaperTypeLabel(e.type), fontSize = 12.sp, color = c.textSecondary)
                             }
-                            Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                            Text(e.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
                         }
                     }
                 }

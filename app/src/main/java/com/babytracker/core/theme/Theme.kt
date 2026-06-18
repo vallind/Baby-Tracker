@@ -2,14 +2,11 @@ package com.babytracker.core.theme
 
 import android.app.Activity
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -52,9 +49,10 @@ val BabyTrackerShapes = Shapes(
     extraLarge = RoundedCornerShape(24.dp),
 )
 
-fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.ColorScheme {
+fun AppTheme.toColorScheme(): androidx.compose.material3.ColorScheme {
     val c = colors
-    return if (isDark) darkColorScheme(
+    val useDark = name == "night"
+    val scheme = if (useDark) darkColorScheme(
         primary = c.primary,
         onPrimary = c.card,
         primaryContainer = c.primaryLight,
@@ -99,29 +97,16 @@ fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.
         errorContainer = c.tagBg,
         scrim = Color.Black.copy(alpha = 0.32f),
     )
+    return scheme
 }
 
 @Composable
 fun BabyTrackerTheme(
     theme: AppTheme = AppTheme.pure,
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val isDark = isSystemInDarkTheme()
-
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= 31 -> {
-            val activity = context as? Activity
-            if (activity != null) {
-                if (isDark) dynamicDarkColorScheme(activity) else dynamicLightColorScheme(activity)
-            } else {
-                theme.toColorScheme(isDark)
-            }
-        }
-        else -> theme.toColorScheme(isDark)
-    }
-
+    val colorScheme = theme.toColorScheme()
     val darkTheme = theme.name == "night"
 
     SideEffect {

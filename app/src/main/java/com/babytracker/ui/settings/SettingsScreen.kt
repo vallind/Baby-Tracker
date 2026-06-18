@@ -436,7 +436,7 @@ fun BackupScreen(navController: NavController) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Folder, contentDescription = "本地备份", tint = MaterialTheme.colorScheme.primary)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
@@ -600,6 +600,7 @@ fun BackupScreen(navController: NavController) {
                 TextButton(onClick = { showRestoreConfirm = false }) { Text("取消") }
             },
         )
+    }
     if (showWebdavRestoreConfirm) {
         AlertDialog(
             onDismissRequest = { showWebdavRestoreConfirm = false },
@@ -616,6 +617,5 @@ fun BackupScreen(navController: NavController) {
             },
             dismissButton = { TextButton(onClick = { showWebdavRestoreConfirm = false }) { Text("取消") } },
         )
-    }
     }
 }
