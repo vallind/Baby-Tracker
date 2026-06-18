@@ -96,7 +96,7 @@ done
 | 文件 | DocumentFile 1.0.1 | SAF 目录选择 |
 | 图片 | Coil 2.6.0 | — |
 | 构建 | Gradle 9.5.1 + AGP 8.9.3 | R8 minify + 资源压缩 |
-| 编译 | Kotlin 1.9.24, Java 17, SDK 34, minSdk 24 | — |
+| 编译 | Kotlin 2.3.21, Java 21, SDK 36, minSdk 24 | 当前使用 ReVanced aapt2-arm64-v8a |
 | 发布 | `isMinifyEnabled = true` + `isShrinkResources = true` | proguard-rules.pro 已配 |
 
 ## Build, Test, and Development Commands
