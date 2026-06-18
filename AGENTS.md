@@ -425,6 +425,7 @@ Migration：`fallbackToDestructiveMigration()` → 正式 `Migration(1, 2)` 增�
 
 ## 文档规范
 
+- 所有注释必须使用中文，禁止英文注释
 - 文档统一使用中文
 - commit message 使用中文
 - `CHANGELOG.md` 每次发布版本必须更新

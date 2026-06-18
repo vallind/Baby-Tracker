@@ -1,0 +1,101 @@
+[versions]
+# Plugins
+agp = "9.2.1"
+kotlin = "2.3.21"
+ksp = "2.3.9"
+
+# AndroidX Core
+coreKtx = "1.13.1"
+splashscreen = "1.0.1"
+activityCompose = "1.9.0"
+documentfile = "1.0.1"
+
+# Lifecycle
+lifecycle = "2.7.0"
+
+# Compose
+composeBom = "2024.10.00"
+
+# Navigation
+navigationCompose = "2.7.7"
+
+# DI
+koin = "3.5.6"
+
+# Database
+room = "2.7.0"
+
+# Network
+retrofit = "2.9.0"
+okhttp = "4.12.0"
+
+# Image
+coil = "2.6.0"
+
+# Coroutines
+coroutines = "1.7.3"
+
+# Test
+junit = "4.13.2"
+testExtJunit = "1.2.1"
+espresso = "3.6.1"
+
+[libraries]
+# ── AndroidX Core ──────────────────────────────────────────
+core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "splashscreen" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
+
+# ── Lifecycle ──────────────────────────────────────────────
+lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+
+# ── Compose ────────────────────────────────────────────────
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+
+# ── Navigation ─────────────────────────────────────────────
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+
+# ── Koin (DI) ──────────────────────────────────────────────
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
+
+# ── Room (Database) ────────────────────────────────────────
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+
+# ── Network ────────────────────────────────────────────────
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-logging = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
+
+# ── Image Loading ──────────────────────────────────────────
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+
+# ── Coroutines ─────────────────────────────────────────────
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+
+# ── Test ───────────────────────────────────────────────────
+junit = { module = "junit:junit", version.ref = "junit" }
+test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "testExtJunit" }
+espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+
+# ── Debug ──────────────────────────────────────────────────
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
