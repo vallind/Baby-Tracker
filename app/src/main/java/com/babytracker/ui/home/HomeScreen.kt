@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import com.babytracker.core.theme.DT
-import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
@@ -73,7 +71,7 @@ fun HomeScreen(navController: NavController) {
 
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             Box(
-                Modifier.fillMaxWidth().background(Gradients.primarySoft(c)).padding(horizontal = DT.pageMargin.dp),
+                Modifier.fillMaxWidth().background(c.primaryLight).padding(horizontal = DT.pageMargin.dp),
             ) {
                 Row(Modifier.padding(vertical = 24.dp)) {
                     Column(Modifier.weight(1f).fillMaxHeight().padding(end = 16.dp), verticalArrangement = Arrangement.Center) {
@@ -89,7 +87,7 @@ fun HomeScreen(navController: NavController) {
                         }
                     }
                     Box(
-                        Modifier.size(72.dp).clip(CircleShape).background(Gradients.primary(c)),
+                        Modifier.size(72.dp).clip(CircleShape).background(c.primary),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(baby.name.take(1), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
