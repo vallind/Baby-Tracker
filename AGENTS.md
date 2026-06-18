@@ -88,15 +88,15 @@ done
 | UI | Jetpack Compose + Material 3 | full ColorScheme / Typography / Shapes |
 | 启动屏 | androidx.core:core-splashscreen 1.0.1 | MainActivity `installSplashScreen()` |
 | 导航 | Navigation Compose | 11 条路由 |
-| 数据库 | Room 2.6.1 + KSP | 8 张表，Migration 增量升级 |
-| 异步 | Kotlin Coroutines + Flow | — |
-| DI | Koin 3.5.6 | ViewModel 用 `viewModel { }` 注册 |
+| 数据库 | Room 2.8.4 + KSP 2.3.9 | 8 张表，Migration 增量升级 |
+| 异步 | Kotlin Coroutines 1.11.0 + Flow | — |
+| DI | Koin 4.2.1 | ViewModel 用 `viewModel { }` 注册（koin-core-module-dsl） |
 | 架构 | MVVM（ViewModel + StateFlow） | 2 个 ViewModel |
-| 网络 | Retrofit 2.9.0 + OkHttp 4.12.0 | WebDAV 备份 |
+| 网络 | Retrofit 3.0.0 + OkHttp 5.4.0 | WebDAV 备份 |
 | 文件 | DocumentFile 1.0.1 | SAF 目录选择 |
-| 图片 | Coil 2.6.0 | — |
-| 构建 | Gradle 9.5.1 + AGP 8.9.3 | R8 minify + 资源压缩 |
-| 编译 | Kotlin 2.3.21, Java 21, SDK 36, minSdk 24 | 当前使用 ReVanced aapt2-arm64-v8a |
+| 图片 | Coil 2.7.0 | — |
+| 构建 | Gradle 9.5.1 + AGP 9.2.1 | R8 minify + 资源压缩 |
+| 编译 | Kotlin 2.3.21, Java 21, SDK 36, minSdk 24 | ReVanced aapt2-arm64-v8a |
 | 发布 | `isMinifyEnabled = true` + `isShrinkResources = true` | proguard-rules.pro 已配 |
 
 ## Build, Test, and Development Commands
@@ -111,8 +111,8 @@ done
 
 ## 构建前置条件
 
-- JDK 17（`java -version` 验证）
-- Android SDK 34（`local.properties` 配置 `sdk.dir`，**不要硬编码 Termux 路径**）
+- JDK 21（`java -version` 验证）
+- Android SDK 36（`local.properties` 配置 `sdk.dir`，**不要硬编码 Termux 路径**）
 - 无需 Firebase / google-services.json
 - 无需 Node.js / pnpm（纯原生项目）
 - 推荐用 Android Studio Hedgehog 或更高

@@ -2,6 +2,22 @@
 
 ## 更新日志
 
+### [1.3.0] — 2026-06-18
+
+**依赖升级：**
+- **SDK 36**：compileSdk/targetSdk 35→36，配合新版 AndroidX 库
+- **AGP 9.2.1**：构建工具链更新
+- **Kotlin 2.3.21 + KSP 2.3.9**：语言及注解处理升级
+- **Compose BOM 2026.05.01**：Compose 1.11.x 系列
+- **Koin 4.2.1**：ViewModel DSL 从 `koin-androidx-viewmodel` 迁移到 `koin-core-module-dsl`
+- **Retrofit 3.0.0 / OkHttp 5.4.0**：网络栈升级
+- **Room 2.8.4 / Lifecycle 2.10.0 / Core KTX 1.18.0**：AndroidX 全线升级
+
+**基础设施：**
+- **版本目录**：从直接声明依赖迁移到 `gradle/libs.versions.toml` 统一管理
+- **Termux AAPT2 修复**：替换为 ReVanced 预编译 aapt2-arm64-v8a（build-tools 35.0.2），支持 SDK 35+ 编译
+- **添加 AAPT2 修复文档**：`docs/aapt2-termux-fix.md`
+
 ### [1.2.0] — 2026-06-18
 
 **架构改进：**

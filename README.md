@@ -45,17 +45,17 @@ Gradients.progress(c)       // 进度条渐变
 ## 技术栈
 
 | 层面 | 选型 |
-|---|---|
+|---|---|---|
 | UI | Jetpack Compose + Material 3 |
-| 启动屏 | androidx.core:core-splashscreen 1.0.1 |
-| 导航 | Navigation Compose |
-| 数据库 | Room 2.6.1 + KSP |
-| DI | Koin 3.5.6（ViewModel 用 `viewModel { }` + `koinViewModel()`） |
+| 启动屏 | androidx.core:core-splashscreen 1.2.0 |
+| 导航 | Navigation Compose 2.9.1 |
+| 数据库 | Room 2.8.4 + KSP 2.3.9 |
+| DI | Koin 4.2.1（ViewModel 用 `viewModel { }` + `koinViewModel()`） |
 | 架构 | MVVM + ViewModel + StateFlow |
-| 异步 | Kotlin Coroutines + Flow |
-| 网络 | Retrofit 2.9.0 + OkHttp 4.12.0 |
-| 图片 | Coil 2.6.0 |
-| 构建 | Gradle 9.5.1 + AGP 8.9.3, Java 17, SDK 34 |
+| 异步 | Kotlin Coroutines 1.11.0 + Flow |
+| 网络 | Retrofit 3.0.0 + OkHttp 5.4.0 |
+| 图片 | Coil 2.7.0 |
+| 构建 | Gradle 9.5.1 + AGP 9.2.1, Java 21, SDK 36 |
 | 发布 | R8 minify + resource shrinking + 自定义 ProGuard 规则 |
 
 ## 构建
