@@ -2,7 +2,6 @@ package com.babytracker.ui.feeding
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -17,8 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,6 +29,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.FeedingRepository
 import com.babytracker.ui.components.BottomNavBar
 import com.babytracker.ui.components.rememberHaptic
+import com.babytracker.ui.components.SwipeToDeleteContainer
 import com.babytracker.ui.components.EmptyState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -50,14 +48,20 @@ fun FeedingListScreen(navController: NavController) {
     if (babyId == 0) return
     val feedings by feedingRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
+    var editingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
     var deletingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
         containerColor = c.bg,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { showForm = true },
+                onClick = {
+                    editingFeeding = null
+                    showForm = true
+                },
                 containerColor = c.primary,
                 contentColor = c.card,
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
@@ -67,7 +71,7 @@ fun FeedingListScreen(navController: NavController) {
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
-            // —— 顶部页头：浅蓝渐变背景 + 返回 + 标题 ——
+            // —— 顶部页头 ——
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -94,7 +98,10 @@ fun FeedingListScreen(navController: NavController) {
                         title = "还没有喂养记录",
                         subtitle = "点击下方按钮，记录宝宝的每一次进食",
                         actionText = "记录喂养",
-                        onAction = { showForm = true },
+                        onAction = {
+                            editingFeeding = null
+                            showForm = true
+                        },
                     )
                 }
                 val grouped = feedings.groupBy { it.timestamp.take(10) }
@@ -107,19 +114,40 @@ fun FeedingListScreen(navController: NavController) {
                         modifier = Modifier.padding(top = if (groupIndex == 0) DT.cardGap.dp else DT.cardGapSm.dp, bottom = 4.dp),
                     )
                     items.forEachIndexed { i, f ->
-                        TimelineItem(
-                            time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" },
-                            useAccent = i % 2 == 1,
-                            emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" },
-                            title = DateUtils.feedingTypeLabel(f.type),
-                            subtitle = when (f.type) {
-                                "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
-                                "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
-                                "food" -> "${f.foodName} ${f.amountG}g"
-                                else -> "${f.amountMl}ml"
+                        SwipeToDeleteContainer(
+                            onDelete = {
+                                scope.launch {
+                                    val deleted = f
+                                    feedingRepo.delete(deleted)
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "已删除喂养记录",
+                                        actionLabel = "撤销",
+                                        duration = SnackbarDuration.Short,
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        feedingRepo.insert(deleted)
+                                    }
+                                }
                             },
-                            onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); deletingFeeding = f },
-                        )
+                        ) {
+                            TimelineItem(
+                                time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" },
+                                useAccent = i % 2 == 1,
+                                emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" },
+                                title = DateUtils.feedingTypeLabel(f.type),
+                                subtitle = when (f.type) {
+                                    "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
+                                    "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
+                                    "food" -> "${f.foodName} ${f.amountG}g"
+                                    else -> "${f.amountMl}ml"
+                                },
+                                onClick = {
+                                    editingFeeding = f
+                                    showForm = true
+                                },
+                                onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); deletingFeeding = f },
+                            )
+                        }
                     }
                     groupIndex++
                 }
@@ -131,10 +159,21 @@ fun FeedingListScreen(navController: NavController) {
     if (showForm) {
         FeedingFormDialog(
             babyId = babyId,
-            onDismiss = { showForm = false },
-            onSave = { feeding ->
-                scope.launch { feedingRepo.insert(feeding) }
+            editEntity = editingFeeding,
+            onDismiss = {
                 showForm = false
+                editingFeeding = null
+            },
+            onSave = { feeding ->
+                scope.launch {
+                    if (editingFeeding != null) {
+                        feedingRepo.update(feeding)
+                    } else {
+                        feedingRepo.insert(feeding)
+                    }
+                    showForm = false
+                    editingFeeding = null
+                }
             },
         )
     }
@@ -146,8 +185,19 @@ fun FeedingListScreen(navController: NavController) {
             text = { Text("确定要删除这条喂养记录吗？") },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch { feedingRepo.delete(f) }
-                    deletingFeeding = null
+                    scope.launch {
+                        val deleted = f
+                        feedingRepo.delete(deleted)
+                        deletingFeeding = null
+                        val result = snackbarHostState.showSnackbar(
+                            message = "已删除喂养记录",
+                            actionLabel = "撤销",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            feedingRepo.insert(deleted)
+                        }
+                    }
                 }) { Text("删除", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
@@ -159,23 +209,37 @@ fun FeedingListScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity) -> Unit) {
-    var type by remember { mutableStateOf("breast") }
-    var amountMl by remember { mutableStateOf("") }
-    var durationMin by remember { mutableStateOf("") }
-    var breastSide by remember { mutableStateOf("双侧") }
-    var foodName by remember { mutableStateOf("") }
-    var amountG by remember { mutableStateOf("") }
-    var brand by remember { mutableStateOf("") }
+fun FeedingFormDialog(
+    babyId: Int,
+    editEntity: FeedingEntity? = null,
+    onDismiss: () -> Unit,
+    onSave: (FeedingEntity) -> Unit,
+) {
+    val isEdit = editEntity != null
+    var type by remember { mutableStateOf(editEntity?.type ?: "breast") }
+    var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
+    var durationMin by remember { mutableStateOf(editEntity?.durationMin?.toString() ?: "") }
+    var breastSide by remember { mutableStateOf(editEntity?.breastSide ?: "双侧") }
+    var foodName by remember { mutableStateOf(editEntity?.foodName ?: "") }
+    var amountG by remember { mutableStateOf(editEntity?.amountG?.toString() ?: "") }
+    var brand by remember { mutableStateOf(editEntity?.brand ?: "") }
     val now = LocalDateTime.now()
-    var feedingDateTime by remember { mutableStateOf(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
+    var feedingDateTime by remember {
+        mutableStateOf(
+            editEntity?.timestamp?.let { ts ->
+                try {
+                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                } catch (_: Exception) { now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
+            } ?: now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        )
+    }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.padding(horizontal = DT.pageMargin.dp).verticalScroll(rememberScrollState())) {
-            Text("记录喂养", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 16.dp))
+            Text(if (isEdit) "编辑喂养" else "记录喂养", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 16.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
                 listOf("breast" to "🤱 母乳", "formula" to "💧 配方", "food" to "🥣 辅食", "water" to "🥤 饮水").forEach { (t, label) ->
@@ -254,20 +318,34 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
-                    onSave(FeedingEntity(
-                        babyId = babyId, type = type,
-                        amountMl = amountMl.toIntOrNull(),
-                        durationMin = durationMin.toIntOrNull(),
-                        breastSide = if (type == "breast") breastSide else null,
-                        foodName = if (type == "food") foodName else null,
-                        amountG = amountG.toIntOrNull(),
-                        brand = brand.ifBlank { null },
-                        timestamp = feedingDateTime.replace(" ", "T") + ":00",
-                    ))
+                    val feeding = if (isEdit) {
+                        editEntity.copy(
+                            type = type,
+                            amountMl = amountMl.toIntOrNull(),
+                            durationMin = durationMin.toIntOrNull(),
+                            breastSide = if (type == "breast") breastSide else null,
+                            foodName = if (type == "food") foodName else null,
+                            amountG = amountG.toIntOrNull(),
+                            brand = brand.ifBlank { null },
+                            timestamp = feedingDateTime.replace(" ", "T") + ":00",
+                        )
+                    } else {
+                        FeedingEntity(
+                            babyId = babyId, type = type,
+                            amountMl = amountMl.toIntOrNull(),
+                            durationMin = durationMin.toIntOrNull(),
+                            breastSide = if (type == "breast") breastSide else null,
+                            foodName = if (type == "food") foodName else null,
+                            amountG = amountG.toIntOrNull(),
+                            brand = brand.ifBlank { null },
+                            timestamp = feedingDateTime.replace(" ", "T") + ":00",
+                        )
+                    }
+                    onSave(feeding)
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = MaterialTheme.shapes.medium,
-            ) { Text("保存") }
+            ) { Text(if (isEdit) "更新" else "保存") }
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -323,7 +401,15 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TimelineItem(time: String, useAccent: Boolean = false, emoji: String, title: String, subtitle: String, onLongClick: () -> Unit = {}) {
+fun TimelineItem(
+    time: String,
+    useAccent: Boolean = false,
+    emoji: String,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
+) {
     val c = LocalThemeColors.current
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     val tint = if (useAccent) c.accent else c.primary
@@ -332,13 +418,12 @@ fun TimelineItem(time: String, useAccent: Boolean = false, emoji: String, title:
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
-            .combinedClickable(onLongClick = onLongClick, onClick = {}),
+            .combinedClickable(onLongClick = onLongClick, onClick = onClick),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = c.card),
     ) {
         Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-            // 左侧圆角图标背景（primary / accent 交替）
             Box(
                 Modifier
                     .size(DT.iconBgSize.dp)
@@ -347,12 +432,10 @@ fun TimelineItem(time: String, useAccent: Boolean = false, emoji: String, title:
                 contentAlignment = Alignment.Center,
             ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
             Spacer(Modifier.width(12.dp))
-            // 中间标题/副标题
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
             }
-            // 右侧时间
             Text(time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
         }
     }

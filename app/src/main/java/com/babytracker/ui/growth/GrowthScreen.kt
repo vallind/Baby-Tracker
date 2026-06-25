@@ -35,7 +35,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.GrowthRepository
 import kotlinx.coroutines.launch
 import com.babytracker.ui.components.rememberHaptic
-import com.babytracker.ui.components.longPressDeletable
+import com.babytracker.ui.components.SwipeToDeleteContainer
 import com.babytracker.ui.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -53,7 +53,9 @@ fun GrowthScreen(navController: NavController) {
     if (babyId == 0) return
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
+    var editingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
     var deletingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
@@ -66,13 +68,17 @@ fun GrowthScreen(navController: NavController) {
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
             ))
-    }, floatingActionButton = {
-        FloatingActionButton(onClick = { showForm = true }, containerColor = c.primary, contentColor = Color.White) {
+    }, snackbarHost = { SnackbarHost(snackbarHostState) },
+    floatingActionButton = {
+        FloatingActionButton(onClick = {
+            editingGrowth = null
+            showForm = true
+        }, containerColor = c.primary, contentColor = Color.White) {
             Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
-            // —— 顶部 Tab 区（浅蓝渐变背景 + 小圆角指示器）——
+            // —— 顶部 Tab 区 ——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
                 Row(Modifier.fillMaxWidth()) {
                     tabs.forEachIndexed { i, label ->
@@ -86,7 +92,6 @@ fun GrowthScreen(navController: NavController) {
             }
             Spacer(Modifier.height(DT.cardGap.dp))
             val chartData = remember(growths, tab) { growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt } }
-            // —— 当前数值大字显示 + 正常范围说明 ——
             val latest = chartData.lastOrNull()
             val normalRangeHint = when (types[tab]) {
                 "height" -> "WHO 参考范围 50-80 cm（6 月龄约 67 cm）"
@@ -136,7 +141,6 @@ fun GrowthScreen(navController: NavController) {
             val lineColor = c.primary
             val bgColor = c.card
             val areaBrush = Gradients.growthChart(c)
-            // 动态刻度：基于实际数据 min/max
             val minVal = chartData.minOfOrNull { it.value } ?: 0.0
             val maxVal = chartData.maxOfOrNull { it.value } ?: 100.0
             val range = (maxVal - minVal).coerceAtLeast(1.0)
@@ -159,9 +163,7 @@ fun GrowthScreen(navController: NavController) {
                 }
                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
                     val w = size.width; val h = size.height
-                    // 网格线
                     for (i in 0..3) { drawLine(gridColor, Offset(0f, h * i / 4), Offset(w, h * i / 4), strokeWidth = 1f) }
-                    // WHO 参考百分位虚线（仅当有数据且类型为 weight/height 时显示）
                     val whoLines = whoReferenceLines(types[tab], minVal, maxVal, range)
                     whoLines.forEach { percentile ->
                         val y = h * (1f - ((percentile - minVal) / range).toFloat()).coerceIn(0f, h)
@@ -177,7 +179,6 @@ fun GrowthScreen(navController: NavController) {
                     if (chartData.size > 1 && chartProgress > 0f) {
                         val points = chartData.mapIndexed { i, g -> Offset(w * i / (chartData.size - 1), h * (1f - ((g.value - minVal) / range).toFloat())) }
                         val visibleCount = ((points.size - 1) * chartProgress).toInt().coerceIn(0, points.size - 1)
-                        // 渐变填充区域
                         val areaPath = androidx.compose.ui.graphics.Path().apply {
                             moveTo(points[0].x, h)
                             for (i in 0..visibleCount) { lineTo(points[i].x, points[i].y) }
@@ -185,9 +186,7 @@ fun GrowthScreen(navController: NavController) {
                             close()
                         }
                         drawPath(areaPath, brush = areaBrush)
-                        // 折线
                         for (i in 0 until visibleCount) { drawLine(lineColor, points[i], points[i + 1], strokeWidth = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round) }
-                        // 数据点：双层圆
                         for (i in 0..visibleCount) {
                             drawCircle(lineColor, 5.dp.toPx(), points[i])
                             drawCircle(bgColor, 2.5.dp.toPx(), points[i])
@@ -197,7 +196,7 @@ fun GrowthScreen(navController: NavController) {
                         drawCircle(bgColor, 2.5.dp.toPx(), Offset(w / 2, h / 2))
                     }
                 }
-                val data2 = chartData  // 复用同一变量，避免重复计算
+                val data2 = chartData
                 if (data2.size > 1) {
                     Row(Modifier.fillMaxWidth().padding(start = 36.dp, top = 300.dp - 20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                         data2.forEachIndexed { i, g ->
@@ -221,18 +220,46 @@ fun GrowthScreen(navController: NavController) {
                     enter = fadeIn() + slideInVertically { it / 2 },
                 ) {
                 val itemShape = RoundedCornerShape(DT.cardRadius.dp)
-                Card(
-                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingGrowth = g }.shadow(elevation = DT.cardElevation.dp, shape = itemShape),
-                    shape = itemShape,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    colors = CardDefaults.cardColors(containerColor = c.card),
+                SwipeToDeleteContainer(
+                    onDelete = {
+                        scope.launch {
+                            val deleted = g
+                            growthRepo.delete(deleted)
+                            val result = snackbarHostState.showSnackbar(
+                                message = "已删除生长记录",
+                                actionLabel = "撤销",
+                                duration = SnackbarDuration.Short,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                growthRepo.insert(deleted)
+                            }
+                        }
+                    },
                 ) {
-                    Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
-                            Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                    Card(
+                        Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth()
+                            .combinedClickable(
+                                onClick = {
+                                    editingGrowth = g
+                                    showForm = true
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    deletingGrowth = g
+                                },
+                            )
+                            .shadow(elevation = DT.cardElevation.dp, shape = itemShape),
+                        shape = itemShape,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        colors = CardDefaults.cardColors(containerColor = c.card),
+                    ) {
+                        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                                Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                            }
                         }
                     }
                 }
@@ -246,10 +273,21 @@ fun GrowthScreen(navController: NavController) {
     if (showForm) {
         GrowthFormDialog(
             babyId = babyId,
-            onDismiss = { showForm = false },
-            onSave = { growth ->
-                scope.launch { growthRepo.insert(growth) }
+            editEntity = editingGrowth,
+            onDismiss = {
                 showForm = false
+                editingGrowth = null
+            },
+            onSave = { growth ->
+                scope.launch {
+                    if (editingGrowth != null) {
+                        growthRepo.update(growth)
+                    } else {
+                        growthRepo.insert(growth)
+                    }
+                    showForm = false
+                    editingGrowth = null
+                }
             },
         )
     }
@@ -261,8 +299,19 @@ fun GrowthScreen(navController: NavController) {
             text = { Text("确定要删除这条生长记录吗？") },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch { growthRepo.delete(g) }
-                    deletingGrowth = null
+                    scope.launch {
+                        val deleted = g
+                        growthRepo.delete(deleted)
+                        deletingGrowth = null
+                        val result = snackbarHostState.showSnackbar(
+                            message = "已删除生长记录",
+                            actionLabel = "撤销",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            growthRepo.insert(deleted)
+                        }
+                    }
                 }) { Text("删除", color = c.danger) }
             },
             dismissButton = {
@@ -274,19 +323,33 @@ fun GrowthScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) -> Unit) {
+fun GrowthFormDialog(
+    babyId: Int,
+    editEntity: GrowthEntity? = null,
+    onDismiss: () -> Unit,
+    onSave: (GrowthEntity) -> Unit,
+) {
     val c = LocalThemeColors.current
-    var type by remember { mutableStateOf("height") }
-    var value by remember { mutableStateOf("") }
-    var measuredAt by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
-    var note by remember { mutableStateOf("") }
+    val isEdit = editEntity != null
+    var type by remember { mutableStateOf(editEntity?.type ?: "height") }
+    var value by remember { mutableStateOf(editEntity?.value?.let { if (it == it.toLong().toDouble() && it == 0.0) "" else String.format("%.1f", it) } ?: "") }
+    var measuredAt by remember {
+        mutableStateOf(
+            editEntity?.measuredAt?.let { ts ->
+                try {
+                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                } catch (_: Exception) { LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
+            } ?: LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        )
+    }
+    var note by remember { mutableStateOf(editEntity?.note ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.padding(horizontal = DT.pageMargin.dp).verticalScroll(rememberScrollState())) {
-            Text("记录生长", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(bottom = 16.dp))
+            Text(if (isEdit) "编辑生长" else "记录生长", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(bottom = 16.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
                 listOf("height" to "📏 身高", "weight" to "⚖️ 体重", "head" to "📐 头围").forEach { (t, label) ->
@@ -324,17 +387,27 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) 
 
             Button(
                 onClick = {
-                    onSave(GrowthEntity(
-                        babyId = babyId, type = type,
-                        value = value.toDoubleOrNull() ?: 0.0,
-                        measuredAt = measuredAt.replace(" ", "T") + ":00",
-                        note = note.ifBlank { null },
-                    ))
+                    val growth = if (isEdit) {
+                        editEntity.copy(
+                            type = type,
+                            value = value.toDoubleOrNull() ?: 0.0,
+                            measuredAt = measuredAt.replace(" ", "T") + ":00",
+                            note = note.ifBlank { null },
+                        )
+                    } else {
+                        GrowthEntity(
+                            babyId = babyId, type = type,
+                            value = value.toDoubleOrNull() ?: 0.0,
+                            measuredAt = measuredAt.replace(" ", "T") + ":00",
+                            note = note.ifBlank { null },
+                        )
+                    }
+                    onSave(growth)
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-            ) { Text("保存", color = Color.White) }
+            ) { Text(if (isEdit) "更新" else "保存", color = Color.White) }
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -389,21 +462,15 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) 
 }
 /**
  * WHO 0-2 岁参考百分位（简化版，仅作图表参考虚线使用）。
- * 返回当前数据范围内可见的百分位值列表。
- *
- * 数据来源：WHO Child Growth Standards（男孩/女孩 0-2 岁平均值，取近似中位 ± 偏移）。
- * 简化处理：只返回与当前数据 [minVal, maxVal] 范围有交集的中位/15th/85th 三条线。
  */
 private fun whoReferenceLines(type: String, minVal: Double, maxVal: Double, range: Double): List<Double> {
-    // 各类型 6 月龄参考值（中位数）
     val median = when (type) {
-        "height" -> 67.0  // 6 月龄身高中位 cm
-        "weight" -> 7.5   // 6 月龄体重中位 kg
-        "head" -> 43.0    // 6 月龄头围中位 cm
+        "height" -> 67.0
+        "weight" -> 7.5
+        "head" -> 43.0
         else -> return emptyList()
     }
-    // 生成 3 条参考线：85th / 50th / 15th
-    val offsets = listOf(0.10, 0.0, -0.10)  // +10% / 中位 / -10%
+    val offsets = listOf(0.10, 0.0, -0.10)
     return offsets.map { median * (1 + it) }
         .filter { it in (minVal - range * 0.2)..(maxVal + range * 0.2) }
 }

@@ -27,7 +27,7 @@ import com.babytracker.data.repository.HealthRepository
 import kotlinx.coroutines.launch
 import com.babytracker.core.database.entity.HealthRecordEntity
 import com.babytracker.ui.components.rememberHaptic
-import com.babytracker.ui.components.longPressDeletable
+import com.babytracker.ui.components.SwipeToDeleteContainer
 import com.babytracker.ui.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -50,7 +50,9 @@ fun HealthScreen(navController: NavController) {
     if (babyId == 0) return
     val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
+    var editingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }
     var deletingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     Scaffold(containerColor = c.bg, topBar = {
@@ -60,8 +62,12 @@ fun HealthScreen(navController: NavController) {
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
             ))
-    }, floatingActionButton = {
-        FloatingActionButton(onClick = { showForm = true }, containerColor = c.primary, contentColor = Color.White) {
+    }, snackbarHost = { SnackbarHost(snackbarHostState) },
+    floatingActionButton = {
+        FloatingActionButton(onClick = {
+            editingRecord = null
+            showForm = true
+        }, containerColor = c.primary, contentColor = Color.White) {
             Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
@@ -91,7 +97,24 @@ fun HealthScreen(navController: NavController) {
                         category = category,
                         items = items,
                         useAccent = index % 2 == 1,
+                        onClick = { record ->
+                            editingRecord = record
+                            showForm = true
+                        },
                         onLongPress = { deletingRecord = it },
+                        onDelete = { record ->
+                            scope.launch {
+                                healthRepo.delete(record)
+                                val result = snackbarHostState.showSnackbar(
+                                    message = "已删除「${record.description.take(20)}」",
+                                    actionLabel = "撤销",
+                                    duration = SnackbarDuration.Short,
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    healthRepo.insert(record)
+                                }
+                            }
+                        },
                     )
                     Spacer(Modifier.height(DT.cardGapSm.dp))
                 }
@@ -102,11 +125,20 @@ fun HealthScreen(navController: NavController) {
     if (showForm) {
         HealthFormDialog(
             babyId = babyId,
-            onDismiss = { showForm = false },
+            editEntity = editingRecord,
+            onDismiss = {
+                showForm = false
+                editingRecord = null
+            },
             onSave = { record ->
                 scope.launch {
-                    healthRepo.insert(record)
+                    if (editingRecord != null) {
+                        healthRepo.update(record)
+                    } else {
+                        healthRepo.insert(record)
+                    }
                     showForm = false
+                    editingRecord = null
                 }
             }
         )
@@ -116,11 +148,22 @@ fun HealthScreen(navController: NavController) {
         AlertDialog(
             onDismissRequest = { deletingRecord = null },
             title = { Text("确认删除") },
-            text = { Text("确定要删除这条健康记录吗？") },
+            text = { Text("确定要删除这条健康记录吗？\n「${r.description.take(30)}」") },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch { healthRepo.delete(r) }
-                    deletingRecord = null
+                    scope.launch {
+                        val deleted = r
+                        healthRepo.delete(deleted)
+                        deletingRecord = null
+                        val result = snackbarHostState.showSnackbar(
+                            message = "已删除「${deleted.description.take(20)}」",
+                            actionLabel = "撤销",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            healthRepo.insert(deleted)
+                        }
+                    }
                 }) { Text("删除", color = c.danger) }
             },
             dismissButton = {
@@ -131,13 +174,15 @@ fun HealthScreen(navController: NavController) {
 }
 
 /** 单个分类卡片：标题 + 内容列表。 */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun HealthCategoryCard(
     category: String,
     items: List<HealthRecordEntity>,
     useAccent: Boolean,
+    onClick: (HealthRecordEntity) -> Unit,
     onLongPress: (HealthRecordEntity) -> Unit,
+    onDelete: (HealthRecordEntity) -> Unit,
 ) {
     val c = LocalThemeColors.current
     val haptic = rememberHaptic()
@@ -171,33 +216,43 @@ private fun HealthCategoryCard(
             Spacer(Modifier.height(8.dp))
             // —— 记录列表 ——
             items.forEachIndexed { i, r ->
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .longPressDeletable(haptic) { onLongPress(r) }
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.Top,
+                SwipeToDeleteContainer(
+                    onDelete = { onDelete(r) },
                 ) {
-                    Box(
+                    Row(
                         Modifier
-                            .padding(top = 4.dp)
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(tint),
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(r.description, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
-                        Spacer(Modifier.height(2.dp))
-                        val dateText = try {
-                            DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
-                        } catch (_: Exception) { r.recordDate.take(10) }
-                        Text(dateText, fontSize = 11.sp, color = c.textSecondary)
-                        if (!r.doctorName.isNullOrBlank()) {
-                            Text("医生：${r.doctorName}", fontSize = 11.sp, color = c.textSecondary)
-                        }
-                        if (!r.note.isNullOrBlank()) {
-                            Text(r.note, fontSize = 12.sp, color = c.textSecondary)
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = { onClick(r) },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    onLongPress(r)
+                                },
+                            )
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Box(
+                            Modifier
+                                .padding(top = 4.dp)
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(tint),
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(r.description, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                            Spacer(Modifier.height(2.dp))
+                            val dateText = try {
+                                DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
+                            } catch (_: Exception) { r.recordDate.take(10) }
+                            Text(dateText, fontSize = 11.sp, color = c.textSecondary)
+                            if (!r.doctorName.isNullOrBlank()) {
+                                Text("医生：${r.doctorName}", fontSize = 11.sp, color = c.textSecondary)
+                            }
+                            if (!r.note.isNullOrBlank()) {
+                                Text(r.note, fontSize = 12.sp, color = c.textSecondary)
+                            }
                         }
                     }
                 }
@@ -213,15 +268,22 @@ private fun HealthCategoryCard(
 @Composable
 fun HealthFormDialog(
     babyId: Int,
+    editEntity: HealthRecordEntity? = null,
     onDismiss: () -> Unit,
     onSave: (HealthRecordEntity) -> Unit,
 ) {
     val c = LocalThemeColors.current
-    var category by remember { mutableStateOf("allergy") }
-    var description by remember { mutableStateOf("") }
-    var doctorName by remember { mutableStateOf("") }
-    var recordDate by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))) }
-    var note by remember { mutableStateOf("") }
+    val isEdit = editEntity != null
+    var category by remember { mutableStateOf(editEntity?.category ?: "allergy") }
+    var description by remember { mutableStateOf(editEntity?.description ?: "") }
+    var doctorName by remember { mutableStateOf(editEntity?.doctorName ?: "") }
+    var recordDate by remember {
+        mutableStateOf(
+            editEntity?.recordDate?.take(10)
+                ?: LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        )
+    }
+    var note by remember { mutableStateOf(editEntity?.note ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val categories = listOf(
@@ -239,7 +301,7 @@ fun HealthFormDialog(
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.padding(horizontal = DT.pageMargin.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
-            Text("添加健康记录", style = MaterialTheme.typography.headlineSmall, color = c.textPrimary)
+            Text(if (isEdit) "编辑健康记录" else "添加健康记录", style = MaterialTheme.typography.headlineSmall, color = c.textPrimary)
             Spacer(Modifier.height(16.dp))
             Row(Modifier.horizontalScroll(rememberScrollState())) {
                 categories.forEach { (key, label) ->
@@ -301,21 +363,32 @@ fun HealthFormDialog(
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = {
-                    onSave(HealthRecordEntity(
-                        babyId = babyId,
-                        category = category,
-                        description = description,
-                        doctorName = doctorName.ifBlank { null },
-                        recordDate = recordDate + "T00:00:00",
-                        note = note.ifBlank { null },
-                    ))
+                    val record = if (isEdit) {
+                        editEntity.copy(
+                            category = category,
+                            description = description,
+                            doctorName = doctorName.ifBlank { null },
+                            recordDate = recordDate + "T00:00:00",
+                            note = note.ifBlank { null },
+                        )
+                    } else {
+                        HealthRecordEntity(
+                            babyId = babyId,
+                            category = category,
+                            description = description,
+                            doctorName = doctorName.ifBlank { null },
+                            recordDate = recordDate + "T00:00:00",
+                            note = note.ifBlank { null },
+                        )
+                    }
+                    onSave(record)
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
                 enabled = description.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = Color.White)
             ) {
-                Text("保存", style = MaterialTheme.typography.titleSmall)
+                Text(if (isEdit) "更新" else "保存", style = MaterialTheme.typography.titleSmall)
             }
         }
     }

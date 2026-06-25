@@ -27,7 +27,7 @@ import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.data.repository.VaccinationRepository
 import com.babytracker.data.repository.BabyRepository
 import com.babytracker.ui.components.rememberHaptic
-import com.babytracker.ui.components.longPressDeletable
+import com.babytracker.ui.components.SwipeToDeleteContainer
 import com.babytracker.ui.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -49,8 +49,10 @@ fun VaccinationListScreen(navController: NavController) {
 
     var filter by remember { mutableStateOf("pending") }
     var showForm by remember { mutableStateOf(false) }
+    var editingVac by remember { mutableStateOf<VaccinationEntity?>(null) }
     var deletingVac by remember { mutableStateOf<VaccinationEntity?>(null) }
     var showGenerateConfirm by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     Scaffold(containerColor = c.bg, topBar = {
@@ -60,13 +62,17 @@ fun VaccinationListScreen(navController: NavController) {
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
             ))
-    }, floatingActionButton = {
-        FloatingActionButton(onClick = { showForm = true }, containerColor = c.primary, contentColor = Color.White) {
+    }, snackbarHost = { SnackbarHost(snackbarHostState) },
+    floatingActionButton = {
+        FloatingActionButton(onClick = {
+            editingVac = null
+            showForm = true
+        }, containerColor = c.primary, contentColor = Color.White) {
             Icon(Icons.Default.Add, contentDescription = "添加")
         }
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
-            // —— 顶部 Tab 区（浅蓝渐变背景 + 小圆角指示器）——
+            // —— 顶部 Tab 区 ——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
                 Row(Modifier.fillMaxWidth()) {
                     listOf("pending" to "接种计划", "done" to "接种记录").forEach { (s, l) ->
@@ -91,27 +97,54 @@ fun VaccinationListScreen(navController: NavController) {
             }
             filtered.forEach { v ->
                     val itemShape = RoundedCornerShape(DT.cardRadius.dp)
-                    Card(
-                        Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingVac = v }.shadow(elevation = DT.cardElevation.dp, shape = itemShape),
-                        shape = itemShape,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        colors = CardDefaults.cardColors(containerColor = c.card),
+                    SwipeToDeleteContainer(
+                        onDelete = {
+                            scope.launch {
+                                val deleted = v
+                                vacRepo.delete(deleted)
+                                val result = snackbarHostState.showSnackbar(
+                                    message = "已删除「${deleted.name}」",
+                                    actionLabel = "撤销",
+                                    duration = SnackbarDuration.Short,
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    vacRepo.insert(deleted)
+                                }
+                            }
+                        },
                     ) {
-                    Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
-                            Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                        }
-                        val tagColor = if (v.status == "done") c.success else c.accent
-                        Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                            Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
+                        Card(
+                            Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth()
+                                .combinedClickable(
+                                    onClick = {
+                                        editingVac = v
+                                        showForm = true
+                                    },
+                                    onLongClick = {
+                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                        deletingVac = v
+                                    },
+                                )
+                                .shadow(elevation = DT.cardElevation.dp, shape = itemShape),
+                            shape = itemShape,
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            colors = CardDefaults.cardColors(containerColor = c.card),
+                        ) {
+                        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                                Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                            }
+                            val tagColor = if (v.status == "done") c.success else c.accent
+                            Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                                Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
+                    }
                 }
-            }
-            // —— 底部提示（仅在接种计划 Tab 显示）——
             if (filter == "pending") {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -126,18 +159,25 @@ fun VaccinationListScreen(navController: NavController) {
     }
 
     if (showForm) {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(onDismissRequest = { showForm = false }, sheetState = sheetState) {
-            VaccinationFormDialog(
-                babyId = babyId,
-                onSave = { vac ->
-                    scope.launch {
+        VaccinationFormDialog(
+            babyId = babyId,
+            editEntity = editingVac,
+            onSave = { vac ->
+                scope.launch {
+                    if (editingVac != null) {
+                        vacRepo.update(vac)
+                    } else {
                         vacRepo.insert(vac)
-                        showForm = false
                     }
+                    showForm = false
+                    editingVac = null
                 }
-            )
-        }
+            },
+            onDismiss = {
+                showForm = false
+                editingVac = null
+            },
+        )
     }
 
     if (showGenerateConfirm) {
@@ -169,8 +209,19 @@ fun VaccinationListScreen(navController: NavController) {
             text = { Text("确定要删除「${v.name}」吗？") },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch { vacRepo.delete(v) }
-                    deletingVac = null
+                    scope.launch {
+                        val deleted = v
+                        vacRepo.delete(deleted)
+                        deletingVac = null
+                        val result = snackbarHostState.showSnackbar(
+                            message = "已删除「${deleted.name}」",
+                            actionLabel = "撤销",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            vacRepo.insert(deleted)
+                        }
+                    }
                 }) { Text("删除", color = c.danger) }
             },
             dismissButton = {
@@ -184,65 +235,93 @@ fun VaccinationListScreen(navController: NavController) {
 @Composable
 fun VaccinationFormDialog(
     babyId: Int,
+    editEntity: VaccinationEntity? = null,
     onSave: (VaccinationEntity) -> Unit,
+    onDismiss: () -> Unit,
 ) {
     val c = LocalThemeColors.current
-    var name by remember { mutableStateOf("") }
-    var dose by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("pending") }
-    var scheduledDate by remember { mutableStateOf(LocalDate.now().toString()) }
-    var administeredDate by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
+    val isEdit = editEntity != null
+    var name by remember { mutableStateOf(editEntity?.name ?: "") }
+    var dose by remember { mutableStateOf(editEntity?.dose ?: "") }
+    var status by remember { mutableStateOf(editEntity?.status ?: "pending") }
+    var scheduledDate by remember {
+        mutableStateOf(
+            editEntity?.scheduledDate?.take(10)
+                ?: LocalDate.now().toString()
+        )
+    }
+    var administeredDate by remember {
+        mutableStateOf(
+            editEntity?.administeredDate?.take(10) ?: ""
+        )
+    }
+    var note by remember { mutableStateOf(editEntity?.note ?: "") }
     var showScheduledDatePicker by remember { mutableStateOf(false) }
     var showAdministeredDatePicker by remember { mutableStateOf(false) }
 
-    Column(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 0.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
-        Text("添加疫苗", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 16.dp))
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("疫苗名称") }, leadingIcon = { Text("💉", style = MaterialTheme.typography.titleMedium) }, isError = name.isBlank(), supportingText = { if (name.isBlank()) Text("名称不能为空") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 0.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
+            Text(if (isEdit) "编辑疫苗" else "添加疫苗", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 16.dp))
 
-        OutlinedTextField(value = dose, onValueChange = { dose = it }, label = { Text("剂次 (可选)") }, placeholder = { Text("第1剂") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("疫苗名称") }, leadingIcon = { Text("💉", style = MaterialTheme.typography.titleMedium) }, isError = name.isBlank(), supportingText = { if (name.isBlank()) Text("名称不能为空") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
 
-        Text("状态", style = MaterialTheme.typography.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = 8.dp))
-        Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("pending" to "未接种", "done" to "已接种", "skipped" to "已跳过").forEach { (s, l) ->
-                FilterChip(
-                    selected = status == s,
-                    onClick = { status = s },
-                    label = { Text(l, style = MaterialTheme.typography.bodySmall) },
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = c.primary.copy(alpha = 0.12f), selectedLabelColor = c.primary)
-                )
+            OutlinedTextField(value = dose, onValueChange = { dose = it }, label = { Text("剂次 (可选)") }, placeholder = { Text("第1剂") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
+
+            Text("状态", style = MaterialTheme.typography.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = 8.dp))
+            Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("pending" to "未接种", "done" to "已接种", "skipped" to "已跳过").forEach { (s, l) ->
+                    FilterChip(
+                        selected = status == s,
+                        onClick = { status = s },
+                        label = { Text(l, style = MaterialTheme.typography.bodySmall) },
+                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = c.primary.copy(alpha = 0.12f), selectedLabelColor = c.primary)
+                    )
+                }
             }
-        }
 
-        OutlinedTextField(value = scheduledDate, onValueChange = {}, readOnly = true, label = { Text("计划接种日期 (可选)") }, leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showScheduledDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
+            OutlinedTextField(value = scheduledDate, onValueChange = {}, readOnly = true, label = { Text("计划接种日期 (可选)") }, leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showScheduledDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
 
-        if (status == "done") {
-            OutlinedTextField(value = administeredDate, onValueChange = {}, readOnly = true, label = { Text("实际接种日期 (可选)") }, leadingIcon = { Text("✅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showAdministeredDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
-        }
+            if (status == "done") {
+                OutlinedTextField(value = administeredDate, onValueChange = {}, readOnly = true, label = { Text("实际接种日期 (可选)") }, leadingIcon = { Text("✅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showAdministeredDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
+            }
 
-        OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
+            OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
 
-        Button(
-            onClick = {
-                val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
-                val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
-                onSave(VaccinationEntity(
-                    babyId = babyId,
-                    name = name,
-                    dose = dose.ifBlank { null },
-                    scheduledDate = scheduledDateTime,
-                    administeredDate = administeredDateTime,
-                    status = status,
-                    note = note.ifBlank { null }
-                ))
-            },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            shape = RoundedCornerShape(DT.buttonRadius.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-            enabled = name.isNotBlank()
-        ) {
-            Text("保存", color = Color.White, style = MaterialTheme.typography.titleSmall)
+            Button(
+                onClick = {
+                    val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
+                    val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
+                    val vac = if (isEdit) {
+                        editEntity.copy(
+                            name = name,
+                            dose = dose.ifBlank { null },
+                            scheduledDate = scheduledDateTime,
+                            administeredDate = administeredDateTime,
+                            status = status,
+                            note = note.ifBlank { null }
+                        )
+                    } else {
+                        VaccinationEntity(
+                            babyId = babyId,
+                            name = name,
+                            dose = dose.ifBlank { null },
+                            scheduledDate = scheduledDateTime,
+                            administeredDate = administeredDateTime,
+                            status = status,
+                            note = note.ifBlank { null }
+                        )
+                    }
+                    onSave(vac)
+                },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(DT.buttonRadius.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = c.primary),
+                enabled = name.isNotBlank()
+            ) {
+                Text(if (isEdit) "更新" else "保存", color = Color.White, style = MaterialTheme.typography.titleSmall)
+            }
         }
     }
 

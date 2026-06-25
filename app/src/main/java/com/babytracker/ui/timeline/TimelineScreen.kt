@@ -21,6 +21,7 @@ import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.BabyController
 import com.babytracker.ui.components.BottomNavBar
 import com.babytracker.ui.components.EmptyState
+import com.babytracker.ui.components.SwipeToDeleteContainer
 import com.babytracker.ui.components.rememberHaptic
 import com.babytracker.ui.navigation.Screen
 import kotlinx.coroutines.launch
@@ -40,11 +41,13 @@ fun TimelineScreen(navController: NavController) {
     val state by viewModel.state.collectAsState()
     var showTypePicker by remember { mutableStateOf(false) }
     var deletingItem by remember { mutableStateOf<TimelineItem?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(babyId) { viewModel.load(babyId) }
 
     Scaffold(
         containerColor = c.bg,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -104,37 +107,53 @@ fun TimelineScreen(navController: NavController) {
                         items.forEachIndexed { i, item ->
                             val cardShape = RoundedCornerShape(DT.cardRadius.dp)
                             val tint = if (item.accent) c.accent else c.primary
-                            Card(
-                                Modifier
-                                    .padding(vertical = 4.dp)
-                                    .fillMaxWidth()
-                                    .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
-                                    .combinedClickable(
-                                        onClick = { navigateToDetail(navController, item) },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            deletingItem = item
-                                        },
-                                    ),
-                                shape = cardShape,
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                colors = CardDefaults.cardColors(containerColor = c.card),
-                            ) {
-                                Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        Modifier
-                                            .size(DT.iconBgSize.dp)
-                                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                            .background(tint.copy(alpha = 0.14f)),
-                                        contentAlignment = Alignment.Center,
-                                    ) { Text(item.emoji, style = MaterialTheme.typography.titleLarge) }
-                                    Spacer(Modifier.width(12.dp))
-                                    Column(Modifier.weight(1f)) {
-                                        Text(item.title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                                        Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                            SwipeToDeleteContainer(
+                                onDelete = {
+                                    scope.launch {
+                                        viewModel.delete(item)
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "已删除「${item.title}」",
+                                            actionLabel = "撤销",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            viewModel.undoLastDelete()
+                                        }
                                     }
-                                    if (item.time.isNotEmpty()) {
-                                        Text(item.time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
+                                },
+                            ) {
+                                Card(
+                                    Modifier
+                                        .padding(vertical = 4.dp)
+                                        .fillMaxWidth()
+                                        .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
+                                        .combinedClickable(
+                                            onClick = { navigateToDetail(navController, item) },
+                                            onLongClick = {
+                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                                deletingItem = item
+                                            },
+                                        ),
+                                    shape = cardShape,
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                                    colors = CardDefaults.cardColors(containerColor = c.card),
+                                ) {
+                                    Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            Modifier
+                                                .size(DT.iconBgSize.dp)
+                                                .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                                .background(tint.copy(alpha = 0.14f)),
+                                            contentAlignment = Alignment.Center,
+                                        ) { Text(item.emoji, style = MaterialTheme.typography.titleLarge) }
+                                        Spacer(Modifier.width(12.dp))
+                                        Column(Modifier.weight(1f)) {
+                                            Text(item.title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                            Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                        }
+                                        if (item.time.isNotEmpty()) {
+                                            Text(item.time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
+                                        }
                                     }
                                 }
                             }
@@ -180,11 +199,21 @@ fun TimelineScreen(navController: NavController) {
         AlertDialog(
             onDismissRequest = { deletingItem = null },
             title = { Text("确认删除") },
-            text = { Text("确定要删除这条${item.title}记录吗？") },
+            text = { Text("确定要删除这条「${item.title}」记录吗？") },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch { viewModel.delete(item) }
-                    deletingItem = null
+                    scope.launch {
+                        viewModel.delete(item)
+                        deletingItem = null
+                        val result = snackbarHostState.showSnackbar(
+                            message = "已删除「${item.title}」",
+                            actionLabel = "撤销",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            viewModel.undoLastDelete()
+                        }
+                    }
                 }) { Text("删除", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {

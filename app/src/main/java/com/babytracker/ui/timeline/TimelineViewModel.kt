@@ -54,6 +54,10 @@ class TimelineViewModel(
     private var cachedGrowths: List<GrowthEntity> = emptyList()
     private var cachedHealths: List<HealthRecordEntity> = emptyList()
 
+    // 撤销删除：暂存最近一次删除的实体
+    private var lastDeletedEntity: Any? = null
+    private var lastDeletedType: String? = null
+
     init {
         _trigger
             .filterNotNull()
@@ -185,15 +189,41 @@ class TimelineViewModel(
         _trigger.value = babyId
     }
 
+    /** 删除记录，并在内部暂存实体副本用于可能的撤销操作 */
     fun delete(item: TimelineItem) {
         viewModelScope.launch {
             when (item.recordType) {
-                "feeding" -> cachedFeedings.find { it.id == item.id }?.let { feedingRepo.delete(it) }
-                "sleep" -> cachedSleeps.find { it.id == item.id }?.let { sleepRepo.delete(it) }
-                "diaper" -> cachedDiapers.find { it.id == item.id }?.let { diaperRepo.delete(it) }
-                "growth" -> cachedGrowths.find { it.id == item.id }?.let { growthRepo.delete(it) }
-                "health" -> cachedHealths.find { it.id == item.id }?.let { healthRepo.delete(it) }
+                "feeding" -> cachedFeedings.find { it.id == item.id }?.let {
+                    lastDeletedEntity = it; lastDeletedType = "feeding"; feedingRepo.delete(it)
+                }
+                "sleep" -> cachedSleeps.find { it.id == item.id }?.let {
+                    lastDeletedEntity = it; lastDeletedType = "sleep"; sleepRepo.delete(it)
+                }
+                "diaper" -> cachedDiapers.find { it.id == item.id }?.let {
+                    lastDeletedEntity = it; lastDeletedType = "diaper"; diaperRepo.delete(it)
+                }
+                "growth" -> cachedGrowths.find { it.id == item.id }?.let {
+                    lastDeletedEntity = it; lastDeletedType = "growth"; growthRepo.delete(it)
+                }
+                "health" -> cachedHealths.find { it.id == item.id }?.let {
+                    lastDeletedEntity = it; lastDeletedType = "health"; healthRepo.delete(it)
+                }
             }
+        }
+    }
+
+    /** 撤销最近一次删除 */
+    fun undoLastDelete() {
+        viewModelScope.launch {
+            when (lastDeletedType) {
+                "feeding" -> (lastDeletedEntity as? FeedingEntity)?.let { feedingRepo.insert(it) }
+                "sleep" -> (lastDeletedEntity as? SleepEntity)?.let { sleepRepo.insert(it) }
+                "diaper" -> (lastDeletedEntity as? DiaperEntity)?.let { diaperRepo.insert(it) }
+                "growth" -> (lastDeletedEntity as? GrowthEntity)?.let { growthRepo.insert(it) }
+                "health" -> (lastDeletedEntity as? HealthRecordEntity)?.let { healthRepo.insert(it) }
+            }
+            lastDeletedEntity = null
+            lastDeletedType = null
         }
     }
 }

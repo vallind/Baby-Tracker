@@ -9,7 +9,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,7 +24,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.SleepRepository
 import kotlinx.coroutines.launch
-import com.babytracker.ui.components.longPressDeletable
+import com.babytracker.ui.components.SwipeToDeleteContainer
 import com.babytracker.ui.components.EmptyState
 import com.babytracker.ui.components.rememberHaptic
 import org.koin.compose.koinInject
@@ -44,7 +43,9 @@ fun SleepListScreen(navController: NavController) {
     if (babyId == 0) return
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
+    var editingSleep by remember { mutableStateOf<SleepEntity?>(null) }
     var deletingSleep by remember { mutableStateOf<SleepEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val today = java.time.LocalDate.now().toString()
     val night = sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }.firstOrNull()
@@ -57,9 +58,13 @@ fun SleepListScreen(navController: NavController) {
 
     Scaffold(
         containerColor = c.bg,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { showForm = true },
+                onClick = {
+                    editingSleep = null
+                    showForm = true
+                },
                 containerColor = c.primary,
                 contentColor = c.card,
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
@@ -69,7 +74,7 @@ fun SleepListScreen(navController: NavController) {
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
-            // —— 顶部页头：浅蓝渐变背景 + 返回 + 标题 ——
+            // —— 顶部页头 ——
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -102,7 +107,6 @@ fun SleepListScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(DT.cardInnerPadding.dp)) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        // 月亮图标背景（紫色淡背景，呼应夜间睡眠意象）
                         Box(
                             Modifier
                                 .size(DT.iconBgSizeLg.dp)
@@ -125,7 +129,7 @@ fun SleepListScreen(navController: NavController) {
                         }
                     }
                     Spacer(Modifier.height(16.dp))
-                    val goalSeconds = 14L * 3600L  // 14h 推荐夜间睡眠时长
+                    val goalSeconds = 14L * 3600L
                     val goalPercent = (nightDurSec.toFloat() / goalSeconds.toFloat()).coerceIn(0f, 1f)
                     Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(c.divider)) {
                         Box(Modifier.fillMaxWidth(goalPercent).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(Gradients.progress(c)))
@@ -139,7 +143,10 @@ fun SleepListScreen(navController: NavController) {
                     title = "还没有睡眠记录",
                     subtitle = "点击下方按钮，记录宝宝的睡眠时间",
                     actionText = "记录睡眠",
-                    onAction = { showForm = true },
+                    onAction = {
+                        editingSleep = null
+                        showForm = true
+                    },
                 )
             }
             val grouped = sleeps.groupBy { it.startTime.take(10) }
@@ -150,31 +157,56 @@ fun SleepListScreen(navController: NavController) {
                 val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
                 val sleepCardShape = RoundedCornerShape(DT.cardRadius.dp)
                 val tint = if (i % 2 == 1) c.accent else c.primary
-                Card(
-                    Modifier
-                        .padding(horizontal = DT.pageMargin.dp, vertical = 4.dp)
-                        .fillMaxWidth()
-                        .shadow(elevation = DT.cardElevation.dp, shape = sleepCardShape)
-                        .longPressDeletable(haptic) { deletingSleep = s },
-                    shape = sleepCardShape,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    colors = CardDefaults.cardColors(containerColor = c.card),
-                ) {
-                    Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                        // 左侧圆角图标背景（primary / accent 交替）
-                        Box(
-                            Modifier
-                                .size(DT.iconBgSize.dp)
-                                .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                .background(tint.copy(alpha = 0.14f)),
-                            contentAlignment = Alignment.Center,
-                        ) { Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                            Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                SwipeToDeleteContainer(
+                    onDelete = {
+                        scope.launch {
+                            val deleted = s
+                            sleepRepo.delete(deleted)
+                            val result = snackbarHostState.showSnackbar(
+                                message = "已删除睡眠记录",
+                                actionLabel = "撤销",
+                                duration = SnackbarDuration.Short,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                sleepRepo.insert(deleted)
+                            }
                         }
-                        Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = c.primary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    },
+                ) {
+                    Card(
+                        Modifier
+                            .padding(horizontal = DT.pageMargin.dp, vertical = 4.dp)
+                            .fillMaxWidth()
+                            .shadow(elevation = DT.cardElevation.dp, shape = sleepCardShape)
+                            .combinedClickable(
+                                onClick = {
+                                    editingSleep = s
+                                    showForm = true
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                    deletingSleep = s
+                                },
+                            ),
+                        shape = sleepCardShape,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        colors = CardDefaults.cardColors(containerColor = c.card),
+                    ) {
+                        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                Modifier
+                                    .size(DT.iconBgSize.dp)
+                                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                    .background(tint.copy(alpha = 0.14f)),
+                                contentAlignment = Alignment.Center,
+                            ) { Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                            }
+                            Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = c.primary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
                 }
@@ -184,7 +216,25 @@ fun SleepListScreen(navController: NavController) {
     }
 
     if (showForm) {
-        SleepFormDialog(babyId = babyId, sleepRepo = sleepRepo, onDismiss = { showForm = false })
+        SleepFormDialog(
+            babyId = babyId,
+            editEntity = editingSleep,
+            onDismiss = {
+                showForm = false
+                editingSleep = null
+            },
+            onSave = { sleep ->
+                scope.launch {
+                    if (editingSleep != null) {
+                        sleepRepo.update(sleep)
+                    } else {
+                        sleepRepo.insert(sleep)
+                    }
+                    showForm = false
+                    editingSleep = null
+                }
+            },
+        )
     }
 
     deletingSleep?.let { s ->
@@ -194,8 +244,19 @@ fun SleepListScreen(navController: NavController) {
             text = { Text("确定要删除这条睡眠记录吗？") },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch { sleepRepo.delete(s) }
-                    deletingSleep = null
+                    scope.launch {
+                        val deleted = s
+                        sleepRepo.delete(deleted)
+                        deletingSleep = null
+                        val result = snackbarHostState.showSnackbar(
+                            message = "已删除睡眠记录",
+                            actionLabel = "撤销",
+                            duration = SnackbarDuration.Short,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            sleepRepo.insert(deleted)
+                        }
+                    }
                 }) { Text("删除", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
@@ -207,20 +268,43 @@ fun SleepListScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SleepFormDialog(babyId: Int, sleepRepo: SleepRepository, onDismiss: () -> Unit) {
+fun SleepFormDialog(
+    babyId: Int,
+    editEntity: SleepEntity? = null,
+    onDismiss: () -> Unit,
+    onSave: (SleepEntity) -> Unit,
+) {
     val scope = rememberCoroutineScope()
+    val isEdit = editEntity != null
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectedType by remember { mutableStateOf("night") }
+    var selectedType by remember { mutableStateOf(editEntity?.type ?: "night") }
     val now = LocalDateTime.now()
-    var startTime by remember { mutableStateOf(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
-    var endTime by remember { mutableStateOf(now.plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
-    var note by remember { mutableStateOf("") }
+    var startTime by remember {
+        mutableStateOf(
+            editEntity?.startTime?.let { ts ->
+                try {
+                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                } catch (_: Exception) { now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
+            } ?: now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        )
+    }
+    var endTime by remember {
+        mutableStateOf(
+            editEntity?.endTime?.let { ts ->
+                try {
+                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                } catch (_: Exception) { now.plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
+            } ?: now.plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+        )
+    }
+    var note by remember { mutableStateOf(editEntity?.note ?: "") }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableIntStateOf(0) }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
+            Text(if (isEdit) "编辑睡眠" else "记录睡眠", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(bottom = 16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = { Text("🌙 夜间睡眠") })
                 FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("☀️ 小睡") })
@@ -233,18 +317,25 @@ fun SleepFormDialog(babyId: Int, sleepRepo: SleepRepository, onDismiss: () -> Un
             OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small)
             Spacer(Modifier.height(20.dp))
             Button(onClick = {
-                scope.launch {
-                    sleepRepo.insert(SleepEntity(
+                val sleep = if (isEdit) {
+                    editEntity.copy(
+                        type = selectedType,
+                        startTime = startTime.replace(" ", "T") + ":00",
+                        endTime = endTime.replace(" ", "T") + ":00",
+                        note = note.ifBlank { null },
+                    )
+                } else {
+                    SleepEntity(
                         babyId = babyId,
                         type = selectedType,
                         startTime = startTime.replace(" ", "T") + ":00",
                         endTime = endTime.replace(" ", "T") + ":00",
                         note = note.ifBlank { null },
-                    ))
-                    onDismiss()
+                    )
                 }
+                onSave(sleep)
             }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = MaterialTheme.shapes.small) {
-                Text("保存")
+                Text(if (isEdit) "更新" else "保存")
             }
             Spacer(Modifier.height(16.dp))
         }
