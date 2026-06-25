@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
@@ -24,10 +25,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.navigation.NavController
 import com.babytracker.core.database.entity.FeedingEntity
 import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.FeedingRepository
+import com.babytracker.ui.components.BottomNavBar
 import com.babytracker.ui.components.rememberHaptic
 import com.babytracker.ui.components.EmptyState
 import kotlinx.coroutines.launch
@@ -50,59 +53,75 @@ fun FeedingListScreen(navController: NavController) {
     var deletingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("喂养记录") },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
+        containerColor = c.bg,
+        bottomBar = { BottomNavBar(navController) },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showForm = true },
+                containerColor = c.primary,
+                contentColor = c.card,
+                shape = RoundedCornerShape(DT.buttonRadius.dp),
+                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                text = { Text("记录喂养", style = MaterialTheme.typography.titleSmall) },
             )
         },
-        bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
-                color = Color.Transparent,
-            ) {
-                Button(
-                    onClick = { showForm = true },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = MaterialTheme.shapes.medium,
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("记录喂养", style = MaterialTheme.typography.titleSmall)
-                }
-            }
-        },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp).verticalScroll(rememberScrollState())) {
-            if (feedings.isEmpty()) {
-                EmptyState(
-                    emoji = "🍼",
-                    title = "还没有喂养记录",
-                    subtitle = "点击下方按钮，记录宝宝的每一次进食",
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
+            // —— 顶部页头：浅蓝渐变背景 + 返回 + 标题 ——
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Gradients.pageHeader(c))
+                    .padding(horizontal = DT.pageMargin.dp)
+                    .height(DT.appBarHeight.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回", tint = c.textPrimary)
+                }
+                Text(
+                    "喂养记录",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = c.textPrimary,
                 )
             }
-            val grouped = feedings.groupBy { it.timestamp.take(10) }
-            grouped.forEach { (date, items) ->
-                Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
-                items.forEach { f ->
-                TimelineItem(
-                    time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" },
-                    color = when (f.type) { "breast" -> c.blue; "formula" -> c.green; "food" -> c.yellow; else -> c.cyan },
-                    emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" },
-                    title = DateUtils.feedingTypeLabel(f.type),
-                    subtitle = when (f.type) {
-                        "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
-                        "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
-                        "food" -> "${f.foodName} ${f.amountG}g"
-                        else -> "${f.amountMl}ml"
-                    },
-                    onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); deletingFeeding = f },
-                )
+
+            Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
+                if (feedings.isEmpty()) {
+                    EmptyState(
+                        emoji = "🍼",
+                        title = "还没有喂养记录",
+                        subtitle = "点击下方按钮，记录宝宝的每一次进食",
+                        actionText = "记录喂养",
+                        onAction = { showForm = true },
+                    )
+                }
+                val grouped = feedings.groupBy { it.timestamp.take(10) }
+                var groupIndex = 0
+                grouped.forEach { (date, items) ->
+                    Text(
+                        date,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = c.textSecondary,
+                        modifier = Modifier.padding(top = if (groupIndex == 0) DT.cardGap.dp else DT.cardGapSm.dp, bottom = 4.dp),
+                    )
+                    items.forEachIndexed { i, f ->
+                        TimelineItem(
+                            time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" },
+                            useAccent = i % 2 == 1,
+                            emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" },
+                            title = DateUtils.feedingTypeLabel(f.type),
+                            subtitle = when (f.type) {
+                                "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
+                                "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
+                                "food" -> "${f.foodName} ${f.amountG}g"
+                                else -> "${f.amountMl}ml"
+                            },
+                            onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); deletingFeeding = f },
+                        )
+                    }
+                    groupIndex++
                 }
             }
             Spacer(Modifier.height(80.dp))
@@ -304,25 +323,37 @@ fun FeedingFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (FeedingEntity
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TimelineItem(time: String, color: androidx.compose.ui.graphics.Color, emoji: String, title: String, subtitle: String, onLongClick: () -> Unit = {}) {
+fun TimelineItem(time: String, useAccent: Boolean = false, emoji: String, title: String, subtitle: String, onLongClick: () -> Unit = {}) {
     val c = LocalThemeColors.current
-    Row(Modifier.padding(vertical = 8.dp)) {
-        Text(time, Modifier.width(60.dp).padding(top = 8.dp), style = MaterialTheme.typography.titleSmall)
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(24.dp)) {
-            Box(Modifier.size(12.dp).clip(CircleShape).background(color).border(3.dp, color.copy(alpha = 0.2f), CircleShape))
-            Box(Modifier.width(2.dp).height(60.dp).background(MaterialTheme.colorScheme.outlineVariant))
-        }
-        Spacer(Modifier.width(12.dp))
-        Card(
-            Modifier.fillMaxWidth().heightIn(min = 80.dp).combinedClickable(onLongClick = onLongClick, onClick = {}),
-            shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        ) {
-            Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(DT.iconBgSize.dp).clip(CircleShape).background(color.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) { Text(title, style = MaterialTheme.typography.titleSmall); Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
+    val tint = if (useAccent) c.accent else c.primary
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
+            .combinedClickable(onLongClick = onLongClick, onClick = {}),
+        shape = cardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = c.card),
+    ) {
+        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+            // 左侧圆角图标背景（primary / accent 交替）
+            Box(
+                Modifier
+                    .size(DT.iconBgSize.dp)
+                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                    .background(tint.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center,
+            ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
+            Spacer(Modifier.width(12.dp))
+            // 中间标题/副标题
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
             }
+            // 右侧时间
+            Text(time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
         }
     }
 }

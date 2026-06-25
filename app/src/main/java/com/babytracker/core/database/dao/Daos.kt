@@ -99,3 +99,66 @@ interface DiaperDao {
     @Delete
     suspend fun delete(diaper: DiaperEntity)
 }
+
+@Dao
+interface MessageDao {
+    @Query("SELECT * FROM messages WHERE type = :type ORDER BY createTime DESC")
+    fun watchByType(type: String): Flow<List<MessageEntity>>
+
+    @Query("SELECT * FROM messages ORDER BY createTime DESC")
+    fun watchAll(): Flow<List<MessageEntity>>
+
+    @Query("SELECT COUNT(*) FROM messages WHERE isRead = 0")
+    fun watchUnreadCount(): Flow<Int>
+
+    @Insert
+    suspend fun insert(entity: MessageEntity): Long
+
+    @Query("UPDATE messages SET isRead = 1 WHERE id = :id")
+    suspend fun markRead(id: Long)
+
+    @Query("UPDATE messages SET isRead = 1")
+    suspend fun markAllRead()
+
+    @Delete
+    suspend fun delete(entity: MessageEntity)
+}
+
+@Dao
+interface DevelopmentAssessmentDao {
+    @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId ORDER BY assess_date DESC")
+    fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessmentEntity>>
+
+    @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId ORDER BY assess_date DESC LIMIT 1")
+    fun watchLatest(babyId: Int): Flow<DevelopmentAssessmentEntity?>
+
+    @Insert
+    suspend fun insert(entity: DevelopmentAssessmentEntity): Long
+
+    @Delete
+    suspend fun delete(entity: DevelopmentAssessmentEntity)
+}
+
+@Dao
+interface ReminderDao {
+    @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 0 ORDER BY due_date ASC")
+    fun watchPending(babyId: Int): Flow<List<ReminderEntity>>
+
+    @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 1 ORDER BY done_date DESC")
+    fun watchHistory(babyId: Int): Flow<List<ReminderEntity>>
+
+    @Insert
+    suspend fun insert(entity: ReminderEntity): Long
+
+    @Update
+    suspend fun update(entity: ReminderEntity)
+
+    @Query("UPDATE reminders SET is_done = 1, done_date = :doneDate WHERE id = :id")
+    suspend fun markDone(id: Int, doneDate: Long)
+
+    @Query("UPDATE reminders SET is_enabled = :enabled WHERE id = :id")
+    suspend fun setEnabled(id: Int, enabled: Boolean)
+
+    @Delete
+    suspend fun delete(entity: ReminderEntity)
+}

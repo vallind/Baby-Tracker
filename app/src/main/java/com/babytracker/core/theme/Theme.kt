@@ -42,11 +42,11 @@ val BabyTrackerTypography = Typography(
 )
 
 val BabyTrackerShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(20.dp),
-    large = RoundedCornerShape(28.dp),
-    extraLarge = RoundedCornerShape(32.dp),
+    extraSmall = RoundedCornerShape(12.dp),    // 原 8 → 12（更圆润，输入框/小元素）
+    small = RoundedCornerShape(16.dp),         // 原 16（不变，标准卡片）
+    medium = RoundedCornerShape(20.dp),        // 原 20（不变，中等卡片）
+    large = RoundedCornerShape(28.dp),         // 原 28（不变，大卡片/对话框）
+    extraLarge = RoundedCornerShape(36.dp),    // 原 32 → 36（底部弹层/超大圆角）
 )
 
 fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.ColorScheme {
@@ -113,7 +113,8 @@ fun BabyTrackerTheme(
         val activity = context as? Activity
         if (activity != null && Build.VERSION.SDK_INT >= 21) {
             val window = activity.window
-            window.statusBarColor = if (darkTheme) colorScheme.surface.toArgb() else colorScheme.primary.copy(alpha = 0.05f).toArgb()
+            // 状态栏融入页面背景（浅蓝），让顶部更柔和
+            window.statusBarColor = if (darkTheme) colorScheme.surface.toArgb() else colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, activity.window.decorView).isAppearanceLightStatusBars = !darkTheme
         }
     }
@@ -136,6 +137,11 @@ fun BabyTrackerTheme(
         cyan = colorScheme.tertiary,
         tagBg = colorScheme.errorContainer,
         tagText = colorScheme.onErrorContainer,
+        // 宝宝追踪专属辅助色：不来自 colorScheme，直接从 theme.colors 透传
+        accent = theme.colors.accent,
+        accentLight = theme.colors.accentLight,
+        pageBg = theme.colors.pageBg,
+        cardShadow = theme.colors.cardShadow,
     )
 
     CompositionLocalProvider(LocalThemeColors provides mergedColors) {

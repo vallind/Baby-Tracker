@@ -9,6 +9,10 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.data.repository.*
 import com.babytracker.ui.stats.StatsViewModel
 import com.babytracker.ui.home.HomeViewModel
+import com.babytracker.ui.message.MessageViewModel
+import com.babytracker.ui.development.DevelopmentAssessmentViewModel
+import com.babytracker.ui.reminder.ReminderViewModel
+import com.babytracker.ui.timeline.TimelineViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -25,8 +29,15 @@ val appModule = module {
     single<VaccinationRepository> { VaccinationRepositoryImpl(get()) }
     single<HealthRepository> { HealthRepositoryImpl(get()) }
     single<DiaperRepository> { DiaperRepositoryImpl(get()) }
+    single<MessageRepository> { MessageRepositoryImpl(get()) }
+    single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get()) }
+    single<ReminderRepository> { ReminderRepositoryImpl(get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { MessageViewModel(get()) }
+    viewModel { DevelopmentAssessmentViewModel(get(), get()) }
+    viewModel { ReminderViewModel(get()) }
+    viewModel { TimelineViewModel(get(), get(), get(), get(), get(), get()) }
 }
 
 val databaseModule = module {
@@ -39,4 +50,7 @@ val databaseModule = module {
     single { get<AppDatabase>().healthRecordDao() }
     single { get<AppDatabase>().diaperDao() }
     single { get<AppDatabase>().backupConfigDao() }
+    single { get<AppDatabase>().messageDao() }
+    single { get<AppDatabase>().developmentAssessmentDao() }
+    single { get<AppDatabase>().reminderDao() }
 }

@@ -7,7 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
@@ -15,6 +18,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.database.entity.DiaperEntity
 import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
@@ -30,6 +34,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DiaperListScreen(navController: NavController) {
+    val c = LocalThemeColors.current
     val diaperRepo: DiaperRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val haptic = rememberHaptic()
@@ -40,45 +45,93 @@ fun DiaperListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var deletingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
 
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("尿布记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ))
-    }, floatingActionButton = {
-        FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary) {
-            Icon(Icons.Default.Add, null, tint = Color.White)
-        }
-    }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
-            if (diapers.isEmpty()) {
-                EmptyState(
-                    emoji = "🧷",
-                    title = "还没有尿布记录",
-                    subtitle = "点击右下角按钮，记录每次换尿布",
+    Scaffold(
+        containerColor = c.bg,
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showForm = true },
+                containerColor = c.primary,
+                contentColor = c.card,
+                shape = RoundedCornerShape(DT.buttonRadius.dp),
+                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                text = { Text("记录尿布", style = MaterialTheme.typography.titleSmall) },
+            )
+        },
+    ) { padding ->
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
+            // —— 顶部页头：浅蓝渐变背景 + 返回 + 标题 ——
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Gradients.pageHeader(c))
+                    .padding(horizontal = DT.pageMargin.dp)
+                    .height(DT.appBarHeight.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回", tint = c.textPrimary)
+                }
+                Text(
+                    "尿布记录",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = c.textPrimary,
                 )
             }
-            val grouped = diapers.groupBy { it.timestamp.take(10) }
-            grouped.forEach { (date, items) ->
-                Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
-                items.forEach { d ->
-                Card(
-                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingDiaper = d },
-                    shape = MaterialTheme.shapes.medium,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                ) {
-                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("🧷", style = MaterialTheme.typography.titleLarge)
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall)
-                            Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+            Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
+                if (diapers.isEmpty()) {
+                    EmptyState(
+                        emoji = "🧷",
+                        title = "还没有尿布记录",
+                        subtitle = "点击下方按钮，记录每次换尿布",
+                        actionText = "记录尿布",
+                        onAction = { showForm = true },
+                    )
+                }
+                val grouped = diapers.groupBy { it.timestamp.take(10) }
+                var groupIndex = 0
+                grouped.forEach { (date, items) ->
+                    Text(
+                        date,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = c.textSecondary,
+                        modifier = Modifier.padding(top = if (groupIndex == 0) DT.cardGap.dp else DT.cardGapSm.dp, bottom = 4.dp),
+                    )
+                    items.forEachIndexed { i, d ->
+                        val diaperCardShape = RoundedCornerShape(DT.cardRadius.dp)
+                        val tint = if (i % 2 == 1) c.accent else c.primary
+                        Card(
+                            Modifier
+                                .padding(vertical = 4.dp)
+                                .fillMaxWidth()
+                                .shadow(elevation = DT.cardElevation.dp, shape = diaperCardShape)
+                                .longPressDeletable(haptic) { deletingDiaper = d },
+                            shape = diaperCardShape,
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            colors = CardDefaults.cardColors(containerColor = c.card),
+                        ) {
+                            Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    Modifier
+                                        .size(DT.iconBgSize.dp)
+                                        .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                        .background(tint.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text("🧷", style = MaterialTheme.typography.titleLarge) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                }
+                                if (!d.note.isNullOrBlank()) {
+                                    Text(d.note.take(6), style = MaterialTheme.typography.labelSmall, color = c.textHint, modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
                         }
                     }
+                    groupIndex++
                 }
-            }
             }
             Spacer(Modifier.height(80.dp))
         }

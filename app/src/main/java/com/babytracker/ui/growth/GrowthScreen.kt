@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -14,11 +15,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -56,28 +59,68 @@ fun GrowthScreen(navController: NavController) {
     val tabs = listOf("身高", "体重", "头围")
     val types = listOf("height", "weight", "head")
 
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("生长记录") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+    Scaffold(containerColor = c.bg, topBar = {
+        CenterAlignedTopAppBar(title = { Text("生长记录", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                containerColor = c.primaryLight,
+                titleContentColor = c.textPrimary,
+                navigationIconContentColor = c.textPrimary,
             ))
     }, floatingActionButton = {
-        FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary) {
-            Icon(Icons.Default.Add, contentDescription = "添加记录", tint = Color.White)
+        FloatingActionButton(onClick = { showForm = true }, containerColor = c.primary, contentColor = Color.White) {
+            Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            Row(Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(2.dp)) {
-                tabs.forEachIndexed { i, label ->
-                    Box(Modifier.weight(1f).background(if (tab == i) MaterialTheme.colorScheme.surface else Color.Transparent, RoundedCornerShape(6.dp)).clickable { tab = i }.padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
-                        Text(label, color = if (tab == i) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = if (tab == i) FontWeight.SemiBold else null, style = MaterialTheme.typography.bodyMedium)
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
+            // —— 顶部 Tab 区（浅蓝渐变背景 + 小圆角指示器）——
+            Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
+                Row(Modifier.fillMaxWidth()) {
+                    tabs.forEachIndexed { i, label ->
+                        Column(Modifier.weight(1f).clickable { tab = i }.padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(label, color = if (tab == i) c.primary else c.textSecondary, fontWeight = if (tab == i) FontWeight.SemiBold else null, style = MaterialTheme.typography.bodyMedium)
+                            Spacer(Modifier.height(6.dp))
+                            Box(Modifier.width(24.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(if (tab == i) c.primary else Color.Transparent))
+                        }
                     }
                 }
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(DT.cardGap.dp))
             val chartData = remember(growths, tab) { growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt } }
+            // —— 当前数值大字显示 + 正常范围说明 ——
+            val latest = chartData.lastOrNull()
+            val normalRangeHint = when (types[tab]) {
+                "height" -> "WHO 参考范围 50-80 cm（6 月龄约 67 cm）"
+                "weight" -> "WHO 参考范围 3-12 kg（6 月龄约 7.5 kg）"
+                "head" -> "WHO 参考范围 34-48 cm（6 月龄约 43 cm）"
+                else -> ""
+            }
+            val currentShape = RoundedCornerShape(DT.cardRadius.dp)
+            Card(
+                Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().shadow(elevation = DT.cardElevation.dp, shape = currentShape),
+                shape = currentShape,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                colors = CardDefaults.cardColors(containerColor = c.card),
+            ) {
+                Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.primary.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
+                        Text(when (tab) { 0 -> "📏"; 1 -> "⚖️"; else -> "📐" }, fontSize = DT.iconSize.sp)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("当前${tabs[tab]}", fontSize = 12.sp, color = c.textSecondary)
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            latest?.let { String.format("%.1f", it.value) } ?: "--",
+                            fontSize = DT.textSizeXxl.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = c.textPrimary,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(normalRangeHint, fontSize = 11.sp, color = c.textSecondary)
+                    }
+                }
+            }
+            Spacer(Modifier.height(DT.cardGap.dp))
             if (chartData.isEmpty()) {
                 EmptyState(
                     emoji = when (tab) { 0 -> "📏"; 1 -> "⚖️"; else -> "📐" },
@@ -89,10 +132,10 @@ fun GrowthScreen(navController: NavController) {
                 targetValue = if (chartData.size > 1) 1f else 0f,
                 animationSpec = tween(durationMillis = 800),
             )
-            val gridColor = MaterialTheme.colorScheme.outlineVariant
-            val lineColor = MaterialTheme.colorScheme.primary
-            val bgColor = MaterialTheme.colorScheme.background
-            val areaBrush = Gradients.chartArea(c)
+            val gridColor = c.divider
+            val lineColor = c.primary
+            val bgColor = c.card
+            val areaBrush = Gradients.growthChart(c)
             // 动态刻度：基于实际数据 min/max
             val minVal = chartData.minOfOrNull { it.value } ?: 0.0
             val maxVal = chartData.maxOfOrNull { it.value } ?: 100.0
@@ -103,9 +146,16 @@ fun GrowthScreen(navController: NavController) {
                     String.format("%.1f", v)
                 }
             }
-            Box(Modifier.fillMaxWidth().height(300.dp)) {
+            val chartCardShape = RoundedCornerShape(DT.cardRadius.dp)
+            Card(
+                Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().shadow(elevation = DT.cardElevation.dp, shape = chartCardShape),
+                shape = chartCardShape,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                colors = CardDefaults.cardColors(containerColor = c.card),
+            ) {
+                Box(Modifier.fillMaxWidth().height(300.dp).padding(DT.cardInnerPadding.dp)) {
                 Column(Modifier.fillMaxHeight().width(36.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.SpaceBetween) {
-                    yLabels.forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    yLabels.forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = c.textSecondary) }
                 }
                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
                     val w = size.width; val h = size.height
@@ -154,32 +204,35 @@ fun GrowthScreen(navController: NavController) {
                             if (i % maxOf(1, data2.size / 5) == 0 || i == data2.size - 1) {
                                 Text(
                                     try { LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM/dd")) } catch (_: Exception) { "" },
-                                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.labelSmall, color = c.textSecondary,
                                 )
                             }
                         }
                     }
                 }
+                }
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(DT.cardGap.dp))
             growths.filter { it.type == types[tab] }.sortedByDescending { it.measuredAt }.groupBy { it.measuredAt.take(10) }.forEach { (date, items) ->
-                Text(date, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
+                Text(date, style = MaterialTheme.typography.labelSmall, color = c.textSecondary, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
                 items.forEach { g ->
                 AnimatedVisibility(
                     visible = true,
                     enter = fadeIn() + slideInVertically { it / 2 },
                 ) {
+                val itemShape = RoundedCornerShape(DT.cardRadius.dp)
                 Card(
-                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingGrowth = g },
-                    shape = MaterialTheme.shapes.medium,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingGrowth = g }.shadow(elevation = DT.cardElevation.dp, shape = itemShape),
+                    shape = itemShape,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    colors = CardDefaults.cardColors(containerColor = c.card),
                 ) {
-                    Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(c.green.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
+                    Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall)
-                            Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                            Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                         }
                     }
                 }
@@ -210,7 +263,7 @@ fun GrowthScreen(navController: NavController) {
                 TextButton(onClick = {
                     scope.launch { growthRepo.delete(g) }
                     deletingGrowth = null
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                }) { Text("删除", color = c.danger) }
             },
             dismissButton = {
                 TextButton(onClick = { deletingGrowth = null }) { Text("取消") }
@@ -222,6 +275,7 @@ fun GrowthScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) -> Unit) {
+    val c = LocalThemeColors.current
     var type by remember { mutableStateOf("height") }
     var value by remember { mutableStateOf("") }
     var measuredAt by remember { mutableStateOf(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))) }
@@ -257,7 +311,7 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) 
                 label = { Text("测量时间") }, singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showDatePicker = true },
                 shape = MaterialTheme.shapes.medium, enabled = false,
-                colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary),
             )
 
             OutlinedTextField(
@@ -278,8 +332,9 @@ fun GrowthFormDialog(babyId: Int, onDismiss: () -> Unit, onSave: (GrowthEntity) 
                     ))
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = MaterialTheme.shapes.medium,
-            ) { Text("保存") }
+                shape = RoundedCornerShape(DT.buttonRadius.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = c.primary),
+            ) { Text("保存", color = Color.White) }
             Spacer(Modifier.height(24.dp))
         }
     }

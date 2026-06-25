@@ -3,7 +3,15 @@ package com.babytracker.data.repository
 import com.babytracker.core.database.dao.*
 import com.babytracker.core.database.entity.*
 import com.babytracker.core.database.entity.FeedingEntity
+import com.babytracker.data.mapper.toDomain
+import com.babytracker.data.mapper.toEntity
+import com.babytracker.domain.model.AppMessage
+import com.babytracker.domain.model.DevelopmentAssessment
+import com.babytracker.domain.model.MessageType
+import com.babytracker.domain.model.Reminder
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.time.LocalDateTime
 
 interface BabyRepository {
     fun watchAll(): Flow<List<BabyEntity>>
@@ -103,4 +111,92 @@ class DiaperRepositoryImpl(private val dao: DiaperDao) : DiaperRepository {
     override suspend fun insert(diaper: DiaperEntity) = dao.insert(diaper)
     override suspend fun update(diaper: DiaperEntity) = dao.update(diaper)
     override suspend fun delete(diaper: DiaperEntity) = dao.delete(diaper)
+}
+
+// —— 消息中心 —— Repository 返回 Domain Model（AppMessage），内部做 Entity↔Domain 映射
+
+interface MessageRepository {
+    fun watchByType(type: MessageType): Flow<List<AppMessage>>
+    fun watchAll(): Flow<List<AppMessage>>
+    fun watchUnreadCount(): Flow<Int>
+    suspend fun insert(message: AppMessage): Long
+    suspend fun markRead(id: Long)
+    suspend fun markAllRead()
+    suspend fun delete(message: AppMessage)
+}
+
+class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
+    override fun watchByType(type: MessageType): Flow<List<AppMessage>> =
+        dao.watchByType(MessageType.raw(type)).map { list -> list.map { it.toDomain() } }
+
+    override fun watchAll(): Flow<List<AppMessage>> =
+        dao.watchAll().map { list -> list.map { it.toDomain() } }
+
+    override fun watchUnreadCount(): Flow<Int> = dao.watchUnreadCount()
+
+    override suspend fun insert(message: AppMessage): Long = dao.insert(message.toEntity())
+
+    override suspend fun markRead(id: Long) = dao.markRead(id)
+
+    override suspend fun markAllRead() = dao.markAllRead()
+
+    override suspend fun delete(message: AppMessage) = dao.delete(message.toEntity())
+}
+
+// —— 发育评估 —— Repository 返回 Domain Model（DevelopmentAssessment），内部做 Entity↔Domain 映射
+
+interface DevelopmentAssessmentRepository {
+    fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessment>>
+    fun watchLatest(babyId: Int): Flow<DevelopmentAssessment?>
+    suspend fun insert(assessment: DevelopmentAssessment): Long
+    suspend fun delete(assessment: DevelopmentAssessment)
+}
+
+class DevelopmentAssessmentRepositoryImpl(
+    private val dao: DevelopmentAssessmentDao,
+) : DevelopmentAssessmentRepository {
+    override fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessment>> =
+        dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
+
+    override fun watchLatest(babyId: Int): Flow<DevelopmentAssessment?> =
+        dao.watchLatest(babyId).map { it?.toDomain() }
+
+    override suspend fun insert(assessment: DevelopmentAssessment): Long =
+        dao.insert(assessment.toEntity())
+
+    override suspend fun delete(assessment: DevelopmentAssessment) =
+        dao.delete(assessment.toEntity())
+}
+
+// —— 提醒中心 —— Repository 返回 Domain Model（Reminder），内部做 Entity↔Domain 映射。
+//   注：markDone 接收 LocalDateTime（domain 层），内部转 epoch milli 调 DAO。
+//   setEnabled 用于用药类每日提醒开关。
+
+interface ReminderRepository {
+    fun watchPending(babyId: Int): Flow<List<Reminder>>
+    fun watchHistory(babyId: Int): Flow<List<Reminder>>
+    suspend fun insert(reminder: Reminder): Long
+    suspend fun markDone(id: Int, doneDate: LocalDateTime)
+    suspend fun setEnabled(id: Int, enabled: Boolean)
+    suspend fun delete(reminder: Reminder)
+}
+
+class ReminderRepositoryImpl(private val dao: ReminderDao) : ReminderRepository {
+    override fun watchPending(babyId: Int): Flow<List<Reminder>> =
+        dao.watchPending(babyId).map { list -> list.map { it.toDomain() } }
+
+    override fun watchHistory(babyId: Int): Flow<List<Reminder>> =
+        dao.watchHistory(babyId).map { list -> list.map { it.toDomain() } }
+
+    override suspend fun insert(reminder: Reminder): Long =
+        dao.insert(reminder.toEntity())
+
+    override suspend fun markDone(id: Int, doneDate: LocalDateTime) =
+        dao.markDone(id, doneDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
+
+    override suspend fun setEnabled(id: Int, enabled: Boolean) =
+        dao.setEnabled(id, enabled)
+
+    override suspend fun delete(reminder: Reminder) =
+        dao.delete(reminder.toEntity())
 }

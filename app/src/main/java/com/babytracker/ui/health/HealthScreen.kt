@@ -2,17 +2,24 @@ package com.babytracker.ui.health
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
@@ -29,9 +36,13 @@ import java.time.format.DateTimeFormatter
 val healthCategoryLabels = mapOf("allergy" to "过敏史", "medicalHistory" to "既往病史", "exam" to "体检记录", "note" to "备注", "birth_info" to "出生信息", "visit" to "就诊记录", "medication" to "用药记录", "doctor_note" to "医生备注")
 val healthCategoryIcons = mapOf("allergy" to "🤧", "medicalHistory" to "📋", "exam" to "🏥", "note" to "📝", "birth_info" to "🍼", "visit" to "🏥", "medication" to "💊", "doctor_note" to "📋")
 
+// 显示顺序（出生信息 → 过敏 → 既往病史 → 体检 → 就诊 → 用药 → 医生备注 → 备注）
+private val healthCategoryOrder = listOf("birth_info", "allergy", "medicalHistory", "exam", "visit", "medication", "doctor_note", "note")
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HealthScreen(navController: NavController) {
+    val c = LocalThemeColors.current
     val healthRepo: HealthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val haptic = rememberHaptic()
@@ -42,42 +53,50 @@ fun HealthScreen(navController: NavController) {
     var deletingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }
     val scope = rememberCoroutineScope()
 
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("健康档案") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
+    Scaffold(containerColor = c.bg, topBar = {
+        CenterAlignedTopAppBar(title = { Text("健康档案", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                containerColor = c.primaryLight,
+                titleContentColor = c.textPrimary,
+                navigationIconContentColor = c.textPrimary,
             ))
     }, floatingActionButton = {
-        FloatingActionButton(onClick = { showForm = true }, containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary) {
-            Icon(Icons.Default.Add, null)
+        FloatingActionButton(onClick = { showForm = true }, containerColor = c.primary, contentColor = Color.White) {
+            Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
+            // —— 顶部标题区（浅蓝渐变背景）——
+            Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 20.dp)) {
+                Column {
+                    Text("健康档案", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                    Spacer(Modifier.height(4.dp))
+                    Text("记录过敏、用药、就诊等信息，建立完整健康档案", fontSize = 12.sp, color = c.textSecondary)
+                }
+            }
+            Spacer(Modifier.height(DT.cardGap.dp))
+
             if (records.isEmpty()) {
                 EmptyState(
                     emoji = "❤️",
                     title = "还没有健康记录",
-                    subtitle = "记录过敏、用药、就诊等信息，建立完整健康档案",
+                    subtitle = "点击右下角按钮，添加宝宝的健康信息",
                 )
-            }
-            records.forEach { r ->
-                Card(
-                    Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth().longPressDeletable(haptic) { deletingRecord = r },
-                    shape = MaterialTheme.shapes.medium,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                ) {
-                    Row(Modifier.fillMaxWidth().heightIn(min = 68.dp).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(healthCategoryIcons[r.category] ?: "📋", style = MaterialTheme.typography.titleLarge)
-                        Spacer(Modifier.width(14.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(r.description, fontWeight = FontWeight.Medium, maxLines = 1, style = MaterialTheme.typography.bodyMedium)
-                            Text("${healthCategoryLabels[r.category] ?: r.category} · ${DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
+            } else {
+                // —— 按类别分组渲染 ——
+                val grouped = records.groupBy { it.category }
+                healthCategoryOrder.forEachIndexed { index, category ->
+                    val items = grouped[category] ?: return@forEachIndexed
+                    HealthCategoryCard(
+                        category = category,
+                        items = items,
+                        useAccent = index % 2 == 1,
+                        onLongPress = { deletingRecord = it },
+                    )
+                    Spacer(Modifier.height(DT.cardGapSm.dp))
                 }
             }
+            Spacer(Modifier.height(80.dp))
         }
     }
     if (showForm) {
@@ -102,12 +121,91 @@ fun HealthScreen(navController: NavController) {
                 TextButton(onClick = {
                     scope.launch { healthRepo.delete(r) }
                     deletingRecord = null
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                }) { Text("删除", color = c.danger) }
             },
             dismissButton = {
                 TextButton(onClick = { deletingRecord = null }) { Text("取消") }
             },
         )
+    }
+}
+
+/** 单个分类卡片：标题 + 内容列表。 */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HealthCategoryCard(
+    category: String,
+    items: List<HealthRecordEntity>,
+    useAccent: Boolean,
+    onLongPress: (HealthRecordEntity) -> Unit,
+) {
+    val c = LocalThemeColors.current
+    val haptic = rememberHaptic()
+    val tint = if (useAccent) c.accent else c.primary
+    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
+    Card(
+        Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().shadow(elevation = DT.cardElevation.dp, shape = cardShape),
+        shape = cardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        colors = CardDefaults.cardColors(containerColor = c.card),
+    ) {
+        Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+            // —— 分类标题行 ——
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(tint.copy(alpha = 0.14f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(healthCategoryIcons[category] ?: "📋", fontSize = DT.iconSize.sp)
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    healthCategoryLabels[category] ?: category,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = c.textPrimary,
+                )
+                Spacer(Modifier.weight(1f))
+                Text("${items.size} 条", fontSize = 12.sp, color = c.textSecondary)
+            }
+            Spacer(Modifier.height(8.dp))
+            // —— 记录列表 ——
+            items.forEachIndexed { i, r ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .longPressDeletable(haptic) { onLongPress(r) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Box(
+                        Modifier
+                            .padding(top = 4.dp)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(tint),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(r.description, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                        Spacer(Modifier.height(2.dp))
+                        val dateText = try {
+                            DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
+                        } catch (_: Exception) { r.recordDate.take(10) }
+                        Text(dateText, fontSize = 11.sp, color = c.textSecondary)
+                        if (!r.doctorName.isNullOrBlank()) {
+                            Text("医生：${r.doctorName}", fontSize = 11.sp, color = c.textSecondary)
+                        }
+                        if (!r.note.isNullOrBlank()) {
+                            Text(r.note, fontSize = 12.sp, color = c.textSecondary)
+                        }
+                    }
+                }
+                if (i != items.lastIndex) {
+                    HorizontalDivider(color = c.divider, thickness = 0.5.dp, modifier = Modifier.padding(start = 20.dp))
+                }
+            }
+        }
     }
 }
 
@@ -118,6 +216,7 @@ fun HealthFormDialog(
     onDismiss: () -> Unit,
     onSave: (HealthRecordEntity) -> Unit,
 ) {
+    val c = LocalThemeColors.current
     var category by remember { mutableStateOf("allergy") }
     var description by remember { mutableStateOf("") }
     var doctorName by remember { mutableStateOf("") }
@@ -140,7 +239,7 @@ fun HealthFormDialog(
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.padding(horizontal = DT.pageMargin.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
-            Text("添加健康记录", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+            Text("添加健康记录", style = MaterialTheme.typography.headlineSmall, color = c.textPrimary)
             Spacer(Modifier.height(16.dp))
             Row(Modifier.horizontalScroll(rememberScrollState())) {
                 categories.forEach { (key, label) ->
@@ -148,6 +247,10 @@ fun HealthFormDialog(
                         selected = category == key,
                         onClick = { category = key },
                         label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = c.primary.copy(alpha = 0.12f),
+                            selectedLabelColor = c.primary,
+                        ),
                         modifier = Modifier.padding(end = 8.dp)
                     )
                 }
@@ -182,9 +285,9 @@ fun HealthFormDialog(
                 shape = MaterialTheme.shapes.medium,
                 enabled = false,
                 colors = OutlinedTextFieldDefaults.colors(
-                    disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledBorderColor = c.cardBorder,
+                    disabledTextColor = c.textPrimary,
+                    disabledLabelColor = c.textSecondary,
                 ),
             )
             Spacer(Modifier.height(12.dp))
@@ -208,9 +311,9 @@ fun HealthFormDialog(
                     ))
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(DT.buttonRadius.dp),
                 enabled = description.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+                colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = Color.White)
             ) {
                 Text("保存", style = MaterialTheme.typography.titleSmall)
             }

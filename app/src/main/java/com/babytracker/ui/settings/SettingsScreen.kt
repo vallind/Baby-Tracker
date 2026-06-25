@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.database.entity.BabyEntity
 import com.babytracker.core.theme.DT
+import com.babytracker.core.theme.Gradients
 import com.babytracker.core.theme.LocalThemeColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -37,12 +38,14 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.data.repository.BabyRepository
 import com.babytracker.data.repository.VaccinationRepository
+import com.babytracker.ui.components.BottomNavBar
 import com.babytracker.ui.navigation.Screen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @Composable
 fun SettingsScreen(navController: NavController) {
+    val c = LocalThemeColors.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val themeCtrl: ThemeController = koinInject()
@@ -50,53 +53,96 @@ fun SettingsScreen(navController: NavController) {
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
     var showPicker by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).windowInsetsPadding(WindowInsets.statusBars)) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = DT.pageMargin.dp)) {
-        Spacer(Modifier.height(24.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                Text(baby?.name?.take(1) ?: "?", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-            }
-            Spacer(Modifier.width(14.dp))
-            Column {
-                Text(baby?.name ?: "未设置", style = MaterialTheme.typography.titleMedium)
-                Text("${baby?.let { DateUtils.monthAge(java.time.LocalDate.parse(it.birthDate)) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        Spacer(Modifier.height(24.dp))
-
-        SectionTitle("设置")
-        Card(
-            Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    Scaffold(
+        containerColor = c.bg,
+        bottomBar = { BottomNavBar(navController) },
+    ) { padding ->
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(c.bg),
         ) {
-            Column {
-                SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsRow("☁️", "数据备份", onClick = { navController.navigate(Screen.Backup.route) })
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsRow("🎨", "主题", trailing = { ThemeDots(themeCtrl.currentTheme.name, onClick = { showPicker = true }) }, onClick = { showPicker = true })
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsRow("🔔", "通知提醒", trailing = { Switch(checked = true, onCheckedChange = {}, colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary, checkedThumbColor = Color.White)) })
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            // —— 顶部头部区（浅蓝渐变 + 宝宝头像 + "我的" 标题）——
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Gradients.pageHeader(c))
+                    .padding(horizontal = DT.pageMargin.dp),
+            ) {
+                Row(
+                    Modifier.padding(vertical = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(Gradients.primary(c)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            baby?.name?.take(1) ?: "?",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                        )
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            baby?.name ?: "未设置",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = c.textPrimary,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "${baby?.let { DateUtils.monthAge(java.time.LocalDate.parse(it.birthDate)) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = c.textSecondary,
+                        )
+                    }
+                }
             }
-        }
-        Spacer(Modifier.height(20.dp))
 
-        SectionTitle("其他")
-        Card(
-            Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        ) {
-            Column {
-                SettingsRow("ℹ️", "关于我们", onClick = { })
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp, modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsRow("⭐", "给我们评分", onClick = { })
+            Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
+                Spacer(Modifier.height(DT.cardGap.dp))
+
+                SectionTitle("设置")
+                SettingsCard {
+                    SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
+                    SettingsDivider()
+                    SettingsRow("☁️", "数据备份", onClick = { navController.navigate(Screen.Backup.route) })
+                    SettingsDivider()
+                    SettingsRow("🎨", "主题", trailing = { ThemeDots(themeCtrl.currentTheme.name, onClick = { showPicker = true }) }, onClick = { showPicker = true })
+                    SettingsDivider()
+                    SettingsRow("🔔", "通知提醒", trailing = {
+                        Switch(
+                            checked = true,
+                            onCheckedChange = {},
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = c.primary,
+                                checkedThumbColor = Color.White,
+                                uncheckedTrackColor = c.divider,
+                                uncheckedThumbColor = Color.White,
+                            ),
+                        )
+                    })
+                }
+                Spacer(Modifier.height(DT.cardGap.dp))
+
+                SectionTitle("其他")
+                SettingsCard {
+                    SettingsRow("ℹ️", "关于我们", onClick = { })
+                    SettingsDivider()
+                    SettingsRow("⭐", "给我们评分", onClick = { })
+                }
+                Spacer(Modifier.height(40.dp))
             }
         }
-        Spacer(Modifier.height(40.dp))
-    }
+        }
     }
 
     if (showPicker) {
@@ -143,28 +189,70 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
 
 @Composable
 fun SectionTitle(title: String) {
-    Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+    val c = LocalThemeColors.current
+    Text(
+        title,
+        style = MaterialTheme.typography.labelMedium,
+        color = c.textSecondary,
+        modifier = Modifier.padding(bottom = 8.dp),
+    )
+}
+
+/** 统一白色设置卡片（圆角 DT.cardRadius / 阴影 DT.cardElevation）。 */
+@Composable
+fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
+    val c = LocalThemeColors.current
+    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
+    Card(
+        Modifier.fillMaxWidth(),
+        shape = cardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
+        colors = CardDefaults.cardColors(containerColor = c.card),
+    ) {
+        Column(content = content)
+    }
+}
+
+/** 设置项分割线（c.divider）。 */
+@Composable
+fun SettingsDivider() {
+    val c = LocalThemeColors.current
+    HorizontalDivider(
+        color = c.divider,
+        thickness = 0.5.dp,
+        modifier = Modifier.padding(horizontal = DT.cardInnerPadding.dp),
+    )
 }
 
 @Composable
 fun SettingsRow(emoji: String, label: String, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
+    val c = LocalThemeColors.current
     Row(
-        Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 16.dp).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().height(56.dp).padding(horizontal = DT.cardInnerPadding.dp).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(emoji, style = MaterialTheme.typography.titleMedium)
+        Box(
+            Modifier
+                .size(DT.iconBgSize.dp)
+                .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                .background(c.primaryLight),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(emoji, style = MaterialTheme.typography.titleMedium)
+        }
         Spacer(Modifier.width(12.dp))
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = c.textPrimary)
         if (trailing != null) {
             trailing()
         } else {
-            Text("›", color = MaterialTheme.colorScheme.outline, style = MaterialTheme.typography.titleMedium)
+            Text("›", color = c.textHint, style = MaterialTheme.typography.titleMedium)
         }
     }
 }
 
 @Composable
 fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
+    val c = LocalThemeColors.current
     val themesColors = mapOf(
         "pure" to 0xFF2563EB, "aurora" to 0xFF7C3AED, "warm" to 0xFFFF8A80,
         "sunny" to 0xFFF59E0B, "night" to 0xFF1E293B, "morandi" to 0xFF94A3B8,
@@ -173,7 +261,7 @@ fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
         themesColors.forEach { (name, colorInt) ->
             Box(
                 Modifier.size(20.dp).clip(CircleShape).background(Color(colorInt))
-                    .then(if (name == currentTheme) Modifier.border(2.dp, Color(0xFF2563EB), CircleShape) else Modifier),
+                    .then(if (name == currentTheme) Modifier.border(2.dp, c.primary, CircleShape) else Modifier),
             )
         }
     }

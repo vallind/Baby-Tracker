@@ -72,6 +72,9 @@ dependencies {
     // Coil
     implementation(libs.coil.compose)
 
+    // Vico
+    implementation(libs.vico.compose.m3)
+
     // DocumentFile
     implementation(libs.documentfile)
 
