@@ -37,7 +37,7 @@ val appModule = module {
     viewModel { MessageViewModel(get()) }
     viewModel { DevelopmentAssessmentViewModel(get(), get()) }
     viewModel { ReminderViewModel(get()) }
-    viewModel { TimelineViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
 }
 
 val databaseModule = module {

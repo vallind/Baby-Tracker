@@ -34,7 +34,6 @@ private data class EntityBundle(
     val diapers: List<DiaperEntity>,
     val growths: List<GrowthEntity>,
     val healths: List<HealthRecordEntity>,
-    val vaccinations: List<VaccinationEntity>,
 )
 
 class TimelineViewModel(
@@ -43,7 +42,6 @@ class TimelineViewModel(
     private val diaperRepo: DiaperRepository,
     private val growthRepo: GrowthRepository,
     private val healthRepo: HealthRepository,
-    private val vaccinationRepo: VaccinationRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(TimelineUiState())
     val state: StateFlow<TimelineUiState> = _state.asStateFlow()
@@ -55,23 +53,19 @@ class TimelineViewModel(
     private var cachedDiapers: List<DiaperEntity> = emptyList()
     private var cachedGrowths: List<GrowthEntity> = emptyList()
     private var cachedHealths: List<HealthRecordEntity> = emptyList()
-    private var cachedVaccinations: List<VaccinationEntity> = emptyList()
 
     init {
         _trigger
             .filterNotNull()
             .flatMapLatest { babyId ->
-                val firstFive = combine(
+                combine(
                     feedingRepo.watchByBaby(babyId),
                     sleepRepo.watchByBaby(babyId),
                     diaperRepo.watchByBaby(babyId),
                     growthRepo.watchByBaby(babyId),
                     healthRepo.watchByBaby(babyId),
                 ) { f, s, d, g, h ->
-                    EntityBundle(feedings = f, sleeps = s, diapers = d, growths = g, healths = h, vaccinations = emptyList())
-                }
-                combine(firstFive, vaccinationRepo.watchByBaby(babyId)) { bundle, vaccinations ->
-                    bundle.copy(vaccinations = vaccinations)
+                    EntityBundle(feedings = f, sleeps = s, diapers = d, growths = g, healths = h)
                 }
             }
             .map { bundle ->
@@ -80,7 +74,6 @@ class TimelineViewModel(
                 cachedDiapers = bundle.diapers
                 cachedGrowths = bundle.growths
                 cachedHealths = bundle.healths
-                cachedVaccinations = bundle.vaccinations
 
                 val items = mutableListOf<TimelineItem>()
                 var accent = false
@@ -180,28 +173,6 @@ class TimelineViewModel(
                     )
                 }
 
-                bundle.vaccinations.forEach { v ->
-                    val sk = v.administeredDate ?: v.scheduledDate ?: ""
-                    items.add(
-                        TimelineItem(
-                            id = v.id,
-                            recordType = "vaccine",
-                            emoji = "💉",
-                            title = v.name,
-                            subtitle = when {
-                                v.status == "done" -> "已接种"
-                                v.administeredDate != null -> v.administeredDate.take(10)
-                                v.scheduledDate != null -> "计划 ${v.scheduledDate.take(10)}"
-                                else -> "待安排"
-                            },
-                            time = "",
-                            date = sk.take(10),
-                            accent = accent.also { accent = !accent },
-                            sortKey = sk,
-                        )
-                    )
-                }
-
                 items.sortByDescending { it.sortKey }
 
                 TimelineUiState(items = items, loading = false)
@@ -222,7 +193,6 @@ class TimelineViewModel(
                 "diaper" -> cachedDiapers.find { it.id == item.id }?.let { diaperRepo.delete(it) }
                 "growth" -> cachedGrowths.find { it.id == item.id }?.let { growthRepo.delete(it) }
                 "health" -> cachedHealths.find { it.id == item.id }?.let { healthRepo.delete(it) }
-                "vaccine" -> cachedVaccinations.find { it.id == item.id }?.let { vaccinationRepo.delete(it) }
             }
         }
     }
