@@ -11,11 +11,22 @@
 
 ### [Unreleased] — 2026-06-27
 
-**Round 3 — 组件目录化 + 语义色阶补齐 + Typography 令牌化：**
+**滑动删除体验改进：**
+- **滑动确认弹窗**：`SwipeToDeleteContainer` / `SwipeToEditDeleteContainer` 左滑不再直接删除，改为弹出 `AppConfirmDialog` 确认后执行
+- **红色背景裁剪**：滑动容器外层加 `Box.clip(RoundedCornerShape(DT.cardRadius.dp))`，解决红色超出卡片边界的问题
+- **卡片间距外移**：卡片内部 `padding(vertical=4dp)` 移到 `SwipeToDeleteContainer` 外层 modifier，避免红色填充卡片间隙
 
-- **组件目录化**：14 个组件各自独立目录（`card/` `button/` `topbar/` `input/` `chip/` `fab/` `bottomnav/` `section/` `skeleton/` `dialog/` `sheet/` `snackbar/` `iconbutton/` `swipe/`），`AppComponentDefaults.kt` 拆分为 9 个独立 `XxxDefaults.kt` 各归其位
+**记录页直接编辑：**
+- **TimelineScreen 点击编辑**：点击时间线卡片直接弹出对应类型的编辑表单（喂养/睡眠/尿布/生长/健康），不再跳转功能页
+- **TimelineViewModel 新增**：`findXxx(id)` / `updateXxx(entity)` 方法供直接编辑使用
+
+**长按删除统一移除：**
+- 移除 Feeding/Sleep/Diaper/Growth/Vaccination/Health/Timeline 共 7 个屏幕的长按删除逻辑，仅保留左滑删除（已含确认弹窗）
+
+**组件目录化 + 语义色阶补齐 + Typography 令牌化：**
+- **组件目录化**：14 个组件各自独立目录，`AppComponentDefaults.kt` 拆分为 9 个独立 `XxxDefaults.kt` 各归其位
 - **新增组件**：`AppSwitch`（主题化 Switch，颜色自动跟随主题）、`AppScaffold`（Scaffold 包装，自动 `containerColor = c.bg`）
-- **深色令牌**：`AppComponentTokens.dark()` 自动暗色变体（骨架屏、分割线），`BabyTrackerTheme` 根据 `theme.name == "night"` 自动选择
+- **深色令牌**：`AppComponentTokens.dark()` 自动暗色变体，`BabyTrackerTheme` 根据 `theme.name == "night"` 自动选择
 - **DT 弃用**：`DesignTokens.DT` 加 `@Deprecated`，组件级 8 处引用已迁移至 XxxDefaults/inline dp
 - **语义色阶**：`ThemeColors` 新增 `borderHover` `borderFocus` `textDisabled` `bgHover` `bgPressed`，6 主题全部补全
 - **Typography 令牌**：新增 `LocalAppTypography` CompositionLocal，4 个组件从 `MaterialTheme.typography` 迁移至令牌读取

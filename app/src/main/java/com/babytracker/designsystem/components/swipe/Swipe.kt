@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -23,12 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.card.CardDefaults
+import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.theme.DT
 
 /**
  * ---------- 滑动删除容器（Material 3 SwipeToDismissBox）----------
  *
- * 向左滑动 → 红色背景 + 删除图标，松手即删并回调 [onDelete]。
+ * 向左滑动 → 红色背景 + 删除图标，松手弹出确认弹窗。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,42 +39,63 @@ fun SwipeToDeleteContainer(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
-    var dismissed by remember { mutableStateOf(false) }
+    var showConfirm by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
             if (value == SwipeToDismissBoxValue.EndToStart) {
-                dismissed = true
-                onDelete()
-                true
+                showConfirm = true
+                false
             } else {
                 false
             }
         }
     )
 
-    if (dismissed) return
+    Box(
+        modifier = modifier.clip(RoundedCornerShape(DT.cardRadius.dp))
+    ) {
+        SwipeToDismissBox(
+            state = dismissState,
+            modifier = Modifier.fillMaxSize(),
+            enableDismissFromStartToEnd = false,
+            enableDismissFromEndToStart = true,
+            backgroundContent = {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFE53935))
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = Alignment.CenterEnd,
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "删除",
+                        tint = Color.White,
+                    )
+                }
+            },
+            content = content,
+        )
+    }
 
-    SwipeToDismissBox(
-        state = dismissState,
-        modifier = modifier,
-        enableDismissFromStartToEnd = false,
-        enableDismissFromEndToStart = true,
-        backgroundContent = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFE53935), RoundedCornerShape(CardDefaults.cornerRadius()))
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "删除",
-                    tint = Color.White,
-                )
-            }
+    AppConfirmDialog(
+        show = showConfirm,
+        onConfirm = {
+            showConfirm = false
+            onDelete()
         },
-        content = content,
+        onDismiss = { showConfirm = false },
+    )
+}
+=======
+    AppConfirmDialog(
+        show = showConfirm,
+        onConfirm = {
+            showConfirm = false
+            onDelete()
+>>>>>>> re:app/src/main/java/com/babytracker/designsystem/components/SwipeContainers.kt
+        },
+        onDismiss = { showConfirm = false },
     )
 }
 
@@ -103,34 +126,38 @@ fun SwipeToEditContainer(
 
     if (consumed) return
 
-    SwipeToDismissBox(
-        state = dismissState,
-        modifier = modifier,
-        enableDismissFromStartToEnd = true,
-        enableDismissFromEndToStart = false,
-        backgroundContent = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF1976D2), RoundedCornerShape(CardDefaults.cornerRadius()))
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "编辑",
-                    tint = Color.White,
-                )
-            }
-        },
-        content = content,
-    )
+    Box(
+        modifier = modifier.clip(RoundedCornerShape(DT.cardRadius.dp))
+    ) {
+        SwipeToDismissBox(
+            state = dismissState,
+            modifier = Modifier.fillMaxSize(),
+            enableDismissFromStartToEnd = true,
+            enableDismissFromEndToStart = false,
+            backgroundContent = {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF1976D2))
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "编辑",
+                        tint = Color.White,
+                    )
+                }
+            },
+            content = content,
+        )
+    }
 }
 
 /**
  * ---------- 滑动删除+编辑容器 ----------
  *
- * 向右滑动 → 蓝色编辑背景；向左滑动 → 红色删除背景。
+ * 向右滑动 → 蓝色编辑背景；向左滑动 → 红色删除背景（松手弹出确认弹窗）。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,6 +167,7 @@ fun SwipeToEditDeleteContainer(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
+    var showConfirm by remember { mutableStateOf(false) }
     var consumed by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
@@ -150,9 +178,8 @@ fun SwipeToEditDeleteContainer(
                     true
                 }
                 SwipeToDismissBoxValue.EndToStart -> {
-                    consumed = true
-                    onDelete()
-                    true
+                    showConfirm = true
+                    false
                 }
                 else -> false
             }
@@ -161,17 +188,20 @@ fun SwipeToEditDeleteContainer(
 
     if (consumed) return
 
-    SwipeToDismissBox(
-        state = dismissState,
-        modifier = modifier,
-        enableDismissFromStartToEnd = true,
-        enableDismissFromEndToStart = true,
+    Box(
+        modifier = modifier.clip(RoundedCornerShape(DT.cardRadius.dp))
+    ) {
+        SwipeToDismissBox(
+            state = dismissState,
+            modifier = Modifier.fillMaxSize(),
+            enableDismissFromStartToEnd = true,
+            enableDismissFromEndToStart = true,
         backgroundContent = {
             if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) {
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF1976D2), RoundedCornerShape(CardDefaults.cornerRadius()))
+                        .background(Color(0xFF1976D2))
                         .padding(horizontal = 20.dp),
                     contentAlignment = Alignment.CenterStart,
                 ) {
@@ -181,7 +211,7 @@ fun SwipeToEditDeleteContainer(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFE53935), RoundedCornerShape(CardDefaults.cornerRadius()))
+                        .background(Color(0xFFE53935))
                         .padding(horizontal = 20.dp),
                     contentAlignment = Alignment.CenterEnd,
                 ) {
@@ -190,5 +220,15 @@ fun SwipeToEditDeleteContainer(
             }
         },
         content = content,
+        )
+    }
+
+    AppConfirmDialog(
+        show = showConfirm,
+        onConfirm = {
+            showConfirm = false
+            onDelete()
+        },
+        onDismiss = { showConfirm = false },
     )
 }

@@ -24,27 +24,24 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
-import com.babytracker.designsystem.components.rememberHaptic
 import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiaperListScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val diaperRepo: DiaperRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
-    var deletingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -111,6 +108,7 @@ fun DiaperListScreen(navController: NavController) {
                         val diaperCardShape = RoundedCornerShape(DT.cardRadius.dp)
                         val tint = if (i % 2 == 1) c.accent else c.primary
                         SwipeToDeleteContainer(
+                            modifier = Modifier.padding(bottom = 8.dp),
                             onDelete = {
                                 scope.launch {
                                     val deleted = d
@@ -128,19 +126,12 @@ fun DiaperListScreen(navController: NavController) {
                         ) {
                             Card(
                                 Modifier
-                                    .padding(vertical = 4.dp)
                                     .fillMaxWidth()
                                     .shadow(elevation = DT.cardElevation.dp, shape = diaperCardShape)
-                                    .combinedClickable(
-                                        onClick = {
-                                            editingDiaper = d
-                                            showForm = true
-                                        },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                            deletingDiaper = d
-                                        },
-                                    ),
+                                    .clickable(onClick = {
+                                        editingDiaper = d
+                                        showForm = true
+                                    }),
                                 shape = diaperCardShape,
                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                                 colors = CardDefaults.cardColors(containerColor = c.card),
@@ -194,33 +185,6 @@ fun DiaperListScreen(navController: NavController) {
         )
     }
 
-    deletingDiaper?.let { d ->
-        AlertDialog(
-            onDismissRequest = { deletingDiaper = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这条尿布记录吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        val deleted = d
-                        diaperRepo.delete(deleted)
-                        deletingDiaper = null
-                        val result = snackbarHostState.showSnackbar(
-                            message = "已删除尿布记录",
-                            actionLabel = "撤销",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            diaperRepo.insert(deleted)
-                        }
-                    }
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingDiaper = null }) { Text("取消") }
-            },
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -34,27 +34,24 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.GrowthRepository
 import kotlinx.coroutines.launch
-import com.babytracker.designsystem.components.rememberHaptic
 import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GrowthScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val growthRepo: GrowthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
-    var deletingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     var tab by remember { mutableIntStateOf(0) }
@@ -221,6 +218,7 @@ fun GrowthScreen(navController: NavController) {
                 ) {
                 val itemShape = RoundedCornerShape(DT.cardRadius.dp)
                 SwipeToDeleteContainer(
+                    modifier = Modifier.padding(bottom = 8.dp),
                     onDelete = {
                         scope.launch {
                             val deleted = g
@@ -237,17 +235,11 @@ fun GrowthScreen(navController: NavController) {
                     },
                 ) {
                     Card(
-                        Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth()
-                            .combinedClickable(
-                                onClick = {
-                                    editingGrowth = g
-                                    showForm = true
-                                },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    deletingGrowth = g
-                                },
-                            )
+                        Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth()
+                            .clickable(onClick = {
+                                editingGrowth = g
+                                showForm = true
+                            })
                             .shadow(elevation = DT.cardElevation.dp, shape = itemShape),
                         shape = itemShape,
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -292,33 +284,6 @@ fun GrowthScreen(navController: NavController) {
         )
     }
 
-    deletingGrowth?.let { g ->
-        AlertDialog(
-            onDismissRequest = { deletingGrowth = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这条生长记录吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        val deleted = g
-                        growthRepo.delete(deleted)
-                        deletingGrowth = null
-                        val result = snackbarHostState.showSnackbar(
-                            message = "已删除生长记录",
-                            actionLabel = "撤销",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            growthRepo.insert(deleted)
-                        }
-                    }
-                }) { Text("删除", color = c.danger) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingGrowth = null }) { Text("取消") }
-            },
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

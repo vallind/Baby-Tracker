@@ -22,25 +22,33 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
-import com.babytracker.designsystem.components.rememberHaptic
+import com.babytracker.core.database.entity.*
+import com.babytracker.feature.diaper.DiaperFormDialog
+import com.babytracker.feature.feeding.FeedingFormDialog
+import com.babytracker.feature.growth.GrowthFormDialog
+import com.babytracker.feature.health.HealthFormDialog
+import com.babytracker.feature.sleep.SleepFormDialog
 import com.babytracker.navigation.Screen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimelineScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val viewModel: TimelineViewModel = koinViewModel()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val state by viewModel.state.collectAsState()
     var showTypePicker by remember { mutableStateOf(false) }
-    var deletingItem by remember { mutableStateOf<TimelineItem?>(null) }
+    var editingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
+    var editingSleep by remember { mutableStateOf<SleepEntity?>(null) }
+    var editingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
+    var editingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
+    var editingHealth by remember { mutableStateOf<HealthRecordEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(babyId) { viewModel.load(babyId) }
@@ -108,6 +116,7 @@ fun TimelineScreen(navController: NavController) {
                             val cardShape = RoundedCornerShape(DT.cardRadius.dp)
                             val tint = if (item.accent) c.accent else c.primary
                             SwipeToDeleteContainer(
+                                modifier = Modifier.padding(bottom = 8.dp),
                                 onDelete = {
                                     scope.launch {
                                         viewModel.delete(item)
@@ -123,17 +132,18 @@ fun TimelineScreen(navController: NavController) {
                                 },
                             ) {
                                 Card(
-                                    Modifier
-                                        .padding(vertical = 4.dp)
-                                        .fillMaxWidth()
-                                        .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
-                                        .combinedClickable(
-                                            onClick = { navigateToDetail(navController, item) },
-                                            onLongClick = {
-                                                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                                deletingItem = item
-                                            },
-                                        ),
+                                Modifier
+                                    .fillMaxWidth()
+                                    .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
+                                        .clickable(onClick = {
+                                            when (item.recordType) {
+                                                "feeding" -> editingFeeding = viewModel.findFeeding(item.id)
+                                                "sleep" -> editingSleep = viewModel.findSleep(item.id)
+                                                "diaper" -> editingDiaper = viewModel.findDiaper(item.id)
+                                                "growth" -> editingGrowth = viewModel.findGrowth(item.id)
+                                                "health" -> editingHealth = viewModel.findHealth(item.id)
+                                            }
+                                        }),
                                     shape = cardShape,
                                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                                     colors = CardDefaults.cardColors(containerColor = c.card),
@@ -195,43 +205,73 @@ fun TimelineScreen(navController: NavController) {
         }
     }
 
-    deletingItem?.let { item ->
-        AlertDialog(
-            onDismissRequest = { deletingItem = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这条「${item.title}」记录吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        viewModel.delete(item)
-                        deletingItem = null
-                        val result = snackbarHostState.showSnackbar(
-                            message = "已删除「${item.title}」",
-                            actionLabel = "撤销",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            viewModel.undoLastDelete()
-                        }
-                    }
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingItem = null }) { Text("取消") }
+    editingFeeding?.let { f ->
+        FeedingFormDialog(
+            babyId = babyId,
+            editEntity = f,
+            onDismiss = { editingFeeding = null },
+            onSave = { updated ->
+                scope.launch {
+                    viewModel.updateFeeding(updated)
+                    editingFeeding = null
+                }
             },
         )
     }
-}
 
-private fun navigateToDetail(navController: NavController, item: TimelineItem) {
-    val route = when (item.recordType) {
-        "feeding" -> Screen.Feeding.route
-        "sleep" -> Screen.Sleep.route
-        "diaper" -> Screen.Diaper.route
-        "growth" -> Screen.Growth.route
-        "health" -> Screen.Health.route
-        "vaccine" -> Screen.Vaccination.route
-        else -> return
+    editingSleep?.let { s ->
+        SleepFormDialog(
+            babyId = babyId,
+            editEntity = s,
+            onDismiss = { editingSleep = null },
+            onSave = { updated ->
+                scope.launch {
+                    viewModel.updateSleep(updated)
+                    editingSleep = null
+                }
+            },
+        )
     }
-    navController.navigate(route)
+
+    editingDiaper?.let { d ->
+        DiaperFormDialog(
+            babyId = babyId,
+            editEntity = d,
+            onDismiss = { editingDiaper = null },
+            onSave = { updated ->
+                scope.launch {
+                    viewModel.updateDiaper(updated)
+                    editingDiaper = null
+                }
+            },
+        )
+    }
+
+    editingGrowth?.let { g ->
+        GrowthFormDialog(
+            babyId = babyId,
+            editEntity = g,
+            onDismiss = { editingGrowth = null },
+            onSave = { updated ->
+                scope.launch {
+                    viewModel.updateGrowth(updated)
+                    editingGrowth = null
+                }
+            },
+        )
+    }
+
+    editingHealth?.let { h ->
+        HealthFormDialog(
+            babyId = babyId,
+            editEntity = h,
+            onDismiss = { editingHealth = null },
+            onSave = { updated ->
+                scope.launch {
+                    viewModel.updateHealth(updated)
+                    editingHealth = null
+                }
+            },
+        )
+    }
 }

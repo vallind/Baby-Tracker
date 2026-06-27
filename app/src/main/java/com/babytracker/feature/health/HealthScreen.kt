@@ -26,7 +26,6 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.HealthRepository
 import kotlinx.coroutines.launch
 import com.babytracker.core.database.entity.HealthRecordEntity
-import com.babytracker.designsystem.components.rememberHaptic
 import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
@@ -39,19 +38,17 @@ val healthCategoryIcons = mapOf("allergy" to "🤧", "medicalHistory" to "📋",
 // 显示顺序（出生信息 → 过敏 → 既往病史 → 体检 → 就诊 → 用药 → 医生备注 → 备注）
 private val healthCategoryOrder = listOf("birth_info", "allergy", "medicalHistory", "exam", "visit", "medication", "doctor_note", "note")
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val healthRepo: HealthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }
-    var deletingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -101,7 +98,6 @@ fun HealthScreen(navController: NavController) {
                             editingRecord = record
                             showForm = true
                         },
-                        onLongPress = { deletingRecord = it },
                         onDelete = { record ->
                             scope.launch {
                                 healthRepo.delete(record)
@@ -144,48 +140,19 @@ fun HealthScreen(navController: NavController) {
         )
     }
 
-    deletingRecord?.let { r ->
-        AlertDialog(
-            onDismissRequest = { deletingRecord = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这条健康记录吗？\n「${r.description.take(30)}」") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        val deleted = r
-                        healthRepo.delete(deleted)
-                        deletingRecord = null
-                        val result = snackbarHostState.showSnackbar(
-                            message = "已删除「${deleted.description.take(20)}」",
-                            actionLabel = "撤销",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            healthRepo.insert(deleted)
-                        }
-                    }
-                }) { Text("删除", color = c.danger) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingRecord = null }) { Text("取消") }
-            },
-        )
-    }
 }
 
 /** 单个分类卡片：标题 + 内容列表。 */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HealthCategoryCard(
     category: String,
     items: List<HealthRecordEntity>,
     useAccent: Boolean,
     onClick: (HealthRecordEntity) -> Unit,
-    onLongPress: (HealthRecordEntity) -> Unit,
     onDelete: (HealthRecordEntity) -> Unit,
 ) {
     val c = LocalThemeColors.current
-    val haptic = rememberHaptic()
     val tint = if (useAccent) c.accent else c.primary
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     Card(
@@ -217,19 +184,13 @@ private fun HealthCategoryCard(
             // —— 记录列表 ——
             items.forEachIndexed { i, r ->
                 SwipeToDeleteContainer(
+                    modifier = Modifier.padding(bottom = 16.dp),
                     onDelete = { onDelete(r) },
                 ) {
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = { onClick(r) },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    onLongPress(r)
-                                },
-                            )
-                            .padding(vertical = 8.dp),
+                            .clickable(onClick = { onClick(r) }),
                         verticalAlignment = Alignment.Top,
                     ) {
                         Box(

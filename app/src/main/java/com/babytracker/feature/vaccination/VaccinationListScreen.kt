@@ -26,7 +26,6 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.data.repository.BabyRepository
-import com.babytracker.designsystem.components.rememberHaptic
 import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
@@ -35,14 +34,13 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaccinationListScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val vacRepo: VaccinationRepository = koinInject()
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
@@ -50,7 +48,6 @@ fun VaccinationListScreen(navController: NavController) {
     var filter by remember { mutableStateOf("pending") }
     var showForm by remember { mutableStateOf(false) }
     var editingVac by remember { mutableStateOf<VaccinationEntity?>(null) }
-    var deletingVac by remember { mutableStateOf<VaccinationEntity?>(null) }
     var showGenerateConfirm by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -98,6 +95,7 @@ fun VaccinationListScreen(navController: NavController) {
             filtered.forEach { v ->
                     val itemShape = RoundedCornerShape(DT.cardRadius.dp)
                     SwipeToDeleteContainer(
+                        modifier = Modifier.padding(bottom = 8.dp),
                         onDelete = {
                             scope.launch {
                                 val deleted = v
@@ -114,17 +112,11 @@ fun VaccinationListScreen(navController: NavController) {
                         },
                     ) {
                         Card(
-                            Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 4.dp).fillMaxWidth()
-                                .combinedClickable(
-                                    onClick = {
-                                        editingVac = v
-                                        showForm = true
-                                    },
-                                    onLongClick = {
-                                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                        deletingVac = v
-                                    },
-                                )
+                            Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth()
+                                .clickable(onClick = {
+                                    editingVac = v
+                                    showForm = true
+                                })
                                 .shadow(elevation = DT.cardElevation.dp, shape = itemShape),
                             shape = itemShape,
                             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
@@ -202,33 +194,6 @@ fun VaccinationListScreen(navController: NavController) {
         )
     }
 
-    deletingVac?.let { v ->
-        AlertDialog(
-            onDismissRequest = { deletingVac = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除「${v.name}」吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        val deleted = v
-                        vacRepo.delete(deleted)
-                        deletingVac = null
-                        val result = snackbarHostState.showSnackbar(
-                            message = "已删除「${deleted.name}」",
-                            actionLabel = "撤销",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            vacRepo.insert(deleted)
-                        }
-                    }
-                }) { Text("删除", color = c.danger) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingVac = null }) { Text("取消") }
-            },
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
