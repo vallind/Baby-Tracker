@@ -10,9 +10,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.babytracker.core.theme.BabyTrackerTheme
-import com.babytracker.core.theme.ThemeController
-import com.babytracker.ui.navigation.AppNavigation
+import com.babytracker.designsystem.theme.BabyTrackerTheme
+import com.babytracker.designsystem.theme.ThemeController
+import com.babytracker.navigation.AppNavigation
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {

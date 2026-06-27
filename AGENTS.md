@@ -60,7 +60,7 @@
 
 | 级别 | 范围 | 我的动作 |
 |------|------|----------|
-| 🔴 **重大重构（必须确认）** | 改 `Entities.kt` 表结构/字段类型；改 `core/theme/` 色系系统；切架构（如启用 Domain Model）；重写 `BackupManager` 核心流程；升数据库版本号；换 DI/网络库；改 `AndroidManifest.xml` 核心配置 | **先出方案（影响范围 + 迁移步骤），等你回复“确认”再动** |
+| 🔴 **重大重构（必须确认）** | 改 `Entities.kt` 表结构/字段类型；改 `designsystem/theme/` 色系系统；切架构（如启用 Domain Model）；重写 `BackupManager` 核心流程；升数据库版本号；换 DI/网络库；改 `AndroidManifest.xml` 核心配置 | **先出方案（影响范围 + 迁移步骤），等你回复”确认”再动** |
 | 🟢 **日常开发（直接干）** | 增删改任意 Screen/ViewModel 逻辑；新页面/路由；修 bug；改疫苗列表；加非表结构的计算属性；调 UI 间距/颜色/文本；性能优化（重组/缓存） | 收到指令直接写，不请示，不啰嗦 |
 
 ---
@@ -80,18 +80,69 @@
 
 | 诉求 | 去哪改 |
 |------|--------|
-| 宝宝逻辑 | `BabyController.kt` / `BabyRepository` |
-| 喂养表单 | `FeedingListScreen.kt` → `FeedingFormDialog` |
-| 睡眠统计 | `SleepListScreen.kt` 顶部卡片 + `HomeViewModel` |
-| 生长图表 | `GrowthScreen.kt`（Canvas + WHO 参考线） |
-| 疫苗计划 | `VaccineSchedule.kt`（21 条预设） |
-| 主题色 | `core/theme/DesignTokens.kt` |
-| 备份逻辑 | `BackupManager.kt` |
-| 数据库升级 | `AppDatabase.kt` + `Entities.kt`（同步写 Migration） |
+| 宝宝逻辑 | `core/util/BabyController.kt` / `core/data/repository/` |
+| 喂养表单 | `feature/feeding/FeedingListScreen.kt` |
+| 睡眠统计 | `feature/sleep/SleepListScreen.kt` + `feature/home/HomeViewModel.kt` |
+| 生长图表 | `feature/growth/GrowthScreen.kt`（Canvas + WHO 参考线） |
+| 疫苗计划 | `core/util/VaccineSchedule.kt`（21 条预设） |
+| 主题色 | `designsystem/theme/DesignTokens.kt` |
+| 主题令牌 | `designsystem/theme/AppTokens.kt` / `AppComponentTokens.kt` |
+| 组件库 | `designsystem/components/`（21 个可复用组件） |
+| 国际化 | `designsystem/i18n/AppStrings.kt` |
+| Hooks | `designsystem/hooks/Hooks.kt` |
+| 备份逻辑 | `core/backup/BackupManager.kt` |
+| 数据库升级 | `core/database/AppDatabase.kt` + `core/database/Entities.kt`（同步写 Migration） |
+| 导航/路由 | `navigation/AppNavigation.kt` |
+| DI | `core/di/Modules.kt` |
+
+## 六、🎨 设计系统速查（参照 Palette 令牌驱动架构）
+
+```
+优先级模型：
+  显式参数 > Defaults 参数 > 组件令牌 > 语义令牌 > 硬编码回退
+
+三层令牌：
+  designsystem/theme/AppTokens.kt           — 核心语义令牌（Spacing/Elevation/Opacity/Motion/Shapes）
+  designsystem/theme/AppComponentTokens.kt  — 组件令牌（Card/AppBar/Button/Input/Chip/Fab/BottomBar/ListItem/Skeleton）
+  designsystem/theme/AppComponentDefaults.kt — 组件 Defaults（对标 Palette XxxDefaults 模式）
+
+组件用法示例：
+  AppCard { Text("内容") }                          // 替代 Card + shadow + shape + CardDefaults 样板
+  AppTopBar(title = "标题", onBack = { ... })       // 替代 CenterAlignedTopAppBar
+  PrimaryButton(onClick = { ... }, label = "保存")   // 主按钮
+  AppConfirmDialog(show, onConfirm, onDismiss)       // 替代 AlertDialog 样板
+  snackbar.showUndo(onUndo = { repo.insert(r) })    // 替代 showSnackbar + ActionPerformed 样板
+```
+
+## 七、📁 目录结构
+
+```
+com/babytracker/
+├── designsystem/                # 设计系统（32 文件）
+│   ├── theme/                   # 主题 + Token + Defaults
+│   ├── components/              # 可复用组件（21 个）
+│   ├── hooks/                   # useDebounce/useState/useLatestState
+│   ├── i18n/                    # AppStrings
+│   ├── foundation/              # BorderContainer/CenterVerticallyRow
+│   └── util/                    # AppDefaults 快照
+├── core/                        # 业务基础设施
+│   ├── backup/                  # BackupManager
+│   ├── database/                # Room（AppDatabase/Entities/Daos）
+│   ├── di/                      # Koin Modules
+│   ├── data/                    # Repository + Mapper
+│   ├── domain/                  # Domain Models
+│   └── util/                    # BabyController/DateUtils/VaccineSchedule
+├── feature/                     # 业务功能（13 个模块）
+│   ├── home/feeding/sleep/diaper/growth/
+│   ├── vaccination/health/stats/timeline/
+│   └── message/development/reminder/settings/
+└── navigation/                  # 导航
+    └── AppNavigation.kt
+```
 
 ---
 
-## 六、📝 注释与提交规范
+## 八、📝 注释与提交规范
 
 - 所有注释 **必须中文**。
 - Commit message **必须中文**。

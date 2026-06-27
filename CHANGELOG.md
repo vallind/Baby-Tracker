@@ -1,6 +1,6 @@
-# 宝宝记录 App — Android 实现
-
 ## 更新日志
+遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范。
+版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
 ### [1.4.0] — 2026-06-25
 
@@ -8,6 +8,46 @@
 - **编辑功能**：喂养/睡眠/尿布/生长/疫苗/健康 6 种记录全部支持点击编辑，表单预填原有数据，保存调用 `repo.update()`
 - **滑动删除**：新增 `SwipeToDeleteContainer` 组件，左滑红色背景 + 删除图标松手即删；`SwipeToEditDeleteContainer` 双方向（左滑删/右滑编）
 - **撤销删除**：所有删除操作后弹出 Snackbar「撤销」，点击自动重新插入原记录
+
+### [Unreleased] — 2026-06-27
+
+**设计系统骨架（参照 Palette 令牌驱动架构）：**
+
+**Round 1 — 核心令牌 + 组件层：**
+- **核心令牌层**：新建 `AppTokens.kt`（Spacing 6 级 / Elevation 4 级 / Opacity 5 级 / Motion 3 级 / Shapes 6 级）+ 5 个 CompositionLocal
+- **组件令牌层**：新建 `AppComponentTokens.kt`（9 组：Card / AppBar / Button / Input / Chip / Fab / BottomBar / ListItem / Skeleton）
+- **组件 Defaults 层**：新建 `AppComponentDefaults.kt`（9 个对象，对标 Palette 的 XxxDefaults 模式）
+- **Theme.kt 升级**：`BabyTrackerTheme` 注入全部 7 个 CompositionLocal
+- **新增组件**：`AppCard` / `AppTopBar` / `PrimaryButton`+`SecondaryButton`+`AppTextButton` / `AppChip` / `SectionHeader`+`AppListItem` / `AppInput` / `AppFAB`
+- **文件整理**：`AnimatedListItem`/`animateNumber` → `Animations.kt`；`SwipeToDeleteContainer` 系列 → `SwipeContainers.kt`；`HapticExtensions.kt` 精简
+
+**Round 2 — 对标 Palette 完整结构补全：**
+- **i18n**：新建 `core/i18n/AppStrings.kt`（60+ 中文文案集中管理，对标 PaiStrings）
+- **hooks**：新建 `core/hooks/Hooks.kt`（`useDebounce` / `useState` / `useLatestState`，对标 Palette hooks）
+- **快照**：新建 `core/util/AppDefaults.kt`（非 Composable Token 快照，对标 PaiDefaults）
+- **foundation**：新建 `foundation/border/BorderContainer.kt` + `foundation/layout/CenterVerticallyRow.kt`
+- **新组件**：`AppConfirmDialog`（确认删除）/ `AppSnackbar`（撤销 Snackbar）/ `AppIconButton`（主题化图标）/ `AppBottomSheet`（表单弹层）
+- **导出索引**：新建 `ui/components/AppComponents.kt`（对标 Palette Pai.kt 桶文件）
+
+**Round 4 — 设计系统统一迁移至 `designsystem/`：**
+- `core/components/` + `core/theme/` + `core/hooks/` + `core/i18n/` + `core/foundation/` + `core/util/AppDefaults` → `designsystem/`
+- 包路径统一为 `com.babytracker.designsystem.*`
+
+**最终目录结构：**
+```
+core/theme/     — 主题入口（7 文件）
+core/tokens →   AppTokens / AppComponentTokens / AppComponentDefaults / DesignTokens
+core/hooks/     — 轻量 Hooks（useDebounce/useState/useLatestState）
+core/i18n/      — 国际化文案（AppStrings）
+core/util/      — 工具 + AppDefaults 快照
+foundation/     — 基础组件（BorderContainer/CenterVerticallyRow）
+ui/components/  — 19 个 Composable 文件 + 导出索引
+```
+
+**优先级模型（对标 Palette 五级）：**
+```
+显式参数 > Defaults 参数 > 组件令牌 > 语义令牌 > 硬编码回退
+```
 - **TimelineViewModel**：新增 `undoLastDelete()` 方法暂存最近删除实体用于撤销
 
 ### [1.3.0] — 2026-06-18
