@@ -11,6 +11,19 @@
 
 ### [Unreleased] — 2026-06-27
 
+**Palette 令牌系统完整实施（Round 5）：**
+- **核心令牌升级**：`AppColors` 从 16 字段扩展到 39 字段（含 textPrimary/textSecondary/textTertiary/textDisabled、pageBackground/surfaceElevated、bgHover/bgPressed/bgSelected/bgDisabled、divider/overlay/shadow 等全部语义状态色）；`AppSemanticColors` 移除，所有语义色合并入 `AppColors`
+- **derive() 升级**：HSL 色相位移覆盖全部 39 个字段，支持 `accent`/`accentLight` 参数；内置 LRU 缓存 12 条
+- **组件令牌扩展**：`AppComponentTokens` 从 9 种 → 21 种令牌（新增 Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Progress/Steps/Pagination/Slider/Rate），全部带 `@Immutable`
+- **颜色派生**：`AppComponentTokens.default(colors)` 从 `AppColors` 自动派生 7 个组件的颜色令牌
+- **控件尺寸令牌**：`AppControl` → `AppControlTokens` + `ControlSizeTokens`，提供 small/medium/large 三档预设
+- **Default 快照同步**：`AppDefaults` 同步更新七类令牌快照（8 级间距 / 6 级阴影 / 7 级透明 / 6 级圆角 / 动效令牌）
+- **Logic 解耦**：新增 `ButtonLogic`（isPressed/isLoading/防抖）、`FormLogic`（fields/errors/touched/submitting）、`TableLogic`（sorting/selection/pagination），纯 Kotlin 可 JVM 单测
+- **作用域桥接**：`rememberButtonLogic`/`rememberFormLogic`/`rememberTableLogic` 接受 `CoroutineScope?`，为 null 时 `consoleWarn` 提示传入 viewModelScope
+- **PaiButton 工厂**：PRIMARY/SECONDARY/TEXT 三变体简化工厂
+- **静态审计测试**：`ThemeTokenizationStaticAuditTest` 验证所有 Defaults 文件路由正确性
+- **组件脚手架**：`scripts/generate-component.sh` 一键生成 Xxx.kt / XxxDefaults.kt / XxxLogic.kt / XxxLogicTest.kt
+
 **滑动删除体验改进：**
 - **滑动确认弹窗**：`SwipeToDeleteContainer` / `SwipeToEditDeleteContainer` 左滑不再直接删除，改为弹出 `AppConfirmDialog` 确认后执行
 - **红色背景裁剪**：滑动容器外层加 `Box.clip(RoundedCornerShape(DT.cardRadius.dp))`，解决红色超出卡片边界的问题

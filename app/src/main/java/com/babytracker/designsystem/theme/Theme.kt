@@ -24,7 +24,7 @@ import androidx.core.view.WindowCompat
 // ═══════════════════════════════════════════════════════════
 //  CompositionLocal 声明
 //  — LocalThemeColors：保留原有，向后兼容现有代码
-//  — LocalApp*：新增令牌体系（对标 Palette 的 11 个 Local）
+//  — LocalApp*：令牌体系（对标 Palette 的 11+ 个 Local）
 // ═══════════════════════════════════════════════════════════
 
 val LocalThemeColors = compositionLocalOf { AppTheme.pure.colors }
@@ -114,7 +114,8 @@ fun BabyTrackerTheme(
 ) {
     val context = LocalContext.current
     val darkTheme = theme.name == "night"
-    val resolvedTokens = componentTokens ?: if (darkTheme) AppComponentTokens.dark() else AppComponentTokens.default()
+    val resolvedColors = if (darkTheme) AppColors.dark() else AppColors.light()
+    val resolvedTokens = componentTokens ?: if (darkTheme) AppComponentTokens.dark() else AppComponentTokens.default(resolvedColors)
 
     val colorScheme = theme.toColorScheme(isDark = darkTheme)
 
@@ -153,14 +154,24 @@ fun BabyTrackerTheme(
         cardShadow = theme.colors.cardShadow,
     )
 
-    // 注入全部令牌（对标 Palette 的 CompositionLocalProvider 链）
+    val tokensSpacing = AppSpacing()
+    val tokensElevation = AppElevation()
+    val tokensOpacity = AppOpacity()
+    val tokensMotion = AppMotion()
+    val tokensShapes = AppShapes()
+    val tokensTypography = AppTypography()
+    val tokensControl = AppControlTokens()
+
     CompositionLocalProvider(
         LocalThemeColors provides mergedColors,
-        LocalAppSpacing provides AppSpacing(),
-        LocalAppElevation provides AppElevation(),
-        LocalAppOpacity provides AppOpacity(),
-        LocalAppMotion provides AppMotion(),
-        LocalAppShapes provides AppShapes(),
+        LocalAppColors provides resolvedColors,
+        LocalAppSpacing provides tokensSpacing,
+        LocalAppElevation provides tokensElevation,
+        LocalAppOpacity provides tokensOpacity,
+        LocalAppMotion provides tokensMotion,
+        LocalAppShapes provides tokensShapes,
+        LocalAppTypographyStyle provides tokensTypography,
+        LocalAppControl provides tokensControl,
         LocalAppComponentTokens provides resolvedTokens,
         LocalAppTypography provides BabyTrackerTypography,
     ) {

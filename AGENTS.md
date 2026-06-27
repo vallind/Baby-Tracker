@@ -85,11 +85,12 @@
 | 睡眠统计 | `feature/sleep/SleepListScreen.kt` + `feature/home/HomeViewModel.kt` |
 | 生长图表 | `feature/growth/GrowthScreen.kt`（Canvas + WHO 参考线） |
 | 疫苗计划 | `core/util/VaccineSchedule.kt`（21 条预设） |
-| 主题色 | `designsystem/theme/DesignTokens.kt` |
-| 主题令牌 | `designsystem/theme/AppTokens.kt` / `AppComponentTokens.kt` |
-| 组件库 | `designsystem/components/`（21 个可复用组件） |
+| 主题色 | `designsystem/theme/DesignTokens.kt`（遗留，仅兼容） |
+| 核心令牌 | `designsystem/theme/AppTokens.kt` — AppColors(39字段)/Spacing/Shapes/Elevation/Opacity/Motion/ControlSizeTokens |
+| 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 21 种组件令牌 + derive() 部分覆盖 |
+| 组件库 | `designsystem/components/`（21+ 个可复用组件 + Defaults） |
 | 国际化 | `designsystem/i18n/AppStrings.kt` |
-| Hooks | `designsystem/hooks/Hooks.kt` |
+| Hooks/Logic | `designsystem/hooks/Hooks.kt` + `ButtonLogic.kt`/`FormLogic.kt`/`TableLogic.kt` |
 | 备份逻辑 | `core/backup/BackupManager.kt` |
 | 数据库升级 | `core/database/AppDatabase.kt` + `core/database/Entities.kt`（同步写 Migration） |
 | 导航/路由 | `navigation/AppNavigation.kt` |
@@ -99,29 +100,40 @@
 
 ```
 优先级模型：
-  显式参数 > Defaults 参数 > 组件令牌 > 语义令牌 > 硬编码回退
+  显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
 
 三层令牌：
-  designsystem/theme/AppTokens.kt           — 核心语义令牌（Spacing/Elevation/Opacity/Motion/Shapes）
-  designsystem/theme/AppComponentTokens.kt  — 组件令牌（Card/AppBar/Button/Input/Chip/Fab/BottomBar/ListItem/Skeleton）
-  designsystem/theme/AppComponentDefaults.kt — 组件 Defaults（对标 Palette XxxDefaults 模式）
+  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 39字段/Spacing/Elevation/Opacity/Motion/Shapes/Typography/ControlSizeTokens）
+  designsystem/theme/AppComponentTokens.kt  — 组件令牌（21 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Progress/Skeleton/Steps/Pagination/Slider/Rate + AppBar/Chip/Fab/BottomBar/ListItem）
+  designsystem/util/AppDefaults.kt           — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
+
+derive() 模式：
+  AppColors.derive(primary) → HSL 色相位移，自动重算所有 39 个字段
+  AppComponentTokens.default(colors) → 从 AppColors 自动派生组件令牌颜色
+  tokens.derive { field = value } → 部分覆盖语法糖
 
 组件用法示例：
   AppCard { Text("内容") }                          // 替代 Card + shadow + shape + CardDefaults 样板
   AppTopBar(title = "标题", onBack = { ... })       // 替代 CenterAlignedTopAppBar
   PrimaryButton(onClick = { ... }, label = "保存")   // 主按钮
+  PaiButton("保存", onClick = { ... })               // 简化工厂
   AppConfirmDialog(show, onConfirm, onDismiss)       // 替代 AlertDialog 样板
   snackbar.showUndo(onUndo = { repo.insert(r) })    // 替代 showSnackbar + ActionPerformed 样板
+
+Logic 模式（纯 Kotlin，可 JVM 单测）：
+  ButtonLogic(scope, debounceMs) → isPressed/isLoading/防抖
+  FormLogic(scope, initial, validator) → fields/errors/touched/submitting
+  TableLogic(scope, data) → sorting/selection/pagination
 ```
 
 ## 七、📁 目录结构
 
 ```
 com/babytracker/
-├── designsystem/                # 设计系统（32 文件）
+├── designsystem/                # 设计系统（32+ 文件）
 │   ├── theme/                   # 主题 + Token + Defaults
-│   ├── components/              # 可复用组件（21 个）
-│   ├── hooks/                   # useDebounce/useState/useLatestState
+│   ├── components/              # 可复用组件（21+ 个）
+│   ├── hooks/                   # useDebounce/useState/useLatestState + Logic 类
 │   ├── i18n/                    # AppStrings
 │   ├── foundation/              # BorderContainer/CenterVerticallyRow
 │   └── util/                    # AppDefaults 快照
@@ -142,7 +154,48 @@ com/babytracker/
 
 ---
 
-## 八、📝 注释与提交规范
+## 八、新增组件指引
+
+新增标准组件步骤（也可用 `scripts/generate-component.sh` 生成骨架）：
+
+### Step 1：定义令牌
+在 `AppComponentTokens.kt` 中新增 `XxxTokens` 数据类，然后在 `AppComponentTokens` 聚合中添加字段和 `default(colors)` 派生：
+
+```kotlin
+@Immutable
+data class XxxTokens(
+    val height: Dp = 48.dp,
+    val cornerRadius: Dp = 12.dp,
+    val containerColor: Color = Color.Unspecified,  // 由 default(colors) 派生
+)
+// AppComponentTokens 加一行: val xxx: XxxTokens = XxxTokens()
+// companion object default() 加一行: xxx = XxxTokens(containerColor = colors.primary)
+```
+
+### Step 2：实现 Xxx.kt + XxxDefaults.kt
+**XxxDefaults.kt** 从令牌系统读取值，**Xxx.kt** 纯 UI 层不含业务逻辑。
+
+### Step 3：判断是否需要 Logic 文件
+只有**管理内部交互状态**的组件才需要（如 Button 的 isPressed、Swipe 的滑动进度）。纯视觉/纯回调组件**不需要**（如 Card、TopBar）。
+
+### Step 4：实现 XxxLogic + 桥接（如需要）
+纯 Kotlin 类（接受 `CoroutineScope`），然后在 `Hooks.kt` 加 `rememberXxxLogic(scope: CoroutineScope? = null)` 桥接 Composable。
+
+### Step 5：可选 — 简化工厂
+`@Composable fun PaiXxx(...) = AppXxx(...)` 自动填充所有 Defaults。
+
+### Step 6：更新快照
+`AppDefaults.kt` 添加非 Composable 环境的快照字段。
+
+### Step 7：优先级验证
+```
+显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 回退值
+```
+集成测试在 `ThemeTokenizationStaticAuditTest` 中补充。
+
+---
+
+## 九、📝 注释与提交规范
 
 - 所有注释 **必须中文**。
 - Commit message **必须中文**。
