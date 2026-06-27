@@ -26,25 +26,22 @@ import com.babytracker.core.data.repository.SleepRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.rememberHaptic
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SleepListScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val sleepRepo: SleepRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingSleep by remember { mutableStateOf<SleepEntity?>(null) }
-    var deletingSleep by remember { mutableStateOf<SleepEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     val today = java.time.LocalDate.now().toString()
@@ -158,6 +155,7 @@ fun SleepListScreen(navController: NavController) {
                 val sleepCardShape = RoundedCornerShape(DT.cardRadius.dp)
                 val tint = if (i % 2 == 1) c.accent else c.primary
                 SwipeToDeleteContainer(
+                    modifier = Modifier.padding(bottom = 8.dp),
                     onDelete = {
                         scope.launch {
                             val deleted = s
@@ -175,19 +173,13 @@ fun SleepListScreen(navController: NavController) {
                 ) {
                     Card(
                         Modifier
-                            .padding(horizontal = DT.pageMargin.dp, vertical = 4.dp)
+                            .padding(horizontal = DT.pageMargin.dp)
                             .fillMaxWidth()
                             .shadow(elevation = DT.cardElevation.dp, shape = sleepCardShape)
-                            .combinedClickable(
-                                onClick = {
-                                    editingSleep = s
-                                    showForm = true
-                                },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                    deletingSleep = s
-                                },
-                            ),
+                            .clickable(onClick = {
+                                editingSleep = s
+                                showForm = true
+                            }),
                         shape = sleepCardShape,
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         colors = CardDefaults.cardColors(containerColor = c.card),
@@ -237,33 +229,6 @@ fun SleepListScreen(navController: NavController) {
         )
     }
 
-    deletingSleep?.let { s ->
-        AlertDialog(
-            onDismissRequest = { deletingSleep = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这条睡眠记录吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        val deleted = s
-                        sleepRepo.delete(deleted)
-                        deletingSleep = null
-                        val result = snackbarHostState.showSnackbar(
-                            message = "已删除睡眠记录",
-                            actionLabel = "撤销",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            sleepRepo.insert(deleted)
-                        }
-                    }
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingSleep = null }) { Text("取消") }
-            },
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

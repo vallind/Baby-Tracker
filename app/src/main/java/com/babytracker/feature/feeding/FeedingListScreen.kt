@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -28,7 +27,6 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
 import com.babytracker.designsystem.components.BottomNavBar
-import com.babytracker.designsystem.components.rememberHaptic
 import com.babytracker.designsystem.components.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import kotlinx.coroutines.launch
@@ -42,14 +40,12 @@ fun FeedingListScreen(navController: NavController) {
     val c = LocalThemeColors.current
     val feedingRepo: FeedingRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val feedings by feedingRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
-    var deletingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -115,6 +111,7 @@ fun FeedingListScreen(navController: NavController) {
                     )
                     items.forEachIndexed { i, f ->
                         SwipeToDeleteContainer(
+                            modifier = Modifier.padding(bottom = 8.dp),
                             onDelete = {
                                 scope.launch {
                                     val deleted = f
@@ -145,7 +142,6 @@ fun FeedingListScreen(navController: NavController) {
                                     editingFeeding = f
                                     showForm = true
                                 },
-                                onLongClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress); deletingFeeding = f },
                             )
                         }
                     }
@@ -178,33 +174,6 @@ fun FeedingListScreen(navController: NavController) {
         )
     }
 
-    deletingFeeding?.let { f ->
-        AlertDialog(
-            onDismissRequest = { deletingFeeding = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除这条喂养记录吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch {
-                        val deleted = f
-                        feedingRepo.delete(deleted)
-                        deletingFeeding = null
-                        val result = snackbarHostState.showSnackbar(
-                            message = "已删除喂养记录",
-                            actionLabel = "撤销",
-                            duration = SnackbarDuration.Short,
-                        )
-                        if (result == SnackbarResult.ActionPerformed) {
-                            feedingRepo.insert(deleted)
-                        }
-                    }
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingFeeding = null }) { Text("取消") }
-            },
-        )
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -399,7 +368,6 @@ fun FeedingFormDialog(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TimelineItem(
     time: String,
@@ -408,7 +376,6 @@ fun TimelineItem(
     title: String,
     subtitle: String,
     onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {},
 ) {
     val c = LocalThemeColors.current
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
@@ -416,9 +383,8 @@ fun TimelineItem(
     Card(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
             .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
-            .combinedClickable(onLongClick = onLongClick, onClick = onClick),
+            .clickable(onClick = onClick),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = c.card),

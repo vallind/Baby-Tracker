@@ -212,6 +212,18 @@ class TimelineViewModel(
         }
     }
 
+    fun findFeeding(id: Int): FeedingEntity? = cachedFeedings.find { it.id == id }
+    fun findSleep(id: Int): SleepEntity? = cachedSleeps.find { it.id == id }
+    fun findDiaper(id: Int): DiaperEntity? = cachedDiapers.find { it.id == id }
+    fun findGrowth(id: Int): GrowthEntity? = cachedGrowths.find { it.id == id }
+    fun findHealth(id: Int): HealthRecordEntity? = cachedHealths.find { it.id == id }
+
+    fun updateFeeding(e: FeedingEntity) { viewModelScope.launch { feedingRepo.update(e) } }
+    fun updateSleep(e: SleepEntity) { viewModelScope.launch { sleepRepo.update(e) } }
+    fun updateDiaper(e: DiaperEntity) { viewModelScope.launch { diaperRepo.update(e) } }
+    fun updateGrowth(e: GrowthEntity) { viewModelScope.launch { growthRepo.update(e) } }
+    fun updateHealth(e: HealthRecordEntity) { viewModelScope.launch { healthRepo.update(e) } }
+
     /** 撤销最近一次删除 */
     fun undoLastDelete() {
         viewModelScope.launch {

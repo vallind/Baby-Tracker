@@ -11,6 +11,18 @@
 
 ### [Unreleased] — 2026-06-27
 
+**滑动删除体验改进：**
+- **滑动确认弹窗**：`SwipeToDeleteContainer` / `SwipeToEditDeleteContainer` 左滑不再直接删除，改为弹出 `AppConfirmDialog` 确认后执行
+- **红色背景裁剪**：滑动容器外层加 `Box.clip(RoundedCornerShape(DT.cardRadius.dp))`，解决红色超出卡片边界的问题
+- **卡片间距外移**：卡片内部 `padding(vertical=4dp)` 移到 `SwipeToDeleteContainer` 外层 modifier，避免红色填充卡片间隙
+
+**记录页直接编辑：**
+- **TimelineScreen 点击编辑**：点击时间线卡片直接弹出对应类型的编辑表单（喂养/睡眠/尿布/生长/健康），不再跳转功能页
+- **TimelineViewModel 新增**：`findXxx(id)` / `updateXxx(entity)` 方法供直接编辑使用
+
+**长按删除统一移除：**
+- 移除 Feeding/Sleep/Diaper/Growth/Vaccination/Health/Timeline 共 7 个屏幕的长按删除逻辑，仅保留左滑删除（已含确认弹窗）
+
 **设计系统骨架（参照 Palette 令牌驱动架构）：**
 
 **Round 1 — 核心令牌 + 组件层：**
