@@ -40,9 +40,7 @@ package com.babytracker.designsystem.components
 // SkeletonLoader     骨架屏               (skeleton/)
 
 // —— 交互组件 ——
-// SwipeToDeleteContainer    左滑删除        (swipe/)
-// SwipeToEditContainer      右滑编辑
-// SwipeToEditDeleteContainer 双方向滑动
+// RecordCard         记录卡片（滑动删除+点击编辑）        (recordcard/)
 
 // —— 动画 ——
 // AnimatedListItem   列表项入场动画

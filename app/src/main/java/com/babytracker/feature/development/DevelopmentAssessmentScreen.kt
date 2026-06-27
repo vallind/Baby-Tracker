@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -44,7 +45,7 @@ private data class AbilityMeta(
 )
 
 private val ABILITIES: List<AbilityMeta> = listOf(
-    AbilityMeta("大运动", Icons.Default.DirectionsRun) { it.grossMotor },
+    AbilityMeta("大运动", Icons.AutoMirrored.Filled.DirectionsRun) { it.grossMotor },
     AbilityMeta("精细动作", Icons.Default.PanTool) { it.fineMotor },
     AbilityMeta("语言", Icons.Default.RecordVoiceOver) { it.language },
     AbilityMeta("社交", Icons.Default.Group) { it.social },
@@ -114,7 +115,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = c.primaryLight,
                     titleContentColor = c.textPrimary,
                     navigationIconContentColor = c.textPrimary,

@@ -27,7 +27,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
-import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -110,7 +110,10 @@ fun FeedingListScreen(navController: NavController) {
                         modifier = Modifier.padding(top = if (groupIndex == 0) DT.cardGap.dp else DT.cardGapSm.dp, bottom = 4.dp),
                     )
                     items.forEachIndexed { i, f ->
-                        SwipeToDeleteContainer(
+                        val tint = if (i % 2 == 1) c.accent else c.primary
+                        val emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }
+                        val time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" }
+                        RecordCard(
                             modifier = Modifier.padding(bottom = 8.dp),
                             onDelete = {
                                 scope.launch {
@@ -126,23 +129,33 @@ fun FeedingListScreen(navController: NavController) {
                                     }
                                 }
                             },
+                            onClick = {
+                                editingFeeding = f
+                                showForm = true
+                            },
                         ) {
-                            TimelineItem(
-                                time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" },
-                                useAccent = i % 2 == 1,
-                                emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" },
-                                title = DateUtils.feedingTypeLabel(f.type),
-                                subtitle = when (f.type) {
-                                    "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
-                                    "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
-                                    "food" -> "${f.foodName} ${f.amountG}g"
-                                    else -> "${f.amountMl}ml"
-                                },
-                                onClick = {
-                                    editingFeeding = f
-                                    showForm = true
-                                },
-                            )
+                            Box(
+                                Modifier
+                                    .size(DT.iconBgSize.dp)
+                                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                    .background(tint.copy(alpha = 0.14f)),
+                                contentAlignment = Alignment.Center,
+                            ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(DateUtils.feedingTypeLabel(f.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                Text(
+                                    when (f.type) {
+                                        "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
+                                        "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
+                                        "food" -> "${f.foodName} ${f.amountG}g"
+                                        else -> "${f.amountMl}ml"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = c.textSecondary,
+                                )
+                            }
+                            Text(time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
                         }
                     }
                     groupIndex++
@@ -365,44 +378,5 @@ fun FeedingFormDialog(
                 showTimePicker = false
             }) { Text("确定") }
         }, dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("取消") } })
-    }
-}
-
-@Composable
-fun TimelineItem(
-    time: String,
-    useAccent: Boolean = false,
-    emoji: String,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit = {},
-) {
-    val c = LocalThemeColors.current
-    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
-    val tint = if (useAccent) c.accent else c.primary
-    Card(
-        Modifier
-            .fillMaxWidth()
-            .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
-            .clickable(onClick = onClick),
-        shape = cardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
-    ) {
-        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(DT.iconBgSize.dp)
-                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                    .background(tint.copy(alpha = 0.14f)),
-                contentAlignment = Alignment.Center,
-            ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-            }
-            Text(time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
-        }
     }
 }

@@ -34,7 +34,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.GrowthRepository
 import kotlinx.coroutines.launch
-import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -60,7 +60,7 @@ fun GrowthScreen(navController: NavController) {
 
     Scaffold(containerColor = c.bg, topBar = {
         CenterAlignedTopAppBar(title = { Text("生长记录", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = c.primaryLight,
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
@@ -216,8 +216,7 @@ fun GrowthScreen(navController: NavController) {
                     visible = true,
                     enter = fadeIn() + slideInVertically { it / 2 },
                 ) {
-                val itemShape = RoundedCornerShape(DT.cardRadius.dp)
-                SwipeToDeleteContainer(
+                RecordCard(
                     modifier = Modifier.padding(bottom = 8.dp),
                     onDelete = {
                         scope.launch {
@@ -233,26 +232,16 @@ fun GrowthScreen(navController: NavController) {
                             }
                         }
                     },
+                    onClick = {
+                        editingGrowth = g
+                        showForm = true
+                    },
                 ) {
-                    Card(
-                        Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth()
-                            .clickable(onClick = {
-                                editingGrowth = g
-                                showForm = true
-                            })
-                            .shadow(elevation = DT.cardElevation.dp, shape = itemShape),
-                        shape = itemShape,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        colors = CardDefaults.cardColors(containerColor = c.card),
-                    ) {
-                        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
-                                Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                            }
-                        }
+                    Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                        Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                     }
                 }
                 }

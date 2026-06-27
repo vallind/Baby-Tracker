@@ -21,7 +21,7 @@ import com.babytracker.designsystem.theme.LocalThemeColors
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.core.database.entity.*
 import com.babytracker.feature.diaper.DiaperFormDialog
 import com.babytracker.feature.feeding.FeedingFormDialog
@@ -113,9 +113,8 @@ fun TimelineScreen(navController: NavController) {
                             modifier = Modifier.padding(top = if (groupIndex == 0) 0.dp else DT.cardGapSm.dp, bottom = 4.dp),
                         )
                         items.forEachIndexed { i, item ->
-                            val cardShape = RoundedCornerShape(DT.cardRadius.dp)
                             val tint = if (item.accent) c.accent else c.primary
-                            SwipeToDeleteContainer(
+                            RecordCard(
                                 modifier = Modifier.padding(bottom = 8.dp),
                                 onDelete = {
                                     scope.launch {
@@ -130,41 +129,30 @@ fun TimelineScreen(navController: NavController) {
                                         }
                                     }
                                 },
-                            ) {
-                                Card(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
-                                        .clickable(onClick = {
-                                            when (item.recordType) {
-                                                "feeding" -> editingFeeding = viewModel.findFeeding(item.id)
-                                                "sleep" -> editingSleep = viewModel.findSleep(item.id)
-                                                "diaper" -> editingDiaper = viewModel.findDiaper(item.id)
-                                                "growth" -> editingGrowth = viewModel.findGrowth(item.id)
-                                                "health" -> editingHealth = viewModel.findHealth(item.id)
-                                            }
-                                        }),
-                                    shape = cardShape,
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                    colors = CardDefaults.cardColors(containerColor = c.card),
-                                ) {
-                                    Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        Box(
-                                            Modifier
-                                                .size(DT.iconBgSize.dp)
-                                                .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                                .background(tint.copy(alpha = 0.14f)),
-                                            contentAlignment = Alignment.Center,
-                                        ) { Text(item.emoji, style = MaterialTheme.typography.titleLarge) }
-                                        Spacer(Modifier.width(12.dp))
-                                        Column(Modifier.weight(1f)) {
-                                            Text(item.title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                                            Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                                        }
-                                        if (item.time.isNotEmpty()) {
-                                            Text(item.time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
-                                        }
+                                onClick = {
+                                    when (item.recordType) {
+                                        "feeding" -> editingFeeding = viewModel.findFeeding(item.id)
+                                        "sleep" -> editingSleep = viewModel.findSleep(item.id)
+                                        "diaper" -> editingDiaper = viewModel.findDiaper(item.id)
+                                        "growth" -> editingGrowth = viewModel.findGrowth(item.id)
+                                        "health" -> editingHealth = viewModel.findHealth(item.id)
                                     }
+                                },
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(DT.iconBgSize.dp)
+                                        .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                        .background(tint.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text(item.emoji, style = MaterialTheme.typography.titleLarge) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(item.title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                }
+                                if (item.time.isNotEmpty()) {
+                                    Text(item.time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
                                 }
                             }
                         }

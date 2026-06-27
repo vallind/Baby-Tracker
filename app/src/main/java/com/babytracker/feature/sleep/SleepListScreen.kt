@@ -24,7 +24,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.SleepRepository
 import kotlinx.coroutines.launch
-import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -152,9 +152,8 @@ fun SleepListScreen(navController: NavController) {
                 items.forEachIndexed { i, s ->
                 val start = LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME)
                 val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
-                val sleepCardShape = RoundedCornerShape(DT.cardRadius.dp)
                 val tint = if (i % 2 == 1) c.accent else c.primary
-                SwipeToDeleteContainer(
+                RecordCard(
                     modifier = Modifier.padding(bottom = 8.dp),
                     onDelete = {
                         scope.launch {
@@ -170,36 +169,24 @@ fun SleepListScreen(navController: NavController) {
                             }
                         }
                     },
+                    onClick = {
+                        editingSleep = s
+                        showForm = true
+                    },
                 ) {
-                    Card(
+                    Box(
                         Modifier
-                            .padding(horizontal = DT.pageMargin.dp)
-                            .fillMaxWidth()
-                            .shadow(elevation = DT.cardElevation.dp, shape = sleepCardShape)
-                            .clickable(onClick = {
-                                editingSleep = s
-                                showForm = true
-                            }),
-                        shape = sleepCardShape,
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        colors = CardDefaults.cardColors(containerColor = c.card),
-                    ) {
-                        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                Modifier
-                                    .size(DT.iconBgSize.dp)
-                                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                    .background(tint.copy(alpha = 0.14f)),
-                                contentAlignment = Alignment.Center,
-                            ) { Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                                Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                            }
-                            Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = c.primary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                        }
+                            .size(DT.iconBgSize.dp)
+                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                            .background(tint.copy(alpha = 0.14f)),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                        Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                     }
+                    Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = c.primary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 }
                 }
             }

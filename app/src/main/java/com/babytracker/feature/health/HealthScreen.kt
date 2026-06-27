@@ -26,7 +26,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.HealthRepository
 import kotlinx.coroutines.launch
 import com.babytracker.core.database.entity.HealthRecordEntity
-import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -54,7 +54,7 @@ fun HealthScreen(navController: NavController) {
 
     Scaffold(containerColor = c.bg, topBar = {
         CenterAlignedTopAppBar(title = { Text("健康档案", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = c.primaryLight,
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
@@ -183,37 +183,32 @@ private fun HealthCategoryCard(
             Spacer(Modifier.height(8.dp))
             // —— 记录列表 ——
             items.forEachIndexed { i, r ->
-                SwipeToDeleteContainer(
+                RecordCard(
                     modifier = Modifier.padding(bottom = 16.dp),
                     onDelete = { onDelete(r) },
+                    onClick = { onClick(r) },
+                    verticalAlignment = Alignment.Top,
                 ) {
-                    Row(
+                    Box(
                         Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = { onClick(r) }),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        Box(
-                            Modifier
-                                .padding(top = 4.dp)
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(tint),
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(r.description, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
-                            Spacer(Modifier.height(2.dp))
-                            val dateText = try {
-                                DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
-                            } catch (_: Exception) { r.recordDate.take(10) }
-                            Text(dateText, fontSize = 11.sp, color = c.textSecondary)
-                            if (!r.doctorName.isNullOrBlank()) {
-                                Text("医生：${r.doctorName}", fontSize = 11.sp, color = c.textSecondary)
-                            }
-                            if (!r.note.isNullOrBlank()) {
-                                Text(r.note, fontSize = 12.sp, color = c.textSecondary)
-                            }
+                            .padding(top = 4.dp)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(tint),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(r.description, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                        Spacer(Modifier.height(2.dp))
+                        val dateText = try {
+                            DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
+                        } catch (_: Exception) { r.recordDate.take(10) }
+                        Text(dateText, fontSize = 11.sp, color = c.textSecondary)
+                        if (!r.doctorName.isNullOrBlank()) {
+                            Text("医生：${r.doctorName}", fontSize = 11.sp, color = c.textSecondary)
+                        }
+                        if (!r.note.isNullOrBlank()) {
+                            Text(r.note, fontSize = 12.sp, color = c.textSecondary)
                         }
                     }
                 }

@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.Color
  * 风格：母婴温馨简洁、扁平化、圆润、浅蓝主调
  * @deprecated 使用 AppTokens/AppComponentDefaults 下的对应令牌代替
  */
-@Deprecated("Use AppTokens/AppComponentDefaults tokens instead")
 object DT {
     // —— 间距 ——
     val pageMargin = 20          // 页面边距

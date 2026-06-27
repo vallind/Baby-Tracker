@@ -24,7 +24,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
-import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -105,9 +105,8 @@ fun DiaperListScreen(navController: NavController) {
                         modifier = Modifier.padding(top = if (groupIndex == 0) DT.cardGap.dp else DT.cardGapSm.dp, bottom = 4.dp),
                     )
                     items.forEachIndexed { i, d ->
-                        val diaperCardShape = RoundedCornerShape(DT.cardRadius.dp)
                         val tint = if (i % 2 == 1) c.accent else c.primary
-                        SwipeToDeleteContainer(
+                        RecordCard(
                             modifier = Modifier.padding(bottom = 8.dp),
                             onDelete = {
                                 scope.launch {
@@ -123,36 +122,25 @@ fun DiaperListScreen(navController: NavController) {
                                     }
                                 }
                             },
+                            onClick = {
+                                editingDiaper = d
+                                showForm = true
+                            },
                         ) {
-                            Card(
+                            Box(
                                 Modifier
-                                    .fillMaxWidth()
-                                    .shadow(elevation = DT.cardElevation.dp, shape = diaperCardShape)
-                                    .clickable(onClick = {
-                                        editingDiaper = d
-                                        showForm = true
-                                    }),
-                                shape = diaperCardShape,
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                colors = CardDefaults.cardColors(containerColor = c.card),
-                            ) {
-                                Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        Modifier
-                                            .size(DT.iconBgSize.dp)
-                                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                            .background(tint.copy(alpha = 0.14f)),
-                                        contentAlignment = Alignment.Center,
-                                    ) { Text("🧷", style = MaterialTheme.typography.titleLarge) }
-                                    Spacer(Modifier.width(12.dp))
-                                    Column(Modifier.weight(1f)) {
-                                        Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                                        Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                                    }
-                                    if (!d.note.isNullOrBlank()) {
-                                        Text(d.note.take(6), style = MaterialTheme.typography.labelSmall, color = c.textHint, modifier = Modifier.padding(start = 8.dp))
-                                    }
-                                }
+                                    .size(DT.iconBgSize.dp)
+                                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                    .background(tint.copy(alpha = 0.14f)),
+                                contentAlignment = Alignment.Center,
+                            ) { Text("🧷", style = MaterialTheme.typography.titleLarge) }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                            }
+                            if (!d.note.isNullOrBlank()) {
+                                Text(d.note.take(6), style = MaterialTheme.typography.labelSmall, color = c.textHint, modifier = Modifier.padding(start = 8.dp))
                             }
                         }
                     }

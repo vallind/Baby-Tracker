@@ -51,7 +51,7 @@ fun StatsScreen(navController: NavController) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = c.primaryLight,
                     titleContentColor = c.textPrimary,
                     navigationIconContentColor = c.textPrimary,

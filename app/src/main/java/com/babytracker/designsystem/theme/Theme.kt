@@ -124,7 +124,8 @@ fun BabyTrackerTheme(
         if (activity != null && Build.VERSION.SDK_INT >= 21) {
             val window = activity.window
             // 状态栏融入页面背景（浅蓝），让顶部更柔和
-            window.statusBarColor = if (darkTheme) colorScheme.surface.toArgb() else colorScheme.background.toArgb()
+            @Suppress("DEPRECATION")
+            run { window.statusBarColor = if (darkTheme) colorScheme.surface.toArgb() else colorScheme.background.toArgb() }
             WindowCompat.getInsetsController(window, activity.window.decorView).isAppearanceLightStatusBars = !darkTheme
         }
     }

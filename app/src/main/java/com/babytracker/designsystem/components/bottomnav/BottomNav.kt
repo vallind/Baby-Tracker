@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.List
-import androidx.compose.material.icons.outlined.Message
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -56,9 +56,9 @@ fun BottomNavBar(navController: NavController) {
     ) {
         val tabs = listOf(
             BottomTab("首页", Icons.Outlined.Home, Screen.Home.route, badgeCount = 0),
-            BottomTab("记录", Icons.Outlined.List, Screen.Timeline.route, badgeCount = 0),
+            BottomTab("记录", Icons.AutoMirrored.Outlined.List, Screen.Timeline.route, badgeCount = 0),
             BottomTab("统计", Icons.Outlined.BarChart, Screen.Stats.route, badgeCount = 0),
-            BottomTab("消息", Icons.Outlined.Message, Screen.Message.route, badgeCount = unreadCount),
+            BottomTab("消息", Icons.AutoMirrored.Outlined.Message, Screen.Message.route, badgeCount = unreadCount),
             BottomTab("我的", Icons.Outlined.Person, Screen.Settings.route, badgeCount = 0),
         )
         tabs.forEach { tab ->

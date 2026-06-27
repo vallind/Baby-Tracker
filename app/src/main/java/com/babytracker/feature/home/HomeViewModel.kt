@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.database.entity.*
 import com.babytracker.core.data.repository.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -19,6 +20,7 @@ data class HomeUiState(
     val loading: Boolean = true,
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel(
     private val feedingRepo: FeedingRepository,
     private val sleepRepo: SleepRepository,

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.babytracker.core.database.entity.*
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -36,6 +37,7 @@ private data class EntityBundle(
     val healths: List<HealthRecordEntity>,
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class TimelineViewModel(
     private val feedingRepo: FeedingRepository,
     private val sleepRepo: SleepRepository,

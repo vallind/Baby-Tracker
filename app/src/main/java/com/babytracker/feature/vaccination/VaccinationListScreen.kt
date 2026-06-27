@@ -26,7 +26,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.data.repository.BabyRepository
-import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -54,7 +54,7 @@ fun VaccinationListScreen(navController: NavController) {
 
     Scaffold(containerColor = c.bg, topBar = {
         CenterAlignedTopAppBar(title = { Text("疫苗接种", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = c.primaryLight,
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
@@ -93,8 +93,7 @@ fun VaccinationListScreen(navController: NavController) {
                 )
             }
             filtered.forEach { v ->
-                    val itemShape = RoundedCornerShape(DT.cardRadius.dp)
-                    SwipeToDeleteContainer(
+                    RecordCard(
                         modifier = Modifier.padding(bottom = 8.dp),
                         onDelete = {
                             scope.launch {
@@ -110,31 +109,21 @@ fun VaccinationListScreen(navController: NavController) {
                                 }
                             }
                         },
+                        onClick = {
+                            editingVac = v
+                            showForm = true
+                        },
                     ) {
-                        Card(
-                            Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth()
-                                .clickable(onClick = {
-                                    editingVac = v
-                                    showForm = true
-                                })
-                                .shadow(elevation = DT.cardElevation.dp, shape = itemShape),
-                            shape = itemShape,
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            colors = CardDefaults.cardColors(containerColor = c.card),
-                        ) {
-                        Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
-                                Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                            }
-                            val tagColor = if (v.status == "done") c.success else c.accent
-                            Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                                Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
-                            }
+                        Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                            Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                         }
-                    }
+                        val tagColor = if (v.status == "done") c.success else c.accent
+                        Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                            Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
+                        }
                     }
                 }
             if (filter == "pending") {

@@ -11,6 +11,33 @@
 
 ### [Unreleased] — 2026-06-27
 
+**RecordCard 组件化 + 删除体验统一 + Warning 清零：**
+
+**RecordCard 组件（recordcard/）：**
+- 新建 `RecordCard` — 内联 `SwipeToDismissBox` + `Card` + `AppConfirmDialog`，一张卡片完成滑动删除+点击编辑+确认弹窗
+- 新建 `RecordCardDefaults` — 委托 `CardDefaults` 提供 cornerRadius/elevation/innerPadding
+- 删除 `swipe/Swipe.kt` — SwipeToDeleteContainer/SwipeToEditContainer/SwipeToEditDeleteContainer 废弃
+- 7 个屏幕统一替换为 RecordCard（Feeding/Sleep/Diaper/Growth/Vaccination/Timeline/Health）
+- 红色溢出从结构上根除：Card = SwipeToDismissBox content，尺寸天然一致
+
+**删除体验统一：**
+- 左滑删除统一弹出 `AppConfirmDialog` 确认后执行（不再直接删除）
+- 长按删除 7 个屏幕全部移除，仅保留左滑删除
+- 所有卡片 `combinedClickable` → `clickable`
+
+**记录页直接编辑：**
+- TimelineScreen 点击卡片直接弹出编辑表单（不再跳转功能页）
+- TimelineViewModel 新增 `findXxx(id)` / `updateXxx(entity)` 方法
+
+**Warning 清零：**
+- 移除 DT `@Deprecated` 注解（227 warnings）
+- `centerAlignedTopAppBarColors` → `topAppBarColors`（7 处）
+- `Icons.Outlined.List/Message` → `Icons.AutoMirrored.Outlined.*`
+- `Icons.Filled.DirectionsRun` → `Icons.AutoMirrored.Filled.DirectionsRun`
+- `statusBarColor` deprecation 压制
+- 4 个 ViewModel 加 `@OptIn(ExperimentalCoroutinesApi::class)`
+- BackupManager 移除多余 `?.` 和 `?:` dead code
+
 **Palette 令牌系统完整实施（Round 5）：**
 - **核心令牌升级**：`AppColors` 从 16 字段扩展到 39 字段（含 textPrimary/textSecondary/textTertiary/textDisabled、pageBackground/surfaceElevated、bgHover/bgPressed/bgSelected/bgDisabled、divider/overlay/shadow 等全部语义状态色）；`AppSemanticColors` 移除，所有语义色合并入 `AppColors`
 - **derive() 升级**：HSL 色相位移覆盖全部 39 个字段，支持 `accent`/`accentLight` 参数；内置 LRU 缓存 12 条

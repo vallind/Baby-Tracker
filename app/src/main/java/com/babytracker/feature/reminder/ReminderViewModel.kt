@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.data.repository.ReminderRepository
 import com.babytracker.core.domain.model.Reminder
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -28,6 +29,7 @@ data class ReminderUiState(
  * - `markDone(id)` / `setEnabled(id, enabled)` / `delete(reminder)` 均为 fire-and-forget 协程，
  *   DB 变化会通过 Flow 自动回流到 state。
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ReminderViewModel(
     private val reminderRepo: ReminderRepository,
 ) : ViewModel() {

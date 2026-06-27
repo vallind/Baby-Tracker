@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.database.entity.*
 import com.babytracker.core.data.repository.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.time.Duration
 import java.time.LocalDateTime
@@ -25,6 +26,7 @@ data class StatsUiState(
     val weightPoints: List<Float> = emptyList(),
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class StatsViewModel(
     private val feedingRepo: FeedingRepository,
     private val sleepRepo: SleepRepository,

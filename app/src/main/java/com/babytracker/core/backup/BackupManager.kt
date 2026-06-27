@@ -94,7 +94,7 @@ class BackupManager(private val db: AppDatabase) {
             val propfindXml = "<?xml version=\"1.0\" encoding=\"utf-8\"?><propfind xmlns=\"DAV:\"><prop><displayname/><getcontentlength/><getlastmodified/></prop></propfind>"
             val listRequest = Request.Builder().url(baseUrl).method("PROPFIND", propfindXml.toRequestBody("application/xml".toMediaType())).header("Authorization", Credentials.basic(user, pass)).header("Depth", "1").build()
             val listResponse = client.newCall(listRequest).execute()
-            val body = listResponse.body?.string() ?: return@withContext Result.failure(Exception("无法获取文件列表"))
+            val body = listResponse.body.string()
             val backupFiles = Regex("babytracker_backup_\\d{8}_\\d{6}\\.zip").findAll(body).map { it.value }.sorted().toList()
 
             if (backupFiles.isEmpty()) return@withContext Result.failure(Exception("未找到备份文件"))
@@ -103,7 +103,7 @@ class BackupManager(private val db: AppDatabase) {
 
             val getRequest = Request.Builder().url(fileUrl).get().header("Authorization", Credentials.basic(user, pass)).build()
             val getResponse = client.newCall(getRequest).execute()
-            val zipBytes = getResponse.body?.bytes() ?: return@withContext Result.failure(Exception("下载失败"))
+            val zipBytes = getResponse.body.bytes()
 
             val jsonStr = java.io.ByteArrayInputStream(zipBytes).use { input ->
                 val zip = ZipInputStream(input)
