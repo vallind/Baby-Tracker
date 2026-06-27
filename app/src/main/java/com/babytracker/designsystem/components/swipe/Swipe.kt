@@ -87,17 +87,6 @@ fun SwipeToDeleteContainer(
         onDismiss = { showConfirm = false },
     )
 }
-=======
-    AppConfirmDialog(
-        show = showConfirm,
-        onConfirm = {
-            showConfirm = false
-            onDelete()
->>>>>>> re:app/src/main/java/com/babytracker/designsystem/components/SwipeContainers.kt
-        },
-        onDismiss = { showConfirm = false },
-    )
-}
 
 /**
  * ---------- 滑动编辑容器（Material 3 SwipeToDismissBox）----------

@@ -26,6 +26,7 @@ import com.babytracker.designsystem.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
+import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import kotlinx.coroutines.launch
