@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.topbar
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.AppBarDefaults
+import com.babytracker.designsystem.components.topbar.TopBarDefaults
 import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**
@@ -34,10 +34,10 @@ fun AppTopBar(
     title: String,
     onBack: (() -> Unit)? = null,
     showBack: Boolean = true,
-    height: Dp = AppBarDefaults.height(),
-    titleSize: TextUnit = AppBarDefaults.titleSize(),
-    titleWeight: FontWeight = AppBarDefaults.titleWeight(),
-    backIconSize: Dp = AppBarDefaults.backIconSize(),
+    height: Dp = TopBarDefaults.height(),
+    titleSize: TextUnit = TopBarDefaults.titleSize(),
+    titleWeight: FontWeight = TopBarDefaults.titleWeight(),
+    backIconSize: Dp = TopBarDefaults.backIconSize(),
 ) {
     val c = LocalThemeColors.current
 

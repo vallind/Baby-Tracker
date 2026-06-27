@@ -109,8 +109,15 @@ data class AppComponentTokens(
     val skeleton: SkeletonTokens = SkeletonTokens(),
 ) {
     companion object {
-        /** 默认组件令牌（可后续扩展暗色变体） */
         fun default(): AppComponentTokens = AppComponentTokens()
+
+        fun dark(): AppComponentTokens = AppComponentTokens(
+            skeleton = SkeletonTokens(
+                shimmerColor1 = Color(0xFF3A3A3A),
+                shimmerColor2 = Color(0xFF4A4A4A),
+            ),
+            listItem = ListItemTokens(dividerAlpha = 0.2f),
+        )
     }
 }
 

@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.snackbar
 
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState

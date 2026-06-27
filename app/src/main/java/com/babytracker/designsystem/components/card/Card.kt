@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.card
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
@@ -12,7 +12,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.CardDefaults as AppCardDefaults
+import com.babytracker.designsystem.components.card.CardDefaults as AppCardDefaults
 import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalThemeColors

@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.sheet
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.ExperimentalMaterial3Api

@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.babytracker.designsystem.theme.DT
+// DT 已弃用，inline 18.dp 替代 DT.badgeSize.dp
 
 @Composable
 fun BadgeIcon(
@@ -30,7 +30,7 @@ fun BadgeIcon(
                 Modifier
                     .align(Alignment.TopEnd)
                     .offset(x = 4.dp, y = (-4).dp)
-                    .size(DT.badgeSize.dp)
+                    .size(18.dp)
                     .clip(CircleShape)
                     .background(Color(0xFFE53935)),
                 contentAlignment = Alignment.Center,

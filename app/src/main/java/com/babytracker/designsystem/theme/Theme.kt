@@ -28,6 +28,7 @@ import androidx.core.view.WindowCompat
 // ═══════════════════════════════════════════════════════════
 
 val LocalThemeColors = compositionLocalOf { AppTheme.pure.colors }
+val LocalAppTypography = compositionLocalOf { BabyTrackerTypography }
 
 val BabyTrackerTypography = Typography(
     displayLarge = TextStyle(fontSize = 57.sp, lineHeight = 64.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.25).sp),
@@ -108,11 +109,12 @@ fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.
 fun BabyTrackerTheme(
     theme: AppTheme = AppTheme.pure,
     dynamicColor: Boolean = false,
-    componentTokens: AppComponentTokens = AppComponentTokens.default(),
+    componentTokens: AppComponentTokens? = null,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
     val darkTheme = theme.name == "night"
+    val resolvedTokens = componentTokens ?: if (darkTheme) AppComponentTokens.dark() else AppComponentTokens.default()
 
     val colorScheme = theme.toColorScheme(isDark = darkTheme)
 
@@ -159,7 +161,8 @@ fun BabyTrackerTheme(
         LocalAppOpacity provides AppOpacity(),
         LocalAppMotion provides AppMotion(),
         LocalAppShapes provides AppShapes(),
-        LocalAppComponentTokens provides componentTokens,
+        LocalAppComponentTokens provides resolvedTokens,
+        LocalAppTypography provides BabyTrackerTypography,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

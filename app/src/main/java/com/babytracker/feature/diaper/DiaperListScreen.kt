@@ -25,7 +25,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.rememberHaptic
-import com.babytracker.designsystem.components.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime

@@ -27,7 +27,7 @@ import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.designsystem.components.rememberHaptic
-import com.babytracker.designsystem.components.SwipeToDeleteContainer
+import com.babytracker.designsystem.components.swipe.SwipeToDeleteContainer
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDate

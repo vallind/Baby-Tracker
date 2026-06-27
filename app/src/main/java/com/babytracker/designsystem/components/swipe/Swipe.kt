@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.swipe
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -23,7 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.DT
+import com.babytracker.designsystem.components.card.CardDefaults
 
 /**
  * ---------- 滑动删除容器（Material 3 SwipeToDismissBox）----------
@@ -61,7 +61,7 @@ fun SwipeToDeleteContainer(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFE53935), RoundedCornerShape(DT.cardRadius.dp))
+                    .background(Color(0xFFE53935), RoundedCornerShape(CardDefaults.cornerRadius()))
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd,
             ) {
@@ -112,7 +112,7 @@ fun SwipeToEditContainer(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF1976D2), RoundedCornerShape(DT.cardRadius.dp))
+                    .background(Color(0xFF1976D2), RoundedCornerShape(CardDefaults.cornerRadius()))
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
@@ -171,7 +171,7 @@ fun SwipeToEditDeleteContainer(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF1976D2), RoundedCornerShape(DT.cardRadius.dp))
+                        .background(Color(0xFF1976D2), RoundedCornerShape(CardDefaults.cornerRadius()))
                         .padding(horizontal = 20.dp),
                     contentAlignment = Alignment.CenterStart,
                 ) {
@@ -181,7 +181,7 @@ fun SwipeToEditDeleteContainer(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFE53935), RoundedCornerShape(DT.cardRadius.dp))
+                        .background(Color(0xFFE53935), RoundedCornerShape(CardDefaults.cornerRadius()))
                         .padding(horizontal = 20.dp),
                     contentAlignment = Alignment.CenterEnd,
                 ) {

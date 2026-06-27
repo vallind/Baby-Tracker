@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.section
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.babytracker.designsystem.theme.LocalAppTypography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.ListItemDefaults
+import com.babytracker.designsystem.components.section.ListItemDefaults
 import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**
@@ -41,12 +41,12 @@ fun SectionHeader(
         modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, fontSize = MaterialTheme.typography.titleMedium.fontSize, fontWeight = FontWeight.Bold, color = c.textPrimary)
+        Text(title, fontSize = LocalAppTypography.current.titleMedium.fontSize, fontWeight = FontWeight.Bold, color = c.textPrimary)
         Spacer(Modifier.weight(1f))
         if (actionText != null && onAction != null) {
             Text(
                 actionText,
-                fontSize = MaterialTheme.typography.labelMedium.fontSize,
+                fontSize = LocalAppTypography.current.labelMedium.fontSize,
                 color = c.primary,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable(onClick = onAction),

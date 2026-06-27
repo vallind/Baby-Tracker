@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.button
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.ButtonDefaults as AppButtonDefaults
+import com.babytracker.designsystem.components.button.ButtonDefaults as AppButtonDefaults
 import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**

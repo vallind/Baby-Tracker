@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.babytracker.designsystem.theme.LocalAppTypography
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,14 +40,14 @@ fun EmptyState(
         Spacer(Modifier.height(16.dp))
         Text(
             title,
-            style = MaterialTheme.typography.titleMedium,
+            style = LocalAppTypography.current.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             subtitle,
-            style = MaterialTheme.typography.bodySmall,
+            style = LocalAppTypography.current.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )

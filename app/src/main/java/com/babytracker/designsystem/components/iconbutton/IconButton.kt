@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.iconbutton
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon

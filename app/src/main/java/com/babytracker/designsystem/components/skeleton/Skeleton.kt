@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.skeleton
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -13,7 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.DT
+// DT 已弃用，inline 20.dp 替代 DT.pageMargin.dp
 
 @Composable
 fun SkeletonLoader(
@@ -42,7 +42,7 @@ fun SkeletonLoader(
     )
 
     Column(
-        modifier.padding(horizontal = DT.pageMargin.dp),
+        modifier.padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         repeat(itemCount) {

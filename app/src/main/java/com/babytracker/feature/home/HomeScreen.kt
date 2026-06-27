@@ -21,10 +21,10 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalThemeColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
-import com.babytracker.designsystem.components.AppCard
-import com.babytracker.designsystem.components.BottomNavBar
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.SectionHeader
+import com.babytracker.designsystem.components.section.SectionHeader
 import com.babytracker.navigation.Screen
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.database.entity.FeedingEntity

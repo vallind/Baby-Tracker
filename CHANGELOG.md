@@ -11,6 +11,15 @@
 
 ### [Unreleased] — 2026-06-27
 
+**Round 3 — 组件目录化 + 语义色阶补齐 + Typography 令牌化：**
+
+- **组件目录化**：14 个组件各自独立目录（`card/` `button/` `topbar/` `input/` `chip/` `fab/` `bottomnav/` `section/` `skeleton/` `dialog/` `sheet/` `snackbar/` `iconbutton/` `swipe/`），`AppComponentDefaults.kt` 拆分为 9 个独立 `XxxDefaults.kt` 各归其位
+- **新增组件**：`AppSwitch`（主题化 Switch，颜色自动跟随主题）、`AppScaffold`（Scaffold 包装，自动 `containerColor = c.bg`）
+- **深色令牌**：`AppComponentTokens.dark()` 自动暗色变体（骨架屏、分割线），`BabyTrackerTheme` 根据 `theme.name == "night"` 自动选择
+- **DT 弃用**：`DesignTokens.DT` 加 `@Deprecated`，组件级 8 处引用已迁移至 XxxDefaults/inline dp
+- **语义色阶**：`ThemeColors` 新增 `borderHover` `borderFocus` `textDisabled` `bgHover` `bgPressed`，6 主题全部补全
+- **Typography 令牌**：新增 `LocalAppTypography` CompositionLocal，4 个组件从 `MaterialTheme.typography` 迁移至令牌读取
+
 **设计系统骨架（参照 Palette 令牌驱动架构）：**
 
 **Round 1 — 核心令牌 + 组件层：**

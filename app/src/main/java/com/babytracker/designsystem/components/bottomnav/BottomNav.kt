@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.bottomnav
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -11,8 +11,8 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
+import com.babytracker.designsystem.theme.LocalAppTypography
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.babytracker.designsystem.theme.DT
+import com.babytracker.designsystem.components.bottomnav.BottomBarDefaults
 import com.babytracker.designsystem.theme.LocalThemeColors
 import com.babytracker.core.data.repository.MessageRepository
 import com.babytracker.navigation.Screen
@@ -52,7 +52,7 @@ fun BottomNavBar(navController: NavController) {
         containerColor = c.card,
         contentColor = c.textPrimary,
         tonalElevation = 0.dp,
-        modifier = Modifier.height(DT.bottomBarHeight.dp),
+        modifier = Modifier.height(BottomBarDefaults.height()),
     ) {
         val tabs = listOf(
             BottomTab("首页", Icons.Outlined.Home, Screen.Home.route, badgeCount = 0),
@@ -66,13 +66,13 @@ fun BottomNavBar(navController: NavController) {
                 icon = {
                     if (tab.badgeCount > 0) {
                         BadgedBox(badge = { Badge { Text(if (tab.badgeCount > 99) "99+" else tab.badgeCount.toString()) } }) {
-                            Icon(tab.icon, contentDescription = tab.label, modifier = Modifier.size(DT.iconSize.dp))
+                            Icon(tab.icon, contentDescription = tab.label, modifier = Modifier.size(BottomBarDefaults.iconSize()))
                         }
                     } else {
-                        Icon(tab.icon, contentDescription = tab.label, modifier = Modifier.size(DT.iconSize.dp))
+                        Icon(tab.icon, contentDescription = tab.label, modifier = Modifier.size(BottomBarDefaults.iconSize()))
                     }
                 },
-                label = { Text(tab.label, style = MaterialTheme.typography.labelSmall) },
+                label = { Text(tab.label, style = LocalAppTypography.current.labelSmall) },
                 selected = currentRoute == tab.route,
                 onClick = {
                     if (currentRoute != tab.route) {

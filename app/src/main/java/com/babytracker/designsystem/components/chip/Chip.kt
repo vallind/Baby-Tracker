@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.chip
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import com.babytracker.designsystem.theme.ChipDefaults
+import com.babytracker.designsystem.components.chip.ChipDefaults
 import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**

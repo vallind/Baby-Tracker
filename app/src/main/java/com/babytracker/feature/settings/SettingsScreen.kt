@@ -38,7 +38,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.VaccinationRepository
-import com.babytracker.designsystem.components.BottomNavBar
+import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.navigation.Screen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject

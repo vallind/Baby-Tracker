@@ -6,7 +6,9 @@ import androidx.compose.ui.graphics.Color
  * 设计 Token — 宝宝追踪 App 统一视觉规范
  *
  * 风格：母婴温馨简洁、扁平化、圆润、浅蓝主调
+ * @deprecated 使用 AppTokens/AppComponentDefaults 下的对应令牌代替
  */
+@Deprecated("Use AppTokens/AppComponentDefaults tokens instead")
 object DT {
     // —— 间距 ——
     val pageMargin = 20          // 页面边距
@@ -75,6 +77,12 @@ data class ThemeColors(
     val accentLight: Color,      // 橙色浅背景
     val pageBg: Color,           // 页面背景（浅蓝 #E6F0FF）
     val cardShadow: Color,       // 卡片阴影色
+    // —— 交互态色阶 ——
+    val borderHover: Color,      // 边框 hover 态
+    val borderFocus: Color,      // 边框 focus 态
+    val textDisabled: Color,     // 禁用文本
+    val bgHover: Color,          // 背景 hover 态
+    val bgPressed: Color,        // 背景 pressed 态
 )
 
 data class AppTheme(
@@ -84,31 +92,35 @@ data class AppTheme(
     companion object {
         // —— pure 主题升级为"宝宝蓝"目标风格 ——
         val pure = AppTheme("pure", ThemeColors(
-            primary = Color(0xFF4285F4),          // 蓝强调（目标 #4285F4）
-            primaryLight = Color(0xFFE6F0FF),     // 浅蓝背景（目标 #E6F0FF）
-            bg = Color(0xFFE6F0FF),               // 页面背景改浅蓝（原白 → 浅蓝）
-            card = Color(0xFFFFFFFF),             // 卡片保持白色
-            cardBorder = Color(0xFFE0EAF5),       // 卡片边框浅蓝灰
-            textPrimary = Color(0xFF333333),      // 深灰标题（目标 #333333）
-            textSecondary = Color(0xFF666666),    // 浅灰描述（目标 #666666）
-            textHint = Color(0xFFB0B0B0),         // 提示灰
-            divider = Color(0xFFE0EAF5),          // 分割线浅蓝灰
-            success = Color(0xFF4CAF50),          // 成功绿
-            warning = Color(0xFFFFA500),          // 警告橙（同 accent）
-            danger = Color(0xFFEF4444),           // 危险红
-            pink = Color(0xFFFF8A9E),             // 粉色（女宝/温馨）
-            blue = Color(0xFF4285F4),             // 蓝（同 primary）
-            green = Color(0xFF4CAF50),            // 绿
-            yellow = Color(0xFFFFD54F),           // 黄
-            purple = Color(0xFFA78BFA),           // 紫
-            cyan = Color(0xFF4DD0E1),             // 青
-            tagBg = Color(0xFFFFF3E0),            // 标签背景浅橙
-            tagText = Color(0xFFFFA500),          // 标签文字橙
-            // 宝宝追踪专属辅助色
-            accent = Color(0xFFFFA500),           // 橙色辅助色（目标 #FFA500）
-            accentLight = Color(0xFFFFF3E0),      // 橙色浅背景
-            pageBg = Color(0xFFE6F0FF),           // 页面背景浅蓝
-            cardShadow = Color(0xFFB0C4DE),       // 卡片阴影蓝灰
+            primary = Color(0xFF4285F4),
+            primaryLight = Color(0xFFE6F0FF),
+            bg = Color(0xFFE6F0FF),
+            card = Color(0xFFFFFFFF),
+            cardBorder = Color(0xFFE0EAF5),
+            textPrimary = Color(0xFF333333),
+            textSecondary = Color(0xFF666666),
+            textHint = Color(0xFFB0B0B0),
+            divider = Color(0xFFE0EAF5),
+            success = Color(0xFF4CAF50),
+            warning = Color(0xFFFFA500),
+            danger = Color(0xFFEF4444),
+            pink = Color(0xFFFF8A9E),
+            blue = Color(0xFF4285F4),
+            green = Color(0xFF4CAF50),
+            yellow = Color(0xFFFFD54F),
+            purple = Color(0xFFA78BFA),
+            cyan = Color(0xFF4DD0E1),
+            tagBg = Color(0xFFFFF3E0),
+            tagText = Color(0xFFFFA500),
+            accent = Color(0xFFFFA500),
+            accentLight = Color(0xFFFFF3E0),
+            pageBg = Color(0xFFE6F0FF),
+            cardShadow = Color(0xFFB0C4DE),
+            borderHover = Color(0xFFD0D8E6),
+            borderFocus = Color(0xFF4285F4),
+            textDisabled = Color(0xFFC7C7CC),
+            bgHover = Color(0xFFEAF1FB),
+            bgPressed = Color(0xFFD6E4F5),
         ))
 
         val aurora = AppTheme("aurora", ThemeColors(
@@ -136,6 +148,11 @@ data class AppTheme(
             accentLight = Color(0xFFFEF9C3),
             pageBg = Color(0xFFF8F5FF),
             cardShadow = Color(0xFFD4CCEF),
+            borderHover = Color(0xFFD4D0E0),
+            borderFocus = Color(0xFF7C6CF0),
+            textDisabled = Color(0xFFC7C7CC),
+            bgHover = Color(0xFFF0EDF7),
+            bgPressed = Color(0xFFE4DFF0),
         ))
 
         val warm = AppTheme("warm", ThemeColors(
@@ -163,6 +180,11 @@ data class AppTheme(
             accentLight = Color(0xFFFFF3E0),
             pageBg = Color(0xFFFFFBF7),
             cardShadow = Color(0xFFE8C5B8),
+            borderHover = Color(0xFFE0D0D0),
+            borderFocus = Color(0xFFFF8A80),
+            textDisabled = Color(0xFFC7C7CC),
+            bgHover = Color(0xFFFFF0ED),
+            bgPressed = Color(0xFFFFE0D8),
         ))
 
         val sunny = AppTheme("sunny", ThemeColors(
@@ -190,6 +212,11 @@ data class AppTheme(
             accentLight = Color(0xFFFFF0E0),
             pageBg = Color(0xFFFFFAF0),
             cardShadow = Color(0xFFE8D5A8),
+            borderHover = Color(0xFFE8DCC8),
+            borderFocus = Color(0xFFF5A623),
+            textDisabled = Color(0xFFC7C7CC),
+            bgHover = Color(0xFFFFF5E6),
+            bgPressed = Color(0xFFFFECD0),
         ))
 
         val night = AppTheme("night", ThemeColors(
@@ -217,6 +244,11 @@ data class AppTheme(
             accentLight = Color(0xFF3A2E1E),
             pageBg = Color(0xFF12121F),
             cardShadow = Color(0xFF000000),
+            borderHover = Color(0xFF3A3A50),
+            borderFocus = Color(0xFF5C6BC0),
+            textDisabled = Color(0xFF555570),
+            bgHover = Color(0xFF252540),
+            bgPressed = Color(0xFF2E2E50),
         ))
 
         val morandi = AppTheme("morandi", ThemeColors(
@@ -244,6 +276,11 @@ data class AppTheme(
             accentLight = Color(0xFFF5EDE0),
             pageBg = Color(0xFFFAFAFA),
             cardShadow = Color(0xFFD8D0C8),
+            borderHover = Color(0xFFD8D8D8),
+            borderFocus = Color(0xFFB0BEC5),
+            textDisabled = Color(0xFFC7C7CC),
+            bgHover = Color(0xFFF2F2F2),
+            bgPressed = Color(0xFFE8E8E8),
         ))
 
         val all = listOf(pure, aurora, warm, sunny, night, morandi)

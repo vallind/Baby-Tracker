@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.input
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -20,7 +20,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import com.babytracker.designsystem.theme.InputDefaults
+import com.babytracker.designsystem.components.input.InputDefaults
 import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**

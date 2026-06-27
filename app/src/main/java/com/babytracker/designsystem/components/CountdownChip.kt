@@ -3,8 +3,8 @@ package com.babytracker.designsystem.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import com.babytracker.designsystem.theme.LocalAppTypography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -44,7 +44,7 @@ fun CountdownChip(
     Text(
         label,
         color = Color.White,
-        style = MaterialTheme.typography.labelSmall,
+        style = LocalAppTypography.current.labelSmall,
         fontWeight = FontWeight.Bold,
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))

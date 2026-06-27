@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.dialog
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text

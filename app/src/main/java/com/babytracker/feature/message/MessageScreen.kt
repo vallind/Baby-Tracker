@@ -26,7 +26,7 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalThemeColors
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
-import com.babytracker.designsystem.components.BottomNavBar
+import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDateTime
