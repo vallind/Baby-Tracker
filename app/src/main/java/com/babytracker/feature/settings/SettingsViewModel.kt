@@ -3,6 +3,7 @@ package com.babytracker.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.auth.AuthService
+import com.babytracker.core.data.FamilyService
 import com.babytracker.core.sync.RealtimeManager
 import com.babytracker.core.sync.RealtimeState
 import com.babytracker.core.sync.SyncEngine
@@ -29,6 +30,7 @@ class SettingsViewModel(
     private val syncEngine: SyncEngine,
     private val realtimeManager: RealtimeManager,
     private val authService: AuthService,
+    private val familyService: FamilyService,
 ) : ViewModel() {
 
     /** 同步引擎状态（IDLE / SYNCING / PUSHING / PULLING） */
@@ -65,7 +67,15 @@ class SettingsViewModel(
                 } else {
                     // 退出后停止 Realtime
                     realtimeManager.unsubscribe()
+                    syncEngine.currentFamilyId = null
                 }
+            }
+        }
+
+        // 监听家庭变化，设置同步引擎的 family_id（用于 RLS 隔离）
+        viewModelScope.launch {
+            familyService.currentFamily.collect { family ->
+                syncEngine.currentFamilyId = family?.id
             }
         }
     }

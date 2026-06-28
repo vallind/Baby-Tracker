@@ -44,6 +44,9 @@ class SyncEngine(
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    /** 当前家庭 ID（登录+加入家庭后设置），push 时自动注入到每条记录 */
+    var currentFamilyId: String? = null
+
     /** 表名到 DAO 操作的映射 */
     private suspend fun getEntityDao(tableName: String): EntityDao<*>? = when (tableName) {
         "babies" -> EntityDao(
@@ -133,8 +136,9 @@ class SyncEngine(
                     val dao = getEntityDao(meta.tableName) ?: continue
                     val localEntity = dao.getById(meta.localId) ?: continue
 
-                    // 构建 JSON payload
-                    val payload = entityToJson(meta.tableName, localEntity)
+                    // 构建 JSON payload（注入 family_id 以满足 RLS）
+                    val basePayload = entityToJson(meta.tableName, localEntity)
+                    val payload = injectFamilyId(basePayload)
 
                     // 使用 uuid 作为冲突键 upsert
                     val remoteUuid = meta.remoteUuid ?: payload["uuid"]?.toString()?.removeSurrounding("\"")
@@ -143,7 +147,7 @@ class SyncEngine(
                             .upsert(payload) { onConflict = "uuid" }
                         syncMeta.markSynced(meta.id, remoteUuid, System.currentTimeMillis())
                     } else {
-                        val response = supabase.postgrest.from(meta.tableName)
+                        supabase.postgrest.from(meta.tableName)
                             .insert(payload)
                         // 从响应中获取云端 uuid（简化处理：直接用本地 uuid）
                         syncMeta.markSynced(meta.id, payload["uuid"]?.toString()?.removeSurrounding("\""), System.currentTimeMillis())
@@ -263,6 +267,15 @@ class SyncEngine(
                 .getLong(entity)
         } catch (_: Exception) {
             0L
+        }
+    }
+
+    /** 向 JSON payload 注入 family_id，满足 RLS 家庭隔离策略 */
+    private fun injectFamilyId(base: JsonObject): JsonObject {
+        val fid = currentFamilyId ?: return base
+        return buildJsonObject {
+            base.forEach { (key, value) -> put(key, value) }
+            put("family_id", JsonPrimitive(fid))
         }
     }
 

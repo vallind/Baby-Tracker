@@ -4,6 +4,13 @@
 
 ### [Unreleased]
 
+**Phase 7：RLS 家庭隔离策略升级：**
+- Supabase 10 张业务表增加 `family_id UUID` 列（外键关联 families 表）
+- 删除旧 `TO authenticated` 宽松策略，替换为 `is_family_member(family_id)` 按家庭隔离
+- SyncEngine 新增 `currentFamilyId` 属性 + `injectFamilyId()` 方法，push 时自动注入
+- SettingsViewModel 监听 FamilyService.currentFamily 自动同步 family_id 到 SyncEngine
+- 退出登录时清空 SyncEngine.currentFamilyId
+
 **Supabase Phase 6：家庭共享：**
 - Supabase 建表：profiles（用户档案）、families（家庭 + 6位邀请码）、family_members（成员关系 owner/member）
 - 新增 join_family RPC 函数 + is_family_member 辅助函数 + 三表 RLS 策略
