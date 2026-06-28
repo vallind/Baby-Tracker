@@ -10,6 +10,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+// ── 序列化数据模型（必须在顶层，嵌套类序列化器运行时可能找不到）──
+
+@Serializable
+data class Family(
+    val id: String = "",
+    val name: String = "",
+    @SerialName("invite_code") val inviteCode: String = "",
+)
+
+@Serializable
+data class FamilyMember(
+    @SerialName("family_id") val familyId: String = "",
+    @SerialName("user_id") val userId: String = "",
+    val role: String = "member",
+    @SerialName("joined_at") val joinedAt: String? = null,
+)
+
 /**
  * 家庭共享服务 —— 调用 Supabase API 管理家庭和成员。
  * 数据仅存于 Supabase，不在 Room 本地存储。
@@ -17,23 +34,6 @@ import kotlinx.serialization.Serializable
 class FamilyService(
     private val client: SupabaseClient,
 ) {
-
-    // ── 数据模型 ──
-
-    @Serializable
-    data class Family(
-        val id: String = "",
-        val name: String = "",
-        @SerialName("invite_code") val inviteCode: String = "",
-    )
-
-    @Serializable
-    data class FamilyMember(
-        @SerialName("family_id") val familyId: String = "",
-        @SerialName("user_id") val userId: String = "",
-        val role: String = "member",
-        @SerialName("joined_at") val joinedAt: String? = null,
-    )
 
     // ── 状态 ──
 

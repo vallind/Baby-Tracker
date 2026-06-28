@@ -21,7 +21,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.babytracker.core.data.FamilyService
+import com.babytracker.core.data.Family
+import com.babytracker.core.data.FamilyMember
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.DT
@@ -172,10 +173,10 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
 /** 家庭详情：名称、邀请码、成员列表 */
 @Composable
 private fun FamilyDetailView(
-    family: FamilyService.Family,
-    members: List<FamilyService.FamilyMember>,
-    families: List<FamilyService.Family>,
-    onSelectFamily: (FamilyService.Family) -> Unit,
+    family: Family,
+    members: List<FamilyMember>,
+    families: List<Family>,
+    onSelectFamily: (Family) -> Unit,
     onCreateClick: () -> Unit,
     onJoinClick: () -> Unit,
 ) {

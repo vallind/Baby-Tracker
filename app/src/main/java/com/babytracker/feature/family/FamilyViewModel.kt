@@ -2,6 +2,8 @@ package com.babytracker.feature.family
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.babytracker.core.data.Family
+import com.babytracker.core.data.FamilyMember
 import com.babytracker.core.data.FamilyService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,9 +16,9 @@ class FamilyViewModel(
 ) : ViewModel() {
 
     data class UiState(
-        val families: List<FamilyService.Family> = emptyList(),
-        val currentFamily: FamilyService.Family? = null,
-        val members: List<FamilyService.FamilyMember> = emptyList(),
+        val families: List<Family> = emptyList(),
+        val currentFamily: Family? = null,
+        val members: List<FamilyMember> = emptyList(),
         val isLoading: Boolean = false,
         val errorMessage: String? = null,
         val newFamilyName: String = "",
@@ -125,7 +127,7 @@ class FamilyViewModel(
         }
     }
 
-    fun selectFamily(family: FamilyService.Family) {
+    fun selectFamily(family: Family) {
         _uiState.update { it.copy(currentFamily = family) }
         loadMembers(family.id)
     }
