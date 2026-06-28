@@ -4,6 +4,10 @@
 
 ### [1.4.1] — 2026-06-28
 
+**修复主题切换后组件颜色不跟随变化：**
+- LocalAppComponentTokens 从 staticCompositionLocalOf 改为 compositionLocalOf，确保主题切换时可靠重组
+- BabyTrackerTheme.resolvedColors 从硬编码 AppColors.light()/dark() 改为基于 theme.colors 调用 AppColors.derive()，使暖阳粉/极光紫等主题的组件令牌颜色正确跟随
+
 **设计令牌参照 shadcn/ui 样式升级：**
 - 组件令牌补 contentColor：CardTokens/DialogTokens 新增 contentColor，与 containerColor 成对
 - 圆角体系：AppShapes 新增 radiusScale 全局缩放 + scaled() 方法，所有组件 cornerRadius 标注与 shapes 对应关系

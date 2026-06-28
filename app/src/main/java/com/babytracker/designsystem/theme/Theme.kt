@@ -114,7 +114,19 @@ fun BabyTrackerTheme(
 ) {
     val context = LocalContext.current
     val darkTheme = theme.name == "night"
-    val resolvedColors = if (darkTheme) AppColors.dark() else AppColors.light()
+    val tc = theme.colors
+    val resolvedColors = AppColors.derive(
+        primary = tc.primary,
+        surface = if (darkTheme) Color(0xFF18181B) else tc.card,
+        onSurface = tc.textPrimary,
+        border = tc.cardBorder,
+        secondary = tc.purple,
+        tertiary = tc.cyan,
+        success = tc.green,
+        warning = tc.warning,
+        error = tc.danger,
+        primaryContainer = tc.primaryLight,
+    )
     val colorScheme = theme.toColorScheme(isDark = darkTheme)
 
     SideEffect {

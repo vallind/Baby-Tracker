@@ -1,7 +1,7 @@
 package com.babytracker.designsystem.theme
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -754,35 +754,4 @@ data class AppComponentTokens(
     }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  TT-032 部分覆盖扩展
-//  用法: theme.button.derive { height = 56.dp }
-// ═══════════════════════════════════════════════════════════
-
-inline fun ButtonTokens.derive(block: ButtonTokens.() -> Unit) = copy().apply(block)
-inline fun CardTokens.derive(block: CardTokens.() -> Unit) = copy().apply(block)
-inline fun InputTokens.derive(block: InputTokens.() -> Unit) = copy().apply(block)
-inline fun SelectTokens.derive(block: SelectTokens.() -> Unit) = copy().apply(block)
-inline fun SelectionControlTokens.derive(block: SelectionControlTokens.() -> Unit) = copy().apply(block)
-inline fun SwitchTokens.derive(block: SwitchTokens.() -> Unit) = copy().apply(block)
-inline fun TableTokens.derive(block: TableTokens.() -> Unit) = copy().apply(block)
-inline fun DialogTokens.derive(block: DialogTokens.() -> Unit) = copy().apply(block)
-inline fun MenuTokens.derive(block: MenuTokens.() -> Unit) = copy().apply(block)
-inline fun TagTokens.derive(block: TagTokens.() -> Unit) = copy().apply(block)
-inline fun ProgressTokens.derive(block: ProgressTokens.() -> Unit) = copy().apply(block)
-inline fun SkeletonTokens.derive(block: SkeletonTokens.() -> Unit) = copy().apply(block)
-inline fun StepsTokens.derive(block: StepsTokens.() -> Unit) = copy().apply(block)
-inline fun PaginationTokens.derive(block: PaginationTokens.() -> Unit) = copy().apply(block)
-inline fun SliderTokens.derive(block: SliderTokens.() -> Unit) = copy().apply(block)
-inline fun RateTokens.derive(block: RateTokens.() -> Unit) = copy().apply(block)
-inline fun AppBarTokens.derive(block: AppBarTokens.() -> Unit) = copy().apply(block)
-inline fun ChipTokens.derive(block: ChipTokens.() -> Unit) = copy().apply(block)
-inline fun FabTokens.derive(block: FabTokens.() -> Unit) = copy().apply(block)
-inline fun BottomBarTokens.derive(block: BottomBarTokens.() -> Unit) = copy().apply(block)
-inline fun ListItemTokens.derive(block: ListItemTokens.() -> Unit) = copy().apply(block)
-inline fun IconButtonTokens.derive(block: IconButtonTokens.() -> Unit) = copy().apply(block)
-inline fun ScaffoldTokens.derive(block: ScaffoldTokens.() -> Unit) = copy().apply(block)
-inline fun BorderContainerTokens.derive(block: BorderContainerTokens.() -> Unit) = copy().apply(block)
-inline fun AppComponentTokens.derive(block: AppComponentTokens.() -> Unit) = copy().apply(block)
-
-val LocalAppComponentTokens = staticCompositionLocalOf { AppComponentTokens.default() }
+val LocalAppComponentTokens = compositionLocalOf { AppComponentTokens.default() }
