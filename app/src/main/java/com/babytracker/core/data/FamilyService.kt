@@ -49,22 +49,25 @@ class FamilyService(
     suspend fun createFamily(name: String): Result<Family> = runCatching {
         val userId = client.auth.currentUserOrNull()?.id ?: throw Exception("请先登录")
 
-        // 1. 创建家庭
-        client.postgrest.from("families").insert(mapOf("name" to name))
+        // 客户端生成 UUID（避免 RLS 阻止回查：必须先加入成员才能读 families）
+        val familyId = java.util.UUID.randomUUID().toString()
 
-        // 2. 查询刚创建的家庭（通过 name + 无 invite_code 判断，或直接用 select）
+        // 1. 创建家庭（显式指定 ID）
+        client.postgrest.from("families").insert(mapOf("id" to familyId, "name" to name))
+
+        // 2. 将自己加入为 owner（必须在查询前，否则 RLS 拦截）
+        client.postgrest.from("family_members").insert(
+            mapOf("family_id" to familyId, "user_id" to userId, "role" to "owner")
+        )
+
+        // 3. 现在可以通过 RLS（is_family_member 返回 true）
         val families: List<Family> = client.postgrest.from("families")
             .select(columns = Columns.ALL) {
-                filter { eq("name", name) }
+                filter { eq("id", familyId) }
             }
             .decodeList<Family>()
 
-        val family = families.lastOrNull() ?: throw Exception("创建家庭失败")
-
-        // 3. 将自己加入为 owner
-        client.postgrest.from("family_members").insert(
-            mapOf("family_id" to family.id, "user_id" to userId, "role" to "owner")
-        )
+        val family = families.firstOrNull() ?: throw Exception("创建家庭失败")
 
         _myFamilies.value = _myFamilies.value + family
         _currentFamily.value = family
