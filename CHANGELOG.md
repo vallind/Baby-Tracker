@@ -4,13 +4,22 @@
 
 ### [1.4.1] — 2026-06-28
 
-**设计令牌参照 shadcn/ui 升级：**
+**设计令牌参照 shadcn/ui 样式升级：**
 - 组件令牌补 contentColor：CardTokens/DialogTokens 新增 contentColor，与 containerColor 成对
 - 圆角体系：AppShapes 新增 radiusScale 全局缩放 + scaled() 方法，所有组件 cornerRadius 标注与 shapes 对应关系
 - ButtonTokens.contentColor 默认值从 Color.Transparent 修正为 c.onPrimary
 - AppColors.derive 重构为语义派生（参照 PaletteColors）：输入 primary/surface/onSurface/border 4 个基础色，自动推导全部 39 字段
 - light()/dark() 改用 derive 实现，消除冗余手写值
 - 文档：AGENTS.md 补充令牌设计约定，design-system.md 补充 surface/foreground 配对 + 圆角派生说明
+
+**shadcn 风格视觉调优：**
+- 色彩：亮色主色 #4285F4→#3B82F6(blue-500)，背景 #E6F0FF→#F8FAFC(slate-50)，边框 #E0EAF5→#E4E4E7(zinc-200)，success/warning/danger 同步对齐
+- 暗色：surface #1E1E32→#18181B(zinc-900)，background #12121F→#09090B(zinc-950)
+- 圆角：medium 12dp→8dp，large 16dp→12dp，small 8dp→6dp，对标 shadcn --radius=0.5rem
+- 卡片：border 0dp→1dp 描边风格，cornerRadius shapes.large→shapes.medium
+- 按钮：cornerRadius shapes.medium*2→shapes.medium
+- 标签/Chip：cornerRadius 20dp→shapes.full 胶囊形
+- Card 新增 borderColor/borderWidth 参数支持
 
 ### [1.4.0] — 2026-06-25
 

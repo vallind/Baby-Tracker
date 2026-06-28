@@ -69,43 +69,44 @@ data class AppColors(
     val danger: Color,
 ) {
     companion object {
+        //  shadcn 风格：中性色灰调化，主色保持温暖蓝
         fun light() = derive(
-            primary = Color(0xFF4285F4),
-            surface = Color.White,
-            onSurface = Color(0xFF333333),
-            border = Color(0xFFE0EAF5),
-            onPrimary = Color.White,
-            error = Color(0xFFEF4444),
+            primary = Color(0xFF3B82F6),       // shadcn blue-500
+            surface = Color(0xFFFFFFFF),       // shadcn background
+            onSurface = Color(0xFF1A1A2E),     // shadcn foreground（接近 zinc-900）
+            border = Color(0xFFE4E4E7),        // shadcn border（zinc-200）
+            onPrimary = Color(0xFFFFFFFF),
+            error = Color(0xFFEF4444),         // red-500
             onError = Color.White,
-            success = Color(0xFF4CAF50),
-            warning = Color(0xFFFFA500),
-            secondary = Color(0xFFA78BFA),
+            success = Color(0xFF22C55E),       // green-500（更清新的绿）
+            warning = Color(0xFFF59E0B),       // amber-500
+            secondary = Color(0xFF8B5CF6),     // violet-500
             onSecondary = Color.White,
-            tertiary = Color(0xFF4DD0E1),
-            primaryContainer = Color(0xFFE6F0FF),
-            background = Color(0xFFE6F0FF),
-            onBackground = Color(0xFF333333),
-            outline = Color(0xFFE0EAF5),
+            tertiary = Color(0xFF06B6D4),      // cyan-500
+            primaryContainer = Color(0xFFDBEAFE),  // blue-100
+            background = Color(0xFFF8FAFC),    // slate-50 偏灰白（shadcn 风格）
+            onBackground = Color(0xFF1A1A2E),
+            outline = Color(0xFFE4E4E7),       // border-input
             scrim = Color(0x52000000),
         )
 
         fun dark() = derive(
-            primary = Color(0xFF5C6BC0),
-            surface = Color(0xFF1E1E32),
-            onSurface = Color.White,
-            border = Color(0xFF2A2A3E),
-            onPrimary = Color.White,
-            error = Color(0xFFE57373),
-            onError = Color.White,
-            success = Color(0xFF4DB6AC),
-            warning = Color(0xFFFFB74D),
-            secondary = Color(0xFF9575CD),
-            onSecondary = Color.White,
-            tertiary = Color(0xFF4DD0E1),
-            primaryContainer = Color(0xFF1A2744),
-            background = Color(0xFF12121F),
-            onBackground = Color(0xFF8E8E93),
-            outline = Color(0xFF2A2A3E),
+            primary = Color(0xFF60A5FA),       // blue-400（暗色下稍亮）
+            surface = Color(0xFF18181B),       // zinc-900
+            onSurface = Color(0xFFFAFAFA),     // zinc-50
+            border = Color(0xFF27272A),        // zinc-800
+            onPrimary = Color(0xFF18181B),
+            error = Color(0xFFF87171),         // red-400
+            onError = Color(0xFF18181B),
+            success = Color(0xFF4ADE80),       // green-400
+            warning = Color(0xFFFBBF24),       // amber-400
+            secondary = Color(0xFFA78BFA),     // violet-400
+            onSecondary = Color(0xFF18181B),
+            tertiary = Color(0xFF22D3EE),      // cyan-400
+            primaryContainer = Color(0xFF1E3A5F),  // blue-900/10
+            background = Color(0xFF09090B),    // zinc-950
+            onBackground = Color(0xFFA1A1AA),  // zinc-400
+            outline = Color(0xFF27272A),       // border-input
             scrim = Color(0x66000000),
         )
     }
@@ -168,15 +169,16 @@ data class AppMotion(
     val easing: AppMotionEasing = AppMotionEasing(),
 )
 
-// —— 圆角令牌（6 级 + 全局缩放，参照 shadcn --radius） ——
+// —— 圆角令牌（6 级 + 全局缩放，参照 shadcn --radius=0.5rem） ——
+//  shadcn 默认 0.5rem≈8dp，整体更克制。当前对标：extraSmall=4, small=6, medium=8, large=12
 @Immutable
 data class AppShapes(
     val none: Dp = 0.dp,
-    val extraSmall: Dp = 4.dp,
-    val small: Dp = 8.dp,
-    val medium: Dp = 12.dp,
-    val large: Dp = 16.dp,
-    val full: Dp = 9999.dp,
+    val extraSmall: Dp = 4.dp,   // 小元素：标签/徽章/骨架屏
+    val small: Dp = 6.dp,        // 标准：输入框/菜单项
+    val medium: Dp = 8.dp,       // 中等：卡片/对话框（= shadcn --radius 默认）
+    val large: Dp = 12.dp,       // 大圆角：底部弹层/大卡片
+    val full: Dp = 9999.dp,      // 胶囊：按钮/标签
     /** 全局圆角缩放倍率，影响所有组件 cornerRadius。1.0 = 默认，0.8 = 更方，1.2 = 更圆 */
     val radiusScale: Float = 1.0f,
 ) {

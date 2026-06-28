@@ -115,8 +115,6 @@ fun BabyTrackerTheme(
     val context = LocalContext.current
     val darkTheme = theme.name == "night"
     val resolvedColors = if (darkTheme) AppColors.dark() else AppColors.light()
-    val resolvedTokens = componentTokens ?: if (darkTheme) AppComponentTokens.dark() else AppComponentTokens.default(resolvedColors)
-
     val colorScheme = theme.toColorScheme(isDark = darkTheme)
 
     SideEffect {
@@ -162,6 +160,18 @@ fun BabyTrackerTheme(
     val tokensShapes = AppShapes()
     val tokensTypography = AppTypography()
     val tokensControl = AppControlTokens()
+
+    val resolvedTokens = componentTokens ?: AppComponentTokens.default(
+        colors = resolvedColors,
+        spacing = tokensSpacing,
+        shapes = tokensShapes,
+        typography = tokensTypography,
+        opacity = tokensOpacity,
+        motion = tokensMotion,
+        elevation = tokensElevation,
+        control = tokensControl,
+        darkTheme = darkTheme,
+    )
 
     CompositionLocalProvider(
         LocalThemeColors provides mergedColors,

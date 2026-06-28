@@ -12,125 +12,289 @@ import androidx.compose.ui.unit.sp
 
 // ═══════════════════════════════════════════════════════════
 //  组件令牌 — TT-017 ~ TT-029
-//  优先级模型（TT-031）: 显式参数 > XxxDefaults > AppTheme > 兜底
-//  每个令牌支持 derive {} 部分覆盖（TT-032）
+//  参照 PaletteComponentThemes 架构：
+//  - 每个组件令牌有独立 default() 工厂，接收基础令牌参数
+//  - AppComponentTokens.default() 统一接收 colors/spacing/shapes/typography/
+//    opacity/motion/elevation/control，分发到各组件
+//  - 支持 derive {} 部分覆盖（TT-032）
 // ═══════════════════════════════════════════════════════════
 
 // —— TT-017 按钮 ——
 @Immutable
 data class ButtonTokens(
-    val height: Dp = 48.dp,
-    val cornerRadius: Dp = 24.dp,       // shapes.medium * 2
-    val fontSize: TextUnit = 15.sp,
-    val fontWeight: FontWeight = FontWeight.SemiBold,
-    val iconSize: Dp = 20.dp,
-    val contentColor: Color = Color.Unspecified,
-    val disabledAlpha: Float = 0.38f,
-)
+    val height: Dp,
+    val cornerRadius: Dp,
+    val fontSize: TextUnit,
+    val fontWeight: FontWeight,
+    val iconSize: Dp,
+    val containerColor: Color,
+    val contentColor: Color,
+    val disabledContainerColor: Color,
+    val disabledContentColor: Color,
+    val disabledAlpha: Float,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+            control: AppControlTokens,
+            opacity: AppOpacity,
+        ): ButtonTokens = ButtonTokens(
+            height = control.medium.height,
+            cornerRadius = shapes.scaled(shapes.medium),   // shadcn 风格：按钮 = --radius
+            fontSize = typography.bodyLarge.fontSize,
+            fontWeight = FontWeight.SemiBold,
+            iconSize = control.medium.iconSize,
+            containerColor = colors.primary,
+            contentColor = colors.onPrimary,
+            disabledContainerColor = colors.bgDisabled,
+            disabledContentColor = colors.textDisabled,
+            disabledAlpha = opacity.disabled,
+        )
+    }
+}
 
 // —— TT-018 卡片 ——
 @Immutable
 data class CardTokens(
-    val containerColor: Color = Color.Unspecified,
-    val contentColor: Color = Color.Unspecified,
-    val borderColor: Color = Color.Unspecified,
-    val borderWidth: Dp = 0.dp,
-    val cornerRadius: Dp = 16.dp,       // shapes.large
-    val innerPadding: Dp = 16.dp,
-    val elevation: Dp = 2.dp,
-)
+    val containerColor: Color,
+    val contentColor: Color,
+    val borderColor: Color,
+    val borderWidth: Dp,
+    val cornerRadius: Dp,
+    val innerPadding: Dp,
+    val elevation: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            spacing: AppSpacing,
+            elevation: AppElevation,
+        ): CardTokens = CardTokens(
+            containerColor = colors.surface,
+            contentColor = colors.onSurface,
+            borderColor = colors.outline,
+            borderWidth = 1.dp,                          // shadcn 风格：卡片带描边
+            cornerRadius = shapes.scaled(shapes.medium), // shadcn 风格：卡片 = --radius
+            innerPadding = spacing.md,
+            elevation = elevation.level2,
+        )
+    }
+}
 
-// —— TT-019 输入框（原 InputTokens） ——
+// —— TT-019 输入框 ——
 @Immutable
 data class InputTokens(
-    val height: Dp = 48.dp,
-    val cornerRadius: Dp = 12.dp,       // shapes.medium
-    val fontSize: TextUnit = 15.sp,
-    val borderWidth: Dp = 1.dp,
-    val borderWidthFocus: Dp = 2.dp,
-    val iconSize: Dp = 20.dp,
-    val containerColor: Color = Color.Unspecified,
-    val unfocusedBorderColor: Color = Color.Unspecified,
-    val focusedBorderColor: Color = Color.Unspecified,
-    val errorBorderColor: Color = Color.Unspecified,
-    val placeholderColor: Color = Color.Unspecified,
-    val cursorColor: Color = Color.Unspecified,
-)
+    val height: Dp,
+    val cornerRadius: Dp,
+    val fontSize: TextUnit,
+    val borderWidth: Dp,
+    val borderWidthFocus: Dp,
+    val iconSize: Dp,
+    val containerColor: Color,
+    val unfocusedBorderColor: Color,
+    val focusedBorderColor: Color,
+    val errorBorderColor: Color,
+    val placeholderColor: Color,
+    val cursorColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+            control: AppControlTokens,
+        ): InputTokens = InputTokens(
+            height = control.medium.height,
+            cornerRadius = shapes.scaled(shapes.medium),
+            fontSize = typography.bodyLarge.fontSize,
+            borderWidth = 1.dp,
+            borderWidthFocus = 2.dp,
+            iconSize = control.medium.iconSize,
+            containerColor = colors.surface,
+            unfocusedBorderColor = colors.outline,
+            focusedBorderColor = colors.borderFocus,
+            errorBorderColor = colors.error,
+            placeholderColor = colors.textTertiary,
+            cursorColor = colors.primary,
+        )
+    }
+}
 
 // —— TT-020 下拉菜单 ——
 @Immutable
 data class SelectTokens(
-    val menuItemHeight: Dp = 44.dp,
-    val maxHeight: Dp = 300.dp,
-    val itemHorizontalPadding: Dp = 16.dp,
-    val itemVerticalPadding: Dp = 10.dp,
-    val selectedBgColor: Color = Color.Unspecified,
-    val hoverBgColor: Color = Color.Unspecified,
-    val dividerColor: Color = Color.Unspecified,
-)
+    val menuItemHeight: Dp,
+    val maxHeight: Dp,
+    val itemHorizontalPadding: Dp,
+    val itemVerticalPadding: Dp,
+    val selectedBgColor: Color,
+    val hoverBgColor: Color,
+    val dividerColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            spacing: AppSpacing,
+        ): SelectTokens = SelectTokens(
+            menuItemHeight = 44.dp,
+            maxHeight = 300.dp,
+            itemHorizontalPadding = spacing.md,
+            itemVerticalPadding = 10.dp,
+            selectedBgColor = colors.bgSelected,
+            hoverBgColor = colors.bgHover,
+            dividerColor = colors.divider,
+        )
+    }
+}
 
 // —— TT-021 选择控件（复选框/单选） ——
 @Immutable
 data class SelectionControlTokens(
-    val size: Dp = 20.dp,
-    val strokeWidth: Dp = 2.dp,
-    val checkedColor: Color = Color.Unspecified,
-    val uncheckedColor: Color = Color.Unspecified,
-    val disabledColor: Color = Color.Unspecified,
-    val animationDurationMs: Int = 200,
-)
+    val size: Dp,
+    val strokeWidth: Dp,
+    val checkedColor: Color,
+    val uncheckedColor: Color,
+    val disabledColor: Color,
+    val animationDurationMs: Int,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            opacity: AppOpacity,
+        ): SelectionControlTokens = SelectionControlTokens(
+            size = 20.dp,
+            strokeWidth = 2.dp,
+            checkedColor = colors.primary,
+            uncheckedColor = colors.outline,
+            disabledColor = colors.textDisabled,
+            animationDurationMs = 200,
+        )
+    }
+}
 
 // —— TT-022 开关 ——
 @Immutable
 data class SwitchTokens(
-    val trackWidth: Dp = 40.dp,
-    val trackHeight: Dp = 24.dp,
-    val thumbSize: Dp = 20.dp,
-    val trackCornerRadius: Dp = 12.dp,
-    val checkedColor: Color = Color.Unspecified,
-    val uncheckedColor: Color = Color.Unspecified,
-    val thumbElevation: Dp = 2.dp,
-)
+    val trackWidth: Dp,
+    val trackHeight: Dp,
+    val thumbSize: Dp,
+    val trackCornerRadius: Dp,
+    val checkedColor: Color,
+    val uncheckedColor: Color,
+    val thumbElevation: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            elevation: AppElevation,
+        ): SwitchTokens = SwitchTokens(
+            trackWidth = 40.dp,
+            trackHeight = 24.dp,
+            thumbSize = 20.dp,
+            trackCornerRadius = 12.dp,
+            checkedColor = colors.primary,
+            uncheckedColor = colors.outline,
+            thumbElevation = elevation.level1,
+        )
+    }
+}
 
 // —— TT-023 表格 ——
 @Immutable
 data class TableTokens(
-    val headerHeight: Dp = 48.dp,
-    val rowHeight: Dp = 44.dp,
-    val cellHorizontalPadding: Dp = 16.dp,
-    val cellVerticalPadding: Dp = 8.dp,
-    val dividerThickness: Dp = 0.5.dp,
-    val headerBgColor: Color = Color.Unspecified,
-    val hoverBgColor: Color = Color.Unspecified,
-    val selectedBgColor: Color = Color.Unspecified,
-)
+    val headerHeight: Dp,
+    val rowHeight: Dp,
+    val cellHorizontalPadding: Dp,
+    val cellVerticalPadding: Dp,
+    val dividerThickness: Dp,
+    val headerBgColor: Color,
+    val hoverBgColor: Color,
+    val selectedBgColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            spacing: AppSpacing,
+        ): TableTokens = TableTokens(
+            headerHeight = 48.dp,
+            rowHeight = 44.dp,
+            cellHorizontalPadding = spacing.md,
+            cellVerticalPadding = spacing.sm,
+            dividerThickness = 0.5.dp,
+            headerBgColor = colors.bgHover,
+            hoverBgColor = colors.bgHover,
+            selectedBgColor = colors.bgSelected,
+        )
+    }
+}
 
 // —— TT-024 对话框/遮罩 ——
 @Immutable
 data class DialogTokens(
-    val scrimColor: Color = Color.Unspecified,
-    val scrimOpacity: Float = 0.40f,
-    val containerColor: Color = Color.Unspecified,
-    val contentColor: Color = Color.Unspecified,
-    val cornerRadius: Dp = 24.dp,       // shapes.medium * 2
-    val contentHorizontalPadding: Dp = 24.dp,
-    val contentVerticalPadding: Dp = 20.dp,
-    val dividerColor: Color = Color.Unspecified,
-    val elevation: Dp = 8.dp,
-)
+    val scrimColor: Color,
+    val scrimOpacity: Float,
+    val containerColor: Color,
+    val contentColor: Color,
+    val cornerRadius: Dp,
+    val contentHorizontalPadding: Dp,
+    val contentVerticalPadding: Dp,
+    val dividerColor: Color,
+    val elevation: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            spacing: AppSpacing,
+            elevation: AppElevation,
+            opacity: AppOpacity,
+        ): DialogTokens = DialogTokens(
+            scrimColor = colors.scrim,
+            scrimOpacity = opacity.scrim,
+            containerColor = colors.surface,
+            contentColor = colors.onSurface,
+            cornerRadius = shapes.scaled(shapes.large),   // shadcn 风格：对话框 = rounded-lg
+            contentHorizontalPadding = spacing.lg,
+            contentVerticalPadding = 20.dp,
+            dividerColor = colors.divider,
+            elevation = elevation.level4,
+        )
+    }
+}
 
 // —— TT-025 菜单 ——
 @Immutable
 data class MenuTokens(
-    val itemHeight: Dp = 44.dp,
-    val horizontalPadding: Dp = 16.dp,
-    val verticalPadding: Dp = 8.dp,
-    val minWidth: Dp = 140.dp,
-    val cornerRadius: Dp = 12.dp,       // shapes.medium
-    val hoverBgColor: Color = Color.Unspecified,
-    val selectedBgColor: Color = Color.Unspecified,
-    val elevation: Dp = 4.dp,
-)
+    val itemHeight: Dp,
+    val horizontalPadding: Dp,
+    val verticalPadding: Dp,
+    val minWidth: Dp,
+    val cornerRadius: Dp,
+    val hoverBgColor: Color,
+    val selectedBgColor: Color,
+    val elevation: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            spacing: AppSpacing,
+            elevation: AppElevation,
+        ): MenuTokens = MenuTokens(
+            itemHeight = 44.dp,
+            horizontalPadding = spacing.md,
+            verticalPadding = spacing.sm,
+            minWidth = 140.dp,
+            cornerRadius = shapes.scaled(shapes.medium),
+            hoverBgColor = colors.bgHover,
+            selectedBgColor = colors.bgSelected,
+            elevation = elevation.level3,
+        )
+    }
+}
 
 // —— TT-026 标签语义变体 ——
 @Immutable
@@ -141,229 +305,355 @@ data class TagVariantColors(
 
 @Immutable
 data class TagTokens(
-    val primary: TagVariantColors = TagVariantColors(
-        backgroundColor = Color.Unspecified,
-        textColor = Color.Unspecified,
-    ),
-    val success: TagVariantColors = TagVariantColors(
-        backgroundColor = Color.Unspecified,
-        textColor = Color.Unspecified,
-    ),
-    val warning: TagVariantColors = TagVariantColors(
-        backgroundColor = Color.Unspecified,
-        textColor = Color.Unspecified,
-    ),
-    val danger: TagVariantColors = TagVariantColors(
-        backgroundColor = Color.Unspecified,
-        textColor = Color.Unspecified,
-    ),
-    val default: TagVariantColors = TagVariantColors(
-        backgroundColor = Color.Unspecified,
-        textColor = Color.Unspecified,
-    ),
-    val cornerRadius: Dp = 20.dp,       // shapes.medium * 1.67
-    val fontSize: TextUnit = 12.sp,
-    val fontWeight: FontWeight = FontWeight.Medium,
-    val horizontalPadding: Dp = 12.dp,
-    val verticalPadding: Dp = 6.dp,
-)
+    val primary: TagVariantColors,
+    val success: TagVariantColors,
+    val warning: TagVariantColors,
+    val danger: TagVariantColors,
+    val default: TagVariantColors,
+    val cornerRadius: Dp,
+    val fontSize: TextUnit,
+    val fontWeight: FontWeight,
+    val horizontalPadding: Dp,
+    val verticalPadding: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+            spacing: AppSpacing,
+            opacity: AppOpacity,
+        ): TagTokens = TagTokens(
+            primary = TagVariantColors(
+                backgroundColor = colors.primary.copy(alpha = opacity.subtle),
+                textColor = colors.primary,
+            ),
+            success = TagVariantColors(
+                backgroundColor = colors.success.copy(alpha = opacity.subtle),
+                textColor = colors.success,
+            ),
+            warning = TagVariantColors(
+                backgroundColor = colors.warning.copy(alpha = opacity.subtle),
+                textColor = colors.warning,
+            ),
+            danger = TagVariantColors(
+                backgroundColor = colors.danger.copy(alpha = opacity.subtle),
+                textColor = colors.danger,
+            ),
+            default = TagVariantColors(
+                backgroundColor = colors.bgHover,
+                textColor = colors.textSecondary,
+            ),
+            cornerRadius = shapes.scaled(shapes.full),     // shadcn 风格：标签 = rounded-full
+            fontSize = typography.label.fontSize,
+            fontWeight = FontWeight.Medium,
+            horizontalPadding = 12.dp,
+            verticalPadding = 6.dp,
+        )
+    }
+}
 
 // —— TT-027 进度/骨架屏 ——
 @Immutable
 data class ProgressTokens(
-    val height: Dp = 6.dp,
-    val circularSize: Dp = 32.dp,
-    val strokeWidth: Dp = 4.dp,
-    val trackColor: Color = Color.Unspecified,
-    val indicatorColor: Color = Color.Unspecified,
-)
+    val height: Dp,
+    val circularSize: Dp,
+    val strokeWidth: Dp,
+    val trackColor: Color,
+    val indicatorColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+        ): ProgressTokens = ProgressTokens(
+            height = 6.dp,
+            circularSize = 32.dp,
+            strokeWidth = 4.dp,
+            trackColor = colors.bgHover,
+            indicatorColor = colors.primary,
+        )
+    }
+}
 
 @Immutable
 data class SkeletonTokens(
-    val shimmerColor1: Color = Color(0xFFE0E0E0),
-    val shimmerColor2: Color = Color(0xFFF5F5F5),
-    val cornerRadius: Dp = 4.dp,        // shapes.extraSmall
-    val avatarSize: Dp = 40.dp,
-    val shimmerDurationMs: Int = 1000,
-)
+    val shimmerColor1: Color,
+    val shimmerColor2: Color,
+    val cornerRadius: Dp,
+    val avatarSize: Dp,
+    val shimmerDurationMs: Int,
+) {
+    companion object {
+        fun default(
+            shapes: AppShapes,
+            darkTheme: Boolean = false,
+        ): SkeletonTokens = SkeletonTokens(
+            shimmerColor1 = if (darkTheme) Color(0xFF3A3A3A) else Color(0xFFE0E0E0),
+            shimmerColor2 = if (darkTheme) Color(0xFF4A4A4A) else Color(0xFFF5F5F5),
+            cornerRadius = shapes.scaled(shapes.extraSmall),
+            avatarSize = 40.dp,
+            shimmerDurationMs = 1000,
+        )
+    }
+}
 
 // —— TT-028 步骤/分页 ——
 @Immutable
 data class StepsTokens(
-    val dotSize: Dp = 10.dp,
-    val connectorThickness: Dp = 2.dp,
-    val activeColor: Color = Color.Unspecified,
-    val inactiveColor: Color = Color.Unspecified,
-    val completedColor: Color = Color.Unspecified,
-    val labelStyle: TextStyle = TextStyle.Default,
-)
+    val dotSize: Dp,
+    val connectorThickness: Dp,
+    val activeColor: Color,
+    val inactiveColor: Color,
+    val completedColor: Color,
+    val labelStyle: TextStyle,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+        ): StepsTokens = StepsTokens(
+            dotSize = 10.dp,
+            connectorThickness = 2.dp,
+            activeColor = colors.primary,
+            inactiveColor = colors.textDisabled,
+            completedColor = colors.success,
+            labelStyle = TextStyle.Default,
+        )
+    }
+}
 
 @Immutable
 data class PaginationTokens(
-    val itemSize: Dp = 32.dp,
-    val itemSpacing: Dp = 4.dp,
-    val activeColor: Color = Color.Unspecified,
-    val inactiveColor: Color = Color.Unspecified,
-    val cornerRadius: Dp = 16.dp,       // shapes.large
-)
+    val itemSize: Dp,
+    val itemSpacing: Dp,
+    val activeColor: Color,
+    val inactiveColor: Color,
+    val cornerRadius: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+        ): PaginationTokens = PaginationTokens(
+            itemSize = 32.dp,
+            itemSpacing = 4.dp,
+            activeColor = colors.primary,
+            inactiveColor = colors.textDisabled,
+            cornerRadius = shapes.scaled(shapes.large),
+        )
+    }
+}
 
 // —— TT-029 滑块/评分 ——
 @Immutable
 data class SliderTokens(
-    val trackHeight: Dp = 4.dp,
-    val thumbSize: Dp = 20.dp,
-    val activeColor: Color = Color.Unspecified,
-    val inactiveColor: Color = Color.Unspecified,
-)
+    val trackHeight: Dp,
+    val thumbSize: Dp,
+    val activeColor: Color,
+    val inactiveColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+        ): SliderTokens = SliderTokens(
+            trackHeight = 4.dp,
+            thumbSize = 20.dp,
+            activeColor = colors.primary,
+            inactiveColor = colors.borderDisabled,
+        )
+    }
+}
 
 @Immutable
 data class RateTokens(
-    val starSize: Dp = 24.dp,
-    val starSpacing: Dp = 4.dp,
-    val selectedColor: Color = Color.Unspecified,
-    val unselectedColor: Color = Color.Unspecified,
-)
+    val starSize: Dp,
+    val starSpacing: Dp,
+    val selectedColor: Color,
+    val unselectedColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+        ): RateTokens = RateTokens(
+            starSize = 24.dp,
+            starSpacing = 4.dp,
+            selectedColor = colors.warning,
+            unselectedColor = colors.textTertiary,
+        )
+    }
+}
 
-// —— 导航栏（已有） ——
+// —— 导航栏 ——
 @Immutable
 data class AppBarTokens(
-    val height: Dp = 56.dp,
-    val titleSize: TextUnit = 18.sp,
-    val titleWeight: FontWeight = FontWeight.SemiBold,
-    val backIconSize: Dp = 22.dp,
-)
+    val height: Dp,
+    val titleSize: TextUnit,
+    val titleWeight: FontWeight,
+    val backIconSize: Dp,
+) {
+    companion object {
+        fun default(
+            typography: AppTypography,
+            control: AppControlTokens,
+        ): AppBarTokens = AppBarTokens(
+            height = 56.dp,
+            titleSize = typography.titleLarge.fontSize,
+            titleWeight = FontWeight.SemiBold,
+            backIconSize = 22.dp,
+        )
+    }
+}
 
-// —— 标签（已有） ——
+// —— 标签 ——
 @Immutable
 data class ChipTokens(
-    val cornerRadius: Dp = 20.dp,       // shapes.medium * 1.67
-    val fontSize: TextUnit = 12.sp,
-    val fontWeight: FontWeight = FontWeight.Medium,
-    val horizontalPadding: Dp = 12.dp,
-    val verticalPadding: Dp = 6.dp,
-)
+    val cornerRadius: Dp,
+    val fontSize: TextUnit,
+    val fontWeight: FontWeight,
+    val horizontalPadding: Dp,
+    val verticalPadding: Dp,
+) {
+    companion object {
+        fun default(
+            shapes: AppShapes,
+            typography: AppTypography,
+        ): ChipTokens = ChipTokens(
+            cornerRadius = shapes.scaled(shapes.full),     // shadcn 风格：Chip = rounded-full
+            fontSize = typography.label.fontSize,
+            fontWeight = FontWeight.Medium,
+            horizontalPadding = 12.dp,
+            verticalPadding = 6.dp,
+        )
+    }
+}
 
-// —— FAB（已有） ——
+// —— FAB ——
 @Immutable
 data class FabTokens(
-    val size: Dp = 56.dp,
-    val iconSize: Dp = 24.dp,
-    val cornerRadius: Dp = 28.dp,       // size / 2（正圆 FAB）
-    val elevation: Dp = 6.dp,
-)
+    val size: Dp,
+    val iconSize: Dp,
+    val cornerRadius: Dp,
+    val elevation: Dp,
+) {
+    companion object {
+        fun default(
+            control: AppControlTokens,
+            elevation: AppElevation,
+        ): FabTokens = FabTokens(
+            size = 56.dp,
+            iconSize = control.large.iconSize,
+            cornerRadius = 28.dp,
+            elevation = elevation.level3,
+        )
+    }
+}
 
-// —— 底部导航（已有） ——
+// —— 底部导航 ——
 @Immutable
 data class BottomBarTokens(
-    val height: Dp = 64.dp,
-    val iconSize: Dp = 22.dp,
-    val labelSize: TextUnit = 11.sp,
-    val fontWeight: FontWeight = FontWeight.Medium,
-)
+    val height: Dp,
+    val iconSize: Dp,
+    val labelSize: TextUnit,
+    val fontWeight: FontWeight,
+) {
+    companion object {
+        fun default(
+            typography: AppTypography,
+        ): BottomBarTokens = BottomBarTokens(
+            height = 64.dp,
+            iconSize = 22.dp,
+            labelSize = 11.sp,
+            fontWeight = FontWeight.Medium,
+        )
+    }
+}
 
-// —— 列表项（已有） ——
+// —— 列表项 ——
 @Immutable
 data class ListItemTokens(
-    val minHeight: Dp = 56.dp,
-    val horizontalPadding: Dp = 16.dp,
-    val iconSize: Dp = 24.dp,
-    val titleSize: TextUnit = 15.sp,
-    val subtitleSize: TextUnit = 13.sp,
-    val dividerAlpha: Float = 0.12f,
-)
+    val minHeight: Dp,
+    val horizontalPadding: Dp,
+    val iconSize: Dp,
+    val titleSize: TextUnit,
+    val subtitleSize: TextUnit,
+    val dividerAlpha: Float,
+) {
+    companion object {
+        fun default(
+            spacing: AppSpacing,
+            typography: AppTypography,
+            opacity: AppOpacity,
+        ): ListItemTokens = ListItemTokens(
+            minHeight = 56.dp,
+            horizontalPadding = spacing.md,
+            iconSize = 24.dp,
+            titleSize = typography.bodyLarge.fontSize,
+            subtitleSize = typography.bodyMedium.fontSize,
+            dividerAlpha = opacity.divider,
+        )
+    }
+}
 
 // ═══════════════════════════════════════════════════════════
 //  TT-030 顶层聚合容器
+//  参照 PaletteComponentThemes.default()：统一接收所有基础令牌，分发到各组件
 // ═══════════════════════════════════════════════════════════
 
 data class AppComponentTokens(
-    val button: ButtonTokens = ButtonTokens(),
-    val card: CardTokens = CardTokens(),
-    val input: InputTokens = InputTokens(),
-    val select: SelectTokens = SelectTokens(),
-    val selectionControl: SelectionControlTokens = SelectionControlTokens(),
-    val switch: SwitchTokens = SwitchTokens(),
-    val table: TableTokens = TableTokens(),
-    val dialog: DialogTokens = DialogTokens(),
-    val menu: MenuTokens = MenuTokens(),
-    val tag: TagTokens = TagTokens(),
-    val progress: ProgressTokens = ProgressTokens(),
-    val skeleton: SkeletonTokens = SkeletonTokens(),
-    val steps: StepsTokens = StepsTokens(),
-    val pagination: PaginationTokens = PaginationTokens(),
-    val slider: SliderTokens = SliderTokens(),
-    val rate: RateTokens = RateTokens(),
-    val appBar: AppBarTokens = AppBarTokens(),
-    val chip: ChipTokens = ChipTokens(),
-    val fab: FabTokens = FabTokens(),
-    val bottomBar: BottomBarTokens = BottomBarTokens(),
-    val listItem: ListItemTokens = ListItemTokens(),
+    val button: ButtonTokens,
+    val card: CardTokens,
+    val input: InputTokens,
+    val select: SelectTokens,
+    val selectionControl: SelectionControlTokens,
+    val switch: SwitchTokens,
+    val table: TableTokens,
+    val dialog: DialogTokens,
+    val menu: MenuTokens,
+    val tag: TagTokens,
+    val progress: ProgressTokens,
+    val skeleton: SkeletonTokens,
+    val steps: StepsTokens,
+    val pagination: PaginationTokens,
+    val slider: SliderTokens,
+    val rate: RateTokens,
+    val appBar: AppBarTokens,
+    val chip: ChipTokens,
+    val fab: FabTokens,
+    val bottomBar: BottomBarTokens,
+    val listItem: ListItemTokens,
 ) {
     companion object {
-        fun default(colors: AppColors? = null): AppComponentTokens {
-            val c = colors
-            if (c == null) return AppComponentTokens()
-            return AppComponentTokens(
-                button = ButtonTokens(
-                    contentColor = c.onPrimary,
-                ),
-                card = CardTokens(
-                    containerColor = c.surface,
-                    contentColor = c.onSurface,
-                ),
-                selectionControl = SelectionControlTokens(
-                    checkedColor = c.primary,
-                    uncheckedColor = c.outline,
-                    disabledColor = c.textDisabled,
-                ),
-                switch = SwitchTokens(
-                    checkedColor = c.primary,
-                    uncheckedColor = c.outline,
-                ),
-                table = TableTokens(
-                    headerBgColor = c.bgHover,
-                    hoverBgColor = c.bgHover,
-                    selectedBgColor = c.bgSelected,
-                ),
-                dialog = DialogTokens(
-                    scrimColor = c.scrim,
-                    containerColor = c.surface,
-                    contentColor = c.onSurface,
-                    dividerColor = c.divider,
-                ),
-                menu = MenuTokens(
-                    hoverBgColor = c.bgHover,
-                    selectedBgColor = c.bgSelected,
-                ),
-                tag = TagTokens(
-                    primary = TagVariantColors(backgroundColor = c.primary.copy(alpha = 0.12f), textColor = c.primary),
-                    success = TagVariantColors(backgroundColor = c.success.copy(alpha = 0.12f), textColor = c.success),
-                    warning = TagVariantColors(backgroundColor = c.warning.copy(alpha = 0.12f), textColor = c.warning),
-                    danger = TagVariantColors(backgroundColor = c.danger.copy(alpha = 0.12f), textColor = c.danger),
-                    default = TagVariantColors(backgroundColor = c.bgHover, textColor = c.textSecondary),
-                ),
-                progress = ProgressTokens(
-                    trackColor = c.bgHover,
-                    indicatorColor = c.primary,
-                ),
-                slider = SliderTokens(
-                    activeColor = c.primary,
-                    inactiveColor = c.borderDisabled,
-                ),
-                rate = RateTokens(
-                    selectedColor = c.warning,
-                    unselectedColor = c.textTertiary,
-                ),
-            )
-        }
-
-        fun dark(): AppComponentTokens = AppComponentTokens(
-            skeleton = SkeletonTokens(
-                shimmerColor1 = Color(0xFF3A3A3A),
-                shimmerColor2 = Color(0xFF4A4A4A),
-            ),
-            listItem = ListItemTokens(dividerAlpha = 0.2f),
-            dialog = DialogTokens(scrimOpacity = 0.50f),
+        fun default(
+            colors: AppColors = AppColors.light(),
+            spacing: AppSpacing = AppSpacing(),
+            shapes: AppShapes = AppShapes(),
+            typography: AppTypography = AppTypography(),
+            opacity: AppOpacity = AppOpacity(),
+            motion: AppMotion = AppMotion(),
+            elevation: AppElevation = AppElevation(),
+            control: AppControlTokens = AppControlTokens(),
+            darkTheme: Boolean = false,
+        ): AppComponentTokens = AppComponentTokens(
+            button = ButtonTokens.default(colors, shapes, typography, control, opacity),
+            card = CardTokens.default(colors, shapes, spacing, elevation),
+            input = InputTokens.default(colors, shapes, typography, control),
+            select = SelectTokens.default(colors, spacing),
+            selectionControl = SelectionControlTokens.default(colors, opacity),
+            switch = SwitchTokens.default(colors, elevation),
+            table = TableTokens.default(colors, spacing),
+            dialog = DialogTokens.default(colors, shapes, spacing, elevation, opacity),
+            menu = MenuTokens.default(colors, shapes, spacing, elevation),
+            tag = TagTokens.default(colors, shapes, typography, spacing, opacity),
+            progress = ProgressTokens.default(colors),
+            skeleton = SkeletonTokens.default(shapes, darkTheme),
+            steps = StepsTokens.default(colors),
+            pagination = PaginationTokens.default(colors, shapes),
+            slider = SliderTokens.default(colors),
+            rate = RateTokens.default(colors),
+            appBar = AppBarTokens.default(typography, control),
+            chip = ChipTokens.default(shapes, typography),
+            fab = FabTokens.default(control, elevation),
+            bottomBar = BottomBarTokens.default(typography),
+            listItem = ListItemTokens.default(spacing, typography, opacity),
         )
     }
 }
@@ -396,4 +686,4 @@ inline fun BottomBarTokens.derive(block: BottomBarTokens.() -> Unit) = copy().ap
 inline fun ListItemTokens.derive(block: ListItemTokens.() -> Unit) = copy().apply(block)
 inline fun AppComponentTokens.derive(block: AppComponentTokens.() -> Unit) = copy().apply(block)
 
-val LocalAppComponentTokens = staticCompositionLocalOf { AppComponentTokens() }
+val LocalAppComponentTokens = staticCompositionLocalOf { AppComponentTokens.default() }

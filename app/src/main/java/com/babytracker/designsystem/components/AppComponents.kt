@@ -21,15 +21,25 @@ package com.babytracker.designsystem.components
 // AppTextButton      文本按钮
 // AppInput           统一输入框             (input/)
 // AppChip            标签                   (chip/)
+// AppTag             语义标签（5色变体）      (tag/)
 // AppFAB             浮动操作按钮            (fab/)
 // SectionHeader      分区标题               (section/)
 // AppListItem        标准列表项
 // AppIconButton      主题化图标按钮          (iconbutton/)
 // AppConfirmDialog   确认删除对话框          (dialog/)
+// AppDialog          通用对话框             (dialog/)
+// AppActionSheet     底部操作面板           (dialog/)
 // AppBottomSheet     表单底部弹层           (sheet/)
 // AppSnackbar        撤销 Snackbar          (snackbar/)
-// AppSwitch          主题化 Switch           (switch/)
+// AppSwitch          主题化 Switch          (switchcontrol/)
+// AppCheckbox        主题化复选框           (switchcontrol/)
+// AppRadioButton     主题化单选按钮         (switchcontrol/)
 // AppScaffold        Scaffold 包装（自动 bg） (scaffold/)
+// AppLinearProgress  线性进度条             (progress/)
+// AppCircularProgress 圆形进度指示器         (progress/)
+// AppSlider          主题化滑块             (slider/)
+// AppLabeledSlider   带标签滑块             (slider/)
+// AppRate            星级评分               (rate/)
 
 // —— 专用组件 ——
 // BabyIllustration   宝宝头像
