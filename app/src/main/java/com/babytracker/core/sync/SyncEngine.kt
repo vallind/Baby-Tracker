@@ -214,11 +214,14 @@ class SyncEngine(
         )
         for (table in tables) {
             try {
+                // 先给 uuid 为空的旧数据补上 uuid
+                db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
+                // 标记 pending
                 db.execSQL("""
                     INSERT INTO sync_metadata (tableName, localId, remoteUuid, syncStatus, updatedAt)
                     SELECT '$table', id, uuid, 'pending', COALESCE(updatedAt, 0)
                     FROM $table
-                    WHERE deletedAt IS NULL
+                    WHERE deletedAt IS NULL AND uuid IS NOT NULL
                       AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')
                 """)
             } catch (_: Exception) { }
