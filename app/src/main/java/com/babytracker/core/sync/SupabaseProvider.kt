@@ -25,6 +25,8 @@ object SupabaseProvider {
             install(Auth) {
                 // 启动时自动从本地存储恢复登录态
                 autoLoadFromStorage = true
+                // 自动刷新过期的 token（无需用户重新登录）
+                alwaysAutoRefresh = true
             }
             install(Realtime)
             install(Storage)

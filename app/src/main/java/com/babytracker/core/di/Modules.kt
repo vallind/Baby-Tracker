@@ -66,7 +66,7 @@ val databaseModule = module {
 // ── Supabase 同步模块 ──
 val syncModule = module {
     single { com.babytracker.core.sync.SupabaseProvider.client }
-    single { com.babytracker.core.auth.AuthService(get()) }
+    single { com.babytracker.core.auth.AuthService(get(), get()) }
     single { com.babytracker.core.sync.SyncEngine(get(), get()) }
     single { com.babytracker.core.sync.RealtimeManager(get(), get(), get()) }
     single { FamilyService(get()) }

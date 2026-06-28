@@ -1,5 +1,6 @@
 package com.babytracker.core.auth
 
+import android.content.SharedPreferences
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -23,25 +24,33 @@ import kotlinx.coroutines.flow.stateIn
  * - 支持账户名 + 密码。Supabase Email Auth 要求合法邮箱格式，
  *   纯账户名自动拼接虚拟域名后传给 Supabase。
  *   需在 Supabase Dashboard → Authentication → Settings 关闭 "Confirm email"。
+ * - 登录态通过 Supabase Auth 内置存储持久化（autoLoadFromStorage + alwaysAutoRefresh），
+ *   SharedPreferences 作为双重保障标记。
  */
 class AuthService(
     private val client: SupabaseClient,
+    private val prefs: SharedPreferences,
 ) {
 
     companion object {
         /** 纯账户名自动拼接的虚拟域名（需合法 TLD，.local 会被拒绝） */
         private const val SYNTHETIC_DOMAIN = "@baby-tracker.app"
+        private const val KEY_LOGGED_IN = "auth_logged_in"
     }
 
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser: StateFlow<UserInfo?> = _currentUser.asStateFlow()
 
     init {
-        // 启动时尝试从本地存储恢复登录态
+        // 启动时从 Supabase Auth 内置存储恢复登录态
         try {
             _currentUser.value = client.auth.currentUserOrNull()
         } catch (_: Exception) {
             _currentUser.value = null
+        }
+        // 同步 SharedPreferences 标记（以 Supabase 实际状态为准）
+        if (_currentUser.value != null) {
+            prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
         }
     }
 
@@ -75,6 +84,8 @@ class AuthService(
             _currentUser.value = sessionUser
             sessionUser
         }
+        // 持久化登录标记
+        prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
         user
     }
 
@@ -90,6 +101,8 @@ class AuthService(
         }
         val user = client.auth.retrieveUserForCurrentSession()
         _currentUser.value = user
+        // 持久化登录标记
+        prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
         user
     }
 
@@ -103,6 +116,8 @@ class AuthService(
             // 忽略网络错误
         }
         _currentUser.value = null
+        // 清除持久化登录标记
+        prefs.edit().putBoolean(KEY_LOGGED_IN, false).apply()
     }
 
     // ─── 状态查询 ───
