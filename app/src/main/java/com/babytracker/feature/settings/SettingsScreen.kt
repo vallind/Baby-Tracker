@@ -59,6 +59,7 @@ fun SettingsScreen(navController: NavController) {
     val babyCtrl: BabyController = koinInject()
     val themeCtrl: ThemeController = koinInject()
     val authService: AuthService = koinInject()
+    val displayAccount by authService.displayAccount.collectAsState()
     val settingsVM: SettingsViewModel = koinViewModel()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
@@ -141,7 +142,9 @@ fun SettingsScreen(navController: NavController) {
                 SettingsCard {
                     SettingsRow(
                         "🔐",
-                        if (isLoggedIn) "账户（已登录）" else "登录账户",
+                        if (isLoggedIn && displayAccount != null) "账户：$displayAccount" 
+                        else if (isLoggedIn) "账户（已登录）" 
+                        else "登录账户",
                         trailing = if (isLoggedIn) {
                             { Text("已连接", color = c.success, fontSize = 12.sp) }
                         } else null,

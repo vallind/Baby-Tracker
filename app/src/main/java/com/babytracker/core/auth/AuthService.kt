@@ -33,24 +33,27 @@ class AuthService(
 ) {
 
     companion object {
-        /** 纯账户名自动拼接的虚拟域名（需合法 TLD，.local 会被拒绝） */
         private const val SYNTHETIC_DOMAIN = "@baby-tracker.app"
         private const val KEY_LOGGED_IN = "auth_logged_in"
+        private const val KEY_DISPLAY_ACCOUNT = "auth_display_account"
     }
 
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser: StateFlow<UserInfo?> = _currentUser.asStateFlow()
 
+    /** 已登录的账户名（从 SharedPreferences 恢复，用于 UI 展示） */
+    private val _displayAccount = MutableStateFlow<String?>(null)
+    val displayAccount: StateFlow<String?> = _displayAccount.asStateFlow()
+
     init {
-        // 启动时从 Supabase Auth 内置存储恢复登录态
         try {
             _currentUser.value = client.auth.currentUserOrNull()
         } catch (_: Exception) {
             _currentUser.value = null
         }
-        // 同步 SharedPreferences 标记（以 Supabase 实际状态为准）
         if (_currentUser.value != null) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
+            _displayAccount.value = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
         }
     }
 
@@ -84,15 +87,14 @@ class AuthService(
             _currentUser.value = sessionUser
             sessionUser
         }
-        // 持久化登录标记
-        prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
+        // 持久化登录标记 + 账户名
+        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_DISPLAY_ACCOUNT, account).apply()
+        _displayAccount.value = account
         user
     }
 
     /**
      * 登录已有账户。
-     * @param account 账户名（纯用户名自动拼接 @baby.local）
-     * @param password 密码
      */
     suspend fun signIn(account: String, password: String): Result<UserInfo> = runCatching {
         client.auth.signInWith(Email) {
@@ -101,23 +103,21 @@ class AuthService(
         }
         val user = client.auth.retrieveUserForCurrentSession()
         _currentUser.value = user
-        // 持久化登录标记
-        prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
+        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_DISPLAY_ACCOUNT, account).apply()
+        _displayAccount.value = account
         user
     }
 
     /**
-     * 退出登录。退出后继续本地使用，只是停止云同步。
+     * 退出登录。
      */
     suspend fun signOut() {
         try {
             client.auth.signOut()
-        } catch (_: Exception) {
-            // 忽略网络错误
-        }
+        } catch (_: Exception) { }
         _currentUser.value = null
-        // 清除持久化登录标记
-        prefs.edit().putBoolean(KEY_LOGGED_IN, false).apply()
+        _displayAccount.value = null
+        prefs.edit().putBoolean(KEY_LOGGED_IN, false).remove(KEY_DISPLAY_ACCOUNT).apply()
     }
 
     // ─── 状态查询 ───
