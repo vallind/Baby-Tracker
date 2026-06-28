@@ -396,6 +396,9 @@ fun BabyManagementScreen(navController: NavController) {
     val babyCtrl: BabyController = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
+    val activeBabies = babies.filter { it.deletedAt == null }
+    val deletedBabies = babies.filter { it.deletedAt != null }
+    var showDeleted by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     var showForm by remember { mutableStateOf(false) }
@@ -416,13 +419,13 @@ fun BabyManagementScreen(navController: NavController) {
             )
         },
     ) { padding ->
-        if (babies.isEmpty()) {
+        if (activeBabies.isEmpty() && deletedBabies.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 Text("还没有添加宝宝", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = 8.dp)) {
-                babies.forEach { b ->
+                activeBabies.forEach { b ->
                     val isCurrent = b.id == babyCtrl.currentBabyId
                     AppCard(
                         modifier = Modifier
@@ -468,6 +471,43 @@ fun BabyManagementScreen(navController: NavController) {
                             }
                             IconButton(onClick = { showDeleteConfirm = b }) {
                                 Icon(Icons.Default.Delete, contentDescription = "删除", tint = c.textSecondary)
+                            }
+                        }
+                    }
+                }
+
+                // 已删除宝宝
+                if (deletedBabies.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    TextButton(onClick = { showDeleted = !showDeleted }) {
+                        Text(
+                            "已删除的宝宝 (${deletedBabies.size}) ${if (showDeleted) "▲" else "▼"}",
+                            color = c.textSecondary,
+                            fontSize = 13.sp,
+                        )
+                    }
+                    if (showDeleted) {
+                        deletedBabies.forEach { b ->
+                            AppCard(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                cornerRadius = DT.cardRadius.dp,
+                                elevation = 1.dp,
+                            ) {
+                                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(Modifier.size(36.dp).clip(CircleShape).background(c.textTertiary), contentAlignment = Alignment.Center) {
+                                        Text(b.name.take(1), color = Color.White, fontWeight = FontWeight.SemiBold)
+                                    }
+                                    Spacer(Modifier.width(10.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(b.name, style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
+                                        Text("已删除", style = MaterialTheme.typography.labelSmall, color = c.textTertiary)
+                                    }
+                                    TextButton(onClick = {
+                                        scope.launch { babyRepo.restore(b) }
+                                    }) {
+                                        Text("恢复", color = c.primary, fontSize = 13.sp)
+                                    }
+                                }
                             }
                         }
                     }

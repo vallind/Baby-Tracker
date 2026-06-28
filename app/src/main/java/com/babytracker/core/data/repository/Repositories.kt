@@ -1,5 +1,6 @@
 package com.babytracker.core.data.repository
 
+import com.babytracker.core.database.AppDatabase
 import com.babytracker.core.database.dao.*
 import com.babytracker.core.database.entity.SyncMetadataEntity
 import com.babytracker.core.data.mapper.toDomain
@@ -21,9 +22,14 @@ interface BabyRepository {
     suspend fun insert(baby: Baby): Long
     suspend fun update(baby: Baby)
     suspend fun delete(baby: Baby)
+    suspend fun restore(baby: Baby)
 }
 
-class BabyRepositoryImpl(private val dao: BabyDao, private val syncMeta: SyncMetadataDao) : BabyRepository {
+class BabyRepositoryImpl(
+    private val dao: BabyDao,
+    private val syncMeta: SyncMetadataDao,
+    private val db: AppDatabase,
+) : BabyRepository {
     override fun watchAll() = dao.watchAll().map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(baby: Baby): Long {
@@ -40,7 +46,29 @@ class BabyRepositoryImpl(private val dao: BabyDao, private val syncMeta: SyncMet
     override suspend fun delete(baby: Baby) {
         val entity = baby.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        // 级联软删除子记录
+        cascadeSoftDelete(baby.id)
         syncMeta.insert(SyncMetadataEntity(tableName = "babies", localId = baby.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+    }
+    override suspend fun restore(baby: Baby) {
+        val entity = baby.copy(deletedAt = null, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "babies", localId = baby.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+    }
+
+    private fun cascadeSoftDelete(babyId: Int) {
+        val sql = db.openHelper.writableDatabase
+        sql.beginTransaction()
+        try {
+            for (table in listOf("feedings", "sleeps", "growths", "vaccinations",
+                "health_records", "diapers", "development_assessments", "reminders")
+            ) {
+                sql.execSQL("UPDATE $table SET deletedAt = $nowEpoch, updatedAt = $nowEpoch WHERE baby_id = $babyId")
+            }
+            sql.setTransactionSuccessful()
+        } finally {
+            sql.endTransaction()
+        }
     }
 }
 

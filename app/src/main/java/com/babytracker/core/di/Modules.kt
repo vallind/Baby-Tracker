@@ -26,7 +26,7 @@ val appModule = module {
     single { ThemeController(get()) }
     single { BabyController(get(), get()) }
     single { BackupManager(get()) }
-    single<BabyRepository> { BabyRepositoryImpl(get(), get()) }
+    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get()) }
     single<FeedingRepository> { FeedingRepositoryImpl(get(), get()) }
     single<SleepRepository> { SleepRepositoryImpl(get(), get()) }
     single<GrowthRepository> { GrowthRepositoryImpl(get(), get()) }
