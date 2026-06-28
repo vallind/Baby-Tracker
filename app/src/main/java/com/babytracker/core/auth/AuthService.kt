@@ -20,11 +20,18 @@ import kotlinx.coroutines.flow.stateIn
  * 设计原则：不强制登录，本地优先。
  * - 未登录时 App 完全本地使用，所有数据存 Room
  * - 登录为可选操作，登录后开启云同步和家庭共享
- * - 支持账户名 + 密码（底层用 Supabase email 字段存储账户名，关闭了邮箱验证）
+ * - 支持账户名 + 密码。Supabase Email Auth 要求邮箱格式，
+ *   纯账户名自动拼接 @baby.local 域名字段传给 Supabase。
  */
 class AuthService(
     private val client: SupabaseClient,
 ) {
+
+    companion object {
+        /** 纯账户名自动拼接的虚拟域名，用于绕过 Supabase 邮箱格式校验 */
+        private const val SYNTHETIC_DOMAIN = "@baby.local"
+    }
+
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser: StateFlow<UserInfo?> = _currentUser.asStateFlow()
 
@@ -37,16 +44,20 @@ class AuthService(
         }
     }
 
+    /** 将用户输入的账户名转换为 Supabase 接受的 email 格式 */
+    private fun toEmail(account: String): String =
+        if (account.contains("@")) account else account + SYNTHETIC_DOMAIN
+
     // ─── 登录/注册 ───
 
     /**
      * 注册新账户。
-     * @param account 账户名（底层存入 Supabase email 字段，不验证邮箱格式）
+     * @param account 账户名（纯用户名自动拼接 @baby.local）
      * @param password 密码
      */
     suspend fun signUp(account: String, password: String): Result<UserInfo> = runCatching {
         client.auth.signUpWith(Email) {
-            email = account
+            email = toEmail(account)
             this.password = password
         }
         // signUp 成功后通过 retrieveUser 获取用户信息
@@ -57,12 +68,12 @@ class AuthService(
 
     /**
      * 登录已有账户。
-     * @param account 账户名
+     * @param account 账户名（纯用户名自动拼接 @baby.local）
      * @param password 密码
      */
     suspend fun signIn(account: String, password: String): Result<UserInfo> = runCatching {
         client.auth.signInWith(Email) {
-            email = account
+            email = toEmail(account)
             this.password = password
         }
         val user = client.auth.retrieveUserForCurrentSession()
