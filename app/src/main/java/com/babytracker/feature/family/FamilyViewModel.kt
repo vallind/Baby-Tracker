@@ -37,15 +37,19 @@ class FamilyViewModel(
             try {
                 _uiState.update { it.copy(isLoading = true) }
                 val families = familyService.loadMyFamilies()
+                // 优先使用 FamilyService 中已选中的家庭，而非硬取第一个
+                val activeFamily = familyService.currentFamily.value
+                    ?.let { selected -> families.find { it.id == selected.id } }
+                    ?: families.firstOrNull()
                 _uiState.update {
                     it.copy(
                         families = families,
-                        currentFamily = families.firstOrNull(),
+                        currentFamily = activeFamily,
                         isLoading = false,
                     )
                 }
                 // 加载当前家庭成员列表
-                families.firstOrNull()?.let { loadMembers(it.id) }
+                activeFamily?.let { loadMembers(it.id) }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(isLoading = false, errorMessage = e.message ?: "加载失败")
@@ -60,13 +64,17 @@ class FamilyViewModel(
                     // 重新加载家庭列表（可能有新家庭加入）和成员列表
                     try {
                         val families = familyService.loadMyFamilies()
+                        // 刷新时保持当前选中家庭，不硬切到第一个
+                        val activeFamily = familyService.currentFamily.value
+                            ?.let { selected -> families.find { it.id == selected.id } }
+                            ?: families.firstOrNull()
                         _uiState.update {
                             it.copy(
                                 families = families,
-                                currentFamily = families.find { f -> f.id == family.id } ?: families.firstOrNull(),
+                                currentFamily = activeFamily,
                             )
                         }
-                        _uiState.value.currentFamily?.let { loadMembers(it.id) }
+                        activeFamily?.let { loadMembers(it.id) }
                     } catch (_: Exception) { }
                 }
             }

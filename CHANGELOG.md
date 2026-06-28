@@ -4,6 +4,10 @@
 
 ### [Unreleased]
 
+**修复家庭页面无法显示当前选中家庭：**
+- Bug：`FamilyViewModel.init` 始终 `currentFamily = families.firstOrNull()`，切换家庭后再次进入页面显示错误家庭
+- 修复：优先读取 `FamilyService.currentFamily` 中已选中的家庭
+
 **修复加入家庭后成员新增记录无法实时同步：**
 - Bug：`RealtimeManager.subscribeAll()` 切换家庭时未先断开旧频道，旧频道仍然存活在 Supabase 服务端，新成员的新记录通过 Realtime 推送时路由到旧频道/旧 RLS 上下文，导致接收不到
 - 修复：`subscribeAll()` 在同一协程内先执行 `disconnect()` 断开旧频道，再创建新频道，保证 JWT/RLS 上下文刷新后重新订阅
