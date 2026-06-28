@@ -1,6 +1,7 @@
 package com.babytracker.core.data.repository
 
 import com.babytracker.core.database.dao.*
+import com.babytracker.core.database.entity.SyncMetadataEntity
 import com.babytracker.core.data.mapper.toDomain
 import com.babytracker.core.data.mapper.toEntity
 import com.babytracker.core.domain.model.*
@@ -8,15 +9,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
 import java.util.UUID
-
-/**
- * 同步字段辅助：为 insert 自动生成 uuid + updatedAt。
- * 只用于 insert 路径——Domain Model 层不需要手动填这些字段。
- */
-private fun <T> withSyncFields(block: () -> T): T {
-    // 子类各自通过 copy 注入，这里仅提供工具常量
-    return block()
-}
 
 private val nowEpoch get() = System.currentTimeMillis()
 private fun newUuid() = UUID.randomUUID().toString()
@@ -31,20 +23,24 @@ interface BabyRepository {
     suspend fun delete(baby: Baby)
 }
 
-class BabyRepositoryImpl(private val dao: BabyDao) : BabyRepository {
+class BabyRepositoryImpl(private val dao: BabyDao, private val syncMeta: SyncMetadataDao) : BabyRepository {
     override fun watchAll() = dao.watchAll().map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(baby: Baby): Long {
         val entity = baby.copy(uuid = baby.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "babies", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
     override suspend fun update(baby: Baby) {
         val entity = baby.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "babies", localId = baby.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
     override suspend fun delete(baby: Baby) {
         val entity = baby.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "babies", localId = baby.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -58,20 +54,24 @@ interface FeedingRepository {
     suspend fun delete(feeding: Feeding)
 }
 
-class FeedingRepositoryImpl(private val dao: FeedingDao) : FeedingRepository {
+class FeedingRepositoryImpl(private val dao: FeedingDao, private val syncMeta: SyncMetadataDao) : FeedingRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(feeding: Feeding): Long {
         val entity = feeding.copy(uuid = feeding.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "feedings", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
     override suspend fun update(feeding: Feeding) {
         val entity = feeding.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "feedings", localId = feeding.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
     override suspend fun delete(feeding: Feeding) {
         val entity = feeding.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "feedings", localId = feeding.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -85,20 +85,24 @@ interface SleepRepository {
     suspend fun delete(sleep: Sleep)
 }
 
-class SleepRepositoryImpl(private val dao: SleepDao) : SleepRepository {
+class SleepRepositoryImpl(private val dao: SleepDao, private val syncMeta: SyncMetadataDao) : SleepRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(sleep: Sleep): Long {
         val entity = sleep.copy(uuid = sleep.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "sleeps", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
     override suspend fun update(sleep: Sleep) {
         val entity = sleep.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "sleeps", localId = sleep.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
     override suspend fun delete(sleep: Sleep) {
         val entity = sleep.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "sleeps", localId = sleep.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -112,20 +116,24 @@ interface GrowthRepository {
     suspend fun delete(growth: Growth)
 }
 
-class GrowthRepositoryImpl(private val dao: GrowthDao) : GrowthRepository {
+class GrowthRepositoryImpl(private val dao: GrowthDao, private val syncMeta: SyncMetadataDao) : GrowthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(growth: Growth): Long {
         val entity = growth.copy(uuid = growth.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "growths", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
     override suspend fun update(growth: Growth) {
         val entity = growth.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "growths", localId = growth.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
     override suspend fun delete(growth: Growth) {
         val entity = growth.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "growths", localId = growth.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -139,20 +147,24 @@ interface VaccinationRepository {
     suspend fun delete(vaccination: Vaccination)
 }
 
-class VaccinationRepositoryImpl(private val dao: VaccinationDao) : VaccinationRepository {
+class VaccinationRepositoryImpl(private val dao: VaccinationDao, private val syncMeta: SyncMetadataDao) : VaccinationRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(vaccination: Vaccination): Long {
         val entity = vaccination.copy(uuid = vaccination.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "vaccinations", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
     override suspend fun update(vaccination: Vaccination) {
         val entity = vaccination.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "vaccinations", localId = vaccination.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
     override suspend fun delete(vaccination: Vaccination) {
         val entity = vaccination.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "vaccinations", localId = vaccination.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -166,20 +178,24 @@ interface HealthRepository {
     suspend fun delete(record: HealthRecord)
 }
 
-class HealthRepositoryImpl(private val dao: HealthRecordDao) : HealthRepository {
+class HealthRepositoryImpl(private val dao: HealthRecordDao, private val syncMeta: SyncMetadataDao) : HealthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(record: HealthRecord): Long {
         val entity = record.copy(uuid = record.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "health_records", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
     override suspend fun update(record: HealthRecord) {
         val entity = record.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "health_records", localId = record.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
     override suspend fun delete(record: HealthRecord) {
         val entity = record.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "health_records", localId = record.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -193,20 +209,24 @@ interface DiaperRepository {
     suspend fun delete(diaper: Diaper)
 }
 
-class DiaperRepositoryImpl(private val dao: DiaperDao) : DiaperRepository {
+class DiaperRepositoryImpl(private val dao: DiaperDao, private val syncMeta: SyncMetadataDao) : DiaperRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(diaper: Diaper): Long {
         val entity = diaper.copy(uuid = diaper.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "diapers", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
     override suspend fun update(diaper: Diaper) {
         val entity = diaper.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "diapers", localId = diaper.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
     override suspend fun delete(diaper: Diaper) {
         val entity = diaper.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "diapers", localId = diaper.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -222,7 +242,7 @@ interface MessageRepository {
     suspend fun delete(message: AppMessage)
 }
 
-class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
+class MessageRepositoryImpl(private val dao: MessageDao, private val syncMeta: SyncMetadataDao) : MessageRepository {
     override fun watchByType(type: MessageType): Flow<List<AppMessage>> =
         dao.watchByType(MessageType.raw(type)).map { list -> list.map { it.toDomain() } }
 
@@ -233,7 +253,9 @@ class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
 
     override suspend fun insert(message: AppMessage): Long {
         val entity = message.copy(uuid = message.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "messages", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
 
     override suspend fun markRead(id: Long) = dao.markRead(id)
@@ -243,6 +265,7 @@ class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
     override suspend fun delete(message: AppMessage) {
         val entity = message.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "messages", localId = message.id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
@@ -259,6 +282,7 @@ interface DevelopmentAssessmentRepository {
 
 class DevelopmentAssessmentRepositoryImpl(
     private val dao: DevelopmentAssessmentDao,
+    private val syncMeta: SyncMetadataDao,
 ) : DevelopmentAssessmentRepository {
     override fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessment>> =
         dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
@@ -271,23 +295,25 @@ class DevelopmentAssessmentRepositoryImpl(
 
     override suspend fun insert(assessment: DevelopmentAssessment): Long {
         val entity = assessment.copy(uuid = assessment.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "development_assessments", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
 
     override suspend fun update(assessment: DevelopmentAssessment) {
         val entity = assessment.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "development_assessments", localId = assessment.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 
     override suspend fun delete(assessment: DevelopmentAssessment) {
         val entity = assessment.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "development_assessments", localId = assessment.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 }
 
 // —— 提醒中心 —— Repository 返回 Domain Model（Reminder），内部做 Entity↔Domain 映射。
-//   注：markDone 接收 LocalDateTime（domain 层），内部转 epoch milli 调 DAO。
-//   setEnabled 用于用药类每日提醒开关。
 
 interface ReminderRepository {
     fun watchPending(babyId: Int): Flow<List<Reminder>>
@@ -300,7 +326,7 @@ interface ReminderRepository {
     suspend fun setEnabled(id: Int, enabled: Boolean)
 }
 
-class ReminderRepositoryImpl(private val dao: ReminderDao) : ReminderRepository {
+class ReminderRepositoryImpl(private val dao: ReminderDao, private val syncMeta: SyncMetadataDao) : ReminderRepository {
     override fun watchPending(babyId: Int): Flow<List<Reminder>> =
         dao.watchPending(babyId).map { list -> list.map { it.toDomain() } }
 
@@ -312,17 +338,21 @@ class ReminderRepositoryImpl(private val dao: ReminderDao) : ReminderRepository 
 
     override suspend fun insert(reminder: Reminder): Long {
         val entity = reminder.copy(uuid = reminder.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        return dao.insert(entity)
+        val id = dao.insert(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "reminders", localId = id.toInt(), remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
+        return id
     }
 
     override suspend fun update(reminder: Reminder) {
         val entity = reminder.copy(updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "reminders", localId = reminder.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 
     override suspend fun delete(reminder: Reminder) {
         val entity = reminder.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
+        syncMeta.insert(SyncMetadataEntity(tableName = "reminders", localId = reminder.id, remoteUuid = entity.uuid, syncStatus = "pending", updatedAt = entity.updatedAt))
     }
 
     override suspend fun markDone(id: Int, doneDate: LocalDateTime) =
