@@ -2,6 +2,15 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [Unreleased]
+
+**文档：Supabase 后端方案补充：**
+- 补充 `profiles` 和 `family_members` 表的 RLS 策略（第三节）
+- 新增第六节"删除策略（Soft Delete）"：所有业务表增加 `deleted_at` 字段，30 天保留期
+- 修正第五节 Realtime 订阅代码的协程收集问题（`subscribeRealtime` 接收 `CoroutineScope` 参数）
+- 认证方案调整为"不强制登录，本地优先"：只保留账户名+密码，去掉手机号 OTP 和微信登录
+- 全文"邮箱"改为"账户"，Supabase Auth 底层用 email 字段存账户名，关闭邮箱验证
+
 ### [1.4.2] — 2026-06-28
 
 **DatePicker & TimePicker TDesign 风格重构：**
