@@ -218,7 +218,7 @@ fun FeatureGrid(navController: NavController) {
         FeatureGridItemData(Screen.Feeding, "🍼", "喂养记录"),
         FeatureGridItemData(Screen.Sleep, "🌙", "睡眠记录"),
         FeatureGridItemData(Screen.Growth, "📏", "生长记录"),
-        FeatureGridItemData(Screen.Growth, "🧠", "发育评估"),
+        FeatureGridItemData(Screen.DevelopmentAssessment, "🧠", "发育评估"),
         FeatureGridItemData(Screen.Vaccination, "💉", "疫苗接种"),
         FeatureGridItemData(Screen.Health, "❤️", "健康档案"),
         FeatureGridItemData(Screen.Stats, "📊", "统计分析"),
