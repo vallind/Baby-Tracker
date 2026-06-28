@@ -198,6 +198,14 @@ class SyncEngine(
     /** 查询当前 pending 记录数（仅诊断用） */
     suspend fun pendingCount(): Int = syncMeta.getPendingChanges().size
 
+    /**
+     * 清除全局 lastSyncAt 时间戳。
+     * 下次 pull() 将执行全量拉取（而非增量），用于切换/加入新家庭时同步历史数据。
+     */
+    suspend fun resetLastSync() {
+        syncMeta.clearLastSyncAt()
+    }
+
     /** 全量同步，返回 [推送数, 拉取数] */
     suspend fun fullSync(): Pair<Int, Int> {
         val pushed = push()

@@ -61,10 +61,14 @@ class SettingsViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "待同步")
 
+    /** 上次已同步的家庭 ID，用于检测家庭切换并触发全量同步 */
+    private var lastSyncedFamilyId: String? = null
+
     init {
         // 启动时从本地恢复 familyId（Supabase 挂了也能同步）
         val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        syncEngine.currentFamilyId = prefs.getString("current_family_id", null)
+        lastSyncedFamilyId = prefs.getString("current_family_id", null)
+        syncEngine.currentFamilyId = lastSyncedFamilyId
 
         registerNetworkCallback()
         viewModelScope.launch {
@@ -74,6 +78,7 @@ class SettingsViewModel(
                 } else if (user == null) {
                     realtimeManager.unsubscribe()
                     syncEngine.currentFamilyId = null
+                    lastSyncedFamilyId = null
                 }
             }
         }
@@ -86,9 +91,27 @@ class SettingsViewModel(
         }
         viewModelScope.launch {
             familyService.currentFamily.collect { family ->
-                syncEngine.currentFamilyId = family?.id
+                val newId = family?.id
+                syncEngine.currentFamilyId = newId
                 // 持久化到本地，Supabase 不通时仍可同步
-                family?.id?.let { prefs.edit().putString("current_family_id", it).apply() }
+                newId?.let { prefs.edit().putString("current_family_id", it).apply() }
+
+                // 加入/切换到新家庭时，触发全量同步（拉取该家庭的历史数据）
+                val isNewFamily = newId != null && lastSyncedFamilyId != null && newId != lastSyncedFamilyId
+                if (isNewFamily && _isOnline.value) {
+                    viewModelScope.launch {
+                        syncEngine.resetLastSync()  // 清除增量锚点，执行全量拉取
+                        syncEngine.fullSync()       // 拉取新家庭所有历史数据
+                        lastSyncedFamilyId = newId
+                    }
+                } else {
+                    lastSyncedFamilyId = newId
+                }
+
+                // 同步完成后可能需要刷新 Realtime 订阅（RLS 已随家庭成员变化更新）
+                if (isNewFamily) {
+                    realtimeManager.subscribeAll()
+                }
             }
         }
     }

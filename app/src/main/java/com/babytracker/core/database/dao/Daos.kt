@@ -244,6 +244,10 @@ interface SyncMetadataDao {
     @Query("UPDATE sync_metadata SET lastSyncAt = :lastSyncAt WHERE lastSyncAt IS NULL OR lastSyncAt < :lastSyncAt")
     suspend fun updateLastSyncAt(lastSyncAt: Long)
 
+    /** 清除全局 lastSyncAt 时间戳，使下次 pull 执行全量拉取（用于切换/加入家庭时同步历史数据） */
+    @Query("UPDATE sync_metadata SET lastSyncAt = NULL")
+    suspend fun clearLastSyncAt()
+
     /** 按 remoteUuid 查找同步元数据 */
     @Query("SELECT * FROM sync_metadata WHERE remoteUuid = :remoteUuid AND tableName = :tableName LIMIT 1")
     suspend fun getByRemoteUuid(tableName: String, remoteUuid: String): SyncMetadataEntity?

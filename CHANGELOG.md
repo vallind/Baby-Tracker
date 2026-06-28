@@ -4,6 +4,13 @@
 
 ### [Unreleased]
 
+**修复加入家庭后成员之间宝宝信息不同步的问题：**
++- 根因 1：加入家庭后 `SettingsViewModel` 未触发 `fullSync()`，`currentFamilyId` 更新了但数据没有拉取
++- 根因 2：增量 `pull()` 使用全局 `lastSyncAt` 过滤 (`gte("updatedAt", lastSyncAt)`)，加入新家庭时历史数据（`updatedAt` 早于该时间戳）被跳过
++- 修复：`SyncEngine` 新增 `resetLastSync()` 清除全局同步锚点；`SyncMetadataDao` 新增 `clearLastSyncAt()` SQL
++- 修复：`SettingsViewModel` 监听 `familyService.currentFamily` 变更，检测到切换到新家庭时自动 `resetLastSync()` + `fullSync()`，确保拉取新家庭全部历史数据
++- 修复：切换家庭后自动重新订阅 Realtime（RLS 上下文已变化）
+
 **修复创建者看不到新成员加入的问题：**
 +- RealtimeManager 新增 `family_members` 表订阅，新成员加入/角色变更/移除时通过 `SharedFlow` 实时推送
 +- FamilyViewModel 监听 `familyMembersChanged` 事件，自动刷新家庭列表和成员列表
