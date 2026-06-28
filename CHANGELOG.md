@@ -4,6 +4,10 @@
 
 ### [Unreleased]
 
+**修复底部导航首页点击无效问题：**
++- BottomNavBar 去掉 `if (currentRoute != tab.route)` 守卫，改为始终执行 navigate（`launchSingleTop` 已防重复），防止 currentRoute 误判导致点击无响应
++- HomeScreen FeatureGrid 导航统一为 `popUpTo(startDestination, saveState)` + `launchSingleTop` + `restoreState`，与 BottomNavBar 保持一致，消除回退栈状态不一致
+
 **AppFormSheet：统一表单底部弹层组件：**
 +- 新增 `AppFormSheet` 组件（`designsystem/components/dialog/`）：封装 ModalBottomSheet + 标题 + 保存按钮，中间 content 插槽由业务填充
 +- 迁移 `FeedingFormDialog` / `SleepFormDialog` / `DiaperFormDialog` / `HealthFormDialog` / `GrowthFormDialog` → 每个减 ~15 行样板代码
