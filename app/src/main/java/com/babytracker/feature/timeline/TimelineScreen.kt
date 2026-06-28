@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -51,6 +52,7 @@ fun TimelineScreen(navController: NavController) {
     var editingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
     var editingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
     var editingHealth by remember { mutableStateOf<HealthRecordEntity?>(null) }
+    var typeFilter by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(babyId) { viewModel.load(babyId) }
@@ -90,6 +92,15 @@ fun TimelineScreen(navController: NavController) {
                 )
             }
 
+            Row(Modifier.fillMaxWidth().padding(horizontal = DT.pageMargin.dp, vertical = 6.dp)) {
+                listOf("" to "全部", "feeding" to "🤱喂", "sleep" to "😴睡", "diaper" to "🧷尿", "growth" to "📏长", "health" to "❤️健").forEach { (key, label) ->
+                    Box(Modifier.weight(1f).clickable { typeFilter = key }, contentAlignment = Alignment.Center) {
+                        Text(label, fontSize = 12.sp, color = if (typeFilter == key) c.primary else c.textSecondary, fontWeight = if (typeFilter == key) FontWeight.SemiBold else null)
+                    }
+                }
+            }
+            HorizontalDivider(color = c.divider, thickness = 0.5.dp)
+
             Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
                 if (state.loading) {
                     Spacer(Modifier.height(200.dp))
@@ -105,11 +116,12 @@ fun TimelineScreen(navController: NavController) {
                         onAction = { showTypePicker = true },
                     )
                 } else {
+                    val filtered = remember(state.items, typeFilter) { if (typeFilter.isEmpty()) state.items else state.items.filter { it.recordType == typeFilter } }
                     val typeColor: (String) -> Color = { when (it) {
                         "feeding" -> c.accent; "sleep" -> c.purple; "diaper" -> c.blue
                         "growth" -> c.green; "health" -> c.primary; else -> Color.Unspecified
                     } }
-                    val grouped = state.items.groupBy { it.date }
+                    val grouped = remember(filtered) { filtered.groupBy { it.date } }
                     var groupIndex = 0
                     grouped.forEach { (date, items) ->
                         Text(
