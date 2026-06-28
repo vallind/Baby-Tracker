@@ -2,31 +2,31 @@ package com.babytracker.feature.timeline
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.DT
-import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.core.util.BabyController
-import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.SegmentedControl
+import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.core.util.BabyController
+import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.*
 import com.babytracker.feature.diaper.DiaperFormDialog
 import com.babytracker.feature.feeding.FeedingFormDialog
@@ -48,6 +48,7 @@ fun TimelineScreen(navController: NavController) {
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val state by viewModel.state.collectAsState()
+
     var showTypePicker by remember { mutableStateOf(false) }
     var showAddFeeding by remember { mutableStateOf(false) }
     var showAddSleep by remember { mutableStateOf(false) }
@@ -58,135 +59,230 @@ fun TimelineScreen(navController: NavController) {
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
     var editingHealth by remember { mutableStateOf<HealthRecord?>(null) }
     var typeFilter by remember { mutableStateOf("") }
+
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(babyId) { viewModel.load(babyId) }
 
+    // 类型 → 颜色映射
+    val typeColor: (String) -> Color = {
+        when (it) {
+            "feeding" -> c.warning
+            "sleep" -> c.secondary
+            "diaper" -> c.tertiary
+            "growth" -> c.success
+            "health" -> c.primary
+            else -> c.primary
+        }
+    }
+
+    // 类型 → emoji 映射
+    val typeEmoji: (String) -> String = {
+        when (it) {
+            "feeding" -> "🤱"
+            "sleep" -> "🌙"
+            "diaper" -> "🧷"
+            "growth" -> "📏"
+            "health" -> "❤️"
+            else -> "📝"
+        }
+    }
+
     Scaffold(
         containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            AppTopBar(
+                title = "记录",
+                onBack = { navController.popBackStack() },
+            )
+        },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {
             AppFAB(icon = Icons.Default.Add, onClick = { showTypePicker = true })
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground).verticalScroll(rememberScrollState())) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(Gradients.pageHeader(c))
-                    .padding(horizontal = DT.pageMargin.dp)
-                    .height(DT.appBarHeight.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回", tint = c.textPrimary)
-                }
-                Text(
-                    "记录",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = c.textPrimary,
-                )
-            }
-
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(c.pageBackground),
+        ) {
+            // —— 类型筛选 Tab ——
             val filterKeys = listOf("", "feeding", "sleep", "diaper", "growth", "health")
             SegmentedControl(
                 labels = listOf("全部", "🤱喂", "😴睡", "🧷尿", "📏长", "❤️健"),
                 selectedIndex = filterKeys.indexOf(typeFilter).coerceAtLeast(0),
                 onSelect = { typeFilter = filterKeys[it] },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = DT.pageMargin.dp, vertical = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = DT.pageMargin.dp, vertical = 6.dp),
             )
             HorizontalDivider(color = c.divider, thickness = 0.5.dp)
 
-            Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
-                if (state.loading) {
-                    Spacer(Modifier.height(200.dp))
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = c.primary)
-                    }
-                } else if (state.items.isEmpty()) {
+            if (state.loading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = c.primary)
+                }
+            } else if (state.items.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "📝",
                         title = "还没有记录",
-                        subtitle = "点击下方按钮，记录宝宝的每一次成长",
-                        actionText = "记录",
+                        subtitle = "点击右下角按钮，记录宝宝的每一次成长",
+                        actionText = "开始记录",
                         onAction = { showTypePicker = true },
                     )
-                } else {
-                    val filtered = remember(state.items, typeFilter) { if (typeFilter.isEmpty()) state.items else state.items.filter { it.recordType == typeFilter } }
-                    val typeColor: (String) -> Color = { when (it) {
-                        "feeding" -> c.warning; "sleep" -> c.secondary; "diaper" -> c.primary
-                        "growth" -> c.success; "health" -> c.primary; else -> Color.Unspecified
-                    } }
-                    val grouped = remember(filtered) { filtered.groupBy { it.date } }
-                    var groupIndex = 0
-                    grouped.forEach { (date, items) ->
-                        Text(
-                            text = "${DateUtils.relativeDate(date)} · ${items.size}次",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = c.textSecondary,
-                            modifier = Modifier.padding(top = if (groupIndex == 0) 0.dp else DT.cardGapSm.dp, bottom = 4.dp),
+                }
+            } else {
+                val filtered = remember(state.items, typeFilter) {
+                    if (typeFilter.isEmpty()) state.items
+                    else state.items.filter { it.recordType == typeFilter }
+                }
+
+                if (filtered.isEmpty()) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        EmptyState(
+                            emoji = typeEmoji(typeFilter),
+                            title = "没有${when (typeFilter) {
+                                "feeding" -> "喂养"
+                                "sleep" -> "睡眠"
+                                "diaper" -> "尿布"
+                                "growth" -> "生长"
+                                "health" -> "健康"
+                                else -> ""
+                            }}记录",
+                            subtitle = "点击右下角按钮开始记录",
                         )
-                        items.forEachIndexed { i, item ->
-                            val tint = if (item.accent) c.warning else c.primary
-                            RecordCard(
-                                modifier = Modifier.padding(bottom = 8.dp),
-                                accentColor = typeColor(item.recordType),
-                                onDelete = {
-                                    scope.launch {
-                                        viewModel.delete(item)
-                                        val result = snackbarHostState.showSnackbar(
-                                            message = "已删除「${item.title}」",
-                                            actionLabel = "撤销",
-                                            duration = SnackbarDuration.Short,
-                                        )
-                                        if (result == SnackbarResult.ActionPerformed) {
-                                            viewModel.undoLastDelete()
-                                        }
-                                    }
-                                },
-                                onClick = {},
-                                onLongClick = {
-                                    when (item.recordType) {
-                                        "feeding" -> editingFeeding = viewModel.findFeeding(item.id)
-                                        "sleep" -> editingSleep = viewModel.findSleep(item.id)
-                                        "diaper" -> editingDiaper = viewModel.findDiaper(item.id)
-                                        "growth" -> editingGrowth = viewModel.findGrowth(item.id)
-                                        "health" -> editingHealth = viewModel.findHealth(item.id)
-                                    }
-                                },
-                            ) {
-                                Box(
+                    }
+                } else {
+                    val grouped = remember(filtered) { filtered.groupBy { it.date } }
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentPadding = PaddingValues(
+                            start = DT.pageMargin.dp,
+                            end = DT.pageMargin.dp,
+                            top = 8.dp,
+                            bottom = 80.dp,
+                        ),
+                    ) {
+                        grouped.forEach { (date, items) ->
+                            // —— 日期分组标题 ——
+                            item(key = "header-$date") {
+                                Row(
                                     Modifier
-                                        .size(DT.iconBgSize.dp)
-                                        .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                        .background(typeColor(item.recordType).takeIf { it != Color.Unspecified }?.copy(alpha = 0.14f) ?: c.primary.copy(alpha = 0.14f)),
-                                    contentAlignment = Alignment.Center,
-                                ) { Text(item.emoji, style = MaterialTheme.typography.titleLarge) }
-                                Spacer(Modifier.width(12.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(item.title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                                    Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp, bottom = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = DateUtils.relativeDate(date),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = c.textSecondary,
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Box(
+                                        Modifier
+                                            .clip(RoundedCornerShape(999.dp))
+                                            .background(c.divider)
+                                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                                    ) {
+                                        Text(
+                                            "${items.size}次",
+                                            fontSize = 10.sp,
+                                            color = c.textTertiary,
+                                        )
+                                    }
                                 }
-                                if (item.time.isNotEmpty()) {
-                                    Text(item.time, style = MaterialTheme.typography.labelMedium, color = c.textTertiary)
+                            }
+
+                            // —— 记录卡片列表 ——
+                            items(items = items, key = { it.id }) { item ->
+                                val accent = typeColor(item.recordType)
+                                RecordCard(
+                                    modifier = Modifier.padding(bottom = 8.dp),
+                                    accentColor = accent,
+                                    onDelete = {
+                                        scope.launch {
+                                            viewModel.delete(item)
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = "已删除「${item.title}」",
+                                                actionLabel = "撤销",
+                                                duration = SnackbarDuration.Short,
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                viewModel.undoLastDelete()
+                                            }
+                                        }
+                                    },
+                                    onClick = {},
+                                    onLongClick = {
+                                        when (item.recordType) {
+                                            "feeding" -> editingFeeding = viewModel.findFeeding(item.id)
+                                            "sleep" -> editingSleep = viewModel.findSleep(item.id)
+                                            "diaper" -> editingDiaper = viewModel.findDiaper(item.id)
+                                            "growth" -> editingGrowth = viewModel.findGrowth(item.id)
+                                            "health" -> editingHealth = viewModel.findHealth(item.id)
+                                        }
+                                    },
+                                ) {
+                                    Box(
+                                        Modifier
+                                            .size(DT.iconBgSize.dp)
+                                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                            .background(accent.copy(alpha = 0.12f)),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            item.emoji,
+                                            style = MaterialTheme.typography.titleLarge,
+                                        )
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            item.title,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = c.textPrimary,
+                                            fontWeight = FontWeight.Medium,
+                                        )
+                                        Text(
+                                            item.subtitle,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = c.textSecondary,
+                                        )
+                                    }
+                                    if (item.time.isNotEmpty()) {
+                                        Text(
+                                            item.time,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = c.textTertiary,
+                                        )
+                                    }
                                 }
                             }
                         }
-                        groupIndex++
                     }
                 }
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
 
+    // ── 类型选择底部弹窗 ──
     if (showTypePicker) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         ModalBottomSheet(onDismissRequest = { showTypePicker = false }, sheetState = sheetState) {
             Column(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp)) {
-                Text("选择记录类型", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(bottom = 16.dp))
+                Text(
+                    "选择记录类型",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp),
+                )
                 val types = listOf(
                     Screen.Feeding to "🤱 喂养",
                     Screen.Sleep to "😴 睡眠",
@@ -216,6 +312,7 @@ fun TimelineScreen(navController: NavController) {
         }
     }
 
+    // ── 编辑表单弹窗 ──
     editingFeeding?.let { f ->
         FeedingFormDialog(
             babyId = babyId,
@@ -286,8 +383,7 @@ fun TimelineScreen(navController: NavController) {
         )
     }
 
-    // ── 快速新增表单（不跳页）──
-
+    // ── 快速新增表单 ──
     if (showAddFeeding) {
         FeedingFormDialog(
             babyId = babyId,
