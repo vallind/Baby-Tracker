@@ -8,8 +8,11 @@ import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -32,6 +35,10 @@ class RealtimeManager(
     private val _connectionState = MutableStateFlow(RealtimeState.DISCONNECTED)
     val connectionState: StateFlow<RealtimeState> = _connectionState.asStateFlow()
 
+    /** 家庭成员变更事件（新成员加入 / 角色变更 / 移除），供 FamilyViewModel 监听并刷新 UI */
+    private val _familyMembersChanged = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val familyMembersChanged: SharedFlow<Unit> = _familyMembersChanged.asSharedFlow()
+
     private var channel: io.github.jan.supabase.realtime.RealtimeChannel? = null
 
     /** 订阅所有业务表的变更 */
@@ -46,6 +53,7 @@ class RealtimeManager(
                 val tables = listOf(
                     "babies", "feedings", "sleeps", "growths", "vaccinations",
                     "health_records", "diapers", "messages", "development_assessments", "reminders",
+                    "family_members",
                 )
 
                 for (tableName in tables) {
@@ -82,6 +90,12 @@ class RealtimeManager(
     /** 处理来自 Realtime 的变更事件 */
     private suspend fun handleRealtimeChange(tableName: String, action: PostgresAction) {
         try {
+            // family_members 表不在 Room 中，仅通知 ViewModel 刷新 UI
+            if (tableName == "family_members") {
+                _familyMembersChanged.tryEmit(Unit)
+                return
+            }
+
             when (action) {
                 is PostgresAction.Insert -> {
                     val record = action.record as? JsonObject ?: return

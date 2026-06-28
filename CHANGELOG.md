@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**修复创建者看不到新成员加入的问题：**
++- RealtimeManager 新增 `family_members` 表订阅，新成员加入/角色变更/移除时通过 `SharedFlow` 实时推送
++- FamilyViewModel 监听 `familyMembersChanged` 事件，自动刷新家庭列表和成员列表
++- FamilyViewModel.init 现在也会加载成员列表（之前只加载家庭不加载成员）
+
 **修复加入家庭"邀请码无效"问题：**
 +- 根因：`families` 表 RLS 策略 `is_family_member(id)` 阻止非成员查询邀请码，形成闭环死锁
 +- 修复：`joinFamily()` 改为调用 PostgreSQL `join_family(invite_code)` SECURITY DEFINER 函数（RPC），该函数绕过 RLS 完成查找+加入

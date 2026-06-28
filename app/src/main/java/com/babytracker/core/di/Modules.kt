@@ -44,7 +44,7 @@ val appModule = module {
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), androidContext()) }
-    viewModel { FamilyViewModel(get()) }
+    viewModel { FamilyViewModel(get(), get()) }
 }
 
 val databaseModule = module {
