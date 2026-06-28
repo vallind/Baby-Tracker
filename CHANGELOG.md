@@ -4,6 +4,18 @@
 
 ### [Unreleased]
 
+**尿布更换 UI 重做：参照睡眠页面：**
++- 顶部改用 AppTopBar（标题+返回+日历图标），替换旧版渐变 Header
++- 新增日期选择器行（今天/昨天/明天 + 完整日期 + 下拉箭头），支持 DatePickerDialog
++- 今日汇总大卡：青绿色渐变背景（Gradients.diaperSummary），展示总次数+分类计数（小便/大便/混合）
++- 换尿布详情卡片：小便/大便/混合 三列 emoji 统计（DiaperStatCell）
++- 记录列表按时间倒序排列，RecordCard + 类型色条（小便蓝/大便橙/混合红）
++- FAB 替换为底部固定按钮（"+ 记录尿布"），添加 BottomNavBar
++- 新增 Gradients.diaperSummary 渐变（tertiary 青绿色调）
+
+**修复睡眠夜间大卡未铺满页面：**
++- 夜间睡眠大卡卡片添加 `padding(horizontal = (-DT.pageMargin).dp)` 抵消 LazyColumn 边距，实现边缘到边缘铺满
+
 **生长记录 UI 重做：匹配设计图：**
 +- 顶部改用 AppTopBar（标题+返回+日历图标），Tab 切换区（身高/体重/头围）纯净无渐变
 +- Hero 大数值卡：居中展示最新数值+单位（48sp），附测量日期

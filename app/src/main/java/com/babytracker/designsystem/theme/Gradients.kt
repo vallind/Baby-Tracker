@@ -66,4 +66,9 @@ object Gradients {
     fun timelineLine(c: AppColors): Brush = Brush.verticalGradient(
         colors = listOf(c.divider, Color.Transparent),
     )
+
+    /** 尿布汇总大卡渐变（青绿 → 深青，干净清新意象） */
+    fun diaperSummary(c: AppColors): Brush = Brush.verticalGradient(
+        colors = listOf(c.tertiary, c.tertiary.copy(alpha = 0.75f)),
+    )
 }
