@@ -10,26 +10,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.designsystem.theme.DT
-import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.data.repository.BabyRepository
-import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -39,7 +36,39 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+// —— 筛选胶囊元数据 ——
+private data class FilterPill(val key: String, val label: String)
+
+private val FILTER_PILLS = listOf(
+    FilterPill("all", "全部"),
+    FilterPill("pending", "待接种"),
+    FilterPill("done", "已接种"),
+    FilterPill("expired", "已过期"),
+)
+
+/** 计算建议月龄文案，如 "12月龄" 或 "1岁2个月"。 */
+private fun suggestedAgeText(scheduledDate: String?, birthDate: String): String {
+    if (scheduledDate == null) return ""
+    return try {
+        val sched = LocalDate.parse(scheduledDate.take(10))
+        val birth = LocalDate.parse(birthDate.take(10))
+        val m = ((sched.year - birth.year) * 12L + (sched.monthValue - birth.monthValue))
+        if (m <= 0) "出生时"
+        else if (m < 12) "${m}月龄"
+        else "${m / 12}岁${m % 12}个月"
+    } catch (_: Exception) { "" }
+}
+
+/** PENDING 且 scheduledDate 已过 today → 已过期。 */
+private fun isExpired(v: Vaccination): Boolean {
+    if (v.status != VaccinationStatus.PENDING) return false
+    val sched = v.scheduledDate ?: return false
+    return try {
+        LocalDate.parse(sched.take(10)).isBefore(LocalDate.now())
+    } catch (_: Exception) { false }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaccinationListScreen(navController: NavController) {
     val c = LocalAppColors.current
@@ -49,48 +78,151 @@ fun VaccinationListScreen(navController: NavController) {
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
+    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
+    val baby = babies.find { it.id == babyId }
 
-    var filter by remember { mutableStateOf("pending") }
+    val today = remember { LocalDate.now().toString().take(10) }
+
+    // tab: plan（接种计划）/ done（接种记录）
+    var tab by remember { mutableStateOf("plan") }
+    // statusFilter: all / pending / done / expired
+    var statusFilter by remember { mutableStateOf("all") }
+
+    // 根据 tab + filter 过滤
+    val filtered = remember(vaccinations, tab, statusFilter, today) {
+        vaccinations.filter { v ->
+            val baseOk = when (tab) {
+                "plan" -> v.status == VaccinationStatus.PENDING || v.status == VaccinationStatus.SKIPPED
+                else -> v.status == VaccinationStatus.DONE
+            }
+            if (!baseOk) return@filter false
+            when (statusFilter) {
+                "pending" -> v.status == VaccinationStatus.PENDING && !isExpired(v)
+                "done" -> v.status == VaccinationStatus.DONE
+                "expired" -> v.status == VaccinationStatus.PENDING && isExpired(v)
+                else -> true // all
+            }
+        }
+    }
+
     var showForm by remember { mutableStateOf(false) }
     var editingVac by remember { mutableStateOf<Vaccination?>(null) }
     var showGenerateConfirm by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(containerColor = c.pageBackground, topBar = {
-        AppTopBar(title = "疫苗接种", onBack = { navController.popBackStack() })
-    }, snackbarHost = { SnackbarHost(snackbarHostState) },
-    floatingActionButton = {
-        AppFAB(icon = Icons.Default.Add, onClick = { editingVac = null; showForm = true })
-    }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
-            // —— 顶部 Tab 区 ——
-            Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
-                Row(Modifier.fillMaxWidth()) {
-                    listOf("pending" to "接种计划", "done" to "接种记录").forEach { (s, l) ->
-                        Column(Modifier.weight(1f).clickable { filter = s }.padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(l, color = if (filter == s) c.primary else c.textSecondary, fontWeight = if (filter == s) FontWeight.SemiBold else null, style = MaterialTheme.typography.bodyMedium)
-                            Spacer(Modifier.height(6.dp))
-                            Box(Modifier.width(24.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(if (filter == s) c.primary else Color.Transparent))
-                        }
+    Scaffold(
+        containerColor = c.pageBackground,
+        topBar = {
+            AppTopBar(title = "疫苗接种", onBack = { navController.popBackStack() })
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            AppFAB(icon = Icons.Default.Add, onClick = { editingVac = null; showForm = true })
+        },
+    ) { padding ->
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(c.pageBackground),
+        ) {
+            // —— Segment 标签页（接种计划 / 接种记录）——
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(c.pageBackground)
+                    .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                listOf("plan" to "接种计划", "done" to "接种记录").forEachIndexed { i, (key, label) ->
+                    val active = tab == key
+                    Column(
+                        Modifier
+                            .weight(1f)
+                            .clickable {
+                                tab = key
+                                statusFilter = "all"
+                            }
+                            .padding(vertical = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            label,
+                            fontSize = 16.sp,
+                            fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
+                            color = if (active) c.primary else c.textSecondary,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Box(
+                            Modifier
+                                .width(24.dp)
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(if (active) c.primary else Color.Transparent),
+                        )
                     }
                 }
             }
-            Spacer(Modifier.height(DT.cardGap.dp))
-            val filtered = remember(vaccinations, filter) { vaccinations.filter { VaccinationStatus.raw(it.status) == filter } }
+
+            // —— 胶囊筛选栏 ——
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = DT.pageMargin.dp)
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FILTER_PILLS.forEach { pill ->
+                    val active = statusFilter == pill.key
+                    val pillColor = when (pill.key) {
+                        "done" -> Color(0xFF4CAF50)
+                        "expired" -> Color(0xFFF44336)
+                        else -> c.primary
+                    }
+                    Box(
+                        Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (active) pillColor else Color.Transparent)
+                            .then(
+                                if (active) Modifier
+                                else Modifier.border(1.dp, c.outline, RoundedCornerShape(999.dp))
+                            )
+                            .clickable { statusFilter = pill.key }
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            pill.label,
+                            fontSize = 13.sp,
+                            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (active) Color.White else c.textSecondary,
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+
+            // —— 内容区 ——
             if (filtered.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = if (filter == "pending") "💉" else "✅",
-                        title = if (filter == "pending") "暂无接种计划" else "暂无接种记录",
-                        subtitle = if (filter == "pending") "点击下方按钮生成默认接种计划，或手动添加" else "完成接种后，状态会自动切换到此处",
-                        actionText = if (filter == "pending") "生成接种计划" else null,
-                        onAction = if (filter == "pending") ({ showGenerateConfirm = true }) else null,
+                        emoji = if (tab == "plan") "💉" else "✅",
+                        title = if (tab == "plan") "暂无接种计划" else "暂无接种记录",
+                        subtitle = when {
+                            tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING } ->
+                                "点击下方按钮生成默认接种计划，或手动添加"
+                            statusFilter == "expired" -> "暂无过期疫苗，继续保持 👏"
+                            statusFilter == "pending" -> "所有计划疫苗均已按时接种或已过期"
+                            else -> ""
+                        },
+                        actionText = if (tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING }) "生成接种计划" else null,
+                        onAction = if (tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING }) ({ showGenerateConfirm = true }) else null,
                     )
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().weight(1f),
                     contentPadding = PaddingValues(
                         start = DT.pageMargin.dp,
                         end = DT.pageMargin.dp,
@@ -98,8 +230,13 @@ fun VaccinationListScreen(navController: NavController) {
                     ),
                 ) {
                     items(items = filtered, key = { it.id }) { v ->
-                        RecordCard(
-                            modifier = Modifier.padding(bottom = 8.dp),
+                        VaccinationCard(
+                            vaccination = v,
+                            birthDate = baby?.birthDate ?: "",
+                            onClick = {
+                                editingVac = v
+                                showForm = true
+                            },
                             onDelete = {
                                 scope.launch {
                                     val deleted = v
@@ -114,30 +251,18 @@ fun VaccinationListScreen(navController: NavController) {
                                     }
                                 }
                             },
-                            onClick = {
-                                editingVac = v
-                                showForm = true
-                            },
-                        ) {
-                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == VaccinationStatus.DONE) c.success.copy(alpha = 0.14f) else c.warning.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == VaccinationStatus.DONE) "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
-                                Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                            }
-                            val tagColor = if (v.status == VaccinationStatus.DONE) c.success else c.warning
-                            Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                                Text(if (v.status == VaccinationStatus.DONE) "已接种" else if (v.status == VaccinationStatus.PENDING) "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
+                        )
                     }
-                    if (filter == "pending") {
+                    if (tab == "plan") {
                         item {
                             Text(
                                 "以上计划根据国家免疫规划制定，具体接种时间请遵医嘱。",
-                                fontSize = 11.sp,
-                                color = c.textSecondary,
-                                modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                                fontSize = 12.sp,
+                                color = c.textTertiary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
                             )
                         }
                     }
@@ -152,19 +277,12 @@ fun VaccinationListScreen(navController: NavController) {
             editEntity = editingVac,
             onSave = { vac ->
                 scope.launch {
-                    if (editingVac != null) {
-                        vacRepo.update(vac)
-                    } else {
-                        vacRepo.insert(vac)
-                    }
+                    if (editingVac != null) vacRepo.update(vac) else vacRepo.insert(vac)
                     showForm = false
                     editingVac = null
                 }
             },
-            onDismiss = {
-                showForm = false
-                editingVac = null
-            },
+            onDismiss = { showForm = false; editingVac = null },
         )
     }
 
@@ -177,19 +295,108 @@ fun VaccinationListScreen(navController: NavController) {
                 TextButton(onClick = {
                     showGenerateConfirm = false
                     scope.launch {
-                        val baby = babyRepo.getById(babyId)
-                        if (baby != null) {
-                            VaccineSchedule.createForBaby(babyId, baby.birthDate).forEach { vacRepo.insert(it) }
+                        val b = babyRepo.getById(babyId)
+                        if (b != null) {
+                            VaccineSchedule.createForBaby(babyId, b.birthDate).forEach { vacRepo.insert(it) }
                         }
                     }
                 }) { Text("生成") }
             },
-            dismissButton = {
-                TextButton(onClick = { showGenerateConfirm = false }) { Text("取消") }
-            },
+            dismissButton = { TextButton(onClick = { showGenerateConfirm = false }) { Text("取消") } },
         )
     }
+}
 
+// —— 疫苗卡片（名称 + 剂次 + 状态标签 / 建议月龄 + 建议日期）——
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun VaccinationCard(
+    vaccination: Vaccination,
+    birthDate: String,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    val c = LocalAppColors.current
+    val ageText = remember(vaccination.scheduledDate, birthDate) {
+        suggestedAgeText(vaccination.scheduledDate, birthDate)
+    }
+    val dateText = remember(vaccination.scheduledDate) {
+        vaccination.scheduledDate?.let { s ->
+            try {
+                val dt = LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME)
+                "建议 ${DateUtils.formatDate(dt)}"
+            } catch (_: Exception) { s.take(10) }
+        } ?: ""
+    }
+
+    val isExpired = isExpired(vaccination)
+
+    // 状态标签颜色 & 文案
+    val (tagColor, tagLabel) = when {
+        vaccination.status == VaccinationStatus.DONE -> c.success to "已接种"
+        vaccination.status == VaccinationStatus.SKIPPED -> c.textTertiary to "已跳过"
+        isExpired -> Color(0xFFF44336) to "已过期"
+        else -> c.warning to "未接种"
+    }
+
+    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
+
+    Card(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .combinedClickable(onClick = onClick, onLongClick = onDelete),
+        shape = cardShape,
+        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            // Row 1: 名称 + 剂次 + 状态标签
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    vaccination.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = c.textPrimary,
+                )
+                if (!vaccination.dose.isNullOrBlank()) {
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        vaccination.dose,
+                        fontSize = 13.sp,
+                        color = c.textSecondary,
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(tagColor.copy(alpha = 0.12f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        tagLabel,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = tagColor,
+                    )
+                }
+            }
+            // Row 2: 建议月龄 + 建议日期
+            if (ageText.isNotBlank() || dateText.isNotBlank()) {
+                Spacer(Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (ageText.isNotBlank()) {
+                        Text(ageText, fontSize = 13.sp, color = c.textSecondary)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    if (dateText.isNotBlank()) {
+                        Text(dateText, fontSize = 13.sp, color = c.textSecondary)
+                    }
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
