@@ -82,6 +82,9 @@ fun HomeScreen(navController: NavController) {
             BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyManagement.route) })
 
             Spacer(Modifier.height(DT.cardGap.dp))
+            FeatureGrid(navController)
+
+            Spacer(Modifier.height(DT.cardGap.dp))
             TodayOverviewCard(feedCount = state.feedCount, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
 
             if (state.recentItems.isNotEmpty()) {
@@ -91,9 +94,6 @@ fun HomeScreen(navController: NavController) {
                     onSeeAll = { navController.navigate(Screen.Timeline.route) },
                 )
             }
-
-            Spacer(Modifier.height(DT.cardGap.dp))
-            FeatureGrid(navController)
 
             Spacer(Modifier.height(80.dp))
         }
