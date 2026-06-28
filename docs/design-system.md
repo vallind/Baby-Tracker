@@ -12,6 +12,19 @@
   designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 39字段/Spacing/Elevation/Opacity/Motion/Shapes/Typography/ControlSizeTokens）
   designsystem/theme/AppComponentTokens.kt  — 组件令牌（21 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Progress/Skeleton/Steps/Pagination/Slider/Rate + AppBar/Chip/Fab/BottomBar/ListItem）
   designsystem/util/AppDefaults.kt           — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
+
+## 令牌设计约定（参照 shadcn/ui）
+
+### 颜色：surface/foreground 配对
+- 每个有 `containerColor` 的组件令牌必须有对应的 `contentColor`
+- 成对赋值：`containerColor = c.surface` + `contentColor = c.onSurface`
+- 如 ButtonTokens：`contentColor = c.onPrimary`（容器色由 M3 内部处理）
+
+### 圆角：从 AppShapes 基准派生
+- AppShapes 提供 6 级 + `radiusScale: Float` 全局缩放（参照 shadcn `--radius`）
+- 组件 cornerRadius 从 shapes 基准计算，必须标注对应关系
+- 示例：`cornerRadius: Dp = 24.dp  // shapes.medium * 2`
+- 新增组件圆角通过 `shapes.scaled(shapes.large)` 计算，不硬编码
 ```
 
 ## derive() 模式

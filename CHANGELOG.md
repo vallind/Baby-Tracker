@@ -4,9 +4,11 @@
 
 ### [1.4.1] — 2026-06-28
 
-**文档补充：新增组件判断标准**
-- AGENTS.md 第八节新增组件判断标准（视觉形态 ≥ 2 处 + 需封装设计令牌才新增）
-- docs/design-system.md 新增「判断标准」小节（计数规则、三原则、反例、检查清单）
+**设计令牌参照 shadcn/ui 升级：**
+- 组件令牌补 contentColor：CardTokens/DialogTokens 新增 contentColor，与 containerColor 成对
+- 圆角体系：AppShapes 新增 radiusScale 全局缩放 + scaled() 方法，所有组件 cornerRadius 标注与 shapes 对应关系
+- ButtonTokens.contentColor 默认值从 Color.Transparent 修正为 c.onPrimary
+- 文档：AGENTS.md 补充令牌设计约定，design-system.md 补充 surface/foreground 配对 + 圆角派生说明
 
 ### [1.4.0] — 2026-06-25
 

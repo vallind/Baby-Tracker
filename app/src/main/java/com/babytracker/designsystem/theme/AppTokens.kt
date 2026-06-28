@@ -212,7 +212,7 @@ data class AppMotion(
     val easing: AppMotionEasing = AppMotionEasing(),
 )
 
-// —— 圆角令牌（6 级） ——
+// —— 圆角令牌（6 级 + 全局缩放，参照 shadcn --radius） ——
 @Immutable
 data class AppShapes(
     val none: Dp = 0.dp,
@@ -221,7 +221,12 @@ data class AppShapes(
     val medium: Dp = 12.dp,
     val large: Dp = 16.dp,
     val full: Dp = 9999.dp,
-)
+    /** 全局圆角缩放倍率，影响所有组件 cornerRadius。1.0 = 默认，0.8 = 更方，1.2 = 更圆 */
+    val radiusScale: Float = 1.0f,
+) {
+    /** 应用缩放后的圆角值 */
+    fun scaled(base: Dp): Dp = base * radiusScale
+}
 
 // —— 排版令牌（5 组 7 级） ——
 @Immutable

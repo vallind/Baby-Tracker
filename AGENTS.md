@@ -109,6 +109,10 @@ app/src/main/java/com/babytracker/
   1. 同一视觉形态在项目中已出现 ≥ 2 处（跨功能重复算，按视觉形态计数，不是调用次数）
   2. 需要封装设计令牌（颜色/圆角/间距），而非纯布局组合
   → 否则直接用 Compose 原生或内联实现，不新增组件
+- **令牌设计参照 shadcn/ui**：
+  - 颜色：containerColor + contentColor 成对出现（surface/foreground 约定）
+  - 圆角：组件 cornerRadius 从 AppShapes 基准派生（medium/large/extraSmall），通过 AppShapes.radiusScale 全局缩放
+  - 新增组件令牌时必须标注与 AppShapes 的对应关系（如 `// shapes.medium * 2`）
 - **Snackbar** 用 `snackbar.showUndo(onUndo = { ... })` 模式。
 
 ---

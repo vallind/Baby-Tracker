@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 @Immutable
 data class ButtonTokens(
     val height: Dp = 48.dp,
-    val cornerRadius: Dp = 24.dp,
+    val cornerRadius: Dp = 24.dp,       // shapes.medium * 2
     val fontSize: TextUnit = 15.sp,
     val fontWeight: FontWeight = FontWeight.SemiBold,
     val iconSize: Dp = 20.dp,
@@ -32,9 +32,10 @@ data class ButtonTokens(
 @Immutable
 data class CardTokens(
     val containerColor: Color = Color.Unspecified,
+    val contentColor: Color = Color.Unspecified,
     val borderColor: Color = Color.Unspecified,
     val borderWidth: Dp = 0.dp,
-    val cornerRadius: Dp = 16.dp,
+    val cornerRadius: Dp = 16.dp,       // shapes.large
     val innerPadding: Dp = 16.dp,
     val elevation: Dp = 2.dp,
 )
@@ -43,7 +44,7 @@ data class CardTokens(
 @Immutable
 data class InputTokens(
     val height: Dp = 48.dp,
-    val cornerRadius: Dp = 12.dp,
+    val cornerRadius: Dp = 12.dp,       // shapes.medium
     val fontSize: TextUnit = 15.sp,
     val borderWidth: Dp = 1.dp,
     val borderWidthFocus: Dp = 2.dp,
@@ -109,7 +110,9 @@ data class TableTokens(
 data class DialogTokens(
     val scrimColor: Color = Color.Unspecified,
     val scrimOpacity: Float = 0.40f,
-    val cornerRadius: Dp = 24.dp,
+    val containerColor: Color = Color.Unspecified,
+    val contentColor: Color = Color.Unspecified,
+    val cornerRadius: Dp = 24.dp,       // shapes.medium * 2
     val contentHorizontalPadding: Dp = 24.dp,
     val contentVerticalPadding: Dp = 20.dp,
     val dividerColor: Color = Color.Unspecified,
@@ -123,7 +126,7 @@ data class MenuTokens(
     val horizontalPadding: Dp = 16.dp,
     val verticalPadding: Dp = 8.dp,
     val minWidth: Dp = 140.dp,
-    val cornerRadius: Dp = 12.dp,
+    val cornerRadius: Dp = 12.dp,       // shapes.medium
     val hoverBgColor: Color = Color.Unspecified,
     val selectedBgColor: Color = Color.Unspecified,
     val elevation: Dp = 4.dp,
@@ -158,7 +161,7 @@ data class TagTokens(
         backgroundColor = Color.Unspecified,
         textColor = Color.Unspecified,
     ),
-    val cornerRadius: Dp = 20.dp,
+    val cornerRadius: Dp = 20.dp,       // shapes.medium * 1.67
     val fontSize: TextUnit = 12.sp,
     val fontWeight: FontWeight = FontWeight.Medium,
     val horizontalPadding: Dp = 12.dp,
@@ -179,7 +182,7 @@ data class ProgressTokens(
 data class SkeletonTokens(
     val shimmerColor1: Color = Color(0xFFE0E0E0),
     val shimmerColor2: Color = Color(0xFFF5F5F5),
-    val cornerRadius: Dp = 4.dp,
+    val cornerRadius: Dp = 4.dp,        // shapes.extraSmall
     val avatarSize: Dp = 40.dp,
     val shimmerDurationMs: Int = 1000,
 )
@@ -201,7 +204,7 @@ data class PaginationTokens(
     val itemSpacing: Dp = 4.dp,
     val activeColor: Color = Color.Unspecified,
     val inactiveColor: Color = Color.Unspecified,
-    val cornerRadius: Dp = 16.dp,
+    val cornerRadius: Dp = 16.dp,       // shapes.large
 )
 
 // —— TT-029 滑块/评分 ——
@@ -233,7 +236,7 @@ data class AppBarTokens(
 // —— 标签（已有） ——
 @Immutable
 data class ChipTokens(
-    val cornerRadius: Dp = 20.dp,
+    val cornerRadius: Dp = 20.dp,       // shapes.medium * 1.67
     val fontSize: TextUnit = 12.sp,
     val fontWeight: FontWeight = FontWeight.Medium,
     val horizontalPadding: Dp = 12.dp,
@@ -245,7 +248,7 @@ data class ChipTokens(
 data class FabTokens(
     val size: Dp = 56.dp,
     val iconSize: Dp = 24.dp,
-    val cornerRadius: Dp = 28.dp,
+    val cornerRadius: Dp = 28.dp,       // size / 2（正圆 FAB）
     val elevation: Dp = 6.dp,
 )
 
@@ -302,7 +305,11 @@ data class AppComponentTokens(
             if (c == null) return AppComponentTokens()
             return AppComponentTokens(
                 button = ButtonTokens(
-                    contentColor = Color.Transparent,
+                    contentColor = c.onPrimary,
+                ),
+                card = CardTokens(
+                    containerColor = c.surface,
+                    contentColor = c.onSurface,
                 ),
                 selectionControl = SelectionControlTokens(
                     checkedColor = c.primary,
@@ -320,6 +327,8 @@ data class AppComponentTokens(
                 ),
                 dialog = DialogTokens(
                     scrimColor = c.scrim,
+                    containerColor = c.surface,
+                    contentColor = c.onSurface,
                     dividerColor = c.divider,
                 ),
                 menu = MenuTokens(
