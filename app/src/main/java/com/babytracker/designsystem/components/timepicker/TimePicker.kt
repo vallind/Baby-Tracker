@@ -1,11 +1,13 @@
 package com.babytracker.designsystem.components.timepicker
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 /**
  * TDesign 风格时间选择器对话框 — 滚轮式时/分选择。
@@ -62,19 +66,27 @@ fun TimePickerDialog(
     var hour by remember { mutableIntStateOf(initialHour.coerceIn(0, 23)) }
     var minute by remember { mutableIntStateOf(initialMinute.coerceIn(0, 59)) }
 
-    // 全屏遮罩 + 底部面板
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Black.copy(alpha = 0.4f)),
+    // 全屏 Dialog 确保覆盖在所有内容之上（包括 ModalBottomSheet）
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius))
-                .background(bgColor),
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))
+                .clickable(enabled = false) {},
+            contentAlignment = Alignment.BottomCenter,
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius))
+                    .background(bgColor),
+            ) {
             // 顶部工具栏
             TimePickerToolbar(
                 title = title,
@@ -82,7 +94,10 @@ fun TimePickerDialog(
                 dividerColor = tokens.toolbarDividerColor(),
                 toolbarHeight = tokens.toolbarHeight(),
                 onCancel = onDismiss,
-                onConfirm = { onConfirm("%02d:%02d".format(hour, minute)) },
+                onConfirm = {
+                    onConfirm("%02d:%02d".format(hour, minute))
+                    onDismiss()
+                },
             )
 
             // 滚轮选择区
@@ -93,17 +108,29 @@ fun TimePickerDialog(
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
             ) {
-                WheelPicker(
-                    value = hour,
-                    range = 0..23,
-                    itemHeight = itemHeight,
-                    visibleItems = visibleItems,
-                    selectedBgColor = tokens.selectedBackgroundColor(),
-                    selectedTextColor = tokens.selectedTextColor(),
-                    unselectedTextColor = tokens.unselectedTextColor(),
-                    dividerColor = tokens.dividerColor(),
-                    onValueChanged = { hour = it },
-                )
+                // 小时
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        "小时",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = tokens.unselectedTextColor(),
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    TimePickerLogic(
+                        value = hour,
+                        range = 0..23,
+                        itemHeight = itemHeight,
+                        visibleItems = visibleItems,
+                        selectedBgColor = tokens.selectedBackgroundColor(),
+                        selectedTextColor = tokens.selectedTextColor(),
+                        unselectedTextColor = tokens.unselectedTextColor(),
+                        dividerColor = tokens.dividerColor(),
+                        onValueChanged = { hour = it },
+                    )
+                }
 
                 Text(
                     ":",
@@ -112,21 +139,34 @@ fun TimePickerDialog(
                     modifier = Modifier.padding(horizontal = 8.dp),
                 )
 
-                WheelPicker(
-                    value = minute,
-                    range = 0..59,
-                    itemHeight = itemHeight,
-                    visibleItems = visibleItems,
-                    selectedBgColor = tokens.selectedBackgroundColor(),
-                    selectedTextColor = tokens.selectedTextColor(),
-                    unselectedTextColor = tokens.unselectedTextColor(),
-                    dividerColor = tokens.dividerColor(),
-                    onValueChanged = { minute = it },
-                )
+                // 分钟
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        "分钟",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = tokens.unselectedTextColor(),
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    TimePickerLogic(
+                        value = minute,
+                        range = 0..59,
+                        itemHeight = itemHeight,
+                        visibleItems = visibleItems,
+                        selectedBgColor = tokens.selectedBackgroundColor(),
+                        selectedTextColor = tokens.selectedTextColor(),
+                        unselectedTextColor = tokens.unselectedTextColor(),
+                        dividerColor = tokens.dividerColor(),
+                        onValueChanged = { minute = it },
+                    )
+                }
             }
 
             // 安全区域占位
             Spacer(modifier = Modifier.height(16.dp))
+        }
         }
     }
 }

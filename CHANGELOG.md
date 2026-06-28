@@ -10,6 +10,10 @@
 - 时间面板：滚轮式时/分选择器（中间行品牌色高亮背景 + 上下分隔线 + 拖拽吸附）
 - 级联流程：先选日期 → "下一步" → 选时间 → "确认"，统一在一个底部面板内完成
 - 提取 WheelPicker 为独立共享组件（timepicker 包内 public，供 TimePickerDialog 和 DateTimeCascadeDialog 共用）
++- 修复滚轮选择器边界值重复显示（小时 23 重复三次、分钟 0 重复三次），改为 null 占位替代 coerceIn
++- 修复小时/分钟 range 错误（0..24→0..23、0..60→0..59）
++- 修复确认按钮点击后窗口不消失（onConfirm 后追加 onDismiss）
++- WheelPicker → AppWheelPicker → TimePickerLogic（符合命名规范），文件名同步重命名
 - 令牌扩展：DatePickerTokens/TimePickerTokens 新增 toolbarHeight/toolbarTextColor/dividerColor/selectedBackgroundColor 等 TDesign 风格字段
 
 ### [1.4.1] — 2026-06-28
