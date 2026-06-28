@@ -216,7 +216,7 @@ fun FeatureGrid(navController: NavController) {
         Triple(Screen.Settings, "⚙️", "设置"),
     )
     Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
-        Text("功能", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
+        // Text("功能", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
         Spacer(Modifier.height(14.dp))
         // 第一行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

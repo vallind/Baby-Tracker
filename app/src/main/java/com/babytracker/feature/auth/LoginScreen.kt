@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import org.koin.compose.koinInject
 
@@ -43,28 +45,13 @@ fun LoginScreen(navController: NavController) {
     val focusManager = LocalFocusManager.current
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // 登录成功后自动返回
     LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) {
-            navController.popBackStack()
-        }
+        if (uiState.isLoggedIn) navController.popBackStack()
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("账户") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = c.pageBackground,
-                    titleContentColor = c.textPrimary,
-                    navigationIconContentColor = c.textPrimary,
-                ),
-            )
+            AppTopBar(title = "账户", onBack = { navController.popBackStack() })
         },
         containerColor = c.pageBackground,
     ) { padding ->
@@ -78,47 +65,31 @@ fun LoginScreen(navController: NavController) {
         ) {
             Spacer(Modifier.height(40.dp))
 
-            // ── 标题 ──
             Text(
                 text = if (uiState.isRegisterMode) "创建账户" else "登录账户",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = c.textPrimary,
+                fontSize = 24.sp, fontWeight = FontWeight.Bold, color = c.textPrimary,
             )
             Spacer(Modifier.height(8.dp))
             Text(
                 text = if (uiState.isRegisterMode) "注册后可开启云同步和家庭共享" else "登录后同步数据到云端",
-                fontSize = 14.sp,
-                color = c.textSecondary,
+                fontSize = 14.sp, color = c.textSecondary,
             )
             Spacer(Modifier.height(32.dp))
 
-            // ── 账户名 ──
             OutlinedTextField(
-                value = uiState.account,
-                onValueChange = vm::onAccountChange,
-                label = { Text("账户名") },
-                placeholder = { Text("请输入账户名") },
+                value = uiState.account, onValueChange = vm::onAccountChange,
+                label = { Text("账户名") }, placeholder = { Text("请输入账户名") },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next,
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) },
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
             )
             Spacer(Modifier.height(16.dp))
 
-            // ── 密码 ──
             OutlinedTextField(
-                value = uiState.password,
-                onValueChange = vm::onPasswordChange,
-                label = { Text("密码") },
-                placeholder = { Text("请输入密码（至少 6 位）") },
+                value = uiState.password, onValueChange = vm::onPasswordChange,
+                label = { Text("密码") }, placeholder = { Text("请输入密码（至少 6 位）") },
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -129,76 +100,34 @@ fun LoginScreen(navController: NavController) {
                         )
                     }
                 },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { vm.submit() },
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { vm.submit() }),
+                shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
             )
             Spacer(Modifier.height(8.dp))
 
-            // ── 错误提示 ──
-            val errorMsg = uiState.errorMessage
-            if (errorMsg != null) {
-                Text(
-                    text = errorMsg,
-                    color = c.error,
-                    fontSize = 13.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                )
+            uiState.errorMessage?.let {
+                Text(it, color = c.error, fontSize = 13.sp, modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp))
             }
             Spacer(Modifier.height(24.dp))
 
-            // ── 提交按钮 ──
-            Button(
+            PrimaryButton(
                 onClick = vm::submit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                    )
-                } else {
-                    Text(
-                        text = if (uiState.isRegisterMode) "注册" else "登录",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-            }
+                label = if (uiState.isLoading) "..." else if (uiState.isRegisterMode) "注册" else "登录",
+            )
             Spacer(Modifier.height(16.dp))
 
-            // ── 切换登录/注册 ──
             TextButton(onClick = vm::toggleMode) {
                 Text(
                     text = if (uiState.isRegisterMode) "已有账户？去登录" else "没有账户？去注册",
-                    color = c.primary,
-                    fontSize = 14.sp,
+                    color = c.primary, fontSize = 14.sp,
                 )
             }
-
             Spacer(Modifier.height(32.dp))
-
-            // ── 说明 ──
-            Text(
-                text = "登录为可选操作，不登录不影响本地使用",
-                fontSize = 12.sp,
-                color = c.textTertiary,
-            )
+            Text("登录为可选操作，不登录不影响本地使用", fontSize = 12.sp, color = c.textTertiary)
             Spacer(Modifier.height(16.dp))
         }
     }
