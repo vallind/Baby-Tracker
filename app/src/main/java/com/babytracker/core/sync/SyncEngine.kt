@@ -140,11 +140,22 @@ class SyncEngine(
 
                     val basePayload = entityToJson(meta.tableName, localEntity)
                     val payload = injectFamilyId(basePayload)
+                    val localUpdated = (payload["updatedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0)
 
                     val remoteUuid = meta.remoteUuid ?: payload["uuid"]?.toString()?.removeSurrounding("\"")
                     if (remoteUuid != null) {
-                        supabase.postgrest.from(meta.tableName)
-                            .upsert(payload) { onConflict = "uuid" }
+                        // 条件 upsert：先查远程版本，仅本地更新时才覆盖
+                        val remoteRow = try {
+                            supabase.postgrest.from(meta.tableName)
+                                .select(columns = Columns.ALL) { filter { eq("uuid", remoteUuid) } }
+                                .decodeList<JsonObject>()
+                        } catch (_: Exception) { emptyList() }
+                        val remoteUpdated = remoteRow.firstOrNull()
+                            ?.get("updatedAt")?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0
+                        if (remoteUpdated == 0L || localUpdated > remoteUpdated) {
+                            supabase.postgrest.from(meta.tableName)
+                                .upsert(payload) { onConflict = "uuid" }
+                        }
                         syncMeta.markSynced(meta.id, remoteUuid, System.currentTimeMillis())
                     } else {
                         supabase.postgrest.from(meta.tableName).insert(payload)

@@ -43,17 +43,26 @@ class FamilyService(
     private val _currentFamily = MutableStateFlow<Family?>(null)
     val currentFamily: StateFlow<Family?> = _currentFamily.asStateFlow()
 
+    /** 生成 6 位大写数字+字母邀请码（客户端生成，离线可用） */
+    private fun genInviteCode(): String {
+        val chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        val random = java.security.SecureRandom()
+        return (1..6).map { chars[random.nextInt(chars.length)] }.joinToString("")
+    }
+
     // ── API 操作 ──
 
-    /** 创建家庭并自动成为 owner */
+    /** 创建家庭并自动成为 owner（离线可用：uuid + invite_code 均在客户端生成） */
     suspend fun createFamily(name: String): Result<Family> = runCatching {
         val userId = client.auth.currentUserOrNull()?.id ?: throw Exception("请先登录")
 
-        // 客户端生成 UUID（避免 RLS 阻止回查：必须先加入成员才能读 families）
         val familyId = java.util.UUID.randomUUID().toString()
+        val inviteCode = genInviteCode()
 
-        // 1. 创建家庭（显式指定 ID）
-        client.postgrest.from("families").insert(mapOf("id" to familyId, "name" to name))
+        // 1. 创建家庭（id + invite_code 客户端生成，无需等服务端）
+        client.postgrest.from("families").insert(
+            mapOf("id" to familyId, "name" to name, "invite_code" to inviteCode)
+        )
 
         // 2. 将自己加入为 owner（必须在查询前，否则 RLS 拦截；重复插入不算错）
         try {
