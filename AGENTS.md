@@ -16,17 +16,29 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 ./gradlew lint                   # Lint 检查
 ```
 
-## 三、目录职责
+## 三、目录结构
 
-| 目录 | 职责 | 注意 |
-|---|---|---|
-| `app/src/main/java/com/babytracker/designsystem/` | 设计系统（组件/令牌/主题） | 改动影响全局 |
-| `app/src/main/java/com/babytracker/core/` | 业务基础设施（数据库/DI/备份） | 改表结构需确认 |
-| `app/src/main/java/com/babytracker/feature/` | 13 个业务模块 | 日常开发主要区域 |
-| `app/src/main/java/com/babytracker/navigation/` | 导航路由 | 11 条路由 |
-| `docs/` | 详细文档 | 只读参考 |
+```
+app/src/main/java/com/babytracker/
+├── designsystem/     # 设计系统：主题令牌、可复用组件、Hooks、国际化
+│   ├── theme/        # 主题 + Token + Defaults
+│   ├── components/   # 可复用组件（21+ 个）
+│   ├── hooks/        # useDebounce/useState/useLatestState + Logic 类
+│   ├── i18n/         # AppStrings
+│   ├── foundation/   # BorderContainer/CenterVerticallyRow
+│   └── util/         # AppDefaults 快照
+├── core/             # 业务基础设施：数据库、DI、备份、数据仓库、工具类
+│   ├── backup/       # BackupManager
+│   ├── database/     # Room（AppDatabase/Entities/Daos）
+│   ├── di/           # Koin Modules
+│   ├── data/         # Repository + Mapper
+│   ├── domain/       # Domain Models
+│   └── util/         # BabyController/DateUtils/VaccineSchedule
+├── feature/          # 13 个业务模块（home/feeding/sleep/diaper/growth/vaccination/health/stats/timeline/settings 等）
+└── navigation/       # 路由导航（AppNavigation.kt，11 条路由）
+```
 
-> 详细目录结构与模块索引：`docs/project-structure.md`
+> 详细模块索引：`docs/project-structure.md`
 
 ## 四、AI 工作流四大准则
 
