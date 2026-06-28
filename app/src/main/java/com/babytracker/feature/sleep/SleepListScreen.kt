@@ -161,7 +161,11 @@ fun SleepListScreen(navController: NavController) {
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     ) {
-                        Box(Modifier.background(Gradients.sleepHeader(c), cardShape)) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .background(Gradients.sleepHeader(c), cardShape)
+                        ) {
                             Column(Modifier.padding(20.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Box(
