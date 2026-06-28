@@ -11,6 +11,13 @@
 - 修正卡片布局：2x2 网格 → 纵向堆叠列表，卡片内图标+标题左对齐、数值右对齐、图表下方
 - 新增 MiniBarChart 组件（柱顶圆角使用 shapes.extraSmall 令牌）
 
+**宝宝信息页面：独立档案页 + 生长数据展示：**
+- 新增 BabyProfileScreen：头像（含相机图标）+ 姓名 + 性别 · 年龄 + 出生信息卡片 + 当前生长数据卡片（身高/体重/头围，含测量日期）
+- 从 GrowthRepository 实时读取最新身高/体重/头围记录
+- 右上角编辑按钮可修改宝宝基本资料（复用 BabyFormDialog）
+- 新增 Screen.BabyProfile 路由 `/settings/baby/profile`，SettingsScreen "宝宝信息" 跳转至档案页
+- 底部 "管理全部宝宝" 入口导航至 BabyManagementScreen 列表管理
+
 **Phase 7：RLS 家庭隔离策略升级：**
 - Supabase 10 张业务表增加 `family_id UUID` 列（外键关联 families 表）
 - 删除旧 `TO authenticated` 宽松策略，替换为 `is_family_member(family_id)` 按家庭隔离

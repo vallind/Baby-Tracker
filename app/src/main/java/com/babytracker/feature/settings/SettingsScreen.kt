@@ -217,7 +217,7 @@ fun SettingsScreen(navController: NavController) {
                         )
                     }
                     SettingsDivider()
-                    SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
+                    SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyProfile.route) })
                     SettingsDivider()
                     SettingsRow("☁️", "数据备份", onClick = { navController.navigate(Screen.Backup.route) })
                     SettingsDivider()
