@@ -15,7 +15,7 @@ import io.github.jan.supabase.storage.Storage
  */
 object SupabaseProvider {
 
-    // TODO: 替换为实际的 Supabase 项目 URL 和 anon key
+    // 注：生产环境应通过 BuildConfig 注入，避免硬编码密钥
     private const val SUPABASE_URL = "https://kzwmcbdgmngyqmjgmjne.supabase.co"
     private const val SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6d21jYmRnbW5neXFtamdtam5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjg5MzUsImV4cCI6MjA5NzcwNDkzNX0.GTwQDfE8pNF_W--PLmVc3PxjemDTxUvDwNfr1ONQzLA"
 

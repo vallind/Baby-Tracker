@@ -10,6 +10,10 @@ interface BabyDao {
     fun watchAll(): Flow<List<BabyEntity>>
     @Query("SELECT * FROM babies WHERE id = :id")
     suspend fun getById(id: Int): BabyEntity?
+    @Query("SELECT * FROM babies WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): BabyEntity?
+    @Query("UPDATE babies SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(baby: BabyEntity): Long
     @Update
@@ -24,6 +28,10 @@ interface FeedingDao {
     fun watchByBaby(babyId: Int): Flow<List<FeedingEntity>>
     @Query("SELECT * FROM feedings WHERE id = :id")
     suspend fun getById(id: Int): FeedingEntity?
+    @Query("SELECT * FROM feedings WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): FeedingEntity?
+    @Query("UPDATE feedings SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(feeding: FeedingEntity): Long
     @Update
@@ -38,6 +46,10 @@ interface SleepDao {
     fun watchByBaby(babyId: Int): Flow<List<SleepEntity>>
     @Query("SELECT * FROM sleeps WHERE id = :id")
     suspend fun getById(id: Int): SleepEntity?
+    @Query("SELECT * FROM sleeps WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): SleepEntity?
+    @Query("UPDATE sleeps SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(sleep: SleepEntity): Long
     @Update
@@ -52,6 +64,10 @@ interface GrowthDao {
     fun watchByBaby(babyId: Int): Flow<List<GrowthEntity>>
     @Query("SELECT * FROM growths WHERE id = :id")
     suspend fun getById(id: Int): GrowthEntity?
+    @Query("SELECT * FROM growths WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): GrowthEntity?
+    @Query("UPDATE growths SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(growth: GrowthEntity): Long
     @Update
@@ -66,6 +82,10 @@ interface VaccinationDao {
     fun watchByBaby(babyId: Int): Flow<List<VaccinationEntity>>
     @Query("SELECT * FROM vaccinations WHERE id = :id")
     suspend fun getById(id: Int): VaccinationEntity?
+    @Query("SELECT * FROM vaccinations WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): VaccinationEntity?
+    @Query("UPDATE vaccinations SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(vaccination: VaccinationEntity): Long
     @Update
@@ -80,6 +100,10 @@ interface HealthRecordDao {
     fun watchByBaby(babyId: Int): Flow<List<HealthRecordEntity>>
     @Query("SELECT * FROM health_records WHERE id = :id")
     suspend fun getById(id: Int): HealthRecordEntity?
+    @Query("SELECT * FROM health_records WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): HealthRecordEntity?
+    @Query("UPDATE health_records SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(record: HealthRecordEntity): Long
     @Update
@@ -102,6 +126,10 @@ interface DiaperDao {
     fun watchByBaby(babyId: Int): Flow<List<DiaperEntity>>
     @Query("SELECT * FROM diapers WHERE id = :id")
     suspend fun getById(id: Int): DiaperEntity?
+    @Query("SELECT * FROM diapers WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): DiaperEntity?
+    @Query("UPDATE diapers SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(diaper: DiaperEntity): Long
     @Update
@@ -123,6 +151,12 @@ interface MessageDao {
 
     @Query("SELECT * FROM messages WHERE id = :id")
     suspend fun getById(id: Long): MessageEntity?
+
+    @Query("SELECT * FROM messages WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): MessageEntity?
+
+    @Query("UPDATE messages SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
 
     @Insert
     suspend fun insert(entity: MessageEntity): Long
@@ -147,6 +181,10 @@ interface DevelopmentAssessmentDao {
     suspend fun getById(id: Int): DevelopmentAssessmentEntity?
     @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId ORDER BY assess_date DESC LIMIT 1")
     fun watchLatest(babyId: Int): Flow<DevelopmentAssessmentEntity?>
+    @Query("SELECT * FROM development_assessments WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): DevelopmentAssessmentEntity?
+    @Query("UPDATE development_assessments SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(entity: DevelopmentAssessmentEntity): Long
     @Update
@@ -163,6 +201,10 @@ interface ReminderDao {
     fun watchHistory(babyId: Int): Flow<List<ReminderEntity>>
     @Query("SELECT * FROM reminders WHERE id = :id")
     suspend fun getById(id: Int): ReminderEntity?
+    @Query("SELECT * FROM reminders WHERE uuid = :uuid LIMIT 1")
+    suspend fun getByUuid(uuid: String): ReminderEntity?
+    @Query("UPDATE reminders SET deletedAt = :deletedAt, updatedAt = :updatedAt WHERE uuid = :uuid")
+    suspend fun softDeleteByUuid(uuid: String, deletedAt: Long, updatedAt: Long)
     @Insert
     suspend fun insert(entity: ReminderEntity): Long
     @Update
@@ -201,4 +243,8 @@ interface SyncMetadataDao {
 
     @Query("UPDATE sync_metadata SET lastSyncAt = :lastSyncAt WHERE lastSyncAt IS NULL OR lastSyncAt < :lastSyncAt")
     suspend fun updateLastSyncAt(lastSyncAt: Long)
+
+    /** 按 remoteUuid 查找同步元数据 */
+    @Query("SELECT * FROM sync_metadata WHERE remoteUuid = :remoteUuid AND tableName = :tableName LIMIT 1")
+    suspend fun getByRemoteUuid(tableName: String, remoteUuid: String): SyncMetadataEntity?
 }

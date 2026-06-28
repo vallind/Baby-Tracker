@@ -49,13 +49,6 @@ class RealtimeManager(
                 )
 
                 for (tableName in tables) {
-                    // PostgresChangeFilter 用构造函数设置 event + schema，DSL block 内设置 table
-                    val changeFilter = io.github.jan.supabase.realtime.PostgresChangeFilter(
-                        event = "*",
-                        schema = "public",
-                    ).apply {
-                        table = tableName
-                    }
                     val changeFlow = ch.postgresChangeFlow<PostgresAction>(
                         schema = "public",
                         filter = { table = tableName },
@@ -101,12 +94,30 @@ class RealtimeManager(
                 is PostgresAction.Delete -> {
                     val oldRecord = action.oldRecord as? JsonObject ?: return
                     val uuid = oldRecord["uuid"]?.toString()?.removeSurrounding("\"") ?: return
-                    // TODO: 通过 uuid 查找并软删除本地记录
+                    val now = System.currentTimeMillis()
+                    // 通过 uuid 查找并软删除本地记录
+                    softDeleteLocal(tableName, uuid, now)
                 }
                 is PostgresAction.Select -> { /* 不处理 select 事件 */ }
             }
         } catch (_: Exception) {
             // 单条记录处理失败不阻塞其他变更
+        }
+    }
+
+    /** 根据 uuid 软删除本地记录 */
+    private suspend fun softDeleteLocal(tableName: String, uuid: String, deletedAt: Long) {
+        when (tableName) {
+            "babies" -> db.babyDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "feedings" -> db.feedingDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "sleeps" -> db.sleepDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "growths" -> db.growthDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "vaccinations" -> db.vaccinationDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "health_records" -> db.healthRecordDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "diapers" -> db.diaperDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "messages" -> db.messageDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "development_assessments" -> db.developmentAssessmentDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
+            "reminders" -> db.reminderDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
         }
     }
 }

@@ -46,7 +46,10 @@ import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.navigation.Screen
 import com.babytracker.core.auth.AuthService
+import com.babytracker.core.sync.SyncState
+import com.babytracker.core.sync.RealtimeState
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
@@ -56,9 +59,14 @@ fun SettingsScreen(navController: NavController) {
     val babyCtrl: BabyController = koinInject()
     val themeCtrl: ThemeController = koinInject()
     val authService: AuthService = koinInject()
+    val settingsVM: SettingsViewModel = koinViewModel()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
     var showPicker by remember { mutableStateOf(false) }
+
+    val syncStatusText by settingsVM.syncStatusText.collectAsState()
+    val syncState by settingsVM.syncState.collectAsState()
+    val isLoggedIn by settingsVM.isLoggedIn.collectAsState()
 
     Scaffold(
         containerColor = c.pageBackground,
@@ -127,6 +135,51 @@ fun SettingsScreen(navController: NavController) {
                         } else null,
                         onClick = { navController.navigate(Screen.Login.route) },
                     )
+                    if (isLoggedIn) {
+                        SettingsDivider()
+                        // 云同步状态行
+                        SettingsRow(
+                            "🔄",
+                            "云同步",
+                            trailing = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // 同步状态指示点
+                                    Box(
+                                        Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                when {
+                                                    syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING -> c.primary
+                                                    settingsVM.connectionState.collectAsState().value == RealtimeState.CONNECTED -> c.success
+                                                    settingsVM.connectionState.collectAsState().value == RealtimeState.ERROR -> c.error
+                                                    else -> c.textTertiary
+                                                }
+                                            ),
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        syncStatusText,
+                                        color = c.textSecondary,
+                                        fontSize = 12.sp,
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    // 手动同步按钮
+                                    TextButton(
+                                        onClick = { settingsVM.manualSync() },
+                                        enabled = syncState != SyncState.SYNCING && syncState != SyncState.PUSHING && syncState != SyncState.PULLING,
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                    ) {
+                                        Text(
+                                            if (syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING) "同步中..." else "立即同步",
+                                            fontSize = 12.sp,
+                                            color = if (syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING) c.textTertiary else c.primary,
+                                        )
+                                    }
+                                }
+                            },
+                        )
+                    }
                     SettingsDivider()
                     SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
                     SettingsDivider()

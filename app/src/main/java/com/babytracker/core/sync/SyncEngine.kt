@@ -48,51 +48,61 @@ class SyncEngine(
     private suspend fun getEntityDao(tableName: String): EntityDao<*>? = when (tableName) {
         "babies" -> EntityDao(
             getById = { id -> db.babyDao().getById(id) },
+            getByUuid = { uuid -> db.babyDao().getByUuid(uuid) },
             upsert = { json -> db.babyDao().insert(parseBaby(json)) },
             updateLocal = { entity -> db.babyDao().update(entity as BabyEntity) },
         )
         "feedings" -> EntityDao(
             getById = { id -> db.feedingDao().getById(id) },
+            getByUuid = { uuid -> db.feedingDao().getByUuid(uuid) },
             upsert = { json -> db.feedingDao().insert(parseFeeding(json)) },
             updateLocal = { entity -> db.feedingDao().update(entity as FeedingEntity) },
         )
         "sleeps" -> EntityDao(
             getById = { id -> db.sleepDao().getById(id) },
+            getByUuid = { uuid -> db.sleepDao().getByUuid(uuid) },
             upsert = { json -> db.sleepDao().insert(parseSleep(json)) },
             updateLocal = { entity -> db.sleepDao().update(entity as SleepEntity) },
         )
         "growths" -> EntityDao(
             getById = { id -> db.growthDao().getById(id) },
+            getByUuid = { uuid -> db.growthDao().getByUuid(uuid) },
             upsert = { json -> db.growthDao().insert(parseGrowth(json)) },
             updateLocal = { entity -> db.growthDao().update(entity as GrowthEntity) },
         )
         "vaccinations" -> EntityDao(
             getById = { id -> db.vaccinationDao().getById(id) },
+            getByUuid = { uuid -> db.vaccinationDao().getByUuid(uuid) },
             upsert = { json -> db.vaccinationDao().insert(parseVaccination(json)) },
             updateLocal = { entity -> db.vaccinationDao().update(entity as VaccinationEntity) },
         )
         "health_records" -> EntityDao(
             getById = { id -> db.healthRecordDao().getById(id) },
+            getByUuid = { uuid -> db.healthRecordDao().getByUuid(uuid) },
             upsert = { json -> db.healthRecordDao().insert(parseHealthRecord(json)) },
             updateLocal = { entity -> db.healthRecordDao().update(entity as HealthRecordEntity) },
         )
         "diapers" -> EntityDao(
             getById = { id -> db.diaperDao().getById(id) },
+            getByUuid = { uuid -> db.diaperDao().getByUuid(uuid) },
             upsert = { json -> db.diaperDao().insert(parseDiaper(json)) },
             updateLocal = { entity -> db.diaperDao().update(entity as DiaperEntity) },
         )
         "messages" -> EntityDao(
             getById = { id -> db.messageDao().getById(id.toLong())?.let { it } },
+            getByUuid = { uuid -> db.messageDao().getByUuid(uuid)?.let { it } },
             upsert = { json -> db.messageDao().insert(parseMessage(json)) },
             updateLocal = { entity -> db.messageDao().update(entity as MessageEntity) },
         )
         "development_assessments" -> EntityDao(
             getById = { id -> db.developmentAssessmentDao().getById(id) },
+            getByUuid = { uuid -> db.developmentAssessmentDao().getByUuid(uuid) },
             upsert = { json -> db.developmentAssessmentDao().insert(parseDevAssessment(json)) },
             updateLocal = { entity -> db.developmentAssessmentDao().update(entity as DevelopmentAssessmentEntity) },
         )
         "reminders" -> EntityDao(
             getById = { id -> db.reminderDao().getById(id) },
+            getByUuid = { uuid -> db.reminderDao().getByUuid(uuid) },
             upsert = { json -> db.reminderDao().insert(parseReminder(json)) },
             updateLocal = { entity -> db.reminderDao().update(entity as ReminderEntity) },
         )
@@ -219,17 +229,22 @@ class SyncEngine(
         val remoteUuid = remoteRow["uuid"]?.toString()?.removeSurrounding("\"") ?: return
         val remoteUpdatedAt = remoteRow["updatedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0L
 
-        // 查找本地是否有同名 uuid 的记录
-        val localMeta = syncMeta.getByTableAndId(tableName, -1) // 需要用 uuid 匹配
-        // 简化处理：直接通过 uuid 查找并 upsert 到本地
-        // 生产环境需完善：先查本地 uuid 对应记录，比较 updatedAt，决定是否覆盖
         try {
-            dao.upsert(remoteRow)
-            // 记录同步元数据（用 remoteUuid 关联）
-            val lastId = syncMeta.insert(
+            // 按 uuid 查找本地记录，比较 updatedAt 决定是否覆盖（LWW）
+            val localEntity = dao.getByUuid(remoteUuid)
+            if (localEntity != null) {
+                val localUpdatedAt = getUpdatedAt(localEntity)
+                // 本地版本更新 → 忽略远程变更
+                if (localUpdatedAt >= remoteUpdatedAt) return
+            }
+
+            // 远程版本更新（或本地无此记录）→ 写入本地
+            val insertedId = dao.upsert(remoteRow)
+            // 记录同步元数据
+            syncMeta.insert(
                 SyncMetadataEntity(
                     tableName = tableName,
-                    localId = 0, // 实际 insert 后获取真实 id
+                    localId = insertedId.toInt(),
                     remoteUuid = remoteUuid,
                     syncStatus = "synced",
                     updatedAt = remoteUpdatedAt,
@@ -238,6 +253,16 @@ class SyncEngine(
             )
         } catch (_: Exception) {
             // 记录冲突
+        }
+    }
+
+    /** 从任意 Entity 中提取 updatedAt 字段（通过反射，LWW 冲突比较用） */
+    private fun getUpdatedAt(entity: Any): Long {
+        return try {
+            entity::class.java.getDeclaredField("updatedAt").apply { isAccessible = true }
+                .getLong(entity)
+        } catch (_: Exception) {
+            0L
         }
     }
 
@@ -551,6 +576,7 @@ class SyncEngine(
  */
 private class EntityDao<T>(
     val getById: suspend (Int) -> T?,
+    val getByUuid: suspend (String) -> T?,
     val upsert: suspend (JsonObject) -> Long,
     val updateLocal: suspend (T) -> Unit,
 )

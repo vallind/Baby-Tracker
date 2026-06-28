@@ -14,6 +14,7 @@ import com.babytracker.feature.development.DevelopmentAssessmentViewModel
 import com.babytracker.feature.reminder.ReminderViewModel
 import com.babytracker.feature.timeline.TimelineViewModel
 import com.babytracker.feature.auth.LoginViewModel
+import com.babytracker.feature.settings.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -40,6 +41,7 @@ val appModule = module {
     viewModel { ReminderViewModel(get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
 }
 
 val databaseModule = module {

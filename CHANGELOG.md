@@ -4,6 +4,16 @@
 
 ### [Unreleased]
 
+**Supabase Phase 3：同步引擎接入 UI & 设置页集成：**
+- 新增 SettingsViewModel：管理同步状态（syncState / connectionState / isLoggedIn），监听登录态自动启动/停止 Realtime 订阅
+- SettingsScreen 接入 ViewModel：登录后显示云同步状态行（连接状态指示点 + 状态文本 + "立即同步"按钮）
+- RealtimeManager DELETE 事件实现：通过 uuid 查找并软删除本地记录（softDeleteByUuid）
+- SyncEngine applyRemoteChange 完善 LWW 冲突处理：按 uuid 查找本地记录，比较 updatedAt 决定是否覆盖
+- 10 个 DAO 补充 getByUuid + softDeleteByUuid 方法，SyncMetadataDao 补充 getByRemoteUuid
+- EntityDao 内部类新增 getByUuid 参数
+- 清理 SupabaseProvider 过时 TODO 注释
+- DI 注册 SettingsViewModel
+
 **Supabase Phase 2：核心同步引擎 & Realtime 订阅：**
 - Repository 层自动填充同步字段：insert 时生成 UUID + updatedAt，update 时刷新 updatedAt，delete 改为软删除（设 deletedAt）
 - 补充 AppMessage / DevelopmentAssessment / Reminder domain model 的 uuid/updatedAt/deletedAt 字段及 mapper
