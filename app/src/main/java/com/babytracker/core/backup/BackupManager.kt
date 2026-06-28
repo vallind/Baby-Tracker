@@ -3,6 +3,7 @@ package com.babytracker.core.backup
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import androidx.room.withTransaction
 import com.babytracker.core.database.AppDatabase
 import com.babytracker.core.database.entity.*
 import kotlinx.coroutines.Dispatchers
@@ -147,77 +148,145 @@ class BackupManager(private val db: AppDatabase) {
         val babyArr = data.getJSONArray("babies")
         if (babyArr.length() == 0) return Result.failure(Exception("备份文件无宝宝数据"))
 
-        // 先解析原始 ID（用于匹配子记录 prefix），entity 设 id=0 让 Room 自动生成
-        data class BabyRestore(val origId: Int, val entity: BabyEntity)
-        val babyList = (0 until babyArr.length()).map { i ->
+        // 解析宝宝（使用原始 ID，保持完全还原）
+        val babies = (0 until babyArr.length()).map { i ->
             val j = babyArr.getJSONObject(i)
-            BabyRestore(
-                origId = j.getInt("id"),
-                entity = BabyEntity(
-                    id = 0, name = j.getString("name"), gender = j.getString("gender"),
-                    birthDate = j.getString("birthDate"),
-                    birthWeight = j.optDouble("birthWeight", 0.0).takeIf { it > 0 },
-                    birthHeight = j.optDouble("birthHeight", 0.0).takeIf { it > 0 },
-                    createdAt = j.optString("createdAt"),
-                ),
+            BabyEntity(
+                id = j.getInt("id"), name = j.getString("name"), gender = j.getString("gender"),
+                birthDate = j.getString("birthDate"),
+                birthWeight = j.optDouble("birthWeight", 0.0).takeIf { it > 0 },
+                birthHeight = j.optDouble("birthHeight", 0.0).takeIf { it > 0 },
+                avatarPath = j.optString("avatarPath").ifBlank { null },
+                createdAt = j.optString("createdAt"),
+                uuid = j.optString("uuid").ifBlank { null },
+                updatedAt = j.optLong("updatedAt", 0),
+                deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
             )
         }
 
-        var count = 0
-        for (baby in babyList) {
-            val newId = db.babyDao().insert(baby.entity).toInt()
-            count++
-            val prefix = "baby_${baby.origId}"
-            parseFeedings(data.optJSONArray("${prefix}_feedings")).forEach { db.feedingDao().insert(it.copy(babyId = newId)) }
-            parseSleeps(data.optJSONArray("${prefix}_sleeps")).forEach { db.sleepDao().insert(it.copy(babyId = newId)) }
-            parseGrowths(data.optJSONArray("${prefix}_growths")).forEach { db.growthDao().insert(it.copy(babyId = newId)) }
-            parseVaccinations(data.optJSONArray("${prefix}_vaccinations")).forEach { db.vaccinationDao().insert(it.copy(babyId = newId)) }
-            parseHealths(data.optJSONArray("${prefix}_health_records")).forEach { db.healthRecordDao().insert(it.copy(babyId = newId)) }
-            parseDiapers(data.optJSONArray("${prefix}_diapers")).forEach { db.diaperDao().insert(it.copy(babyId = newId)) }
-            parseDevelopmentAssessments(data.optJSONArray("${prefix}_assessments")).forEach { db.developmentAssessmentDao().insert(it.copy(babyId = newId)) }
-            parseReminders(data.optJSONArray("${prefix}_reminders")).forEach { db.reminderDao().insert(it.copy(babyId = newId)) }
+        // 事务中：先清空再还原（保持原始 ID 不变）
+        db.withTransaction {
+            clearAllTables()
+            babies.forEach { db.babyDao().insert(it) }
+            babies.forEach { baby ->
+                val prefix = "baby_${baby.id}"
+                parseFeedings(data.optJSONArray("${prefix}_feedings")).forEach { db.feedingDao().insert(it) }
+                parseSleeps(data.optJSONArray("${prefix}_sleeps")).forEach { db.sleepDao().insert(it) }
+                parseGrowths(data.optJSONArray("${prefix}_growths")).forEach { db.growthDao().insert(it) }
+                parseVaccinations(data.optJSONArray("${prefix}_vaccinations")).forEach { db.vaccinationDao().insert(it) }
+                parseHealths(data.optJSONArray("${prefix}_health_records")).forEach { db.healthRecordDao().insert(it) }
+                parseDiapers(data.optJSONArray("${prefix}_diapers")).forEach { db.diaperDao().insert(it) }
+                parseDevelopmentAssessments(data.optJSONArray("${prefix}_assessments")).forEach { db.developmentAssessmentDao().insert(it) }
+                parseReminders(data.optJSONArray("${prefix}_reminders")).forEach { db.reminderDao().insert(it) }
+            }
+            parseMessages(data.optJSONArray("messages")).forEach { db.messageDao().insert(it) }
         }
 
-        // 消息是 App 级别的，不绑定某个宝宝
-        parseMessages(data.optJSONArray("messages")).forEach { db.messageDao().insert(it) }
+        return Result.success(babies.size)
+    }
 
-        return Result.success(count)
+    /** 清空所有业务表并重置自增序列，为完全还原做准备 */
+    private fun clearAllTables() {
+        val db = db.openHelper.writableDatabase
+        // 按 FK 依赖逆序：先删子表，再删父表
+        val tables = listOf(
+            "reminders", "development_assessments", "sync_metadata", "messages",
+            "diapers", "health_records", "vaccinations", "growths", "sleeps",
+            "feedings", "backup_config", "babies",
+        )
+        tables.forEach {
+            db.execSQL("DELETE FROM $it")
+            db.execSQL("DELETE FROM sqlite_sequence WHERE name = '$it'")
+        }
     }
 
     private fun parseFeedings(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
-        FeedingEntity(babyId = j.getInt("babyId"), type = j.getString("type"), amountMl = j.optInt("amountMl", -1).takeIf { v -> v >= 0 }, durationMin = j.optInt("durationMin", -1).takeIf { v -> v >= 0 }, breastSide = j.optString("breastSide").ifBlank { null }, foodName = j.optString("foodName").ifBlank { null }, amountG = j.optInt("amountG", -1).takeIf { v -> v >= 0 }, brand = j.optString("brand").ifBlank { null }, note = j.optString("note").ifBlank { null }, timestamp = j.getString("timestamp"))
+        FeedingEntity(
+            id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
+            amountMl = j.optInt("amountMl", -1).takeIf { v -> v >= 0 },
+            durationMin = j.optInt("durationMin", -1).takeIf { v -> v >= 0 },
+            breastSide = j.optString("breastSide").ifBlank { null },
+            foodName = j.optString("foodName").ifBlank { null },
+            amountG = j.optInt("amountG", -1).takeIf { v -> v >= 0 },
+            brand = j.optString("brand").ifBlank { null },
+            note = j.optString("note").ifBlank { null },
+            timestamp = j.getString("timestamp"),
+            uuid = j.optString("uuid").ifBlank { null },
+            updatedAt = j.optLong("updatedAt", 0),
+            deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
+        )
     } } ?: emptyList()
 
     private fun parseSleeps(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
-        SleepEntity(babyId = j.getInt("babyId"), type = j.getString("type"), startTime = j.getString("startTime"), endTime = j.getString("endTime"), note = j.optString("note").ifBlank { null })
+        SleepEntity(
+            id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
+            startTime = j.getString("startTime"), endTime = j.getString("endTime"),
+            note = j.optString("note").ifBlank { null },
+            uuid = j.optString("uuid").ifBlank { null },
+            updatedAt = j.optLong("updatedAt", 0),
+            deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
+        )
     } } ?: emptyList()
 
     private fun parseGrowths(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
-        GrowthEntity(babyId = j.getInt("babyId"), type = j.getString("type"), value = j.getDouble("value"), measuredAt = j.getString("measuredAt"), note = j.optString("note").ifBlank { null })
+        GrowthEntity(
+            id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
+            value = j.getDouble("value"), measuredAt = j.getString("measuredAt"),
+            note = j.optString("note").ifBlank { null },
+            uuid = j.optString("uuid").ifBlank { null },
+            updatedAt = j.optLong("updatedAt", 0),
+            deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
+        )
     } } ?: emptyList()
 
     private fun parseVaccinations(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
-        VaccinationEntity(babyId = j.getInt("babyId"), name = j.getString("name"), dose = j.optString("dose").ifBlank { null }, scheduledDate = j.optString("scheduledDate").ifBlank { null }, administeredDate = j.optString("administeredDate").ifBlank { null }, status = j.optString("status", "pending"), note = j.optString("note").ifBlank { null })
+        VaccinationEntity(
+            id = j.getInt("id"), babyId = j.getInt("babyId"), name = j.getString("name"),
+            dose = j.optString("dose").ifBlank { null },
+            scheduledDate = j.optString("scheduledDate").ifBlank { null },
+            administeredDate = j.optString("administeredDate").ifBlank { null },
+            status = j.optString("status", "pending"),
+            note = j.optString("note").ifBlank { null },
+            uuid = j.optString("uuid").ifBlank { null },
+            updatedAt = j.optLong("updatedAt", 0),
+            deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
+        )
     } } ?: emptyList()
 
     private fun parseHealths(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
-        HealthRecordEntity(babyId = j.getInt("babyId"), category = j.getString("category"), description = j.getString("description"), doctorName = j.optString("doctorName").ifBlank { null }, recordDate = j.getString("recordDate"), note = j.optString("note").ifBlank { null })
+        HealthRecordEntity(
+            id = j.getInt("id"), babyId = j.getInt("babyId"), category = j.getString("category"),
+            description = j.getString("description"),
+            doctorName = j.optString("doctorName").ifBlank { null },
+            recordDate = j.getString("recordDate"),
+            attachments = j.optString("attachments").ifBlank { null },
+            note = j.optString("note").ifBlank { null },
+            uuid = j.optString("uuid").ifBlank { null },
+            updatedAt = j.optLong("updatedAt", 0),
+            deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
+        )
     } } ?: emptyList()
 
     private fun parseDiapers(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
-        DiaperEntity(babyId = j.getInt("babyId"), type = j.getString("type"), timestamp = j.getString("timestamp"), note = j.optString("note").ifBlank { null })
+        DiaperEntity(
+            id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
+            timestamp = j.getString("timestamp"), note = j.optString("note").ifBlank { null },
+            uuid = j.optString("uuid").ifBlank { null },
+            updatedAt = j.optLong("updatedAt", 0),
+            deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
+        )
     } } ?: emptyList()
 
     private fun parseMessages(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
         MessageEntity(
-            id = 0, type = j.getString("type"), title = j.getString("title"),
+            id = j.getLong("id"), type = j.getString("type"), title = j.getString("title"),
             content = j.getString("content"), senderAvatar = j.optString("senderAvatar").ifBlank { null },
             createTime = j.getLong("createTime"), isRead = j.optBoolean("isRead"),
             extraData = j.optString("extraData", ""),
@@ -229,7 +298,7 @@ class BackupManager(private val db: AppDatabase) {
     private fun parseDevelopmentAssessments(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
         DevelopmentAssessmentEntity(
-            id = 0, babyId = j.getInt("babyId"),
+            id = j.getInt("id"), babyId = j.getInt("babyId"),
             assessDate = j.getLong("assessDate"), babyAgeMonths = j.getInt("babyAgeMonths"),
             grossMotor = j.getInt("grossMotor"), fineMotor = j.getInt("fineMotor"),
             language = j.getInt("language"), social = j.getInt("social"),
@@ -242,7 +311,7 @@ class BackupManager(private val db: AppDatabase) {
     private fun parseReminders(arr: JSONArray?) = arr?.let { (0 until it.length()).map { i ->
         val j = it.getJSONObject(i)
         ReminderEntity(
-            id = 0, babyId = j.getInt("babyId"), type = j.getString("type"),
+            id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
             title = j.getString("title"), description = j.optString("description", ""),
             dueDate = j.getLong("dueDate"), isDone = j.optBoolean("isDone"),
             doneDate = j.optLong("doneDate", -1).takeIf { it >= 0 },
@@ -315,6 +384,7 @@ private fun BabyEntity.toJson() = JSONObject().apply {
     put("id", id); put("name", name); put("gender", gender)
     put("birthDate", birthDate); put("birthWeight", birthWeight); put("birthHeight", birthHeight)
     put("avatarPath", avatarPath); put("createdAt", createdAt)
+    put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
 
 private fun FeedingEntity.toJson() = JSONObject().apply {
@@ -323,33 +393,39 @@ private fun FeedingEntity.toJson() = JSONObject().apply {
     put("breastSide", breastSide); put("foodName", foodName)
     put("amountG", amountG); put("brand", brand); put("note", note)
     put("timestamp", timestamp)
+    put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
 
 private fun SleepEntity.toJson() = JSONObject().apply {
     put("id", id); put("babyId", babyId); put("type", type)
     put("startTime", startTime); put("endTime", endTime); put("note", note)
+    put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
 
 private fun GrowthEntity.toJson() = JSONObject().apply {
     put("id", id); put("babyId", babyId); put("type", type)
     put("value", value); put("measuredAt", measuredAt); put("note", note)
+    put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
 
 private fun VaccinationEntity.toJson() = JSONObject().apply {
     put("id", id); put("babyId", babyId); put("name", name)
     put("dose", dose); put("scheduledDate", scheduledDate)
     put("administeredDate", administeredDate); put("status", status); put("note", note)
+    put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
 
 private fun HealthRecordEntity.toJson() = JSONObject().apply {
     put("id", id); put("babyId", babyId); put("category", category)
     put("description", description); put("doctorName", doctorName)
     put("recordDate", recordDate); put("attachments", attachments); put("note", note)
+    put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
 
 private fun DiaperEntity.toJson() = JSONObject().apply {
     put("id", id); put("babyId", babyId); put("type", type)
     put("timestamp", timestamp); put("note", note)
+    put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
 
 private fun BackupConfigEntity.toJson() = JSONObject().apply {

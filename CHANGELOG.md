@@ -4,6 +4,12 @@
 
 ### [Unreleased]
 
+**备份还原改为完全还原（ID 保持不变）：**
+- 之前还原时所有实体 `id=0` 让 Room 重新生成，导致 ID 全部改变，SyncEngine 无法匹配已有记录
+- 修复：`doRestore()` 改为先清空所有表 → 按 JSON 中原始 ID 插入，`babyId` 无需重映射
+- 补齐所有 10 个实体的 `toJson()` / `parse*()` 中 `uuid`/`updatedAt`/`deletedAt` 字段导出导入，使 SyncEngine 还原后能正确识别已同步记录
+- 构建：`db.withTransaction` 事务保护，先删后插，重置自增序列防止未来 ID 冲突
+
 **备份还原补齐 3 张缺失的表（消息/发育评估/提醒）：**
 - Bug：`MessageEntity`、`DevelopmentAssessmentEntity`、`ReminderEntity` 未纳入备份导出和还原，导致还原后丢失消息、发育评估、提醒数据
 - 修复：在 `exportAll()` 和 `doRestore()` 中新增这三张表的完整导出/导入逻辑，包括 `toJson()` 和 `parse*()` 方法
