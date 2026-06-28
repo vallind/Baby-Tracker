@@ -4,6 +4,9 @@
 
 ### [Unreleased]
 
+**首页八宫格调整：尿布更换替换提醒中心，前置到生长记录前：**
++- 🧷 尿布更换替换 🔔 提醒中心，排在生长记录前面（喂养 → 睡眠 → 尿布 → 生长 → 发育 → 疫苗 → 健康 → 统计）
+
 **修复尿布页面负 padding 闪退风险 + 睡眠大卡恢复间距：**
 +- 尿布今日汇总大卡 + 换尿布详情卡移出 LazyColumn，在外层 Column 中用 `.padding(horizontal = DT.pageMargin.dp)` 正常布局，消除 `(-DT.pageMargin).dp` 负 padding 的布局崩溃风险
 +- 睡眠夜间大卡添加 `padding(horizontal = DT.pageMargin.dp)` 恢复左右 20dp 间距

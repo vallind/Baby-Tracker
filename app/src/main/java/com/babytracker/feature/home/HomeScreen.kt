@@ -217,12 +217,12 @@ fun FeatureGrid(navController: NavController) {
     val items = listOf(
         FeatureGridItemData(Screen.Feeding, "🍼", "喂养记录"),
         FeatureGridItemData(Screen.Sleep, "🌙", "睡眠记录"),
+        FeatureGridItemData(Screen.Diaper, "🧷", "尿布更换"),
         FeatureGridItemData(Screen.Growth, "📏", "生长记录"),
         FeatureGridItemData(Screen.DevelopmentAssessment, "🧠", "发育评估"),
         FeatureGridItemData(Screen.Vaccination, "💉", "疫苗接种"),
         FeatureGridItemData(Screen.Health, "❤️", "健康档案"),
         FeatureGridItemData(Screen.Stats, "📊", "统计分析"),
-        FeatureGridItemData(Screen.Settings, "🔔", "提醒中心"),
     )
     Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
         Spacer(Modifier.height(14.dp))
