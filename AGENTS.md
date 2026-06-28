@@ -104,8 +104,7 @@ app/src/main/java/com/babytracker/
 
 ## 八、关键约束
 
-- **优先使用 AppCard** 而非原生 Card（自动获得统一背景色和样式）。
-- **组件库覆盖范围**：`AppTopBar`、`AppButton`/`PrimaryButton`、`AppConfirmDialog` 等，详见 `docs/design-system.md`。
+- **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button` → `AppButton`/`PrimaryButton`，`AlertDialog` → `AppConfirmDialog`。完整列表见 `docs/design-system.md`。
 - **Snackbar** 用 `snackbar.showUndo(onUndo = { ... })` 模式。
 
 ---
