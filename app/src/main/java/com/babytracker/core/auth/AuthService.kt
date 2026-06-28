@@ -51,9 +51,12 @@ class AuthService(
         } catch (_: Exception) {
             _currentUser.value = null
         }
+        // 无论会话是否立即恢复，都从 SharedPreferences 加载账户名
+        if (prefs.getBoolean(KEY_LOGGED_IN, false)) {
+            _displayAccount.value = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
+        }
         if (_currentUser.value != null) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
-            _displayAccount.value = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
         }
     }
 

@@ -452,6 +452,14 @@ fun BabyManagementScreen(navController: NavController) {
                                     }
                                 }
                                 Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (b.uuid != null) {
+                                    Text(
+                                        "UUID: ${b.uuid.take(8)}…",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                        fontSize = 10.sp,
+                                    )
+                                }
                             }
                             if (!isCurrent) {
                                 TextButton(onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() }) {
