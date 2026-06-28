@@ -120,14 +120,16 @@ class SyncEngine(
      * 将本地所有 pending 变更推送到 Supabase。
      * 使用 upsert 策略（冲突时用云端 uuid 匹配，updatedAt 决定覆盖）。
      */
-    suspend fun push() {
-        if (_syncState.value == SyncState.SYNCING) return
+    /** 上行同步，返回实际推送的记录数 */
+    suspend fun push(): Int {
+        if (_syncState.value == SyncState.SYNCING) return 0
         _syncState.value = SyncState.SYNCING
+        var pushed = 0
         try {
             val pendingChanges = syncMeta.getPendingChanges()
             if (pendingChanges.isEmpty()) {
                 _syncState.value = SyncState.IDLE
-                return
+                return 0
             }
             _syncState.value = SyncState.PUSHING
 
@@ -136,22 +138,19 @@ class SyncEngine(
                     val dao = getEntityDao(meta.tableName) ?: continue
                     val localEntity = dao.getById(meta.localId) ?: continue
 
-                    // 构建 JSON payload（注入 family_id 以满足 RLS）
                     val basePayload = entityToJson(meta.tableName, localEntity)
                     val payload = injectFamilyId(basePayload)
 
-                    // 使用 uuid 作为冲突键 upsert
                     val remoteUuid = meta.remoteUuid ?: payload["uuid"]?.toString()?.removeSurrounding("\"")
                     if (remoteUuid != null) {
                         supabase.postgrest.from(meta.tableName)
                             .upsert(payload) { onConflict = "uuid" }
                         syncMeta.markSynced(meta.id, remoteUuid, System.currentTimeMillis())
                     } else {
-                        supabase.postgrest.from(meta.tableName)
-                            .insert(payload)
-                        // 从响应中获取云端 uuid（简化处理：直接用本地 uuid）
+                        supabase.postgrest.from(meta.tableName).insert(payload)
                         syncMeta.markSynced(meta.id, payload["uuid"]?.toString()?.removeSurrounding("\""), System.currentTimeMillis())
                     }
+                    pushed++
                 } catch (e: Exception) {
                     syncMeta.markConflict(meta.id, System.currentTimeMillis())
                 }
@@ -160,67 +159,47 @@ class SyncEngine(
         } finally {
             _syncState.value = SyncState.IDLE
         }
+        return pushed
     }
 
-    // ================================================================
-    // 下行同步：云端 → 本地
-    // ================================================================
-
-    /**
-     * 从 Supabase 拉取自上次同步以来的增量变更，写入本地 Room。
-     */
-    suspend fun pull() {
-        if (_syncState.value == SyncState.SYNCING) return
+    /** 下行同步，返回实际拉取的记录数 */
+    suspend fun pull(): Int {
+        if (_syncState.value == SyncState.SYNCING) return 0
         _syncState.value = SyncState.SYNCING
+        var pulled = 0
         try {
             _syncState.value = SyncState.PULLING
             val lastSyncAt = syncMeta.getLastSyncAt()
-
-            // 对所有业务表拉取增量变更
             val tables = listOf(
                 "babies", "feedings", "sleeps", "growths", "vaccinations",
                 "health_records", "diapers", "messages", "development_assessments", "reminders",
             )
-
             for (tableName in tables) {
                 try {
-                    // 增量拉取：只拉 updatedAt >= lastSyncAt 的记录
-                    // supabase-kt 3.x DSL：select { filter { gte("column", value) } }
                     val result: List<JsonObject> = if (lastSyncAt != null) {
                         supabase.postgrest.from(tableName)
-                            .select(columns = Columns.ALL) {
-                                filter {
-                                    gte("updatedAt", lastSyncAt)
-                                }
-                            }
+                            .select(columns = Columns.ALL) { filter { gte("updatedAt", lastSyncAt) } }
                             .decodeList<JsonObject>()
                     } else {
                         supabase.postgrest.from(tableName)
                             .select(columns = Columns.ALL)
                             .decodeList<JsonObject>()
                     }
-
-                    for (row in result) {
-                        applyRemoteChange(tableName, row)
-                    }
-                } catch (_: Exception) {
-                    // 某张表拉取失败不阻塞其他表
-                }
+                    for (row in result) { applyRemoteChange(tableName, row); pulled++ }
+                } catch (_: Exception) { }
             }
-
             syncMeta.updateLastSyncAt(System.currentTimeMillis())
         } finally {
             _syncState.value = SyncState.IDLE
         }
+        return pulled
     }
 
-    // ================================================================
-    // 全量同步
-    // ================================================================
-
-    suspend fun fullSync() {
-        push()
-        pull()
+    /** 全量同步，返回 [推送数, 拉取数] */
+    suspend fun fullSync(): Pair<Int, Int> {
+        val pushed = push()
+        val pulled = pull()
+        return pushed to pulled
     }
 
     /**

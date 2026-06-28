@@ -124,8 +124,9 @@ class SettingsViewModel(
                 }
                 // 首次同步：标记存量数据为 pending
                 syncEngine.markExistingPending()
-                syncEngine.fullSync()
-                _syncResult.value = "同步完成 ✓"
+                val result = syncEngine.fullSync()
+                val count = result.first + result.second
+                _syncResult.value = if (count > 0) "同步完成 ✓ 推送${result.first}条 拉取${result.second}条" else "无数据需同步"
             } catch (e: Exception) {
                 _syncResult.value = "同步失败：${e.message}"
             }
