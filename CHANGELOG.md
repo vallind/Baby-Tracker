@@ -8,6 +8,8 @@
 - 组件令牌补 contentColor：CardTokens/DialogTokens 新增 contentColor，与 containerColor 成对
 - 圆角体系：AppShapes 新增 radiusScale 全局缩放 + scaled() 方法，所有组件 cornerRadius 标注与 shapes 对应关系
 - ButtonTokens.contentColor 默认值从 Color.Transparent 修正为 c.onPrimary
+- AppColors.derive 重构为语义派生（参照 PaletteColors）：输入 primary/surface/onSurface/border 4 个基础色，自动推导全部 39 字段
+- light()/dark() 改用 derive 实现，消除冗余手写值
 - 文档：AGENTS.md 补充令牌设计约定，design-system.md 补充 surface/foreground 配对 + 圆角派生说明
 
 ### [1.4.0] — 2026-06-25
