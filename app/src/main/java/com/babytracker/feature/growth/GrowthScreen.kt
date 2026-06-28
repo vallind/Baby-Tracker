@@ -37,6 +37,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.GrowthRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -314,8 +315,7 @@ fun GrowthFormDialog(
         )
     }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
+    var showCascadePicker by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
@@ -343,7 +343,7 @@ fun GrowthFormDialog(
             OutlinedTextField(
                 value = measuredAt, onValueChange = {}, readOnly = true,
                 label = { Text("测量时间") }, singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showDatePicker = true },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showCascadePicker = true },
                 shape = MaterialTheme.shapes.medium, enabled = false,
                 colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.outline, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary),
             )
@@ -383,53 +383,12 @@ fun GrowthFormDialog(
         }
     }
 
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
-            TextButton(onClick = {
-                showDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    val date = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                    val timePart = measuredAt.substring(11)
-                    measuredAt = "$date $timePart"
-                }
-                showTimePicker = true
-            }) { Text("下一步") }
-        }, dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    if (showTimePicker) {
-        var hour by remember { mutableIntStateOf(measuredAt.substring(11, 13).toIntOrNull() ?: 12) }
-        var minute by remember { mutableIntStateOf(measuredAt.substring(14, 16).toIntOrNull() ?: 0) }
-        AlertDialog(onDismissRequest = { showTimePicker = false }, title = { Text("选择时间") }, text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Row(horizontalArrangement = Arrangement.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        TextButton(onClick = { if (hour < 23) hour++ }) { Text("▲", style = MaterialTheme.typography.bodySmall) }
-                        Text("%02d".format(hour), style = MaterialTheme.typography.headlineMedium)
-                        TextButton(onClick = { if (hour > 0) hour-- }) { Text("▼", style = MaterialTheme.typography.bodySmall) }
-                        Text("时", style = MaterialTheme.typography.labelSmall)
-                    }
-                    Text(" : ", style = MaterialTheme.typography.headlineMedium)
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        TextButton(onClick = { if (minute < 59) minute++ }) { Text("▲", style = MaterialTheme.typography.bodySmall) }
-                        Text("%02d".format(minute), style = MaterialTheme.typography.headlineMedium)
-                        TextButton(onClick = { if (minute > 0) minute-- }) { Text("▼", style = MaterialTheme.typography.bodySmall) }
-                        Text("分", style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        }, confirmButton = {
-            TextButton(onClick = {
-                val datePart = measuredAt.take(10)
-                measuredAt = "$datePart ${"%02d".format(hour)}:${"%02d".format(minute)}"
-                showTimePicker = false
-            }) { Text("确定") }
-        }, dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("取消") } })
-    }
+    DateTimeCascadeDialog(
+        show = showCascadePicker,
+        initialDateTime = measuredAt,
+        onConfirm = { measuredAt = it },
+        onDismiss = { showCascadePicker = false },
+    )
 }
 /**
  * WHO 0-2 岁参考百分位（简化版，仅作图表参考虚线使用）。

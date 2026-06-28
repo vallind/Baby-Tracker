@@ -683,6 +683,121 @@ data class BorderContainerTokens(
     }
 }
 
+// —— 时间选择器 ——
+//  TDesign 风格：滚轮式时/分选择，选中项有品牌色高亮背景
+@Immutable
+data class TimePickerTokens(
+    val hourColor: Color,
+    val minuteColor: Color,
+    val separatorColor: Color,
+    val labelColor: Color,
+    val arrowColor: Color,
+    val backgroundColor: Color,
+    val cornerRadius: Dp,           // shapes.medium * 2
+    // TDesign 新增：滚轮选中态
+    val selectedBackgroundColor: Color,     // primary.copy(alpha=0.12)
+    val selectedTextColor: Color,           // primary
+    val unselectedTextColor: Color,         // textTertiary
+    val dividerColor: Color,                // 分隔线
+    val itemHeight: Dp,                     // 滚轮单项高度
+    val visibleItems: Int,                  // 可见项数
+    val toolbarHeight: Dp,                  // 顶部工具栏高度
+    val toolbarTextColor: Color,            // 工具栏文字色
+    val toolbarDividerColor: Color,         // 工具栏底部分隔线
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+        ): TimePickerTokens = TimePickerTokens(
+            hourColor = colors.textPrimary,
+            minuteColor = colors.textPrimary,
+            separatorColor = colors.textPrimary,
+            labelColor = colors.textSecondary,
+            arrowColor = colors.primary,
+            backgroundColor = colors.surface,
+            cornerRadius = shapes.scaled(shapes.medium * 2),
+            selectedBackgroundColor = colors.primary.copy(alpha = 0.12f),
+            selectedTextColor = colors.primary,
+            unselectedTextColor = colors.textTertiary,
+            dividerColor = colors.divider,
+            itemHeight = 44.dp,
+            visibleItems = 5,
+            toolbarHeight = 48.dp,
+            toolbarTextColor = colors.primary,
+            toolbarDividerColor = colors.divider,
+        )
+    }
+}
+
+// —— 日期选择器 ——
+//  TDesign 风格：日历面板，圆形选中标记，月/年头部分
+@Immutable
+data class DatePickerTokens(
+    val selectedDayColor: Color,
+    val selectedDayContentColor: Color,
+    val todayColor: Color,
+    val headlineColor: Color,
+    val backgroundColor: Color,
+    val cornerRadius: Dp,               // shapes.medium * 2
+    // TDesign 新增：日历面板
+    val toolbarHeight: Dp,              // 顶部工具栏高度
+    val toolbarTextColor: Color,        // 工具栏文字色
+    val toolbarDividerColor: Color,     // 工具栏底部分隔线
+    val weekHeaderColor: Color,         // 星期标题色
+    val daySize: Dp,                    // 日期单元格大小
+    val dayTextColor: Color,            // 普通日期文字色
+    val dayDisabledTextColor: Color,    // 不可选日期文字色
+    val selectedShapeRadius: Dp,        // 选中圆形半径
+    val monthYearTextColor: Color,      // 年月标题色
+    val navArrowColor: Color,           // 左右导航箭头色
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+        ): DatePickerTokens = DatePickerTokens(
+            selectedDayColor = colors.primary,
+            selectedDayContentColor = colors.onPrimary,
+            todayColor = colors.primary,
+            headlineColor = colors.textPrimary,
+            backgroundColor = colors.surface,
+            cornerRadius = shapes.scaled(shapes.medium * 2),
+            toolbarHeight = 48.dp,
+            toolbarTextColor = colors.primary,
+            toolbarDividerColor = colors.divider,
+            weekHeaderColor = colors.textTertiary,
+            daySize = 40.dp,
+            dayTextColor = colors.textPrimary,
+            dayDisabledTextColor = colors.textDisabled,
+            selectedShapeRadius = 20.dp,
+            monthYearTextColor = colors.textPrimary,
+            navArrowColor = colors.primary,
+        )
+    }
+}
+
+// —— 级联日期时间选择器 ——
+@Immutable
+data class DateTimeCascadeTokens(
+    val backgroundColor: Color,
+    val cornerRadius: Dp,       // shapes.medium * 2
+    val datePicker: DatePickerTokens,
+    val timePicker: TimePickerTokens,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+        ): DateTimeCascadeTokens = DateTimeCascadeTokens(
+            backgroundColor = colors.surface,
+            cornerRadius = shapes.scaled(shapes.medium * 2),
+            datePicker = DatePickerTokens.default(colors, shapes),
+            timePicker = TimePickerTokens.default(colors, shapes),
+        )
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
 //  TT-030 顶层聚合容器
 //  参照 PaletteComponentThemes.default()：统一接收所有基础令牌，分发到各组件
@@ -713,6 +828,9 @@ data class AppComponentTokens(
     val iconButton: IconButtonTokens,
     val scaffold: ScaffoldTokens,
     val borderContainer: BorderContainerTokens,
+    val timePicker: TimePickerTokens,
+    val datePicker: DatePickerTokens,
+    val dateTimeCascade: DateTimeCascadeTokens,
 ) {
     companion object {
         fun default(
@@ -750,6 +868,9 @@ data class AppComponentTokens(
             iconButton = IconButtonTokens.default(colors, control),
             scaffold = ScaffoldTokens.default(colors),
             borderContainer = BorderContainerTokens.default(colors, shapes, spacing),
+            timePicker = TimePickerTokens.default(colors, shapes),
+            datePicker = DatePickerTokens.default(colors, shapes),
+            dateTimeCascade = DateTimeCascadeTokens.default(colors, shapes),
         )
     }
 }

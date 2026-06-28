@@ -26,6 +26,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
+import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
@@ -203,8 +204,7 @@ fun DiaperFormDialog(
             } ?: now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         )
     }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
+    var showCascadePicker by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -223,7 +223,7 @@ fun DiaperFormDialog(
             }
 
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = diaperDateTime, onValueChange = {}, readOnly = true, label = { Text("时间") }, modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
+            OutlinedTextField(value = diaperDateTime, onValueChange = {}, readOnly = true, label = { Text("时间") }, modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注 (可选)") }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small)
             Spacer(Modifier.height(24.dp))
@@ -252,51 +252,10 @@ fun DiaperFormDialog(
         }
     }
 
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
-            TextButton(onClick = {
-                showDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    val date = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                    val timePart = diaperDateTime.substring(11)
-                    diaperDateTime = "$date $timePart"
-                }
-                showTimePicker = true
-            }) { Text("下一步") }
-        }, dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }) {
-            DatePicker(state = datePickerState)
-        }
-    }
-
-    if (showTimePicker) {
-        var hour by remember { mutableIntStateOf(diaperDateTime.substring(11, 13).toIntOrNull() ?: 12) }
-        var minute by remember { mutableIntStateOf(diaperDateTime.substring(14, 16).toIntOrNull() ?: 0) }
-        AlertDialog(onDismissRequest = { showTimePicker = false }, title = { Text("选择时间") }, text = {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Row(horizontalArrangement = Arrangement.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        TextButton(onClick = { if (hour < 23) hour++ }) { Text("▲", style = MaterialTheme.typography.bodySmall) }
-                        Text("%02d".format(hour), style = MaterialTheme.typography.headlineMedium)
-                        TextButton(onClick = { if (hour > 0) hour-- }) { Text("▼", style = MaterialTheme.typography.bodySmall) }
-                        Text("时", style = MaterialTheme.typography.labelSmall)
-                    }
-                    Text(" : ", style = MaterialTheme.typography.headlineMedium)
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        TextButton(onClick = { if (minute < 59) minute++ }) { Text("▲", style = MaterialTheme.typography.bodySmall) }
-                        Text("%02d".format(minute), style = MaterialTheme.typography.headlineMedium)
-                        TextButton(onClick = { if (minute > 0) minute-- }) { Text("▼", style = MaterialTheme.typography.bodySmall) }
-                        Text("分", style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        }, confirmButton = {
-            TextButton(onClick = {
-                val datePart = diaperDateTime.take(10)
-                diaperDateTime = "$datePart ${"%02d".format(hour)}:${"%02d".format(minute)}"
-                showTimePicker = false
-            }) { Text("确定") }
-        }, dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("取消") } })
-    }
+    DateTimeCascadeDialog(
+        show = showCascadePicker,
+        initialDateTime = diaperDateTime,
+        onConfirm = { diaperDateTime = it },
+        onDismiss = { showCascadePicker = false },
+    )
 }

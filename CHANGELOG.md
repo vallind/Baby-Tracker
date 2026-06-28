@@ -2,6 +2,16 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.4.2] — 2026-06-28
+
+**DatePicker & TimePicker TDesign 风格重构：**
+- 移除 M3 DatePickerDialog + AlertDialog 原生样式，改为 TDesign 风格自定义底部面板
+- 日历面板：月/年标题 + 左右箭头切换 + 日期网格（圆形品牌色选中标记 + 今天品牌色文字）
+- 时间面板：滚轮式时/分选择器（中间行品牌色高亮背景 + 上下分隔线 + 拖拽吸附）
+- 级联流程：先选日期 → "下一步" → 选时间 → "确认"，统一在一个底部面板内完成
+- 提取 WheelPicker 为独立共享组件（timepicker 包内 public，供 TimePickerDialog 和 DateTimeCascadeDialog 共用）
+- 令牌扩展：DatePickerTokens/TimePickerTokens 新增 toolbarHeight/toolbarTextColor/dividerColor/selectedBackgroundColor 等 TDesign 风格字段
+
 ### [1.4.1] — 2026-06-28
 
 **修复底部导航栏图标显示不全：**
