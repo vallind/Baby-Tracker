@@ -215,11 +215,10 @@ class SyncEngine(
             "babies", "feedings", "sleeps", "growths", "vaccinations",
             "health_records", "diapers", "messages", "development_assessments", "reminders",
         )
-        for (table in tables) {
-            try {
-                // 先给 uuid 为空的旧数据补上 uuid
+        db.beginTransaction()
+        try {
+            for (table in tables) {
                 db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
-                // 标记 pending
                 db.execSQL("""
                     INSERT INTO sync_metadata (tableName, localId, remoteUuid, syncStatus, updatedAt)
                     SELECT '$table', id, uuid, 'pending', COALESCE(updatedAt, 0)
@@ -227,7 +226,10 @@ class SyncEngine(
                     WHERE deletedAt IS NULL AND uuid IS NOT NULL
                       AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')
                 """)
-            } catch (_: Exception) { }
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
         }
     }
 
