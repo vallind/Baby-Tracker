@@ -8,6 +8,7 @@
 - StatsPeriod 新增 DAY，StatsUiState 增加 dateRangeText、periodOffset、对比字段（feedingCompare / sleepCompare / heightCompare / weightCompare）
 - StatsViewModel 重写聚合逻辑：offset 导航、上一周期同比对比、按小时/按天分桶
 - StatsScreen UI 重做：SegmentedControl 切换周期、DateRangeNav 翻页导航、四张统计卡（喂养柱状图、睡眠柱状图、身高折线图、体重折线图）
+- 修正卡片布局：2x2 网格 → 纵向堆叠列表，卡片内图标+标题左对齐、数值右对齐、图表下方
 - 新增 MiniBarChart 组件（柱顶圆角使用 shapes.extraSmall 令牌）
 
 **Phase 7：RLS 家庭隔离策略升级：**
