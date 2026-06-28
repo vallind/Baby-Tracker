@@ -63,11 +63,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             authService.observeAuthState().collect { user ->
                 if (user != null && _isOnline.value) {
-                    try {
-                        syncEngine.currentFamilyId = ensureFamily()
-                        realtimeManager.subscribeAll()
-                        syncEngine.fullSync()
-                    } catch (_: Exception) { }
+                    tryAutoSync()
                 } else if (user == null) {
                     realtimeManager.unsubscribe()
                     syncEngine.currentFamilyId = null
@@ -78,11 +74,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             isOnline.collect { online ->
                 if (online && authService.isLoggedIn()) {
-                    try {
-                        syncEngine.currentFamilyId = ensureFamily()
-                        realtimeManager.subscribeAll()
-                        syncEngine.fullSync()
-                    } catch (_: Exception) { }
+                    tryAutoSync()
                 }
             }
         }
@@ -92,6 +84,15 @@ class SettingsViewModel(
                 syncEngine.currentFamilyId = family?.id
             }
         }
+    }
+
+    private suspend fun tryAutoSync() {
+        try {
+            syncEngine.currentFamilyId = ensureFamily()
+            if (syncEngine.currentFamilyId == null) return  // 无家庭则跳过同步
+            realtimeManager.subscribeAll()
+            syncEngine.fullSync()
+        } catch (_: Exception) { }
     }
 
     private suspend fun ensureFamily(): String? {
@@ -113,9 +114,13 @@ class SettingsViewModel(
                 return@launch
             }
             try {
-                // 确保有 family_id
+                // 确保有 family_id，否则 Supabase RLS 会静默拦截
                 if (syncEngine.currentFamilyId == null) {
                     syncEngine.currentFamilyId = ensureFamily()
+                }
+                if (syncEngine.currentFamilyId == null) {
+                    _syncResult.value = "请先创建或加入家庭"
+                    return@launch
                 }
                 syncEngine.fullSync()
                 _syncResult.value = "同步完成 ✓"
