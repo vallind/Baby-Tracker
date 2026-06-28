@@ -62,9 +62,11 @@ class SettingsViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "待同步")
 
     init {
-        // 网络状态监听
+        // 启动时从本地恢复 familyId（Supabase 挂了也能同步）
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        syncEngine.currentFamilyId = prefs.getString("current_family_id", null)
+
         registerNetworkCallback()
-        // 登录态变化
         viewModelScope.launch {
             authService.observeAuthState().collect { user ->
                 if (user != null && _isOnline.value) {
@@ -75,7 +77,6 @@ class SettingsViewModel(
                 }
             }
         }
-        // 网络恢复时自动重试
         viewModelScope.launch {
             isOnline.collect { online ->
                 if (online && authService.isLoggedIn()) {
@@ -83,10 +84,11 @@ class SettingsViewModel(
                 }
             }
         }
-        // 家庭变化
         viewModelScope.launch {
             familyService.currentFamily.collect { family ->
                 syncEngine.currentFamilyId = family?.id
+                // 持久化到本地，Supabase 不通时仍可同步
+                family?.id?.let { prefs.edit().putString("current_family_id", it).apply() }
             }
         }
     }
@@ -106,7 +108,11 @@ class SettingsViewModel(
             familyService.currentFamily.value?.let { return@withLock it.id }
             val families = familyService.loadMyFamilies()
             if (families.isNotEmpty()) return@withLock families.first().id
-            familyService.createFamily("我的家庭").getOrNull()?.id
+            val fid = familyService.createFamily("我的家庭").getOrNull()?.id
+            // 持久化：Supabase 挂了重启后也能直接同步
+            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            fid?.let { prefs.edit().putString("current_family_id", it).apply() }
+            fid
         } catch (_: Exception) { null }
     }
 
