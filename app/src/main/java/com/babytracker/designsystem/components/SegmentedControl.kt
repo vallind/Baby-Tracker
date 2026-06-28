@@ -14,9 +14,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppShapes
 
 /**
  * 分段选择器 —— 用于标签切换（全部/喂养/睡眠/...）。
+ *
+ * 圆角：外层 shapes.large（12dp），内层选中项 shapes.small（6dp）。
  *
  * 用法：
  * ```
@@ -36,10 +39,13 @@ fun SegmentedControl(
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
+    // 容器背景色：primaryContainer + 透明度
+    // 参照：容器容器容器色 + 内容内容色的对照关系
     val bg = c.primaryContainer.copy(alpha = 0.25f)
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(shapes.large))
             .background(bg)
             .padding(2.dp),
     ) {
@@ -48,7 +54,7 @@ fun SegmentedControl(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(shapes.small))
                     .then(if (selected) Modifier.background(c.surface) else Modifier)
                     .clickable { onSelect(index) }
                     .padding(horizontal = 8.dp, vertical = 6.dp),
