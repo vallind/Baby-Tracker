@@ -1,5 +1,6 @@
 package com.babytracker.designsystem.components.topbar
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -37,6 +38,7 @@ fun AppTopBar(
     titleSize: TextUnit = TopBarDefaults.titleSize(),
     titleWeight: FontWeight = TopBarDefaults.titleWeight(),
     backIconSize: Dp = TopBarDefaults.backIconSize(),
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -59,6 +61,7 @@ fun AppTopBar(
                 }
             }
         },
+        actions = { actions() },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = TopBarDefaults.containerColor(),
             titleContentColor = TopBarDefaults.titleColor(),

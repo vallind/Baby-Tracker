@@ -12,13 +12,11 @@ import java.time.LocalDateTime
 /**
  * 消息中心 UI 状态。
  *
- * - [currentTab] 当前选中的 Tab（互动 / 系统 / 服务）
- * - [messages] 当前 Tab 下排序后的消息列表
- * - [interactionUnread] / [systemUnread] / [serviceUnread] 各 Tab 未读数（用于 Tab 红点）
- * - [totalUnread] 总未读数（页面标题"全部已读"按钮可禁用判断）
+ * - [messages] 全量消息列表（按时间倒序），Screen 层自行做分类筛选
+ * - [interactionUnread] / [systemUnread] / [serviceUnread] 各分类未读数（供概览卡角标）
+ * - [totalUnread] 总未读数（"全部已读"按钮可用性判断）
  */
 data class MessageUiState(
-    val currentTab: MessageType = MessageType.INTERACTION,
     val messages: List<AppMessage> = emptyList(),
     val interactionUnread: Int = 0,
     val systemUnread: Int = 0,
@@ -33,12 +31,12 @@ class MessageViewModel(
     val state: StateFlow<MessageUiState> = _state.asStateFlow()
 
     init {
-        // 订阅全量消息 → 计算每 Tab 未读数 + 当前 Tab 列表
+        // 订阅全量消息 → 计算每分类未读数 + 全量列表（按时间倒序）
         repo.watchAll()
             .onEach { all ->
-                val cur = _state.value.currentTab
+                val sorted = all.sortedByDescending { it.createTime }
                 _state.value = _state.value.copy(
-                    messages = all.filter { it.type == cur },
+                    messages = sorted,
                     interactionUnread = all.count { it.type == MessageType.INTERACTION && !it.isRead },
                     systemUnread = all.count { it.type == MessageType.SYSTEM && !it.isRead },
                     serviceUnread = all.count { it.type == MessageType.SERVICE && !it.isRead },
@@ -49,21 +47,6 @@ class MessageViewModel(
 
         // 首次进入若库为空，播种若干演示消息便于审阅
         seedDemoIfEmpty()
-    }
-
-    fun switchTab(type: MessageType) {
-        viewModelScope.launch {
-            // 切 Tab 时立即基于最新数据计算当前 Tab 列表
-            val all = repo.watchAll().first()
-            _state.value = _state.value.copy(
-                currentTab = type,
-                messages = all.filter { it.type == type },
-                interactionUnread = all.count { it.type == MessageType.INTERACTION && !it.isRead },
-                systemUnread = all.count { it.type == MessageType.SYSTEM && !it.isRead },
-                serviceUnread = all.count { it.type == MessageType.SERVICE && !it.isRead },
-                totalUnread = all.count { !it.isRead },
-            )
-        }
     }
 
     fun markRead(id: Long) {
