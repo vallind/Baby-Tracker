@@ -220,6 +220,8 @@ class SyncEngine(
             for (table in tables) {
                 try {
                     db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
+                    // 将之前失败的 conflict 重置为 pending
+                    db.execSQL("UPDATE sync_metadata SET syncStatus='pending' WHERE tableName='$table' AND syncStatus='conflict'")
                     db.execSQL("""
                         INSERT INTO sync_metadata (tableName, localId, remoteUuid, syncStatus, updatedAt)
                         SELECT '$table', id, uuid, 'pending', COALESCE(updatedAt, 0)
