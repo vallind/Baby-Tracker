@@ -39,6 +39,7 @@ import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.navigation.Screen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -307,13 +308,17 @@ fun BabyManagementScreen(navController: NavController) {
             Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = 8.dp)) {
                 babies.forEach { b ->
                     val isCurrent = b.id == babyCtrl.currentBabyId
-                    Card(
-                        onClick = { editingBaby = b; showForm = true },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        border = BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                        colors = CardDefaults.cardColors(containerColor = c.card),
+                    AppCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .border(
+                                BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                                RoundedCornerShape(DT.cardRadius.dp),
+                            )
+                            .clickable { editingBaby = b; showForm = true },
+                        cornerRadius = DT.cardRadius.dp,
+                        elevation = 1.dp,
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
@@ -525,11 +530,10 @@ fun BackupScreen(navController: NavController) {
             ))
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = DT.pageMargin.dp)) {
-            Card(
-                Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                colors = CardDefaults.cardColors(containerColor = c.card),
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadius = DT.cardRadius.dp,
+                elevation = 1.dp,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -583,11 +587,10 @@ fun BackupScreen(navController: NavController) {
             }
             Spacer(Modifier.height(DT.cardGap.dp))
 
-            Card(
-                Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                colors = CardDefaults.cardColors(containerColor = c.card),
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadius = DT.cardRadius.dp,
+                elevation = 1.dp,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -643,11 +646,10 @@ fun BackupScreen(navController: NavController) {
             }
             Spacer(Modifier.height(DT.cardGap.dp))
 
-            Card(
-                Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                colors = CardDefaults.cardColors(containerColor = c.card),
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+                cornerRadius = DT.cardRadius.dp,
+                elevation = 1.dp,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
