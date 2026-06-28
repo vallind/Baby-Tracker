@@ -288,7 +288,15 @@ class SyncEngine(
     // Entity ↔ JSON 转换（简化版，按表名分发）
     // ================================================================
 
-    private fun entityToJson(tableName: String, entity: Any): JsonObject {
+    /** 通过本地 babyId 获取宝宝 uuid（push 时用） */
+    private suspend fun babyUuid(localBabyId: Int): String =
+        db.babyDao().getById(localBabyId)?.uuid ?: ""
+
+    /** 通过宝宝 uuid 获取本地 babyId（pull 时用），找不到返回 0 */
+    private suspend fun resolveLocalBabyId(uuid: String?): Int =
+        if (uuid != null) db.babyDao().getByUuid(uuid)?.id ?: 0 else 0
+
+    private suspend fun entityToJson(tableName: String, entity: Any): JsonObject {
         return when (tableName) {
             "babies" -> {
                 val e = entity as BabyEntity
@@ -309,7 +317,7 @@ class SyncEngine(
                 val e = entity as FeedingEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("type", JsonPrimitive(e.type))
                     e.amountMl?.let { put("amountMl", JsonPrimitive(it)) }
                     e.durationMin?.let { put("durationMin", JsonPrimitive(it)) }
@@ -327,7 +335,7 @@ class SyncEngine(
                 val e = entity as SleepEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("type", JsonPrimitive(e.type))
                     put("startTime", JsonPrimitive(e.startTime))
                     put("endTime", JsonPrimitive(e.endTime))
@@ -340,7 +348,7 @@ class SyncEngine(
                 val e = entity as GrowthEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("type", JsonPrimitive(e.type))
                     put("value", JsonPrimitive(e.value))
                     put("measuredAt", JsonPrimitive(e.measuredAt))
@@ -353,7 +361,7 @@ class SyncEngine(
                 val e = entity as VaccinationEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("name", JsonPrimitive(e.name))
                     e.dose?.let { put("dose", JsonPrimitive(it)) }
                     e.scheduledDate?.let { put("scheduledDate", JsonPrimitive(it)) }
@@ -368,7 +376,7 @@ class SyncEngine(
                 val e = entity as HealthRecordEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("category", JsonPrimitive(e.category))
                     put("description", JsonPrimitive(e.description))
                     e.doctorName?.let { put("doctorName", JsonPrimitive(it)) }
@@ -383,7 +391,7 @@ class SyncEngine(
                 val e = entity as DiaperEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("type", JsonPrimitive(e.type))
                     put("timestamp", JsonPrimitive(e.timestamp))
                     e.note?.let { put("note", JsonPrimitive(it)) }
@@ -410,7 +418,7 @@ class SyncEngine(
                 val e = entity as DevelopmentAssessmentEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("assessDate", JsonPrimitive(e.assessDate))
                     put("babyAgeMonths", JsonPrimitive(e.babyAgeMonths))
                     put("grossMotor", JsonPrimitive(e.grossMotor))
@@ -427,7 +435,7 @@ class SyncEngine(
                 val e = entity as ReminderEntity
                 buildJsonObject {
                     put("uuid", JsonPrimitive(e.uuid))
-                    put("babyId", JsonPrimitive(e.babyId))
+                    put("babyId", JsonPrimitive(babyUuid(e.babyId)))
                     put("type", JsonPrimitive(e.type))
                     put("title", JsonPrimitive(e.title))
                     put("description", JsonPrimitive(e.description))
@@ -462,9 +470,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseFeeding(json: JsonObject): FeedingEntity = FeedingEntity(
+    private suspend fun parseFeeding(json: JsonObject): FeedingEntity = FeedingEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         type = json["type"]?.toString()?.removeSurrounding("\"") ?: "",
         amountMl = json["amountMl"]?.toString()?.removeSurrounding("\"")?.toIntOrNull(),
         durationMin = json["durationMin"]?.toString()?.removeSurrounding("\"")?.toIntOrNull(),
@@ -479,9 +487,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseSleep(json: JsonObject): SleepEntity = SleepEntity(
+    private suspend fun parseSleep(json: JsonObject): SleepEntity = SleepEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         type = json["type"]?.toString()?.removeSurrounding("\"") ?: "",
         startTime = json["startTime"]?.toString()?.removeSurrounding("\"") ?: "",
         endTime = json["endTime"]?.toString()?.removeSurrounding("\"") ?: "",
@@ -491,9 +499,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseGrowth(json: JsonObject): GrowthEntity = GrowthEntity(
+    private suspend fun parseGrowth(json: JsonObject): GrowthEntity = GrowthEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         type = json["type"]?.toString()?.removeSurrounding("\"") ?: "",
         value = json["value"]?.toString()?.removeSurrounding("\"")?.toDoubleOrNull() ?: 0.0,
         measuredAt = json["measuredAt"]?.toString()?.removeSurrounding("\"") ?: "",
@@ -503,9 +511,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseVaccination(json: JsonObject): VaccinationEntity = VaccinationEntity(
+    private suspend fun parseVaccination(json: JsonObject): VaccinationEntity = VaccinationEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         name = json["name"]?.toString()?.removeSurrounding("\"") ?: "",
         dose = json["dose"]?.toString()?.removeSurrounding("\""),
         scheduledDate = json["scheduledDate"]?.toString()?.removeSurrounding("\""),
@@ -517,9 +525,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseHealthRecord(json: JsonObject): HealthRecordEntity = HealthRecordEntity(
+    private suspend fun parseHealthRecord(json: JsonObject): HealthRecordEntity = HealthRecordEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         category = json["category"]?.toString()?.removeSurrounding("\"") ?: "",
         description = json["description"]?.toString()?.removeSurrounding("\"") ?: "",
         doctorName = json["doctorName"]?.toString()?.removeSurrounding("\""),
@@ -531,9 +539,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseDiaper(json: JsonObject): DiaperEntity = DiaperEntity(
+    private suspend fun parseDiaper(json: JsonObject): DiaperEntity = DiaperEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         type = json["type"]?.toString()?.removeSurrounding("\"") ?: "",
         timestamp = json["timestamp"]?.toString()?.removeSurrounding("\"") ?: "",
         note = json["note"]?.toString()?.removeSurrounding("\""),
@@ -556,9 +564,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseDevAssessment(json: JsonObject): DevelopmentAssessmentEntity = DevelopmentAssessmentEntity(
+    private suspend fun parseDevAssessment(json: JsonObject): DevelopmentAssessmentEntity = DevelopmentAssessmentEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         assessDate = json["assessDate"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0L,
         babyAgeMonths = json["babyAgeMonths"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
         grossMotor = json["grossMotor"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
@@ -572,9 +580,9 @@ class SyncEngine(
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
     )
 
-    private fun parseReminder(json: JsonObject): ReminderEntity = ReminderEntity(
+    private suspend fun parseReminder(json: JsonObject): ReminderEntity = ReminderEntity(
         id = 0,
-        babyId = json["babyId"]?.toString()?.removeSurrounding("\"")?.toIntOrNull() ?: 0,
+        babyId = resolveLocalBabyId(json["babyId"]?.toString()?.removeSurrounding("\"")),
         type = json["type"]?.toString()?.removeSurrounding("\"") ?: "",
         title = json["title"]?.toString()?.removeSurrounding("\"") ?: "",
         description = json["description"]?.toString()?.removeSurrounding("\"") ?: "",
