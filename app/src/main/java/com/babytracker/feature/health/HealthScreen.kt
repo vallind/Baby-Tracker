@@ -1,5 +1,6 @@
 package com.babytracker.feature.health
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -19,13 +19,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.HealthRepository
+import com.babytracker.core.data.repository.VaccinationRepository
 import kotlinx.coroutines.launch
 import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.designsystem.components.recordcard.RecordCard
@@ -36,89 +36,143 @@ import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-val healthCategoryLabels = mapOf("allergy" to "过敏史", "medicalHistory" to "既往病史", "exam" to "体检记录", "note" to "备注", "birth_info" to "出生信息", "visit" to "就诊记录", "medication" to "用药记录", "doctor_note" to "医生备注")
-val healthCategoryIcons = mapOf("allergy" to "🤧", "medicalHistory" to "📋", "exam" to "🏥", "note" to "📝", "birth_info" to "🍼", "visit" to "🏥", "medication" to "💊", "doctor_note" to "📋")
+// —— 分类元数据：emoji + 标签 + 配色 ——
+private data class HealthCategoryMeta(
+    val key: String,
+    val label: String,
+    val emoji: String,
+    val bgColor: Color,
+)
 
-// 显示顺序（出生信息 → 过敏 → 既往病史 → 体检 → 就诊 → 用药 → 医生备注 → 备注）
-private val healthCategoryOrder = listOf("birth_info", "allergy", "medicalHistory", "exam", "visit", "medication", "doctor_note", "note")
+private val HEALTH_CATEGORIES = listOf(
+    HealthCategoryMeta("birth_info", "出生信息", "🍼", Color(0xFF9C27B0)),
+    HealthCategoryMeta("allergy", "过敏史", "🤧", Color(0xFFFFC107)),
+    HealthCategoryMeta("medicalHistory", "既往病史", "📋", Color(0xFF4CAF50)),
+    HealthCategoryMeta("visit", "就诊记录", "🏥", Color(0xFFF44336)),
+    HealthCategoryMeta("medication", "用药记录", "💊", Color(0xFF2196F3)),
+    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", Color(0xFFFF9800)),
+    HealthCategoryMeta("doctor_note", "医生备注", "📋", Color(0xFFFF5722)),
+)
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+/** 根据分类和已有记录生成摘要副标题。 */
+private fun categorySummary(category: String, items: List<HealthRecord>): String {
+    if (items.isEmpty()) return "暂无记录"
+    val latest = items.maxByOrNull { it.recordDate } ?: return items.first().description
+    return when (category) {
+        "birth_info" -> latest.recordDate.take(10)
+        "allergy", "medicalHistory", "doctor_note" -> latest.description
+        "visit", "medication" -> "${items.size}条记录"
+        else -> latest.description
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(navController: NavController) {
     val c = LocalAppColors.current
     val healthRepo: HealthRepository = koinInject()
+    val vacRepo: VaccinationRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
     val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
+    val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<HealthRecord?>(null) }
+    // 展开/收起某个分类
+    var expandedCategory by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(containerColor = c.pageBackground, topBar = {
-        AppTopBar(title = "健康档案", onBack = { navController.popBackStack() })
-    }, snackbarHost = { SnackbarHost(snackbarHostState) },
-    floatingActionButton = {
-        AppFAB(icon = Icons.Default.Add, onClick = { editingRecord = null; showForm = true })
-    }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
-            // —— 顶部标题区（浅蓝渐变背景）——
-            Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 20.dp)) {
-                Column {
-                    Text("健康档案", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                    Spacer(Modifier.height(4.dp))
-                    Text("记录过敏、用药、就诊等信息，建立完整健康档案", fontSize = 12.sp, color = c.textSecondary)
-                }
-            }
-            Spacer(Modifier.height(DT.cardGap.dp))
+    val grouped = remember(records) { records.groupBy { it.category } }
+    // 已接种疫苗数
+    val vaccinatedCount = remember(vaccinations) {
+        vaccinations.count { it.status.name == "COMPLETED" || it.status.name == "ADMINISTERED" }
+    }
 
-            if (records.isEmpty()) {
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    EmptyState(
-                        emoji = "❤️",
-                        title = "还没有健康记录",
-                        subtitle = "点击右下角按钮，添加宝宝的健康信息",
-                    )
-                }
-            } else {
-                val grouped = remember(records) { records.groupBy { it.category } }
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(bottom = 80.dp),
-                ) {
-                    healthCategoryOrder.forEachIndexed { index, category ->
-                        val items = grouped[category] ?: return@forEachIndexed
-                        item(key = category) {
-                            HealthCategoryCard(
-                                category = category,
-                                items = items,
-                                useAccent = index % 2 == 1,
-                                onClick = { record ->
-                                    editingRecord = record
-                                    showForm = true
-                                },
-                                onDelete = { record ->
-                                    scope.launch {
-                                        healthRepo.delete(record)
-                                        val result = snackbarHostState.showSnackbar(
-                                            message = "已删除「${record.description.take(20)}」",
-                                            actionLabel = "撤销",
-                                            duration = SnackbarDuration.Short,
-                                        )
-                                        if (result == SnackbarResult.ActionPerformed) {
-                                            healthRepo.insert(record)
-                                        }
+    Scaffold(
+        containerColor = c.pageBackground,
+        topBar = { AppTopBar(title = "健康档案", onBack = { navController.popBackStack() }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            AppFAB(icon = Icons.Default.Add, onClick = { editingRecord = null; showForm = true })
+        },
+    ) { padding ->
+        if (grouped.isEmpty() && vaccinatedCount == 0) {
+            Box(
+                Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center,
+            ) {
+                EmptyState(
+                    emoji = "❤️",
+                    title = "还没有健康记录",
+                    subtitle = "点击右下角按钮，添加宝宝的健康信息",
+                )
+            }
+        } else {
+            LazyColumn(
+                Modifier.fillMaxSize().padding(padding).background(c.pageBackground),
+                contentPadding = PaddingValues(top = DT.cardGap.dp, bottom = 80.dp),
+            ) {
+                HEALTH_CATEGORIES.forEach { meta ->
+                    item(key = meta.key) {
+                        if (meta.key == "vaccination") {
+                            // 疫苗接种卡片：读取 Vaccination 数据
+                            VaccinationSummaryCard(
+                                emoji = meta.emoji,
+                                bgColor = meta.bgColor,
+                                label = meta.label,
+                                count = vaccinatedCount,
+                                onClick = { navController.navigate(com.babytracker.navigation.Screen.Vaccination.route) },
+                            )
+                        } else {
+                            val items = grouped[meta.key].orEmpty()
+                            val summary = categorySummary(meta.key, items)
+                            val isExpanded = expandedCategory == meta.key
+                            HealthCategorySummaryCard(
+                                emoji = meta.emoji,
+                                bgColor = meta.bgColor,
+                                label = meta.label,
+                                summary = summary,
+                                hasItems = items.isNotEmpty(),
+                                isExpanded = isExpanded,
+                                onClick = {
+                                    if (items.isNotEmpty()) {
+                                        expandedCategory = if (isExpanded) null else meta.key
                                     }
                                 },
                             )
+                            // 展开后的记录列表（内嵌在同一卡片下方）
+                            AnimatedVisibility(visible = isExpanded && items.isNotEmpty()) {
+                                ExpandedCategoryItems(
+                                    items = items,
+                                    onEdit = { record ->
+                                        editingRecord = record
+                                        showForm = true
+                                    },
+                                    onDelete = { record ->
+                                        scope.launch {
+                                            healthRepo.delete(record)
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = "已删除「${record.description.take(20)}」",
+                                                actionLabel = "撤销",
+                                                duration = SnackbarDuration.Short,
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                healthRepo.insert(record)
+                                            }
+                                        }
+                                    },
+                                )
+                            }
                         }
-                        item { Spacer(Modifier.height(DT.cardGapSm.dp)) }
                     }
+                    item { Spacer(Modifier.height(DT.cardGapSm.dp)) }
                 }
             }
         }
     }
+
     if (showForm) {
         HealthFormDialog(
             babyId = babyId,
@@ -137,85 +191,149 @@ fun HealthScreen(navController: NavController) {
                     showForm = false
                     editingRecord = null
                 }
-            }
+            },
         )
     }
-
 }
 
-/** 单个分类卡片：标题 + 内容列表。 */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+// —— 通用分类摘要卡片（紧凑行）——
 @Composable
-private fun HealthCategoryCard(
-    category: String,
+private fun HealthCategorySummaryCard(
+    emoji: String,
+    bgColor: Color,
+    label: String,
+    summary: String,
+    hasItems: Boolean,
+    isExpanded: Boolean,
+    onClick: () -> Unit,
+) {
+    val c = LocalAppColors.current
+    Card(
+        Modifier
+            .padding(horizontal = DT.pageMargin.dp)
+            .fillMaxWidth()
+            .clickable(enabled = hasItems, onClick = onClick),
+        shape = RoundedCornerShape(DT.cardRadius.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // 左侧：彩色圆形 emoji
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(bgColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(emoji, fontSize = 20.sp)
+            }
+            Spacer(Modifier.width(12.dp))
+            // 中间：标题 + 副标题
+            Column(Modifier.weight(1f)) {
+                Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    summary,
+                    fontSize = 13.sp,
+                    color = if (hasItems) c.textSecondary else c.textTertiary,
+                    maxLines = 1,
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            // 右侧箭头
+            Text("›", fontSize = 22.sp, color = c.textTertiary)
+        }
+    }
+}
+
+// —— 疫苗接种专用卡片（点击跳转疫苗接种页）——
+@Composable
+private fun VaccinationSummaryCard(
+    emoji: String,
+    bgColor: Color,
+    label: String,
+    count: Int,
+    onClick: () -> Unit,
+) {
+    val c = LocalAppColors.current
+    val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
+    Card(
+        Modifier
+            .padding(horizontal = DT.pageMargin.dp)
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(DT.cardRadius.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(bgColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(emoji, fontSize = 20.sp)
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    summary,
+                    fontSize = 13.sp,
+                    color = if (count > 0) c.textSecondary else c.textTertiary,
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Text("›", fontSize = 22.sp, color = c.textTertiary)
+        }
+    }
+}
+
+// —— 展开后的记录列表 ——
+@Composable
+private fun ExpandedCategoryItems(
     items: List<HealthRecord>,
-    useAccent: Boolean,
-    onClick: (HealthRecord) -> Unit,
+    onEdit: (HealthRecord) -> Unit,
     onDelete: (HealthRecord) -> Unit,
 ) {
     val c = LocalAppColors.current
-    val tint = if (useAccent) c.warning else c.primary
-    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
-    Card(
-        Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().shadow(elevation = DT.cardElevation.dp, shape = cardShape),
-        shape = cardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
-    ) {
-        Column(Modifier.padding(DT.cardInnerPadding.dp)) {
-            // —— 分类标题行 ——
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(tint.copy(alpha = 0.14f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(healthCategoryIcons[category] ?: "📋", fontSize = DT.iconSize.sp)
-                }
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    healthCategoryLabels[category] ?: category,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = c.textPrimary,
-                )
-                Spacer(Modifier.weight(1f))
-                Text("${items.size} 条", fontSize = 12.sp, color = c.textSecondary)
-            }
-            Spacer(Modifier.height(8.dp))
-            // —— 记录列表 ——
-            items.forEachIndexed { i, r ->
-                RecordCard(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    onDelete = { onDelete(r) },
-                    onClick = {},
-                    onLongClick = { onClick(r) },
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    Box(
-                        Modifier
-                            .padding(top = 4.dp)
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(tint),
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
+    val sorted = remember(items) { items.sortedByDescending { it.recordDate } }
+    Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
+        sorted.forEachIndexed { i, r ->
+            RecordCard(
+                modifier = Modifier.padding(bottom = 12.dp),
+                onDelete = { onDelete(r) },
+                onClick = { onEdit(r) },
+                onLongClick = { onEdit(r) },
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(r.description, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
-                        Spacer(Modifier.height(2.dp))
+                        Spacer(Modifier.weight(1f))
                         val dateText = try {
                             DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
                         } catch (_: Exception) { r.recordDate.take(10) }
-                        Text(dateText, fontSize = 11.sp, color = c.textSecondary)
-                        if (!r.doctorName.isNullOrBlank()) {
-                            Text("医生：${r.doctorName}", fontSize = 11.sp, color = c.textSecondary)
-                        }
-                        if (!r.note.isNullOrBlank()) {
-                            Text(r.note, fontSize = 12.sp, color = c.textSecondary)
-                        }
+                        Text(dateText, fontSize = 12.sp, color = c.textSecondary)
                     }
-                }
-                if (i != items.lastIndex) {
-                    HorizontalDivider(color = c.divider, thickness = 0.5.dp, modifier = Modifier.padding(start = 20.dp))
+                    if (!r.doctorName.isNullOrBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("👨‍⚕️ ${r.doctorName}", fontSize = 12.sp, color = c.textSecondary)
+                    }
+                    if (!r.note.isNullOrBlank()) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(r.note, fontSize = 12.sp, color = c.textSecondary, maxLines = 2)
+                    }
                 }
             }
         }
@@ -232,7 +350,7 @@ fun HealthFormDialog(
 ) {
     val c = LocalAppColors.current
     val isEdit = editEntity != null
-    var category by remember { mutableStateOf(editEntity?.category ?: "allergy") }
+    var category by remember { mutableStateOf(editEntity?.category ?: "birth_info") }
     var description by remember { mutableStateOf(editEntity?.description ?: "") }
     var doctorName by remember { mutableStateOf(editEntity?.doctorName ?: "") }
     var recordDate by remember {
@@ -245,11 +363,9 @@ fun HealthFormDialog(
     var showDatePicker by remember { mutableStateOf(false) }
 
     val categories = listOf(
+        "birth_info" to "🍼 出生信息",
         "allergy" to "🤧 过敏史",
         "medicalHistory" to "📋 既往病史",
-        "exam" to "🏥 体检记录",
-        "note" to "📝 备注",
-        "birth_info" to "🍼 出生信息",
         "visit" to "🏥 就诊记录",
         "medication" to "💊 用药记录",
         "doctor_note" to "📋 医生备注",
