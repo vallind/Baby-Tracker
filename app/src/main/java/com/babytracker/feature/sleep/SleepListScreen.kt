@@ -156,6 +156,7 @@ fun SleepListScreen(navController: NavController) {
                     Card(
                         Modifier
                             .fillMaxWidth()
+                            .padding(horizontal = DT.pageMargin.dp)
                             .padding(bottom = 16.dp),
                         shape = cardShape,
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),

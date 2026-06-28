@@ -145,6 +145,102 @@ fun DiaperListScreen(navController: NavController) {
                     )
                 }
             } else {
+                // —— 今日汇总大卡：移出 LazyColumn，正常布局消除负 padding ——
+                val cardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
+
+                Card(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DT.pageMargin.dp)
+                        .padding(bottom = 16.dp),
+                    shape = cardShape,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .background(Gradients.diaperSummary(c), cardShape)
+                    ) {
+                        Column(Modifier.padding(20.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    Modifier
+                                        .size(32.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.White.copy(alpha = 0.25f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text("🧷", fontSize = 16.sp) }
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "今日尿布",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.White.copy(alpha = 0.9f),
+                                )
+                            }
+                            Spacer(Modifier.height(20.dp))
+                            Text(
+                                "${filtered.size} 次",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.75f),
+                            )
+                        }
+                    }
+                }
+
+                // —— 换尿布详情 ——
+                Card(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DT.pageMargin.dp)
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(DT.cardRadius.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    colors = CardDefaults.cardColors(containerColor = c.surface),
+                ) {
+                    Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+                        Text(
+                            "换尿布详情",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = c.textPrimary,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        Row(Modifier.fillMaxWidth()) {
+                            DiaperStatCell(
+                                emoji = "💧",
+                                label = "小便",
+                                value = "${wetCount}次",
+                                modifier = Modifier.weight(1f),
+                                c = c,
+                            )
+                            DiaperStatCell(
+                                emoji = "💩",
+                                label = "大便",
+                                value = "${poopCount}次",
+                                modifier = Modifier.weight(1f),
+                                c = c,
+                            )
+                            DiaperStatCell(
+                                emoji = "🔄",
+                                label = "混合",
+                                value = "${bothCount}次",
+                                modifier = Modifier.weight(1f),
+                                c = c,
+                            )
+                        }
+                    }
+                }
+
+                // —— 记录列表 ——
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -152,105 +248,9 @@ fun DiaperListScreen(navController: NavController) {
                     contentPadding = PaddingValues(
                         start = DT.pageMargin.dp,
                         end = DT.pageMargin.dp,
-                        top = 4.dp,
                         bottom = 8.dp,
                     ),
                 ) {
-                    // —— 今日汇总大卡 ——
-                    item {
-                        val cardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
-
-                        Card(
-                            Modifier
-                                .padding(horizontal = (-DT.pageMargin).dp)
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            shape = cardShape,
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                        ) {
-                            Box(Modifier.background(Gradients.diaperSummary(c), cardShape)) {
-                                Column(Modifier.padding(20.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(
-                                            Modifier
-                                                .size(32.dp)
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(Color.White.copy(alpha = 0.25f)),
-                                            contentAlignment = Alignment.Center,
-                                        ) { Text("🧷", fontSize = 16.sp) }
-                                        Spacer(Modifier.width(8.dp))
-                                        Text(
-                                            "今日尿布",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Medium,
-                                            color = Color.White.copy(alpha = 0.9f),
-                                        )
-                                    }
-                                    Spacer(Modifier.height(20.dp))
-                                    Text(
-                                        "${filtered.size} 次",
-                                        fontSize = 28.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                    )
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(
-                                        "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White.copy(alpha = 0.75f),
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // —— 换尿布详情 ——
-                    item {
-                        Card(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(DT.cardRadius.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            colors = CardDefaults.cardColors(containerColor = c.surface),
-                        ) {
-                            Column(Modifier.padding(DT.cardInnerPadding.dp)) {
-                                Text(
-                                    "换尿布详情",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = c.textPrimary,
-                                )
-                                Spacer(Modifier.height(16.dp))
-                                Row(Modifier.fillMaxWidth()) {
-                                    DiaperStatCell(
-                                        emoji = "💧",
-                                        label = "小便",
-                                        value = "${wetCount}次",
-                                        modifier = Modifier.weight(1f),
-                                        c = c,
-                                    )
-                                    DiaperStatCell(
-                                        emoji = "💩",
-                                        label = "大便",
-                                        value = "${poopCount}次",
-                                        modifier = Modifier.weight(1f),
-                                        c = c,
-                                    )
-                                    DiaperStatCell(
-                                        emoji = "🔄",
-                                        label = "混合",
-                                        value = "${bothCount}次",
-                                        modifier = Modifier.weight(1f),
-                                        c = c,
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // —— 记录列表 ——
                     items(items = sortedRecords, key = { it.id }) { d ->
                         val label = DateUtils.diaperTypeLabel(DiaperType.raw(d.type))
                         val timeStr = try {

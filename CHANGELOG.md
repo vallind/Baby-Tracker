@@ -4,6 +4,10 @@
 
 ### [Unreleased]
 
+**修复尿布页面负 padding 闪退风险 + 睡眠大卡恢复间距：**
++- 尿布今日汇总大卡 + 换尿布详情卡移出 LazyColumn，在外层 Column 中用 `.padding(horizontal = DT.pageMargin.dp)` 正常布局，消除 `(-DT.pageMargin).dp` 负 padding 的布局崩溃风险
++- 睡眠夜间大卡添加 `padding(horizontal = DT.pageMargin.dp)` 恢复左右 20dp 间距
+
 **尿布更换 UI 重做：参照睡眠页面：**
 +- 顶部改用 AppTopBar（标题+返回+日历图标），替换旧版渐变 Header
 +- 新增日期选择器行（今天/昨天/明天 + 完整日期 + 下拉箭头），支持 DatePickerDialog
