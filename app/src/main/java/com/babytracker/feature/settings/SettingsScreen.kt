@@ -67,8 +67,18 @@ fun SettingsScreen(navController: NavController) {
     val syncStatusText by settingsVM.syncStatusText.collectAsState()
     val syncState by settingsVM.syncState.collectAsState()
     val isLoggedIn by settingsVM.isLoggedIn.collectAsState()
+    val syncResult by settingsVM.syncResult.collectAsState()
     var showLogoutConfirm by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // 同步结果 Toast 弹窗提醒
+    LaunchedEffect(syncResult) {
+        syncResult?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            settingsVM.clearSyncResult()
+        }
+    }
 
     Scaffold(
         containerColor = c.pageBackground,

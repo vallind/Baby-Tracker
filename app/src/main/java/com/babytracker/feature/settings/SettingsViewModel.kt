@@ -92,10 +92,24 @@ class SettingsViewModel(
         return familyService.createFamily("我的家庭").getOrNull()?.id
     }
 
+    /** 同步结果消息（一次性事件，UI 消费后置空） */
+    private val _syncResult = MutableStateFlow<String?>(null)
+    val syncResult: StateFlow<String?> = _syncResult.asStateFlow()
+
     /** 手动触发完整双向同步 */
     fun manualSync() {
         viewModelScope.launch {
-            syncEngine.fullSync()
+            try {
+                syncEngine.fullSync()
+                _syncResult.value = "同步完成 ✓"
+            } catch (e: Exception) {
+                _syncResult.value = "同步失败：${e.message}"
+            }
         }
+    }
+
+    /** UI 消费结果后清除 */
+    fun clearSyncResult() {
+        _syncResult.value = null
     }
 }
