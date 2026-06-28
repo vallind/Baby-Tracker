@@ -1,6 +1,8 @@
 package com.babytracker.designsystem.components.bottomnav
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
@@ -50,7 +52,9 @@ fun BottomNavBar(navController: NavController) {
         containerColor = BottomBarDefaults.containerColor(),
         contentColor = BottomBarDefaults.contentColor(),
         tonalElevation = 0.dp,
-        modifier = Modifier.height(BottomBarDefaults.height()),
+        modifier = Modifier
+            .height(BottomBarDefaults.height())
+            .navigationBarsPadding(),
     ) {
         val tabs = listOf(
             BottomTab("首页", Icons.Outlined.Home, Screen.Home.route, badgeCount = 0),

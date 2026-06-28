@@ -4,6 +4,10 @@
 
 ### [1.4.1] — 2026-06-28
 
+**修复底部导航栏图标显示不全：**
+- BottomBarTokens 高度 64dp → 80dp、图标 22dp → 24dp，与 M3 NavigationBar 默认值对齐，解决图标被裁剪问题
+- NavigationBar 添加 navigationBarsPadding() 防止系统手势条遮挡
+
 **修复主题切换后组件颜色不跟随变化：**
 - LocalAppComponentTokens 从 staticCompositionLocalOf 改为 compositionLocalOf，确保主题切换时可靠重组
 - BabyTrackerTheme.resolvedColors 从硬编码 AppColors.light()/dark() 改为基于 theme.colors 调用 AppColors.derive()，使暖阳粉/极光紫等主题的组件令牌颜色正确跟随

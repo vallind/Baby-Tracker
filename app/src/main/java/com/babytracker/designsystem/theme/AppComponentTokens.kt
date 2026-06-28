@@ -582,8 +582,8 @@ data class BottomBarTokens(
             colors: AppColors,
             typography: AppTypography,
         ): BottomBarTokens = BottomBarTokens(
-            height = 64.dp,
-            iconSize = 22.dp,
+            height = 80.dp,
+            iconSize = 24.dp,
             labelSize = 11.sp,
             fontWeight = FontWeight.Medium,
             containerColor = colors.surface,
