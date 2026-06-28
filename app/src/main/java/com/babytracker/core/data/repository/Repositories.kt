@@ -7,6 +7,19 @@ import com.babytracker.core.domain.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
+import java.util.UUID
+
+/**
+ * 同步字段辅助：为 insert 自动生成 uuid + updatedAt。
+ * 只用于 insert 路径——Domain Model 层不需要手动填这些字段。
+ */
+private fun <T> withSyncFields(block: () -> T): T {
+    // 子类各自通过 copy 注入，这里仅提供工具常量
+    return block()
+}
+
+private val nowEpoch get() = System.currentTimeMillis()
+private fun newUuid() = UUID.randomUUID().toString()
 
 // ── 宝宝 ──
 
@@ -21,9 +34,18 @@ interface BabyRepository {
 class BabyRepositoryImpl(private val dao: BabyDao) : BabyRepository {
     override fun watchAll() = dao.watchAll().map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
-    override suspend fun insert(baby: Baby) = dao.insert(baby.toEntity())
-    override suspend fun update(baby: Baby) = dao.update(baby.toEntity())
-    override suspend fun delete(baby: Baby) = dao.delete(baby.toEntity())
+    override suspend fun insert(baby: Baby): Long {
+        val entity = baby.copy(uuid = baby.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
+    override suspend fun update(baby: Baby) {
+        val entity = baby.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
+    override suspend fun delete(baby: Baby) {
+        val entity = baby.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // ── 喂养 ──
@@ -39,9 +61,18 @@ interface FeedingRepository {
 class FeedingRepositoryImpl(private val dao: FeedingDao) : FeedingRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
-    override suspend fun insert(feeding: Feeding) = dao.insert(feeding.toEntity())
-    override suspend fun update(feeding: Feeding) = dao.update(feeding.toEntity())
-    override suspend fun delete(feeding: Feeding) = dao.delete(feeding.toEntity())
+    override suspend fun insert(feeding: Feeding): Long {
+        val entity = feeding.copy(uuid = feeding.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
+    override suspend fun update(feeding: Feeding) {
+        val entity = feeding.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
+    override suspend fun delete(feeding: Feeding) {
+        val entity = feeding.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // ── 睡眠 ──
@@ -57,9 +88,18 @@ interface SleepRepository {
 class SleepRepositoryImpl(private val dao: SleepDao) : SleepRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
-    override suspend fun insert(sleep: Sleep) = dao.insert(sleep.toEntity())
-    override suspend fun update(sleep: Sleep) = dao.update(sleep.toEntity())
-    override suspend fun delete(sleep: Sleep) = dao.delete(sleep.toEntity())
+    override suspend fun insert(sleep: Sleep): Long {
+        val entity = sleep.copy(uuid = sleep.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
+    override suspend fun update(sleep: Sleep) {
+        val entity = sleep.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
+    override suspend fun delete(sleep: Sleep) {
+        val entity = sleep.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // ── 生长 ──
@@ -75,9 +115,18 @@ interface GrowthRepository {
 class GrowthRepositoryImpl(private val dao: GrowthDao) : GrowthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
-    override suspend fun insert(growth: Growth) = dao.insert(growth.toEntity())
-    override suspend fun update(growth: Growth) = dao.update(growth.toEntity())
-    override suspend fun delete(growth: Growth) = dao.delete(growth.toEntity())
+    override suspend fun insert(growth: Growth): Long {
+        val entity = growth.copy(uuid = growth.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
+    override suspend fun update(growth: Growth) {
+        val entity = growth.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
+    override suspend fun delete(growth: Growth) {
+        val entity = growth.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // ── 疫苗 ──
@@ -93,9 +142,18 @@ interface VaccinationRepository {
 class VaccinationRepositoryImpl(private val dao: VaccinationDao) : VaccinationRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
-    override suspend fun insert(vaccination: Vaccination) = dao.insert(vaccination.toEntity())
-    override suspend fun update(vaccination: Vaccination) = dao.update(vaccination.toEntity())
-    override suspend fun delete(vaccination: Vaccination) = dao.delete(vaccination.toEntity())
+    override suspend fun insert(vaccination: Vaccination): Long {
+        val entity = vaccination.copy(uuid = vaccination.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
+    override suspend fun update(vaccination: Vaccination) {
+        val entity = vaccination.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
+    override suspend fun delete(vaccination: Vaccination) {
+        val entity = vaccination.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // ── 健康记录 ──
@@ -111,9 +169,18 @@ interface HealthRepository {
 class HealthRepositoryImpl(private val dao: HealthRecordDao) : HealthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
-    override suspend fun insert(record: HealthRecord) = dao.insert(record.toEntity())
-    override suspend fun update(record: HealthRecord) = dao.update(record.toEntity())
-    override suspend fun delete(record: HealthRecord) = dao.delete(record.toEntity())
+    override suspend fun insert(record: HealthRecord): Long {
+        val entity = record.copy(uuid = record.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
+    override suspend fun update(record: HealthRecord) {
+        val entity = record.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
+    override suspend fun delete(record: HealthRecord) {
+        val entity = record.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // ── 尿布 ──
@@ -129,9 +196,18 @@ interface DiaperRepository {
 class DiaperRepositoryImpl(private val dao: DiaperDao) : DiaperRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
-    override suspend fun insert(diaper: Diaper) = dao.insert(diaper.toEntity())
-    override suspend fun update(diaper: Diaper) = dao.update(diaper.toEntity())
-    override suspend fun delete(diaper: Diaper) = dao.delete(diaper.toEntity())
+    override suspend fun insert(diaper: Diaper): Long {
+        val entity = diaper.copy(uuid = diaper.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
+    override suspend fun update(diaper: Diaper) {
+        val entity = diaper.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
+    override suspend fun delete(diaper: Diaper) {
+        val entity = diaper.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // —— 消息中心 —— Repository 返回 Domain Model（AppMessage），内部做 Entity↔Domain 映射
@@ -155,13 +231,19 @@ class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
 
     override fun watchUnreadCount(): Flow<Int> = dao.watchUnreadCount()
 
-    override suspend fun insert(message: AppMessage): Long = dao.insert(message.toEntity())
+    override suspend fun insert(message: AppMessage): Long {
+        val entity = message.copy(uuid = message.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
 
     override suspend fun markRead(id: Long) = dao.markRead(id)
 
     override suspend fun markAllRead() = dao.markAllRead()
 
-    override suspend fun delete(message: AppMessage) = dao.delete(message.toEntity())
+    override suspend fun delete(message: AppMessage) {
+        val entity = message.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // —— 发育评估 —— Repository 返回 Domain Model（DevelopmentAssessment），内部做 Entity↔Domain 映射
@@ -187,14 +269,20 @@ class DevelopmentAssessmentRepositoryImpl(
     override fun watchLatest(babyId: Int): Flow<DevelopmentAssessment?> =
         dao.watchLatest(babyId).map { it?.toDomain() }
 
-    override suspend fun insert(assessment: DevelopmentAssessment): Long =
-        dao.insert(assessment.toEntity())
+    override suspend fun insert(assessment: DevelopmentAssessment): Long {
+        val entity = assessment.copy(uuid = assessment.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
 
-    override suspend fun update(assessment: DevelopmentAssessment) =
-        dao.update(assessment.toEntity())
+    override suspend fun update(assessment: DevelopmentAssessment) {
+        val entity = assessment.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 
-    override suspend fun delete(assessment: DevelopmentAssessment) =
-        dao.delete(assessment.toEntity())
+    override suspend fun delete(assessment: DevelopmentAssessment) {
+        val entity = assessment.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 }
 
 // —— 提醒中心 —— Repository 返回 Domain Model（Reminder），内部做 Entity↔Domain 映射。
@@ -222,14 +310,20 @@ class ReminderRepositoryImpl(private val dao: ReminderDao) : ReminderRepository 
     override suspend fun getById(id: Int): Reminder? =
         dao.getById(id)?.toDomain()
 
-    override suspend fun insert(reminder: Reminder): Long =
-        dao.insert(reminder.toEntity())
+    override suspend fun insert(reminder: Reminder): Long {
+        val entity = reminder.copy(uuid = reminder.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+        return dao.insert(entity)
+    }
 
-    override suspend fun update(reminder: Reminder) =
-        dao.update(reminder.toEntity())
+    override suspend fun update(reminder: Reminder) {
+        val entity = reminder.copy(updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 
-    override suspend fun delete(reminder: Reminder) =
-        dao.delete(reminder.toEntity())
+    override suspend fun delete(reminder: Reminder) {
+        val entity = reminder.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
+        dao.update(entity)
+    }
 
     override suspend fun markDone(id: Int, doneDate: LocalDateTime) =
         dao.markDone(id, doneDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())

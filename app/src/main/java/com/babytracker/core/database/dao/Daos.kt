@@ -121,6 +121,9 @@ interface MessageDao {
     @Query("SELECT COUNT(*) FROM messages WHERE isRead = 0")
     fun watchUnreadCount(): Flow<Int>
 
+    @Query("SELECT * FROM messages WHERE id = :id")
+    suspend fun getById(id: Long): MessageEntity?
+
     @Insert
     suspend fun insert(entity: MessageEntity): Long
 
@@ -130,6 +133,8 @@ interface MessageDao {
     @Query("UPDATE messages SET isRead = 1")
     suspend fun markAllRead()
 
+    @Update
+    suspend fun update(entity: MessageEntity)
     @Delete
     suspend fun delete(entity: MessageEntity)
 }

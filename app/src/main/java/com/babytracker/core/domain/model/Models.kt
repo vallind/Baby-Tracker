@@ -203,6 +203,9 @@ data class Reminder(
     val doneDate: LocalDateTime? = null,
     val isEnabled: Boolean = true,  // 是否启用（用药类每日提醒可开关）
     val repeatRule: String = "",    // "每日" / "每周一" / ""（一次性）
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 enum class ReminderType { VACCINE, CHECKUP, MEDICATION, ASSESSMENT, OTHER;
@@ -239,6 +242,9 @@ data class DevelopmentAssessment(
     val social: Int,                 // 社交能力
     val cognitive: Int,              // 认知能力
     val note: String = "",           // 备注
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 /**
@@ -282,4 +288,7 @@ data class AppMessage(
     val createTime: LocalDateTime,
     val isRead: Boolean = false,
     val extraData: String = "",
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )

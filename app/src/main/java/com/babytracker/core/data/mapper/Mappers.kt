@@ -142,6 +142,7 @@ fun MessageEntity.toDomain(): AppMessage = AppMessage(
     ),
     isRead = isRead,
     extraData = extraData,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun AppMessage.toEntity(): MessageEntity = MessageEntity(
@@ -153,6 +154,7 @@ fun AppMessage.toEntity(): MessageEntity = MessageEntity(
     createTime = createTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
     isRead = isRead,
     extraData = extraData,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 // —— 发育评估 —— Entity ↔ Domain 双向映射（assessDate: Long(epoch milli) ↔ LocalDateTime）
@@ -171,6 +173,7 @@ fun DevelopmentAssessmentEntity.toDomain(): DevelopmentAssessment = DevelopmentA
     social = social,
     cognitive = cognitive,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun DevelopmentAssessment.toEntity(): DevelopmentAssessmentEntity = DevelopmentAssessmentEntity(
@@ -184,6 +187,7 @@ fun DevelopmentAssessment.toEntity(): DevelopmentAssessmentEntity = DevelopmentA
     social = social,
     cognitive = cognitive,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 // —— 提醒中心 —— Entity ↔ Domain 双向映射
@@ -206,6 +210,7 @@ fun ReminderEntity.toDomain(): Reminder = Reminder(
     },
     isEnabled = isEnabled,
     repeatRule = repeatRule,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun Reminder.toEntity(): ReminderEntity = ReminderEntity(
@@ -219,4 +224,5 @@ fun Reminder.toEntity(): ReminderEntity = ReminderEntity(
     doneDate = doneDate?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
     isEnabled = isEnabled,
     repeatRule = repeatRule,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )

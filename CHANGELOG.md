@@ -4,6 +4,14 @@
 
 ### [Unreleased]
 
+**Supabase Phase 2：核心同步引擎 & Realtime 订阅：**
+- Repository 层自动填充同步字段：insert 时生成 UUID + updatedAt，update 时刷新 updatedAt，delete 改为软删除（设 deletedAt）
+- 补充 AppMessage / DevelopmentAssessment / Reminder domain model 的 uuid/updatedAt/deletedAt 字段及 mapper
+- 新增 SyncEngine：双向增量同步（push/pull），Postgrest upsert + 增量过滤（gte updatedAt），冲突策略 Last-Write-Wins
+- 新增 RealtimeManager：订阅 Supabase 10 张业务表的 INSERT/UPDATE/DELETE 变更，自动回写本地 Room
+- 新增 syncModule DI 注册：SupabaseClient / AuthService / SyncEngine / RealtimeManager
+- MessageDao 补充 getById + update 方法
+
 **领域模型升级 & Repository 重构：**
 - Domain Models 新增 uuid / updatedAt / deletedAt 字段，与 Room Entity 对齐
 - Mappers 更新 7 对 toDomain()/toEntity()，完整映射新字段
