@@ -55,10 +55,14 @@ class FamilyService(
         // 1. 创建家庭（显式指定 ID）
         client.postgrest.from("families").insert(mapOf("id" to familyId, "name" to name))
 
-        // 2. 将自己加入为 owner（必须在查询前，否则 RLS 拦截）
-        client.postgrest.from("family_members").insert(
-            mapOf("family_id" to familyId, "user_id" to userId, "role" to "owner")
-        )
+        // 2. 将自己加入为 owner（必须在查询前，否则 RLS 拦截；重复插入不算错）
+        try {
+            client.postgrest.from("family_members").insert(
+                mapOf("family_id" to familyId, "user_id" to userId, "role" to "owner")
+            )
+        } catch (_: Exception) {
+            // 已存在则忽略（PK 冲突说明已在家庭中）
+        }
 
         // 3. 现在可以通过 RLS（is_family_member 返回 true）
         val families: List<Family> = client.postgrest.from("families")
