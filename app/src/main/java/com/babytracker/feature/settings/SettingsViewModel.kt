@@ -61,10 +61,14 @@ class SettingsViewModel(
         viewModelScope.launch {
             authService.observeAuthState().collect { user ->
                 if (user != null) {
-                    // 登录后确保有家庭 + 设置 family_id（必须在 sync 之前）
-                    syncEngine.currentFamilyId = ensureFamily()
-                    realtimeManager.subscribeAll()
-                    syncEngine.fullSync()
+                    try {
+                        // 登录后确保有家庭 + 设置 family_id（必须在 sync 之前）
+                        syncEngine.currentFamilyId = ensureFamily()
+                        realtimeManager.subscribeAll()
+                        syncEngine.fullSync()
+                    } catch (_: Exception) {
+                        // 网络异常等不 crash，用户可手动重试
+                    }
                 } else {
                     // 退出后停止 Realtime
                     realtimeManager.unsubscribe()
@@ -83,13 +87,17 @@ class SettingsViewModel(
 
     /** 确保当前用户至少有一个家庭，没有则自动创建"我的家庭"，返回 family_id */
     private suspend fun ensureFamily(): String? {
-        // 已有家庭直接返回
-        familyService.currentFamily.value?.let { return it.id }
-        // 尝试从 Supabase 加载
-        val families = familyService.loadMyFamilies()
-        if (families.isNotEmpty()) return families.first().id
-        // 都没有 → 自动创建
-        return familyService.createFamily("我的家庭").getOrNull()?.id
+        return try {
+            // 已有家庭直接返回
+            familyService.currentFamily.value?.let { return it.id }
+            // 尝试从 Supabase 加载
+            val families = familyService.loadMyFamilies()
+            if (families.isNotEmpty()) return families.first().id
+            // 都没有 → 自动创建
+            familyService.createFamily("我的家庭").getOrNull()?.id
+        } catch (_: Exception) {
+            null
+        }
     }
 
     /** 同步结果消息（一次性事件，UI 消费后置空） */
