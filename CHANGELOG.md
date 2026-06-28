@@ -4,10 +4,14 @@
 
 ### [Unreleased]
 
+**修复加入家庭后成员新增记录无法实时同步：**
+- Bug：`RealtimeManager.subscribeAll()` 切换家庭时未先断开旧频道，旧频道仍然存活在 Supabase 服务端，新成员的新记录通过 Realtime 推送时路由到旧频道/旧 RLS 上下文，导致接收不到
+- 修复：`subscribeAll()` 在同一协程内先执行 `disconnect()` 断开旧频道，再创建新频道，保证 JWT/RLS 上下文刷新后重新订阅
+
 **修复加入家庭后完整链路断裂（3 处连环 bug）：**
-+- Bug 1：`FamilyService.joinFamily()` 加入后 `_currentFamily` 保留旧值（`loadMyFamilies` 只在 null 时设置），导致 `SettingsViewModel` 不触发同步
-+- Bug 2：`FamilyViewModel.selectFamily()` 只改 UI 层 `uiState.currentFamily`，未同步到 `FamilyService._currentFamily`，两个状态源分叉，`SettingsViewModel` 感知不到切换
-+- Bug 3：`SyncEngine.pull()` 不按 `family_id` 过滤，仅靠 RLS——多家庭用户的 pull 会混合所有家庭数据
+- Bug 1：`FamilyService.joinFamily()` 加入后 `_currentFamily` 保留旧值（`loadMyFamilies` 只在 null 时设置），导致 `SettingsViewModel` 不触发同步
+- Bug 2：`FamilyViewModel.selectFamily()` 只改 UI 层 `uiState.currentFamily`，未同步到 `FamilyService._currentFamily`，两个状态源分叉，`SettingsViewModel` 感知不到切换
+- Bug 3：`SyncEngine.pull()` 不按 `family_id` 过滤，仅靠 RLS——多家庭用户的 pull 会混合所有家庭数据
 +- 修复：`FamilyService` 新增 `selectFamily()` 方法供外部同步全局状态；`joinFamily()` 加入成功后按邀请码匹配自动切换到新家庭
 +- 修复：`FamilyViewModel.selectFamily()` 调用 `familyService.selectFamily()` 桥接两个状态源
 +- 修复：`SyncEngine.pull()` 添加显式 `eq("family_id", currentFamilyId)` 过滤，且 `currentFamilyId == null` 时拒绝拉取

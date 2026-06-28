@@ -41,9 +41,11 @@ class RealtimeManager(
 
     private var channel: io.github.jan.supabase.realtime.RealtimeChannel? = null
 
-    /** 订阅所有业务表的变更 */
+    /** 订阅所有业务表的变更（切换家庭时重新调用，确保先断开旧频道再建新频道） */
     fun subscribeAll() {
         scope.launch {
+            // 先断开旧频道，避免订阅冲突和 RLS 上下文过期
+            disconnect()
             try {
                 _connectionState.value = RealtimeState.CONNECTING
 
@@ -76,15 +78,18 @@ class RealtimeManager(
         }
     }
 
-    /** 取消所有订阅 */
+    /** 取消所有订阅（异步，供外部调用） */
     fun unsubscribe() {
-        scope.launch {
-            try {
-                channel?.unsubscribe()
-                channel = null
-                _connectionState.value = RealtimeState.DISCONNECTED
-            } catch (_: Exception) { }
-        }
+        scope.launch { disconnect() }
+    }
+
+    /** 断开当前频道（suspend，内部在协程内顺序执行） */
+    private suspend fun disconnect() {
+        try {
+            channel?.unsubscribe()
+            channel = null
+            _connectionState.value = RealtimeState.DISCONNECTED
+        } catch (_: Exception) { }
     }
 
     /** 处理来自 Realtime 的变更事件 */
