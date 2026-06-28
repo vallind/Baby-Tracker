@@ -85,7 +85,7 @@ fun HomeScreen(navController: NavController) {
                 Spacer(Modifier.height(DT.cardGap.dp))
                 RecentRecordsSection(
                     items = state.recentItems,
-                    onSeeAll = { navController.navigate(Screen.Feeding.route) },
+                    onSeeAll = { navController.navigate(Screen.Timeline.route) },
                 )
             }
 

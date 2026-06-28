@@ -2,6 +2,8 @@ package com.babytracker.feature.diaper
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,7 +32,7 @@ import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DiaperListScreen(navController: NavController) {
     val c = LocalThemeColors.current
@@ -61,7 +63,7 @@ fun DiaperListScreen(navController: NavController) {
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
             // —— 顶部页头 ——
             Row(
                 Modifier
@@ -82,8 +84,8 @@ fun DiaperListScreen(navController: NavController) {
                 )
             }
 
-            Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
-                if (diapers.isEmpty()) {
+            if (diapers.isEmpty()) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "🧷",
                         title = "还没有尿布记录",
@@ -95,59 +97,65 @@ fun DiaperListScreen(navController: NavController) {
                         },
                     )
                 }
-                val grouped = diapers.groupBy { it.timestamp.take(10) }
-                var groupIndex = 0
-                grouped.forEach { (date, items) ->
-                    Text(
-                        date,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = c.textSecondary,
-                        modifier = Modifier.padding(top = if (groupIndex == 0) DT.cardGap.dp else DT.cardGapSm.dp, bottom = 4.dp),
-                    )
-                    items.forEachIndexed { i, d ->
-                        val tint = if (i % 2 == 1) c.accent else c.primary
-                        RecordCard(
-                            modifier = Modifier.padding(bottom = 8.dp),
-                            onDelete = {
-                                scope.launch {
-                                    val deleted = d
-                                    diaperRepo.delete(deleted)
-                                    val result = snackbarHostState.showSnackbar(
-                                        message = "已删除尿布记录",
-                                        actionLabel = "撤销",
-                                        duration = SnackbarDuration.Short,
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        diaperRepo.insert(deleted)
+            } else {
+                val grouped = remember(diapers) { diapers.groupBy { it.timestamp.take(10) } }
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = DT.pageMargin.dp,
+                        end = DT.pageMargin.dp,
+                        top = DT.cardGap.dp,
+                        bottom = 80.dp,
+                    ),
+                ) {
+                    grouped.forEach { (date, records) ->
+                        stickyHeader(key = date) {
+                            Text(date, style = MaterialTheme.typography.labelSmall, color = c.textSecondary, modifier = Modifier.padding(bottom = 4.dp))
+                        }
+                        items(items = records, key = { it.id }) { d ->
+                            val tint = if (d.id % 2 == 1) c.accent else c.primary
+                            RecordCard(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                onDelete = {
+                                    scope.launch {
+                                        val deleted = d
+                                        diaperRepo.delete(deleted)
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "已删除尿布记录",
+                                            actionLabel = "撤销",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            diaperRepo.insert(deleted)
+                                        }
                                     }
+                                },
+                                onClick = {},
+                                onLongClick = {
+                                    editingDiaper = d
+                                    showForm = true
+                                },
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(DT.iconBgSize.dp)
+                                        .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                        .background(tint.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text("🧷", style = MaterialTheme.typography.titleLarge) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                                 }
-                            },
-                            onClick = {
-                                editingDiaper = d
-                                showForm = true
-                            },
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(DT.iconBgSize.dp)
-                                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                    .background(tint.copy(alpha = 0.14f)),
-                                contentAlignment = Alignment.Center,
-                            ) { Text("🧷", style = MaterialTheme.typography.titleLarge) }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                                Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                            }
-                            if (!d.note.isNullOrBlank()) {
-                                Text(d.note.take(6), style = MaterialTheme.typography.labelSmall, color = c.textHint, modifier = Modifier.padding(start = 8.dp))
+                                if (!d.note.isNullOrBlank()) {
+                                    Text(d.note.take(6), style = MaterialTheme.typography.labelSmall, color = c.textHint, modifier = Modifier.padding(start = 8.dp))
+                                }
                             }
                         }
                     }
-                    groupIndex++
                 }
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
 

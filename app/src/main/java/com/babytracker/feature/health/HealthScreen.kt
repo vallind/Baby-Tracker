@@ -2,6 +2,8 @@ package com.babytracker.feature.health
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -38,7 +40,7 @@ val healthCategoryIcons = mapOf("allergy" to "🤧", "medicalHistory" to "📋",
 // 显示顺序（出生信息 → 过敏 → 既往病史 → 体检 → 就诊 → 用药 → 医生备注 → 备注）
 private val healthCategoryOrder = listOf("birth_info", "allergy", "medicalHistory", "exam", "visit", "medication", "doctor_note", "note")
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HealthScreen(navController: NavController) {
     val c = LocalThemeColors.current
@@ -68,7 +70,7 @@ fun HealthScreen(navController: NavController) {
             Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
             // —— 顶部标题区（浅蓝渐变背景）——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 20.dp)) {
                 Column {
@@ -80,42 +82,49 @@ fun HealthScreen(navController: NavController) {
             Spacer(Modifier.height(DT.cardGap.dp))
 
             if (records.isEmpty()) {
-                EmptyState(
-                    emoji = "❤️",
-                    title = "还没有健康记录",
-                    subtitle = "点击右下角按钮，添加宝宝的健康信息",
-                )
-            } else {
-                // —— 按类别分组渲染 ——
-                val grouped = records.groupBy { it.category }
-                healthCategoryOrder.forEachIndexed { index, category ->
-                    val items = grouped[category] ?: return@forEachIndexed
-                    HealthCategoryCard(
-                        category = category,
-                        items = items,
-                        useAccent = index % 2 == 1,
-                        onClick = { record ->
-                            editingRecord = record
-                            showForm = true
-                        },
-                        onDelete = { record ->
-                            scope.launch {
-                                healthRepo.delete(record)
-                                val result = snackbarHostState.showSnackbar(
-                                    message = "已删除「${record.description.take(20)}」",
-                                    actionLabel = "撤销",
-                                    duration = SnackbarDuration.Short,
-                                )
-                                if (result == SnackbarResult.ActionPerformed) {
-                                    healthRepo.insert(record)
-                                }
-                            }
-                        },
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    EmptyState(
+                        emoji = "❤️",
+                        title = "还没有健康记录",
+                        subtitle = "点击右下角按钮，添加宝宝的健康信息",
                     )
-                    Spacer(Modifier.height(DT.cardGapSm.dp))
+                }
+            } else {
+                val grouped = remember(records) { records.groupBy { it.category } }
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    contentPadding = PaddingValues(bottom = 80.dp),
+                ) {
+                    healthCategoryOrder.forEachIndexed { index, category ->
+                        val items = grouped[category] ?: return@forEachIndexed
+                        item(key = category) {
+                            HealthCategoryCard(
+                                category = category,
+                                items = items,
+                                useAccent = index % 2 == 1,
+                                onClick = { record ->
+                                    editingRecord = record
+                                    showForm = true
+                                },
+                                onDelete = { record ->
+                                    scope.launch {
+                                        healthRepo.delete(record)
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "已删除「${record.description.take(20)}」",
+                                            actionLabel = "撤销",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            healthRepo.insert(record)
+                                        }
+                                    }
+                                },
+                            )
+                        }
+                        item { Spacer(Modifier.height(DT.cardGapSm.dp)) }
+                    }
                 }
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
     if (showForm) {
@@ -143,7 +152,7 @@ fun HealthScreen(navController: NavController) {
 }
 
 /** 单个分类卡片：标题 + 内容列表。 */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun HealthCategoryCard(
     category: String,
@@ -186,7 +195,8 @@ private fun HealthCategoryCard(
                 RecordCard(
                     modifier = Modifier.padding(bottom = 16.dp),
                     onDelete = { onDelete(r) },
-                    onClick = { onClick(r) },
+                    onClick = {},
+                    onLongClick = { onClick(r) },
                     verticalAlignment = Alignment.Top,
                 ) {
                     Box(
@@ -220,7 +230,7 @@ private fun HealthCategoryCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HealthFormDialog(
     babyId: Int,

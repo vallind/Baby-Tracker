@@ -29,6 +29,19 @@ object DateUtils {
         return try { LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME) } catch (_: DateTimeParseException) { null } catch (_: Exception) { null }
     }
 
+    fun relativeDate(dateStr: String): String {
+        val today = LocalDate.now().toString()
+        val yesterday = LocalDate.now().minusDays(1).toString()
+        return when (dateStr) {
+            today -> "今天"
+            yesterday -> "昨天"
+            else -> {
+                val date = try { LocalDate.parse(dateStr, dateFmt) } catch (_: Exception) { return dateStr }
+                date.format(DateTimeFormatter.ofPattern("M月d日"))
+            }
+        }
+    }
+
     /**
      * 安全解析日期字符串（yyyy-MM-dd 或 ISO_DATE_TIME）。失败返回 null。
      */

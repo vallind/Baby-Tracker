@@ -11,23 +11,36 @@
 
 ### [Unreleased] — 2026-06-27
 
-**RecordCard 组件化 + 删除体验统一 + Warning 清零：**
+**性能优化 + 视觉改进 + 记录页闪退修复：**
 
-**RecordCard 组件（recordcard/）：**
-- 新建 `RecordCard` — 内联 `SwipeToDismissBox` + `Card` + `AppConfirmDialog`，一张卡片完成滑动删除+点击编辑+确认弹窗
-- 新建 `RecordCardDefaults` — 委托 `CardDefaults` 提供 cornerRadius/elevation/innerPadding
-- 删除 `swipe/Swipe.kt` — SwipeToDeleteContainer/SwipeToEditContainer/SwipeToEditDeleteContainer 废弃
-- 7 个屏幕统一替换为 RecordCard（Feeding/Sleep/Diaper/Growth/Vaccination/Timeline/Health）
-- 红色溢出从结构上根除：Card = SwipeToDismissBox content，尺寸天然一致
+**性能优化：**
+- 7 个列表屏幕 `Column+verticalScroll` → `LazyColumn` + `stickyHeader`（Feeding/Sleep/Diaper/Growth/Vaccination/Timeline/Health）
+- `groupBy` / `filter` 加 `remember` 缓存，不再每次重组重算
+- TimelineViewModel 加 `distinctUntilChanged`，相同数据不触发全量重建
+- StatsViewModel 日统计从 O(N×365) 嵌套循环改为 `groupBy{date}` O(N+365)
+
+**记录页闪退修复：**
+- LazyColumn + `weight(1f)` + `contentPadding(bottom=80dp)` 组合导致划到底闪退
+- 回退到 `Column+verticalScroll` 稳定版，保留其他功能
+
+**视觉改进：**
+- 日期头显示相对时间 + 计数：`今天 · 5次`（`DateUtils.relativeDate()`）
+- RecordCard 加 `accentColor` 参数，左侧 3dp 类型色条（drawBehind 绘制，无布局影响）
+- TimelineScreen 按记录类型传色：喂养橙/睡眠紫/尿布蓝/生长绿/健康蓝灰
+- 首页"查看全部"导航修复：FeedingScreen → TimelineScreen
 
 **删除体验统一：**
-- 左滑删除统一弹出 `AppConfirmDialog` 确认后执行（不再直接删除）
-- 长按删除 7 个屏幕全部移除，仅保留左滑删除
-- 所有卡片 `combinedClickable` → `clickable`
+- 所有屏幕卡片编辑改为长按触发（`onClick` → `onLongClick`），Vaccination 保持点击
+- 左滑删除统一弹出 `AppConfirmDialog` 确认后执行
+- 7 个屏幕长按删除全部移除，仅保留左滑删除
 
 **记录页直接编辑：**
 - TimelineScreen 点击卡片直接弹出编辑表单（不再跳转功能页）
 - TimelineViewModel 新增 `findXxx(id)` / `updateXxx(entity)` 方法
+
+**单元测试：**
+- 新增 `DateUtilsTest`（相对日期 4 场景）
+- 新增 `TimelineViewModelTest`（数据映射 + find/sort 验证）
 
 **Warning 清零：**
 - 移除 DT `@Deprecated` 注解（227 warnings）

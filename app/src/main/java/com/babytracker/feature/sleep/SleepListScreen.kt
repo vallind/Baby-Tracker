@@ -2,6 +2,8 @@ package com.babytracker.feature.sleep
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,7 +32,7 @@ import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SleepListScreen(navController: NavController) {
     val c = LocalThemeColors.current
@@ -70,7 +72,7 @@ fun SleepListScreen(navController: NavController) {
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
             // —— 顶部页头 ——
             Row(
                 Modifier
@@ -91,106 +93,136 @@ fun SleepListScreen(navController: NavController) {
                 )
             }
 
-            // —— 今日夜间睡眠大卡 ——
-            val nightCardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
-            Card(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = DT.pageMargin.dp, vertical = DT.cardGap.dp)
-                    .shadow(elevation = DT.cardElevation.dp, shape = nightCardShape),
-                shape = nightCardShape,
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                colors = CardDefaults.cardColors(containerColor = c.card),
-            ) {
-                Column(Modifier.padding(DT.cardInnerPadding.dp)) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            Modifier
-                                .size(DT.iconBgSizeLg.dp)
-                                .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                .background(c.purple.copy(alpha = 0.14f)),
-                            contentAlignment = Alignment.Center,
-                        ) { Text("🌙", style = MaterialTheme.typography.headlineSmall) }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("今日睡眠", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                            Spacer(Modifier.height(2.dp))
-                            Text(
-                                DateUtils.durationFullText(nightDurSec),
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = c.primary,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Spacer(Modifier.height(2.dp))
-                            Text(nightRange, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    val goalSeconds = 14L * 3600L
-                    val goalPercent = (nightDurSec.toFloat() / goalSeconds.toFloat()).coerceIn(0f, 1f)
-                    Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(c.divider)) {
-                        Box(Modifier.fillMaxWidth(goalPercent).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(Gradients.progress(c)))
-                    }
-                }
-            }
-
             if (sleeps.isEmpty()) {
-                EmptyState(
-                    emoji = "😴",
-                    title = "还没有睡眠记录",
-                    subtitle = "点击下方按钮，记录宝宝的睡眠时间",
-                    actionText = "记录睡眠",
-                    onAction = {
-                        editingSleep = null
-                        showForm = true
-                    },
-                )
-            }
-            val grouped = sleeps.groupBy { it.startTime.take(10) }
-            grouped.forEach { (date, items) ->
-                Text(date, style = MaterialTheme.typography.labelSmall, color = c.textSecondary, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
-                items.forEachIndexed { i, s ->
-                val start = LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME)
-                val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
-                val tint = if (i % 2 == 1) c.accent else c.primary
-                RecordCard(
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    onDelete = {
-                        scope.launch {
-                            val deleted = s
-                            sleepRepo.delete(deleted)
-                            val result = snackbarHostState.showSnackbar(
-                                message = "已删除睡眠记录",
-                                actionLabel = "撤销",
-                                duration = SnackbarDuration.Short,
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                sleepRepo.insert(deleted)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    EmptyState(
+                        emoji = "😴",
+                        title = "还没有睡眠记录",
+                        subtitle = "点击下方按钮，记录宝宝的睡眠时间",
+                        actionText = "记录睡眠",
+                        onAction = {
+                            editingSleep = null
+                            showForm = true
+                        },
+                    )
+                }
+            } else {
+                val night = remember(sleeps) {
+                    val today = java.time.LocalDate.now().toString()
+                    sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }.firstOrNull()
+                }
+                val nightDurSec = remember(night) {
+                    night?.let { DateUtils.durationToTotalSeconds(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)) } ?: 0
+                }
+                val nightRange = remember(night) {
+                    night?.let {
+                        val s = LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
+                        val e = LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
+                        "$s-$e"
+                    } ?: "--"
+                }
+                val grouped = remember(sleeps) { sleeps.groupBy { it.startTime.take(10) } }
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = DT.pageMargin.dp,
+                        end = DT.pageMargin.dp,
+                        top = DT.cardGap.dp,
+                        bottom = 80.dp,
+                    ),
+                ) {
+                    // 今日夜间睡眠大卡
+                    item {
+                        val nightCardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
+                        Card(
+                            Modifier
+                                .fillMaxWidth()
+                                .shadow(elevation = DT.cardElevation.dp, shape = nightCardShape),
+                            shape = nightCardShape,
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                            colors = CardDefaults.cardColors(containerColor = c.card),
+                        ) {
+                            Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        Modifier
+                                            .size(DT.iconBgSizeLg.dp)
+                                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                            .background(c.purple.copy(alpha = 0.14f)),
+                                        contentAlignment = Alignment.Center,
+                                    ) { Text("🌙", style = MaterialTheme.typography.headlineSmall) }
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text("今日睡眠", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            DateUtils.durationFullText(nightDurSec),
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = c.primary,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(nightRange, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                    }
+                                }
+                                Spacer(Modifier.height(16.dp))
+                                val goalSeconds = 14L * 3600L
+                                val goalPercent = (nightDurSec.toFloat() / goalSeconds.toFloat()).coerceIn(0f, 1f)
+                                Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(c.divider)) {
+                                    Box(Modifier.fillMaxWidth(goalPercent).fillMaxHeight().clip(RoundedCornerShape(4.dp)).background(Gradients.progress(c)))
+                                }
                             }
                         }
-                    },
-                    onClick = {
-                        editingSleep = s
-                        showForm = true
-                    },
-                ) {
-                    Box(
-                        Modifier
-                            .size(DT.iconBgSize.dp)
-                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                            .background(tint.copy(alpha = 0.14f)),
-                        contentAlignment = Alignment.Center,
-                    ) { Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                        Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                     }
-                    Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = c.primary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                }
+
+                    grouped.forEach { (date, records) ->
+                        stickyHeader(key = date) {
+                            Text(date, style = MaterialTheme.typography.labelSmall, color = c.textSecondary, modifier = Modifier.padding(vertical = 8.dp))
+                        }
+                        items(items = records, key = { it.id }) { s ->
+                            val start = LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME)
+                            val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
+                            val tint = if (s.id % 2 == 1) c.accent else c.primary
+                            RecordCard(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                onDelete = {
+                                    scope.launch {
+                                        val deleted = s
+                                        sleepRepo.delete(deleted)
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "已删除睡眠记录",
+                                            actionLabel = "撤销",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            sleepRepo.insert(deleted)
+                                        }
+                                    }
+                                },
+                                onClick = {},
+                                onLongClick = {
+                                    editingSleep = s
+                                    showForm = true
+                                },
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(DT.iconBgSize.dp)
+                                        .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                        .background(tint.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                }
+                                Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = c.primary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                 }
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
 

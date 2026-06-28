@@ -199,6 +199,7 @@ data class XxxTokens(
 
 - 所有注释 **必须中文**。
 - Commit message **必须中文**。
+- 每次构建成功文件有变动必须提交
 - 必须先更新CHANGELOG再提交
 - 复杂逻辑写注释解释 **为什么这么做**（why），不重复代码表面意思（what）。
 

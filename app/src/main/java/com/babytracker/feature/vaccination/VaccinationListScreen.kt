@@ -2,6 +2,8 @@ package com.babytracker.feature.vaccination
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,7 +36,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun VaccinationListScreen(navController: NavController) {
     val c = LocalThemeColors.current
@@ -68,7 +70,7 @@ fun VaccinationListScreen(navController: NavController) {
             Icon(Icons.Default.Add, contentDescription = "添加")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
             // —— 顶部 Tab 区 ——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
                 Row(Modifier.fillMaxWidth()) {
@@ -82,60 +84,72 @@ fun VaccinationListScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(DT.cardGap.dp))
-            val filtered = vaccinations.filter { it.status == filter }
+            val filtered = remember(vaccinations, filter) { vaccinations.filter { it.status == filter } }
             if (filtered.isEmpty()) {
-                EmptyState(
-                    emoji = if (filter == "pending") "💉" else "✅",
-                    title = if (filter == "pending") "暂无接种计划" else "暂无接种记录",
-                    subtitle = if (filter == "pending") "点击下方按钮生成默认接种计划，或手动添加" else "完成接种后，状态会自动切换到此处",
-                    actionText = if (filter == "pending") "生成接种计划" else null,
-                    onAction = if (filter == "pending") ({ showGenerateConfirm = true }) else null,
-                )
-            }
-            filtered.forEach { v ->
-                    RecordCard(
-                        modifier = Modifier.padding(bottom = 8.dp),
-                        onDelete = {
-                            scope.launch {
-                                val deleted = v
-                                vacRepo.delete(deleted)
-                                val result = snackbarHostState.showSnackbar(
-                                    message = "已删除「${deleted.name}」",
-                                    actionLabel = "撤销",
-                                    duration = SnackbarDuration.Short,
-                                )
-                                if (result == SnackbarResult.ActionPerformed) {
-                                    vacRepo.insert(deleted)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    EmptyState(
+                        emoji = if (filter == "pending") "💉" else "✅",
+                        title = if (filter == "pending") "暂无接种计划" else "暂无接种记录",
+                        subtitle = if (filter == "pending") "点击下方按钮生成默认接种计划，或手动添加" else "完成接种后，状态会自动切换到此处",
+                        actionText = if (filter == "pending") "生成接种计划" else null,
+                        onAction = if (filter == "pending") ({ showGenerateConfirm = true }) else null,
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = DT.pageMargin.dp,
+                        end = DT.pageMargin.dp,
+                        bottom = 80.dp,
+                    ),
+                ) {
+                    items(items = filtered, key = { it.id }) { v ->
+                        RecordCard(
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            onDelete = {
+                                scope.launch {
+                                    val deleted = v
+                                    vacRepo.delete(deleted)
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "已删除「${deleted.name}」",
+                                        actionLabel = "撤销",
+                                        duration = SnackbarDuration.Short,
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        vacRepo.insert(deleted)
+                                    }
                                 }
+                            },
+                            onClick = {
+                                editingVac = v
+                                showForm = true
+                            },
+                        ) {
+                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                                Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                             }
-                        },
-                        onClick = {
-                            editingVac = v
-                            showForm = true
-                        },
-                    ) {
-                        Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
-                            Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                            val tagColor = if (v.status == "done") c.success else c.accent
+                            Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+                                Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
+                            }
                         }
-                        val tagColor = if (v.status == "done") c.success else c.accent
-                        Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                            Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
+                    }
+                    if (filter == "pending") {
+                        item {
+                            Text(
+                                "以上计划根据国家免疫规划制定，具体接种时间请遵医嘱。",
+                                fontSize = 11.sp,
+                                color = c.textSecondary,
+                                modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                            )
                         }
                     }
                 }
-            if (filter == "pending") {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "以上计划根据国家免疫规划制定，具体接种时间请遵医嘱。",
-                    fontSize = 11.sp,
-                    color = c.textSecondary,
-                    modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
-                )
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
 
@@ -185,7 +199,7 @@ fun VaccinationListScreen(navController: NavController) {
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun VaccinationFormDialog(
     babyId: Int,

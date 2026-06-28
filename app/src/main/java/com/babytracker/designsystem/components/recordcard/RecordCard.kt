@@ -1,7 +1,8 @@
 package com.babytracker.designsystem.components.recordcard
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -26,7 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -41,17 +45,19 @@ import com.babytracker.designsystem.theme.LocalThemeColors
  * 优先级模型：
  *   显式参数 > RecordCardDefaults > CardDefaults > 组件令牌
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Suppress("DEPRECATION")
 @Composable
 fun RecordCard(
     onDelete: () -> Unit,
-    onClick: () -> Unit,
+    onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     cornerRadius: Dp = RecordCardDefaults.cornerRadius(),
     containerColor: Color = LocalThemeColors.current.card,
     elevation: Dp = RecordCardDefaults.elevation(),
     innerPadding: Dp = RecordCardDefaults.innerPadding(),
+    accentColor: Color = Color.Unspecified,
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -94,16 +100,22 @@ fun RecordCard(
                     Modifier
                         .fillMaxWidth()
                         .shadow(elevation, shape)
-                        .clickable(onClick = onClick),
+                        .combinedClickable(onClick = onClick, onLongClick = onLongClick),
                     shape = shape,
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     colors = CardDefaults.cardColors(containerColor = containerColor),
                 ) {
-                    Row(
-                        Modifier.padding(innerPadding),
-                        verticalAlignment = verticalAlignment,
-                        content = content,
-                    )
+                    Box(Modifier.fillMaxWidth().then(
+                        if (accentColor != Color.Unspecified) Modifier.drawBehind {
+                            drawRect(color = accentColor, topLeft = Offset.Zero, size = Size(3.dp.toPx(), size.height))
+                        } else Modifier
+                    )) {
+                        Row(
+                            Modifier.padding(innerPadding),
+                            verticalAlignment = verticalAlignment,
+                            content = content,
+                        )
+                    }
                 }
             },
         )

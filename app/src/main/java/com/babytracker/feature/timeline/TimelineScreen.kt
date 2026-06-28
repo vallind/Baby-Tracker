@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -19,6 +20,7 @@ import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalThemeColors
 import com.babytracker.core.util.BabyController
+import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.recordcard.RecordCard
@@ -103,11 +105,15 @@ fun TimelineScreen(navController: NavController) {
                         onAction = { showTypePicker = true },
                     )
                 } else {
+                    val typeColor: (String) -> Color = { when (it) {
+                        "feeding" -> c.accent; "sleep" -> c.purple; "diaper" -> c.blue
+                        "growth" -> c.green; "health" -> c.primary; else -> Color.Unspecified
+                    } }
                     val grouped = state.items.groupBy { it.date }
                     var groupIndex = 0
                     grouped.forEach { (date, items) ->
                         Text(
-                            date,
+                            text = "${DateUtils.relativeDate(date)} · ${items.size}次",
                             style = MaterialTheme.typography.labelSmall,
                             color = c.textSecondary,
                             modifier = Modifier.padding(top = if (groupIndex == 0) 0.dp else DT.cardGapSm.dp, bottom = 4.dp),
@@ -116,6 +122,7 @@ fun TimelineScreen(navController: NavController) {
                             val tint = if (item.accent) c.accent else c.primary
                             RecordCard(
                                 modifier = Modifier.padding(bottom = 8.dp),
+                                accentColor = typeColor(item.recordType),
                                 onDelete = {
                                     scope.launch {
                                         viewModel.delete(item)
@@ -129,7 +136,8 @@ fun TimelineScreen(navController: NavController) {
                                         }
                                     }
                                 },
-                                onClick = {
+                                onClick = {},
+                                onLongClick = {
                                     when (item.recordType) {
                                         "feeding" -> editingFeeding = viewModel.findFeeding(item.id)
                                         "sleep" -> editingSleep = viewModel.findSleep(item.id)
@@ -143,7 +151,7 @@ fun TimelineScreen(navController: NavController) {
                                     Modifier
                                         .size(DT.iconBgSize.dp)
                                         .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                        .background(tint.copy(alpha = 0.14f)),
+                                        .background(typeColor(item.recordType).takeIf { it != Color.Unspecified }?.copy(alpha = 0.14f) ?: c.primary.copy(alpha = 0.14f)),
                                     contentAlignment = Alignment.Center,
                                 ) { Text(item.emoji, style = MaterialTheme.typography.titleLarge) }
                                 Spacer(Modifier.width(12.dp))

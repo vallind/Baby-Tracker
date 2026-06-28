@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -40,7 +42,7 @@ import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GrowthScreen(navController: NavController) {
     val c = LocalThemeColors.current
@@ -74,7 +76,7 @@ fun GrowthScreen(navController: NavController) {
             Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
             // —— 顶部 Tab 区 ——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
                 Row(Modifier.fillMaxWidth()) {
@@ -209,45 +211,60 @@ fun GrowthScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(DT.cardGap.dp))
-            growths.filter { it.type == types[tab] }.sortedByDescending { it.measuredAt }.groupBy { it.measuredAt.take(10) }.forEach { (date, items) ->
-                Text(date, style = MaterialTheme.typography.labelSmall, color = c.textSecondary, modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp))
-                items.forEach { g ->
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn() + slideInVertically { it / 2 },
+            val grouped = remember(growths, tab) {
+                growths.filter { it.type == types[tab] }.sortedByDescending { it.measuredAt }.groupBy { it.measuredAt.take(10) }
+            }
+            if (grouped.isEmpty()) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text("暂无记录", fontSize = 15.sp, color = c.textSecondary)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = DT.pageMargin.dp,
+                        end = DT.pageMargin.dp,
+                        bottom = 80.dp,
+                    ),
                 ) {
-                RecordCard(
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    onDelete = {
-                        scope.launch {
-                            val deleted = g
-                            growthRepo.delete(deleted)
-                            val result = snackbarHostState.showSnackbar(
-                                message = "已删除生长记录",
-                                actionLabel = "撤销",
-                                duration = SnackbarDuration.Short,
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                growthRepo.insert(deleted)
+                    grouped.forEach { (date, items) ->
+                        stickyHeader(key = date) {
+                            Text(date, style = MaterialTheme.typography.labelSmall, color = c.textSecondary, modifier = Modifier.padding(vertical = 4.dp))
+                        }
+                        items(items = items, key = { it.id }) { g ->
+                            RecordCard(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                onDelete = {
+                                    scope.launch {
+                                        val deleted = g
+                                        growthRepo.delete(deleted)
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "已删除生长记录",
+                                            actionLabel = "撤销",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            growthRepo.insert(deleted)
+                                        }
+                                    }
+                                },
+                                onClick = {},
+                                onLongClick = {
+                                    editingGrowth = g
+                                    showForm = true
+                                },
+                            ) {
+                                Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                                    Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                                }
                             }
                         }
-                    },
-                    onClick = {
-                        editingGrowth = g
-                        showForm = true
-                    },
-                ) {
-                    Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
-                        Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                     }
                 }
-                }
             }
-            }
-            Spacer(Modifier.height(80.dp))
         }
     }
 
@@ -275,7 +292,7 @@ fun GrowthScreen(navController: NavController) {
 
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GrowthFormDialog(
     babyId: Int,

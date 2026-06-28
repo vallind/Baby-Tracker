@@ -2,6 +2,8 @@ package com.babytracker.feature.feeding
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -34,7 +36,7 @@ import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FeedingListScreen(navController: NavController) {
     val c = LocalThemeColors.current
@@ -66,7 +68,7 @@ fun FeedingListScreen(navController: NavController) {
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
             // —— 顶部页头 ——
             Row(
                 Modifier
@@ -87,8 +89,8 @@ fun FeedingListScreen(navController: NavController) {
                 )
             }
 
-            Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
-                if (feedings.isEmpty()) {
+            if (feedings.isEmpty()) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "🍼",
                         title = "还没有喂养记录",
@@ -100,68 +102,79 @@ fun FeedingListScreen(navController: NavController) {
                         },
                     )
                 }
-                val grouped = feedings.groupBy { it.timestamp.take(10) }
-                var groupIndex = 0
-                grouped.forEach { (date, items) ->
-                    Text(
-                        date,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = c.textSecondary,
-                        modifier = Modifier.padding(top = if (groupIndex == 0) DT.cardGap.dp else DT.cardGapSm.dp, bottom = 4.dp),
-                    )
-                    items.forEachIndexed { i, f ->
-                        val tint = if (i % 2 == 1) c.accent else c.primary
-                        val emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }
-                        val time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" }
-                        RecordCard(
-                            modifier = Modifier.padding(bottom = 8.dp),
-                            onDelete = {
-                                scope.launch {
-                                    val deleted = f
-                                    feedingRepo.delete(deleted)
-                                    val result = snackbarHostState.showSnackbar(
-                                        message = "已删除喂养记录",
-                                        actionLabel = "撤销",
-                                        duration = SnackbarDuration.Short,
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        feedingRepo.insert(deleted)
+            } else {
+                val grouped = remember(feedings) { feedings.groupBy { it.timestamp.take(10) } }
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = DT.pageMargin.dp,
+                        end = DT.pageMargin.dp,
+                        top = DT.cardGap.dp,
+                        bottom = 80.dp,
+                    ),
+                ) {
+                    grouped.forEach { (date, records) ->
+                        stickyHeader(key = date) {
+                            Text(
+                                date,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = c.textSecondary,
+                                modifier = Modifier.padding(bottom = 4.dp),
+                            )
+                        }
+                        items(items = records, key = { it.id }) { f ->
+                            val tint = if (f.id % 2 == 1) c.accent else c.primary
+                            val emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }
+                            val time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" }
+                            RecordCard(
+                                modifier = Modifier.padding(bottom = 8.dp),
+                                onDelete = {
+                                    scope.launch {
+                                        val deleted = f
+                                        feedingRepo.delete(deleted)
+                                        val result = snackbarHostState.showSnackbar(
+                                            message = "已删除喂养记录",
+                                            actionLabel = "撤销",
+                                            duration = SnackbarDuration.Short,
+                                        )
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            feedingRepo.insert(deleted)
+                                        }
                                     }
+                                },
+                                onClick = {},
+                                onLongClick = {
+                                    editingFeeding = f
+                                    showForm = true
+                                },
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(DT.iconBgSize.dp)
+                                        .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                        .background(tint.copy(alpha = 0.14f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(DateUtils.feedingTypeLabel(f.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text(
+                                        when (f.type) {
+                                            "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
+                                            "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
+                                            "food" -> "${f.foodName} ${f.amountG}g"
+                                            else -> "${f.amountMl}ml"
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = c.textSecondary,
+                                    )
                                 }
-                            },
-                            onClick = {
-                                editingFeeding = f
-                                showForm = true
-                            },
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(DT.iconBgSize.dp)
-                                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                    .background(tint.copy(alpha = 0.14f)),
-                                contentAlignment = Alignment.Center,
-                            ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(DateUtils.feedingTypeLabel(f.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-                                Text(
-                                    when (f.type) {
-                                        "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
-                                        "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
-                                        "food" -> "${f.foodName} ${f.amountG}g"
-                                        else -> "${f.amountMl}ml"
-                                    },
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = c.textSecondary,
-                                )
+                                Text(time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
                             }
-                            Text(time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
                         }
                     }
-                    groupIndex++
                 }
             }
-            Spacer(Modifier.height(80.dp))
         }
     }
 

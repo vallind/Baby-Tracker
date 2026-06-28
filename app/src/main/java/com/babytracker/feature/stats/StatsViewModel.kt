@@ -51,6 +51,7 @@ class StatsViewModel(
                     aggregate(period, feedings, sleeps, growths, diapers)
                 }
             }
+            .distinctUntilChanged()
             .onEach { _state.value = it }
             .launchIn(viewModelScope)
     }
@@ -80,9 +81,10 @@ class StatsViewModel(
         val feedingCount = feedingsInPeriod.size
         val dayCount = ChronoUnit.DAYS.between(start.toLocalDate(), now.toLocalDate()).toInt()
         val feedingPoints = if (feedingsInPeriod.isEmpty()) emptyList() else {
+            val byDay = feedingsInPeriod.groupBy { safeParse(it.timestamp)?.toLocalDate() }
             (0 until dayCount).map { offset ->
                 val day = start.toLocalDate().plusDays(offset.toLong())
-                feedingsInPeriod.count { safeParse(it.timestamp)?.toLocalDate() == day }.toFloat()
+                (byDay[day]?.size ?: 0).toFloat()
             }
         }
 
@@ -94,15 +96,16 @@ class StatsViewModel(
         }
         val sleepHours = ((totalSleepMins / 60f) * 10).toInt() / 10f
         val sleepPoints = if (sleepsInPeriod.isEmpty()) emptyList() else {
+            val byDay: Map<java.time.LocalDate, Long> = sleepsInPeriod.groupBy(
+                { safeParse(it.startTime)?.toLocalDate() ?: java.time.LocalDate.MIN },
+            ) { s ->
+                val st = safeParse(s.startTime) ?: return@groupBy 0L
+                val et = safeParse(s.endTime) ?: return@groupBy 0L
+                Duration.between(st, et).toMinutes().coerceAtLeast(0)
+            }.mapValues { it.value.sum() }
             (0 until dayCount).map { offset ->
                 val day = start.toLocalDate().plusDays(offset.toLong())
-                val mins = sleepsInPeriod.filter { safeParse(it.startTime)?.toLocalDate() == day }
-                    .sumOf { s ->
-                        val st = safeParse(s.startTime) ?: return@sumOf 0L
-                        val et = safeParse(s.endTime) ?: return@sumOf 0L
-                        Duration.between(st, et).toMinutes().coerceAtLeast(0)
-                    }
-                ((mins / 60f) * 10).toInt() / 10f
+                ((byDay[day]?.toFloat() ?: 0f) / 60f * 10).toInt() / 10f
             }
         }
 
