@@ -14,6 +14,8 @@ import com.babytracker.core.sync.RealtimeState
 import com.babytracker.core.sync.SyncEngine
 import com.babytracker.core.sync.SyncState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,6 +44,9 @@ class SettingsViewModel(
     /** 网络是否可用 */
     private val _isOnline = MutableStateFlow(checkNetwork())
     val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
+
+    /** 防止并发创建多个家庭 */
+    private val ensureFamilyMutex = Mutex()
 
     /** 综合同步状态文本 */
     val syncStatusText: StateFlow<String> = combine(syncState, connectionState, isLoggedIn, isOnline) { sync, conn, loggedIn, online ->
@@ -96,11 +101,11 @@ class SettingsViewModel(
         } catch (_: Exception) { }
     }
 
-    private suspend fun ensureFamily(): String? {
-        return try {
-            familyService.currentFamily.value?.let { return it.id }
+    private suspend fun ensureFamily(): String? = ensureFamilyMutex.withLock {
+        try {
+            familyService.currentFamily.value?.let { return@withLock it.id }
             val families = familyService.loadMyFamilies()
-            if (families.isNotEmpty()) return families.first().id
+            if (families.isNotEmpty()) return@withLock families.first().id
             familyService.createFamily("我的家庭").getOrNull()?.id
         } catch (_: Exception) { null }
     }
