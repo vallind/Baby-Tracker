@@ -31,6 +31,7 @@ class BabyRepositoryImpl(private val dao: BabyDao) : BabyRepository {
 
 interface FeedingRepository {
     fun watchByBaby(babyId: Int): Flow<List<FeedingEntity>>
+    suspend fun getById(id: Int): FeedingEntity?
     suspend fun insert(feeding: FeedingEntity): Long
     suspend fun update(feeding: FeedingEntity)
     suspend fun delete(feeding: FeedingEntity)
@@ -38,6 +39,7 @@ interface FeedingRepository {
 
 class FeedingRepositoryImpl(private val dao: FeedingDao) : FeedingRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId)
+    override suspend fun getById(id: Int) = dao.getById(id)
     override suspend fun insert(feeding: FeedingEntity) = dao.insert(feeding)
     override suspend fun update(feeding: FeedingEntity) = dao.update(feeding)
     override suspend fun delete(feeding: FeedingEntity) = dao.delete(feeding)
@@ -45,6 +47,7 @@ class FeedingRepositoryImpl(private val dao: FeedingDao) : FeedingRepository {
 
 interface SleepRepository {
     fun watchByBaby(babyId: Int): Flow<List<SleepEntity>>
+    suspend fun getById(id: Int): SleepEntity?
     suspend fun insert(sleep: SleepEntity): Long
     suspend fun update(sleep: SleepEntity)
     suspend fun delete(sleep: SleepEntity)
@@ -52,6 +55,7 @@ interface SleepRepository {
 
 class SleepRepositoryImpl(private val dao: SleepDao) : SleepRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId)
+    override suspend fun getById(id: Int) = dao.getById(id)
     override suspend fun insert(sleep: SleepEntity) = dao.insert(sleep)
     override suspend fun update(sleep: SleepEntity) = dao.update(sleep)
     override suspend fun delete(sleep: SleepEntity) = dao.delete(sleep)
@@ -59,6 +63,7 @@ class SleepRepositoryImpl(private val dao: SleepDao) : SleepRepository {
 
 interface GrowthRepository {
     fun watchByBaby(babyId: Int): Flow<List<GrowthEntity>>
+    suspend fun getById(id: Int): GrowthEntity?
     suspend fun insert(growth: GrowthEntity): Long
     suspend fun update(growth: GrowthEntity)
     suspend fun delete(growth: GrowthEntity)
@@ -66,6 +71,7 @@ interface GrowthRepository {
 
 class GrowthRepositoryImpl(private val dao: GrowthDao) : GrowthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId)
+    override suspend fun getById(id: Int) = dao.getById(id)
     override suspend fun insert(growth: GrowthEntity) = dao.insert(growth)
     override suspend fun update(growth: GrowthEntity) = dao.update(growth)
     override suspend fun delete(growth: GrowthEntity) = dao.delete(growth)
@@ -73,6 +79,7 @@ class GrowthRepositoryImpl(private val dao: GrowthDao) : GrowthRepository {
 
 interface VaccinationRepository {
     fun watchByBaby(babyId: Int): Flow<List<VaccinationEntity>>
+    suspend fun getById(id: Int): VaccinationEntity?
     suspend fun insert(vaccination: VaccinationEntity): Long
     suspend fun update(vaccination: VaccinationEntity)
     suspend fun delete(vaccination: VaccinationEntity)
@@ -80,6 +87,7 @@ interface VaccinationRepository {
 
 class VaccinationRepositoryImpl(private val dao: VaccinationDao) : VaccinationRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId)
+    override suspend fun getById(id: Int) = dao.getById(id)
     override suspend fun insert(vaccination: VaccinationEntity) = dao.insert(vaccination)
     override suspend fun update(vaccination: VaccinationEntity) = dao.update(vaccination)
     override suspend fun delete(vaccination: VaccinationEntity) = dao.delete(vaccination)
@@ -87,6 +95,7 @@ class VaccinationRepositoryImpl(private val dao: VaccinationDao) : VaccinationRe
 
 interface HealthRepository {
     fun watchByBaby(babyId: Int): Flow<List<HealthRecordEntity>>
+    suspend fun getById(id: Int): HealthRecordEntity?
     suspend fun insert(record: HealthRecordEntity): Long
     suspend fun update(record: HealthRecordEntity)
     suspend fun delete(record: HealthRecordEntity)
@@ -94,6 +103,7 @@ interface HealthRepository {
 
 class HealthRepositoryImpl(private val dao: HealthRecordDao) : HealthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId)
+    override suspend fun getById(id: Int) = dao.getById(id)
     override suspend fun insert(record: HealthRecordEntity) = dao.insert(record)
     override suspend fun update(record: HealthRecordEntity) = dao.update(record)
     override suspend fun delete(record: HealthRecordEntity) = dao.delete(record)
@@ -101,6 +111,7 @@ class HealthRepositoryImpl(private val dao: HealthRecordDao) : HealthRepository 
 
 interface DiaperRepository {
     fun watchByBaby(babyId: Int): Flow<List<DiaperEntity>>
+    suspend fun getById(id: Int): DiaperEntity?
     suspend fun insert(diaper: DiaperEntity): Long
     suspend fun update(diaper: DiaperEntity)
     suspend fun delete(diaper: DiaperEntity)
@@ -108,6 +119,7 @@ interface DiaperRepository {
 
 class DiaperRepositoryImpl(private val dao: DiaperDao) : DiaperRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId)
+    override suspend fun getById(id: Int) = dao.getById(id)
     override suspend fun insert(diaper: DiaperEntity) = dao.insert(diaper)
     override suspend fun update(diaper: DiaperEntity) = dao.update(diaper)
     override suspend fun delete(diaper: DiaperEntity) = dao.delete(diaper)
@@ -147,8 +159,10 @@ class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
 
 interface DevelopmentAssessmentRepository {
     fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessment>>
+    suspend fun getById(id: Int): DevelopmentAssessment?
     fun watchLatest(babyId: Int): Flow<DevelopmentAssessment?>
     suspend fun insert(assessment: DevelopmentAssessment): Long
+    suspend fun update(assessment: DevelopmentAssessment)
     suspend fun delete(assessment: DevelopmentAssessment)
 }
 
@@ -158,11 +172,17 @@ class DevelopmentAssessmentRepositoryImpl(
     override fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessment>> =
         dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
 
+    override suspend fun getById(id: Int): DevelopmentAssessment? =
+        dao.getById(id)?.toDomain()
+
     override fun watchLatest(babyId: Int): Flow<DevelopmentAssessment?> =
         dao.watchLatest(babyId).map { it?.toDomain() }
 
     override suspend fun insert(assessment: DevelopmentAssessment): Long =
         dao.insert(assessment.toEntity())
+
+    override suspend fun update(assessment: DevelopmentAssessment) =
+        dao.update(assessment.toEntity())
 
     override suspend fun delete(assessment: DevelopmentAssessment) =
         dao.delete(assessment.toEntity())
@@ -175,10 +195,12 @@ class DevelopmentAssessmentRepositoryImpl(
 interface ReminderRepository {
     fun watchPending(babyId: Int): Flow<List<Reminder>>
     fun watchHistory(babyId: Int): Flow<List<Reminder>>
+    suspend fun getById(id: Int): Reminder?
     suspend fun insert(reminder: Reminder): Long
+    suspend fun update(reminder: Reminder)
+    suspend fun delete(reminder: Reminder)
     suspend fun markDone(id: Int, doneDate: LocalDateTime)
     suspend fun setEnabled(id: Int, enabled: Boolean)
-    suspend fun delete(reminder: Reminder)
 }
 
 class ReminderRepositoryImpl(private val dao: ReminderDao) : ReminderRepository {
@@ -188,15 +210,21 @@ class ReminderRepositoryImpl(private val dao: ReminderDao) : ReminderRepository 
     override fun watchHistory(babyId: Int): Flow<List<Reminder>> =
         dao.watchHistory(babyId).map { list -> list.map { it.toDomain() } }
 
+    override suspend fun getById(id: Int): Reminder? =
+        dao.getById(id)?.toDomain()
+
     override suspend fun insert(reminder: Reminder): Long =
         dao.insert(reminder.toEntity())
+
+    override suspend fun update(reminder: Reminder) =
+        dao.update(reminder.toEntity())
+
+    override suspend fun delete(reminder: Reminder) =
+        dao.delete(reminder.toEntity())
 
     override suspend fun markDone(id: Int, doneDate: LocalDateTime) =
         dao.markDone(id, doneDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
 
     override suspend fun setEnabled(id: Int, enabled: Boolean) =
         dao.setEnabled(id, enabled)
-
-    override suspend fun delete(reminder: Reminder) =
-        dao.delete(reminder.toEntity())
 }

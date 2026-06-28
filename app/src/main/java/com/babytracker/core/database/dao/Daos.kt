@@ -36,6 +36,8 @@ interface FeedingDao {
 interface SleepDao {
     @Query("SELECT * FROM sleeps WHERE baby_id = :babyId ORDER BY start_time DESC")
     fun watchByBaby(babyId: Int): Flow<List<SleepEntity>>
+    @Query("SELECT * FROM sleeps WHERE id = :id")
+    suspend fun getById(id: Int): SleepEntity?
     @Insert
     suspend fun insert(sleep: SleepEntity): Long
     @Update
@@ -48,6 +50,8 @@ interface SleepDao {
 interface GrowthDao {
     @Query("SELECT * FROM growths WHERE baby_id = :babyId ORDER BY measured_at DESC")
     fun watchByBaby(babyId: Int): Flow<List<GrowthEntity>>
+    @Query("SELECT * FROM growths WHERE id = :id")
+    suspend fun getById(id: Int): GrowthEntity?
     @Insert
     suspend fun insert(growth: GrowthEntity): Long
     @Update
@@ -60,6 +64,8 @@ interface GrowthDao {
 interface VaccinationDao {
     @Query("SELECT * FROM vaccinations WHERE baby_id = :babyId ORDER BY CASE WHEN status = 'pending' THEN 0 ELSE 1 END, scheduled_date ASC")
     fun watchByBaby(babyId: Int): Flow<List<VaccinationEntity>>
+    @Query("SELECT * FROM vaccinations WHERE id = :id")
+    suspend fun getById(id: Int): VaccinationEntity?
     @Insert
     suspend fun insert(vaccination: VaccinationEntity): Long
     @Update
@@ -72,6 +78,8 @@ interface VaccinationDao {
 interface HealthRecordDao {
     @Query("SELECT * FROM health_records WHERE baby_id = :babyId ORDER BY record_date DESC")
     fun watchByBaby(babyId: Int): Flow<List<HealthRecordEntity>>
+    @Query("SELECT * FROM health_records WHERE id = :id")
+    suspend fun getById(id: Int): HealthRecordEntity?
     @Insert
     suspend fun insert(record: HealthRecordEntity): Long
     @Update
@@ -92,6 +100,8 @@ interface BackupConfigDao {
 interface DiaperDao {
     @Query("SELECT * FROM diapers WHERE baby_id = :babyId ORDER BY timestamp DESC")
     fun watchByBaby(babyId: Int): Flow<List<DiaperEntity>>
+    @Query("SELECT * FROM diapers WHERE id = :id")
+    suspend fun getById(id: Int): DiaperEntity?
     @Insert
     suspend fun insert(diaper: DiaperEntity): Long
     @Update
@@ -128,13 +138,14 @@ interface MessageDao {
 interface DevelopmentAssessmentDao {
     @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId ORDER BY assess_date DESC")
     fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessmentEntity>>
-
+    @Query("SELECT * FROM development_assessments WHERE id = :id")
+    suspend fun getById(id: Int): DevelopmentAssessmentEntity?
     @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId ORDER BY assess_date DESC LIMIT 1")
     fun watchLatest(babyId: Int): Flow<DevelopmentAssessmentEntity?>
-
     @Insert
     suspend fun insert(entity: DevelopmentAssessmentEntity): Long
-
+    @Update
+    suspend fun update(entity: DevelopmentAssessmentEntity)
     @Delete
     suspend fun delete(entity: DevelopmentAssessmentEntity)
 }
@@ -143,22 +154,18 @@ interface DevelopmentAssessmentDao {
 interface ReminderDao {
     @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 0 ORDER BY due_date ASC")
     fun watchPending(babyId: Int): Flow<List<ReminderEntity>>
-
     @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 1 ORDER BY done_date DESC")
     fun watchHistory(babyId: Int): Flow<List<ReminderEntity>>
-
+    @Query("SELECT * FROM reminders WHERE id = :id")
+    suspend fun getById(id: Int): ReminderEntity?
     @Insert
     suspend fun insert(entity: ReminderEntity): Long
-
     @Update
     suspend fun update(entity: ReminderEntity)
-
-    @Query("UPDATE reminders SET is_done = 1, done_date = :doneDate WHERE id = :id")
-    suspend fun markDone(id: Int, doneDate: Long)
-
-    @Query("UPDATE reminders SET is_enabled = :enabled WHERE id = :id")
-    suspend fun setEnabled(id: Int, enabled: Boolean)
-
     @Delete
     suspend fun delete(entity: ReminderEntity)
+    @Query("UPDATE reminders SET is_done = 1, done_date = :doneDate WHERE id = :id")
+    suspend fun markDone(id: Int, doneDate: Long)
+    @Query("UPDATE reminders SET is_enabled = :enabled WHERE id = :id")
+    suspend fun setEnabled(id: Int, enabled: Boolean)
 }
