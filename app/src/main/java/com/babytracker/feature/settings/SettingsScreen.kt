@@ -67,6 +67,8 @@ fun SettingsScreen(navController: NavController) {
     val syncStatusText by settingsVM.syncStatusText.collectAsState()
     val syncState by settingsVM.syncState.collectAsState()
     val isLoggedIn by settingsVM.isLoggedIn.collectAsState()
+    var showLogoutConfirm by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         containerColor = c.pageBackground,
@@ -133,7 +135,13 @@ fun SettingsScreen(navController: NavController) {
                         trailing = if (authService.isLoggedIn()) {
                             { Text("已连接", color = c.success, fontSize = 12.sp) }
                         } else null,
-                        onClick = { navController.navigate(Screen.Login.route) },
+                        onClick = {
+                            if (authService.isLoggedIn()) {
+                                showLogoutConfirm = true
+                            } else {
+                                navController.navigate(Screen.Login.route)
+                            }
+                        },
                     )
                     if (isLoggedIn) {
                         SettingsDivider()
@@ -217,6 +225,19 @@ fun SettingsScreen(navController: NavController) {
     if (showPicker) {
         ThemePickerSheet(themeCtrl = themeCtrl, onDismiss = { showPicker = false })
     }
+
+    // 退出登录确认弹窗
+    AppConfirmDialog(
+        show = showLogoutConfirm,
+        title = "退出登录",
+        message = "退出后数据保留在本地，云同步将停止。确定退出？",
+        confirmText = "退出",
+        onConfirm = {
+            scope.launch { authService.signOut() }
+            showLogoutConfirm = false
+        },
+        onDismiss = { showLogoutConfirm = false },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
