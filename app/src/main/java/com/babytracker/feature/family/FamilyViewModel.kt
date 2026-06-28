@@ -30,14 +30,20 @@ class FamilyViewModel(
 
     init {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            val families = familyService.loadMyFamilies()
-            _uiState.update {
-                it.copy(
-                    families = families,
-                    currentFamily = families.firstOrNull(),
-                    isLoading = false,
-                )
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+                val families = familyService.loadMyFamilies()
+                _uiState.update {
+                    it.copy(
+                        families = families,
+                        currentFamily = families.firstOrNull(),
+                        isLoading = false,
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = e.message ?: "加载失败")
+                }
             }
         }
     }
@@ -112,8 +118,10 @@ class FamilyViewModel(
 
     fun loadMembers(familyId: String) {
         viewModelScope.launch {
-            val members = familyService.getFamilyMembers(familyId)
-            _uiState.update { it.copy(members = members) }
+            try {
+                val members = familyService.getFamilyMembers(familyId)
+                _uiState.update { it.copy(members = members) }
+            } catch (_: Exception) { }
         }
     }
 
