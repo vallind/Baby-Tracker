@@ -9,7 +9,10 @@
 - **滑动删除**：新增 `SwipeToDeleteContainer` 组件，左滑红色背景 + 删除图标松手即删；`SwipeToEditDeleteContainer` 双方向（左滑删/右滑编）
 - **撤销删除**：所有删除操作后弹出 Snackbar「撤销」，点击自动重新插入原记录
 
-### [Unreleased] — 2026-06-27
+### [Unreleased] — 2026-06-28
+
+**修复状态栏颜色不一致：**
+- 状态栏底色从 `background` 改为 `primaryContainer`（即 `primaryLight`），与所有页面顶部区域颜色统一
 
 **性能优化 + 视觉改进 + 记录页闪退修复：**
 
