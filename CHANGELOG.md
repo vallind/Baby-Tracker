@@ -4,6 +4,9 @@
 
 ### [Unreleased]
 
+**移除一级页面 TopBar 返回箭头：**
++- Timeline（记录）、Stats（统计分析）、Message（消息中心）均为一级 Tab 页面，去掉 TopBar 的 `onBack` 返回箭头
+
 **修复底部导航首页点击无效问题：**
 +- BottomNavBar 去掉 `if (currentRoute != tab.route)` 守卫，改为始终执行 navigate（`launchSingleTop` 已防重复），防止 currentRoute 误判导致点击无响应
 +- HomeScreen FeatureGrid 导航统一为 `popUpTo(startDestination, saveState)` + `launchSingleTop` + `restoreState`，与 BottomNavBar 保持一致，消除回退栈状态不一致

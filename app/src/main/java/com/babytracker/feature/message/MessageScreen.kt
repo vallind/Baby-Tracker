@@ -65,7 +65,6 @@ fun MessageScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "消息中心",
-                onBack = { navController.popBackStack() },
                 actions = {
                     val canMarkAll = state.totalUnread > 0
                     Text(

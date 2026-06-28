@@ -92,10 +92,7 @@ fun TimelineScreen(navController: NavController) {
         containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            AppTopBar(
-                title = "记录",
-                onBack = { navController.popBackStack() },
-            )
+            AppTopBar(title = "记录")
         },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {

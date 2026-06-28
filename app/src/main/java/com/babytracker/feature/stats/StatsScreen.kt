@@ -60,7 +60,7 @@ fun StatsScreen(navController: NavController) {
     androidx.compose.material3.Scaffold(
         containerColor = c.pageBackground,
         topBar = {
-            AppTopBar(title = "统计分析", onBack = { navController.popBackStack() })
+            AppTopBar(title = "统计分析")
         },
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
