@@ -26,6 +26,7 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.core.domain.model.*
 import com.babytracker.feature.diaper.DiaperFormDialog
 import com.babytracker.feature.feeding.FeedingFormDialog
@@ -89,13 +90,13 @@ fun TimelineScreen(navController: NavController) {
                 )
             }
 
-            Row(Modifier.fillMaxWidth().padding(horizontal = DT.pageMargin.dp, vertical = 6.dp)) {
-                listOf("" to "全部", "feeding" to "🤱喂", "sleep" to "😴睡", "diaper" to "🧷尿", "growth" to "📏长", "health" to "❤️健").forEach { (key, label) ->
-                    Box(Modifier.weight(1f).clickable { typeFilter = key }, contentAlignment = Alignment.Center) {
-                        Text(label, fontSize = 12.sp, color = if (typeFilter == key) c.primary else c.textSecondary, fontWeight = if (typeFilter == key) FontWeight.SemiBold else null)
-                    }
-                }
-            }
+            val filterKeys = listOf("", "feeding", "sleep", "diaper", "growth", "health")
+            SegmentedControl(
+                labels = listOf("全部", "🤱喂", "😴睡", "🧷尿", "📏长", "❤️健"),
+                selectedIndex = filterKeys.indexOf(typeFilter).coerceAtLeast(0),
+                onSelect = { typeFilter = filterKeys[it] },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = DT.pageMargin.dp, vertical = 6.dp),
+            )
             HorizontalDivider(color = c.divider, thickness = 0.5.dp)
 
             Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {

@@ -41,6 +41,7 @@ import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -72,16 +73,13 @@ fun GrowthScreen(navController: NavController) {
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部 Tab 区 ——
-            Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
-                Row(Modifier.fillMaxWidth()) {
-                    tabs.forEachIndexed { i, label ->
-                        Column(Modifier.weight(1f).clickable { tab = i }.padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(label, color = if (tab == i) c.primary else c.textSecondary, fontWeight = if (tab == i) FontWeight.SemiBold else null, style = MaterialTheme.typography.bodyMedium)
-                            Spacer(Modifier.height(6.dp))
-                            Box(Modifier.width(24.dp).height(3.dp).clip(RoundedCornerShape(2.dp)).background(if (tab == i) c.primary else Color.Transparent))
-                        }
-                    }
-                }
+            Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 8.dp)) {
+                SegmentedControl(
+                    labels = tabs,
+                    selectedIndex = tab,
+                    onSelect = { tab = it },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
             Spacer(Modifier.height(DT.cardGap.dp))
             val chartData = remember(growths, tab) { growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt } }
