@@ -2,7 +2,7 @@ package com.babytracker.feature.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.babytracker.core.database.entity.*
+import com.babytracker.core.domain.model.*
 import com.babytracker.core.data.repository.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -62,10 +62,10 @@ class StatsViewModel(
 
     private fun aggregate(
         period: StatsPeriod,
-        feedings: List<FeedingEntity>,
-        sleeps: List<SleepEntity>,
-        growths: List<GrowthEntity>,
-        diapers: List<DiaperEntity>,
+        feedings: List<Feeding>,
+        sleeps: List<Sleep>,
+        growths: List<Growth>,
+        diapers: List<Diaper>,
     ): StatsUiState {
         val now = LocalDateTime.now()
         val start = when (period) {
@@ -113,14 +113,14 @@ class StatsViewModel(
         val diaperCount = diapersInPeriod.size
 
         val heights = growths
-            .filter { it.type == "height" && safeParse(it.measuredAt)?.isAfter(start) == true }
+            .filter { it.type == GrowthType.HEIGHT && safeParse(it.measuredAt)?.isAfter(start) == true }
             .sortedBy { it.measuredAt }
         val height = if (heights.isEmpty()) "--"
         else "${(heights.last().value * 10).toInt() / 10.0}cm"
         val heightPoints = heights.map { it.value.toFloat() }
 
         val weights = growths
-            .filter { it.type == "weight" && safeParse(it.measuredAt)?.isAfter(start) == true }
+            .filter { it.type == GrowthType.WEIGHT && safeParse(it.measuredAt)?.isAfter(start) == true }
             .sortedBy { it.measuredAt }
         val weight = if (weights.isEmpty()) "--"
         else "${(weights.last().value * 10).toInt() / 10.0}kg"

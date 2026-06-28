@@ -4,6 +4,21 @@
 
 ### [Unreleased]
 
+**领域模型升级 & Repository 重构：**
+- Domain Models 新增 uuid / updatedAt / deletedAt 字段，与 Room Entity 对齐
+- Mappers 更新 7 对 toDomain()/toEntity()，完整映射新字段
+- Repository 接口返回值从 Entity 改为 Domain Model，Impl 层统一做 Entity→Domain 映射
+- VaccineSchedule.createForBaby 返回值改为 `List<Vaccination>`（Domain Model），状态使用 VaccinationStatus 枚举
+- ViewModel/Screen 层适配：import 从 entity 改为 domain.model，字符串比较改为枚举比较
+
+**Settings 页面 DS 组件合规修复：**
+- ThemePickerSheet: 原生 Card → AppCard
+- SettingsCard: 原生 Card → AppCard
+- BabyManagementScreen: CenterAlignedTopAppBar → AppTopBar, FloatingActionButton → AppFAB, AlertDialog → AppConfirmDialog
+- BackupScreen: CenterAlignedTopAppBar → AppTopBar, 恢复确认 AlertDialog ×2 → AppConfirmDialog
+- BabyFormDialog 添加 @OptIn 注解（表单对话框保留原生 AlertDialog，DS 无对应组件）
+- 清理无用 import（ArrowBack 等）
+
 **文档：Supabase 后端方案补充：**
 - 补充 `profiles` 和 `family_members` 表的 RLS 策略（第三节）
 - 新增第六节"删除策略（Soft Delete）"：所有业务表增加 `deleted_at` 字段，30 天保留期

@@ -27,9 +27,12 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.section.SectionHeader
 import com.babytracker.navigation.Screen
 import com.babytracker.core.data.repository.BabyRepository
-import com.babytracker.core.database.entity.FeedingEntity
-import com.babytracker.core.database.entity.SleepEntity
-import com.babytracker.core.database.entity.DiaperEntity
+import com.babytracker.core.domain.model.Feeding
+import com.babytracker.core.domain.model.Sleep
+import com.babytracker.core.domain.model.Diaper
+import com.babytracker.core.domain.model.Baby
+import com.babytracker.core.domain.model.SleepType
+import com.babytracker.core.domain.model.FeedingType
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -98,7 +101,7 @@ fun HomeScreen(navController: NavController) {
 }
 
 @Composable
-private fun BabyHeader(baby: com.babytracker.core.database.entity.BabyEntity, onClickProfile: () -> Unit) {
+private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
     val c = LocalAppColors.current
     Box(
         Modifier
@@ -280,9 +283,9 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
             val recentItems = items.take(5)
             val grouped = recentItems.groupBy { item ->
                 when (item) {
-                    is FeedingEntity -> item.timestamp.take(10)
-                    is SleepEntity -> item.startTime.take(10)
-                    is DiaperEntity -> item.timestamp.take(10)
+                    is Feeding -> item.timestamp.take(10)
+                    is Sleep -> item.startTime.take(10)
+                    is Diaper -> item.timestamp.take(10)
                     else -> ""
                 }
             }
@@ -322,20 +325,20 @@ private fun TimelineRecordRow(item: Any) {
         )
         Spacer(Modifier.width(12.dp))
         when (item) {
-            is FeedingEntity -> {
-                Text(when (item.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }, fontSize = 18.sp)
+            is Feeding -> {
+                Text(when (item.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" }, fontSize = 18.sp)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(DateUtils.feedingTypeLabel(item.type), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
-                    Text(if (item.type == "breast") "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
+                    Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                    Text(if (item.type == FeedingType.BREAST) "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
                 }
                 Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textTertiary)
             }
-            is SleepEntity -> {
-                Text(if (item.type == "night") "🌙" else "☀️", fontSize = 18.sp)
+            is Sleep -> {
+                Text(if (item.type == SleepType.NIGHT) "🌙" else "☀️", fontSize = 18.sp)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(if (item.type == "night") "夜间睡眠" else "小睡", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                    Text(if (item.type == SleepType.NIGHT) "夜间睡眠" else "小睡", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
                     Text(
                         DateUtils.durationFullText(
                             DateUtils.durationToTotalSeconds(
@@ -349,12 +352,12 @@ private fun TimelineRecordRow(item: Any) {
                 }
                 Text(item.startTime.substring(11, 16), fontSize = 12.sp, color = c.textTertiary)
             }
-            is DiaperEntity -> {
+            is Diaper -> {
                 Text("🧷", fontSize = 18.sp)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text("换尿布", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
-                    Text(DateUtils.diaperTypeLabel(item.type), fontSize = 12.sp, color = c.textSecondary)
+                    Text(DateUtils.diaperTypeLabel(com.babytracker.core.domain.model.DiaperType.raw(item.type)), fontSize = 12.sp, color = c.textSecondary)
                 }
                 Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textTertiary)
             }

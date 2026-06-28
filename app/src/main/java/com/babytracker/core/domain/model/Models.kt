@@ -6,13 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * Domain Model 层 — 与持久化层（Room Entity）解耦的纯 Kotlin 数据类。
  *
- * 当前阶段仅定义类型，未在 Repository/UI 层使用。
- * 后续重构步骤：
- *   1. Repository 接口改为返回 Flow<List<DomainModel>>
- *   2. RepositoryImpl 内部 Entity → DomainModel 映射
- *   3. UI 层 import 从 entity.* 改为 domain.model.*
- *
- * 当前 Repository 仍返回 Entity，UI 仍直接用 Entity。
+ * 已包含 uuid/updatedAt/deletedAt 同步字段（与 Entity v6 对齐）。
  */
 
 data class Baby(
@@ -24,6 +18,9 @@ data class Baby(
     val birthHeight: Double? = null,
     val avatarPath: String? = null,
     val createdAt: String = "",
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 data class Feeding(
@@ -38,6 +35,9 @@ data class Feeding(
     val brand: String? = null,
     val note: String? = null,
     val timestamp: String,
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 enum class FeedingType { BREAST, FORMULA, FOOD, WATER;
@@ -74,6 +74,9 @@ data class Sleep(
     val startTime: String,
     val endTime: String,
     val note: String? = null,
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 enum class SleepType { NIGHT, NAP;
@@ -90,6 +93,9 @@ data class Growth(
     val value: Double,
     val measuredAt: String,
     val note: String? = null,
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 enum class GrowthType { WEIGHT, HEIGHT, HEAD;
@@ -113,6 +119,9 @@ data class Vaccination(
     val administeredDate: String? = null,
     val status: VaccinationStatus = VaccinationStatus.PENDING,
     val note: String? = null,
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 enum class VaccinationStatus { PENDING, DONE, SKIPPED;
@@ -136,6 +145,9 @@ data class HealthRecord(
     val recordDate: String,
     val attachments: String? = null,
     val note: String? = null,
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 data class Diaper(
@@ -144,6 +156,9 @@ data class Diaper(
     val type: DiaperType,
     val timestamp: String,
     val note: String? = null,
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 enum class DiaperType { WET, POOP, BOTH;

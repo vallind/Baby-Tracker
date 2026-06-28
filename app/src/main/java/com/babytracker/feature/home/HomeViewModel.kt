@@ -2,7 +2,7 @@ package com.babytracker.feature.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.babytracker.core.database.entity.*
+import com.babytracker.core.domain.model.*
 import com.babytracker.core.data.repository.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -42,7 +42,7 @@ class HomeViewModel(
                 ) { feedings, sleeps, diapers ->
                     val today = LocalDate.now().toString()
                     val todayFeedings = feedings.filter { it.timestamp.startsWith(today) }
-                    val todaySleeps = sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }
+                    val todaySleeps = sleeps.filter { it.type == SleepType.NIGHT && it.startTime.startsWith(today) }
                     val nightSleepMin = todaySleeps.sumOf {
                         try { Duration.between(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)).toMinutes() } catch (_: Exception) { 0L }
                     }.toInt()
@@ -50,9 +50,9 @@ class HomeViewModel(
 
                     val allItems = (feedings + sleeps + diapers).sortedByDescending {
                         when (it) {
-                            is FeedingEntity -> it.timestamp
-                            is SleepEntity -> it.startTime
-                            is DiaperEntity -> it.timestamp
+                            is Feeding -> it.timestamp
+                            is Sleep -> it.startTime
+                            is Diaper -> it.timestamp
                             else -> ""
                         }
                     }.take(8)

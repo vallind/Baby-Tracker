@@ -25,7 +25,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.recordcard.RecordCard
-import com.babytracker.core.database.entity.*
+import com.babytracker.core.domain.model.*
 import com.babytracker.feature.diaper.DiaperFormDialog
 import com.babytracker.feature.feeding.FeedingFormDialog
 import com.babytracker.feature.growth.GrowthFormDialog
@@ -47,11 +47,11 @@ fun TimelineScreen(navController: NavController) {
     if (babyId == 0) return
     val state by viewModel.state.collectAsState()
     var showTypePicker by remember { mutableStateOf(false) }
-    var editingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
-    var editingSleep by remember { mutableStateOf<SleepEntity?>(null) }
-    var editingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
-    var editingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
-    var editingHealth by remember { mutableStateOf<HealthRecordEntity?>(null) }
+    var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
+    var editingSleep by remember { mutableStateOf<Sleep?>(null) }
+    var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
+    var editingGrowth by remember { mutableStateOf<Growth?>(null) }
+    var editingHealth by remember { mutableStateOf<HealthRecord?>(null) }
     var typeFilter by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
 

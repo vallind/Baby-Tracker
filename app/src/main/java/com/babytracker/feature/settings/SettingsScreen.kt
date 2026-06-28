@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,13 +25,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.documentfile.provider.DocumentFile
-import com.babytracker.core.database.entity.BabyEntity
+import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.designsystem.theme.AppTheme
 import com.babytracker.designsystem.theme.ThemeController
@@ -41,6 +41,9 @@ import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.navigation.Screen
 import com.babytracker.core.auth.AuthService
 import kotlinx.coroutines.launch
@@ -174,13 +177,18 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppTheme.all.forEach { theme ->
                     val selected = themeCtrl.currentTheme.name == theme.name
-                    Card(
-                        onClick = { themeCtrl.switchTheme(theme.name) },
-                        modifier = Modifier.width(120.dp).height(96.dp),
-                        shape = MaterialTheme.shapes.medium,
-                        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                        colors = CardDefaults.cardColors(containerColor = theme.colors.card),
+                    AppCard(
+                        modifier = Modifier
+                            .width(120.dp)
+                            .height(96.dp)
+                            .border(
+                                if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                RoundedCornerShape(DT.cardRadius.dp),
+                            )
+                            .clickable { themeCtrl.switchTheme(theme.name) },
+                        cornerRadius = DT.cardRadius.dp,
+                        elevation = 1.dp,
+                        containerColor = theme.colors.card,
                     ) {
                         Box(Modifier.fillMaxSize().padding(12.dp)) {
                             Column {
@@ -215,15 +223,13 @@ fun SectionTitle(title: String) {
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
     val c = LocalAppColors.current
-    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
-    Card(
-        Modifier.fillMaxWidth(),
-        shape = cardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
-    ) {
-        Column(content = content)
-    }
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = DT.cardRadius.dp,
+        elevation = DT.cardElevation.dp,
+        containerColor = c.surface,
+        content = content,
+    )
 }
 
 /** 设置项分割线（c.divider）。 */
@@ -291,25 +297,21 @@ fun BabyManagementScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     var showForm by remember { mutableStateOf(false) }
-    var editingBaby by remember { mutableStateOf<BabyEntity?>(null) }
-    var showDeleteConfirm by remember { mutableStateOf<BabyEntity?>(null) }
+    var editingBaby by remember { mutableStateOf<Baby?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf<Baby?>(null) }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("宝宝管理") },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
+            AppTopBar(
+                title = "宝宝管理",
+                onBack = { navController.popBackStack() },
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showForm = true; editingBaby = null }) {
-                Icon(Icons.Default.Add, contentDescription = "添加宝宝")
-            }
+            AppFAB(
+                icon = Icons.Default.Add,
+                onClick = { showForm = true; editingBaby = null },
+            )
         },
     ) { padding ->
         if (babies.isEmpty()) {
@@ -382,26 +384,23 @@ fun BabyManagementScreen(navController: NavController) {
         )
     }
 
-    showDeleteConfirm?.let { baby ->
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = null },
-            title = { Text("确认删除") },
-            text = { Text("确定要删除 ${baby.name} 的所有数据吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    scope.launch { babyRepo.delete(baby) }
-                    showDeleteConfirm = null
-                }) { Text("删除", color = c.textSecondary) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = null }) { Text("取消") }
-            },
-        )
-    }
+    AppConfirmDialog(
+        show = showDeleteConfirm != null,
+        title = "确认删除",
+        message = "确定要删除 ${showDeleteConfirm?.name} 的所有数据吗？",
+        onConfirm = {
+            showDeleteConfirm?.let { baby ->
+                scope.launch { babyRepo.delete(baby) }
+            }
+            showDeleteConfirm = null
+        },
+        onDismiss = { showDeleteConfirm = null },
+    )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BabyFormDialog(baby: BabyEntity?, onDismiss: () -> Unit, onSave: (BabyEntity) -> Unit) {
+fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
     val isEdit = baby != null
     var name by remember { mutableStateOf(baby?.name ?: "") }
     var gender by remember { mutableStateOf(baby?.gender ?: "男") }
@@ -466,7 +465,7 @@ fun BabyFormDialog(baby: BabyEntity?, onDismiss: () -> Unit, onSave: (BabyEntity
         confirmButton = {
             TextButton(
                 onClick = {
-                    onSave(BabyEntity(
+                    onSave(Baby(
                         id = baby?.id ?: 0,
                         name = name,
                         gender = gender,
@@ -534,12 +533,10 @@ fun BackupScreen(navController: NavController) {
 
     val c = LocalAppColors.current
     Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = { Text("备份管理") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            ))
+        AppTopBar(
+            title = "备份管理",
+            onBack = { navController.popBackStack() },
+        )
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = DT.pageMargin.dp, vertical = DT.pageMargin.dp)) {
             AppCard(
@@ -687,47 +684,39 @@ fun BackupScreen(navController: NavController) {
         }
     }
 
-    if (showRestoreConfirm) {
-        AlertDialog(
-            onDismissRequest = { showRestoreConfirm = false },
-            title = { Text("恢复数据") },
-            text = { Text("恢复将导入备份中的宝宝和记录数据，已有数据不受影响。确定继续？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showRestoreConfirm = false
-                    restoring = true
-                    scope.launch {
-                        restoreFileUri?.let { uri ->
-                            backupManager.restoreFromUri(context, uri).onSuccess {
-                                Toast.makeText(context, "恢复完成", Toast.LENGTH_SHORT).show()
-                            }.onFailure {
-                                Toast.makeText(context, "恢复失败: ${it.message}", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                        restoring = false
+    AppConfirmDialog(
+        show = showRestoreConfirm,
+        title = "恢复数据",
+        message = "恢复将导入备份中的宝宝和记录数据，已有数据不受影响。确定继续？",
+        confirmText = "恢复",
+        onConfirm = {
+            showRestoreConfirm = false
+            restoring = true
+            scope.launch {
+                restoreFileUri?.let { uri ->
+                    backupManager.restoreFromUri(context, uri).onSuccess {
+                        Toast.makeText(context, "恢复完成", Toast.LENGTH_SHORT).show()
+                    }.onFailure {
+                        Toast.makeText(context, "恢复失败: ${it.message}", Toast.LENGTH_SHORT).show()
                     }
-                }) { Text("恢复", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRestoreConfirm = false }) { Text("取消") }
-            },
-        )
-    }
-    if (showWebdavRestoreConfirm) {
-        AlertDialog(
-            onDismissRequest = { showWebdavRestoreConfirm = false },
-            title = { Text("云端恢复") },
-            text = { Text("将从 WebDAV 下载最新备份并恢复") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showWebdavRestoreConfirm = false; restoring = true
-                    scope.launch {
-                        backupManager.restoreFromWebDAV().onSuccess { Toast.makeText(context, "云端恢复完成", Toast.LENGTH_SHORT).show() }.onFailure { Toast.makeText(context, "恢复失败: ${it.message}", Toast.LENGTH_SHORT).show() }
-                        restoring = false
-                    }
-                }) { Text("恢复", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = { TextButton(onClick = { showWebdavRestoreConfirm = false }) { Text("取消") } },
-        )
-    }
+                }
+                restoring = false
+            }
+        },
+        onDismiss = { showRestoreConfirm = false },
+    )
+    AppConfirmDialog(
+        show = showWebdavRestoreConfirm,
+        title = "云端恢复",
+        message = "将从 WebDAV 下载最新备份并恢复",
+        confirmText = "恢复",
+        onConfirm = {
+            showWebdavRestoreConfirm = false; restoring = true
+            scope.launch {
+                backupManager.restoreFromWebDAV().onSuccess { Toast.makeText(context, "云端恢复完成", Toast.LENGTH_SHORT).show() }.onFailure { Toast.makeText(context, "恢复失败: ${it.message}", Toast.LENGTH_SHORT).show() }
+                restoring = false
+            }
+        },
+        onDismiss = { showWebdavRestoreConfirm = false },
+    )
 }

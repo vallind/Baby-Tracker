@@ -1,6 +1,7 @@
 package com.babytracker.core.util
 
-import com.babytracker.core.database.entity.VaccinationEntity
+import com.babytracker.core.domain.model.Vaccination
+import com.babytracker.core.domain.model.VaccinationStatus
 
 object VaccineSchedule {
     data class DefaultVaccine(val name: String, val dose: String, val monthAge: Int)
@@ -29,11 +30,11 @@ object VaccineSchedule {
         DefaultVaccine("白破", "", 72),
     )
 
-    fun createForBaby(babyId: Int, birthDate: String): List<VaccinationEntity> {
+    fun createForBaby(babyId: Int, birthDate: String): List<Vaccination> {
         val birth = java.time.LocalDate.parse(birthDate)
         return list.map { v ->
             val scheduled = birth.plusMonths(v.monthAge.toLong()).toString()
-            VaccinationEntity(babyId = babyId, name = v.name, dose = v.dose.ifBlank { null }, scheduledDate = scheduled + "T00:00:00", status = "pending")
+            Vaccination(babyId = babyId, name = v.name, dose = v.dose.ifBlank { null }, scheduledDate = scheduled + "T00:00:00", status = VaccinationStatus.PENDING)
         }
     }
 }

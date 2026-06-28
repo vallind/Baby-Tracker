@@ -11,6 +11,7 @@ fun BabyEntity.toDomain() = Baby(
     birthDate = birthDate,
     birthWeight = birthWeight, birthHeight = birthHeight, avatarPath = avatarPath,
     createdAt = createdAt,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun Baby.toEntity() = BabyEntity(
@@ -18,6 +19,7 @@ fun Baby.toEntity() = BabyEntity(
     birthDate = birthDate,
     birthWeight = birthWeight, birthHeight = birthHeight, avatarPath = avatarPath,
     createdAt = createdAt,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun FeedingEntity.toDomain() = Feeding(
@@ -26,6 +28,7 @@ fun FeedingEntity.toDomain() = Feeding(
     breastSide = BreastSide.fromRaw(breastSide), foodName = foodName, amountG = amountG,
     brand = brand, note = note,
     timestamp = timestamp,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun Feeding.toEntity() = FeedingEntity(
@@ -34,6 +37,7 @@ fun Feeding.toEntity() = FeedingEntity(
     breastSide = BreastSide.raw(breastSide), foodName = foodName, amountG = amountG,
     brand = brand, note = note,
     timestamp = timestamp,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun SleepEntity.toDomain() = Sleep(
@@ -41,6 +45,7 @@ fun SleepEntity.toDomain() = Sleep(
     startTime = startTime,
     endTime = endTime,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun Sleep.toEntity() = SleepEntity(
@@ -48,30 +53,35 @@ fun Sleep.toEntity() = SleepEntity(
     startTime = startTime,
     endTime = endTime,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun DiaperEntity.toDomain() = Diaper(
     id = id, babyId = babyId, type = DiaperType.fromRaw(type),
     timestamp = timestamp,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun Diaper.toEntity() = DiaperEntity(
     id = id, babyId = babyId, type = DiaperType.raw(type),
     timestamp = timestamp,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun GrowthEntity.toDomain() = Growth(
     id = id, babyId = babyId, type = GrowthType.fromRaw(type), value = value,
     measuredAt = measuredAt,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun Growth.toEntity() = GrowthEntity(
     id = id, babyId = babyId, type = GrowthType.raw(type), value = value,
     measuredAt = measuredAt,
     note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun VaccinationEntity.toDomain() = Vaccination(
@@ -79,6 +89,7 @@ fun VaccinationEntity.toDomain() = Vaccination(
     scheduledDate = scheduledDate,
     administeredDate = administeredDate,
     status = VaccinationStatus.fromRaw(status), note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun Vaccination.toEntity() = VaccinationEntity(
@@ -86,6 +97,7 @@ fun Vaccination.toEntity() = VaccinationEntity(
     scheduledDate = scheduledDate,
     administeredDate = administeredDate,
     status = VaccinationStatus.raw(status), note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun HealthRecordEntity.toDomain() = HealthRecord(
@@ -93,6 +105,7 @@ fun HealthRecordEntity.toDomain() = HealthRecord(
     description = description, doctorName = doctorName,
     recordDate = recordDate,
     attachments = attachments, note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun HealthRecord.toEntity() = HealthRecordEntity(
@@ -100,6 +113,7 @@ fun HealthRecord.toEntity() = HealthRecordEntity(
     description = description, doctorName = doctorName,
     recordDate = recordDate,
     attachments = attachments, note = note,
+    uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
 fun BackupConfigEntity.toDomain() = BackupConfig(

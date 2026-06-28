@@ -18,7 +18,8 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.DiaperEntity
+import com.babytracker.core.domain.model.Diaper
+import com.babytracker.core.domain.model.DiaperType
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -44,7 +45,7 @@ fun DiaperListScreen(navController: NavController) {
     if (babyId == 0) return
     val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var editingDiaper by remember { mutableStateOf<DiaperEntity?>(null) }
+    var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -146,7 +147,7 @@ fun DiaperListScreen(navController: NavController) {
                                 ) { Text("🧷", style = MaterialTheme.typography.titleLarge) }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(DateUtils.diaperTypeLabel(d.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text(DateUtils.diaperTypeLabel(DiaperType.raw(d.type)), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
                                     Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                                 }
                                 if (!d.note.isNullOrBlank()) {
@@ -188,12 +189,12 @@ fun DiaperListScreen(navController: NavController) {
 @Composable
 fun DiaperFormDialog(
     babyId: Int,
-    editEntity: DiaperEntity? = null,
+    editEntity: Diaper? = null,
     onDismiss: () -> Unit,
-    onSave: (DiaperEntity) -> Unit,
+    onSave: (Diaper) -> Unit,
 ) {
     val isEdit = editEntity != null
-    var selectedType by remember { mutableStateOf(editEntity?.type ?: "wet") }
+    var selectedType by remember { mutableStateOf(editEntity?.let { DiaperType.raw(it.type) } ?: "wet") }
     val now = LocalDateTime.now()
     var diaperDateTime by remember {
         mutableStateOf(
@@ -231,14 +232,14 @@ fun DiaperFormDialog(
                 onClick = {
                     val diaper = if (isEdit) {
                         editEntity.copy(
-                            type = selectedType,
+                            type = DiaperType.fromRaw(selectedType),
                             timestamp = diaperDateTime.replace(" ", "T") + ":00",
                             note = note.ifBlank { null },
                         )
                     } else {
-                        DiaperEntity(
+                        Diaper(
                             babyId = babyId,
-                            type = selectedType,
+                            type = DiaperType.fromRaw(selectedType),
                             timestamp = diaperDateTime.replace(" ", "T") + ":00",
                             note = note.ifBlank { null },
                         )

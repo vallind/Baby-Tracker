@@ -27,7 +27,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.HealthRepository
 import kotlinx.coroutines.launch
-import com.babytracker.core.database.entity.HealthRecordEntity
+import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import org.koin.compose.koinInject
@@ -50,7 +50,7 @@ fun HealthScreen(navController: NavController) {
     if (babyId == 0) return
     val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var editingRecord by remember { mutableStateOf<HealthRecordEntity?>(null) }
+    var editingRecord by remember { mutableStateOf<HealthRecord?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -156,10 +156,10 @@ fun HealthScreen(navController: NavController) {
 @Composable
 private fun HealthCategoryCard(
     category: String,
-    items: List<HealthRecordEntity>,
+    items: List<HealthRecord>,
     useAccent: Boolean,
-    onClick: (HealthRecordEntity) -> Unit,
-    onDelete: (HealthRecordEntity) -> Unit,
+    onClick: (HealthRecord) -> Unit,
+    onDelete: (HealthRecord) -> Unit,
 ) {
     val c = LocalAppColors.current
     val tint = if (useAccent) c.warning else c.primary
@@ -234,9 +234,9 @@ private fun HealthCategoryCard(
 @Composable
 fun HealthFormDialog(
     babyId: Int,
-    editEntity: HealthRecordEntity? = null,
+    editEntity: HealthRecord? = null,
     onDismiss: () -> Unit,
-    onSave: (HealthRecordEntity) -> Unit,
+    onSave: (HealthRecord) -> Unit,
 ) {
     val c = LocalAppColors.current
     val isEdit = editEntity != null
@@ -338,7 +338,7 @@ fun HealthFormDialog(
                             note = note.ifBlank { null },
                         )
                     } else {
-                        HealthRecordEntity(
+                        HealthRecord(
                             babyId = babyId,
                             category = category,
                             description = description,

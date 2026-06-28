@@ -19,7 +19,8 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.VaccinationEntity
+import com.babytracker.core.domain.model.Vaccination
+import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -49,7 +50,7 @@ fun VaccinationListScreen(navController: NavController) {
 
     var filter by remember { mutableStateOf("pending") }
     var showForm by remember { mutableStateOf(false) }
-    var editingVac by remember { mutableStateOf<VaccinationEntity?>(null) }
+    var editingVac by remember { mutableStateOf<Vaccination?>(null) }
     var showGenerateConfirm by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -84,7 +85,7 @@ fun VaccinationListScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(DT.cardGap.dp))
-            val filtered = remember(vaccinations, filter) { vaccinations.filter { it.status == filter } }
+            val filtered = remember(vaccinations, filter) { vaccinations.filter { VaccinationStatus.raw(it.status) == filter } }
             if (filtered.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
@@ -126,15 +127,15 @@ fun VaccinationListScreen(navController: NavController) {
                                 showForm = true
                             },
                         ) {
-                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.warning.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
+                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == VaccinationStatus.DONE) c.success.copy(alpha = 0.14f) else c.warning.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == VaccinationStatus.DONE) "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
                                 Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                             }
-                            val tagColor = if (v.status == "done") c.success else c.warning
+                            val tagColor = if (v.status == VaccinationStatus.DONE) c.success else c.warning
                             Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
-                                Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
+                                Text(if (v.status == VaccinationStatus.DONE) "已接种" else if (v.status == VaccinationStatus.PENDING) "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     }
@@ -203,15 +204,15 @@ fun VaccinationListScreen(navController: NavController) {
 @Composable
 fun VaccinationFormDialog(
     babyId: Int,
-    editEntity: VaccinationEntity? = null,
-    onSave: (VaccinationEntity) -> Unit,
+    editEntity: Vaccination? = null,
+    onSave: (Vaccination) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val c = LocalAppColors.current
     val isEdit = editEntity != null
     var name by remember { mutableStateOf(editEntity?.name ?: "") }
     var dose by remember { mutableStateOf(editEntity?.dose ?: "") }
-    var status by remember { mutableStateOf(editEntity?.status ?: "pending") }
+    var status by remember { mutableStateOf(editEntity?.let { VaccinationStatus.raw(it.status) } ?: "pending") }
     var scheduledDate by remember {
         mutableStateOf(
             editEntity?.scheduledDate?.take(10)
@@ -267,17 +268,17 @@ fun VaccinationFormDialog(
                             dose = dose.ifBlank { null },
                             scheduledDate = scheduledDateTime,
                             administeredDate = administeredDateTime,
-                            status = status,
+                            status = VaccinationStatus.fromRaw(status),
                             note = note.ifBlank { null }
                         )
                     } else {
-                        VaccinationEntity(
+                        Vaccination(
                             babyId = babyId,
                             name = name,
                             dose = dose.ifBlank { null },
                             scheduledDate = scheduledDateTime,
                             administeredDate = administeredDateTime,
-                            status = status,
+                            status = VaccinationStatus.fromRaw(status),
                             note = note.ifBlank { null }
                         )
                     }

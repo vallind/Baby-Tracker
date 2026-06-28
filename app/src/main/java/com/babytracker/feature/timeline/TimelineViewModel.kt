@@ -2,7 +2,7 @@ package com.babytracker.feature.timeline
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.babytracker.core.database.entity.*
+import com.babytracker.core.domain.model.*
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,11 +30,11 @@ data class TimelineUiState(
 )
 
 private data class EntityBundle(
-    val feedings: List<FeedingEntity>,
-    val sleeps: List<SleepEntity>,
-    val diapers: List<DiaperEntity>,
-    val growths: List<GrowthEntity>,
-    val healths: List<HealthRecordEntity>,
+    val feedings: List<Feeding>,
+    val sleeps: List<Sleep>,
+    val diapers: List<Diaper>,
+    val growths: List<Growth>,
+    val healths: List<HealthRecord>,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -50,11 +50,11 @@ class TimelineViewModel(
 
     private val _trigger = MutableStateFlow<Int?>(null)
 
-    private var cachedFeedings: List<FeedingEntity> = emptyList()
-    private var cachedSleeps: List<SleepEntity> = emptyList()
-    private var cachedDiapers: List<DiaperEntity> = emptyList()
-    private var cachedGrowths: List<GrowthEntity> = emptyList()
-    private var cachedHealths: List<HealthRecordEntity> = emptyList()
+    private var cachedFeedings: List<Feeding> = emptyList()
+    private var cachedSleeps: List<Sleep> = emptyList()
+    private var cachedDiapers: List<Diaper> = emptyList()
+    private var cachedGrowths: List<Growth> = emptyList()
+    private var cachedHealths: List<HealthRecord> = emptyList()
 
     // 撤销删除：暂存最近一次删除的实体
     private var lastDeletedEntity: Any? = null
@@ -89,12 +89,12 @@ class TimelineViewModel(
                         TimelineItem(
                             id = f.id,
                             recordType = "feeding",
-                            emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" },
-                            title = DateUtils.feedingTypeLabel(f.type),
+                            emoji = when (f.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" },
+                            title = DateUtils.feedingTypeLabel(FeedingType.raw(f.type)),
                             subtitle = when (f.type) {
-                                "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
-                                "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
-                                "food" -> "${f.foodName} ${f.amountG}g"
+                                FeedingType.BREAST -> "${f.breastSide?.let { BreastSide.raw(it) } ?: "双侧"} · ${f.durationMin}分钟"
+                                FeedingType.FORMULA -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
+                                FeedingType.FOOD -> "${f.foodName} ${f.amountG}g"
                                 else -> "${f.amountMl}ml"
                             },
                             time = f.timestamp.substring(11, 16),
@@ -116,8 +116,8 @@ class TimelineViewModel(
                         TimelineItem(
                             id = s.id,
                             recordType = "sleep",
-                            emoji = if (s.type == "night") "🌙" else "☀️",
-                            title = if (s.type == "night") "夜间睡眠" else "小睡",
+                            emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
+                            title = if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡",
                             subtitle = buildString {
                                 append("${s.startTime.substring(11, 16)}-${s.endTime.substring(11, 16)}")
                                 if (secs > 0) append(" · ${DateUtils.durationFullText(secs)}")
@@ -137,7 +137,7 @@ class TimelineViewModel(
                             recordType = "diaper",
                             emoji = "🧷",
                             title = "换尿布",
-                            subtitle = DateUtils.diaperTypeLabel(d.type),
+                            subtitle = DateUtils.diaperTypeLabel(DiaperType.raw(d.type)),
                             time = d.timestamp.substring(11, 16),
                             date = d.timestamp.take(10),
                             accent = accent.also { accent = !accent },
@@ -147,13 +147,13 @@ class TimelineViewModel(
                 }
 
                 bundle.growths.forEach { g ->
-                    val unit = when (g.type) { "weight" -> "kg"; "height" -> "cm"; else -> "cm" }
+                    val unit = when (g.type) { GrowthType.WEIGHT -> "kg"; GrowthType.HEIGHT -> "cm"; else -> "cm" }
                     items.add(
                         TimelineItem(
                             id = g.id,
                             recordType = "growth",
                             emoji = "📏",
-                            title = DateUtils.growthTypeLabel(g.type),
+                            title = DateUtils.growthTypeLabel(GrowthType.raw(g.type)),
                             subtitle = "${g.value}$unit",
                             time = g.measuredAt.substring(11, 16),
                             date = g.measuredAt.take(10),
@@ -214,27 +214,27 @@ class TimelineViewModel(
         }
     }
 
-    fun findFeeding(id: Int): FeedingEntity? = cachedFeedings.find { it.id == id }
-    fun findSleep(id: Int): SleepEntity? = cachedSleeps.find { it.id == id }
-    fun findDiaper(id: Int): DiaperEntity? = cachedDiapers.find { it.id == id }
-    fun findGrowth(id: Int): GrowthEntity? = cachedGrowths.find { it.id == id }
-    fun findHealth(id: Int): HealthRecordEntity? = cachedHealths.find { it.id == id }
+    fun findFeeding(id: Int): Feeding? = cachedFeedings.find { it.id == id }
+    fun findSleep(id: Int): Sleep? = cachedSleeps.find { it.id == id }
+    fun findDiaper(id: Int): Diaper? = cachedDiapers.find { it.id == id }
+    fun findGrowth(id: Int): Growth? = cachedGrowths.find { it.id == id }
+    fun findHealth(id: Int): HealthRecord? = cachedHealths.find { it.id == id }
 
-    fun updateFeeding(e: FeedingEntity) { viewModelScope.launch { feedingRepo.update(e) } }
-    fun updateSleep(e: SleepEntity) { viewModelScope.launch { sleepRepo.update(e) } }
-    fun updateDiaper(e: DiaperEntity) { viewModelScope.launch { diaperRepo.update(e) } }
-    fun updateGrowth(e: GrowthEntity) { viewModelScope.launch { growthRepo.update(e) } }
-    fun updateHealth(e: HealthRecordEntity) { viewModelScope.launch { healthRepo.update(e) } }
+    fun updateFeeding(e: Feeding) { viewModelScope.launch { feedingRepo.update(e) } }
+    fun updateSleep(e: Sleep) { viewModelScope.launch { sleepRepo.update(e) } }
+    fun updateDiaper(e: Diaper) { viewModelScope.launch { diaperRepo.update(e) } }
+    fun updateGrowth(e: Growth) { viewModelScope.launch { growthRepo.update(e) } }
+    fun updateHealth(e: HealthRecord) { viewModelScope.launch { healthRepo.update(e) } }
 
     /** 撤销最近一次删除 */
     fun undoLastDelete() {
         viewModelScope.launch {
             when (lastDeletedType) {
-                "feeding" -> (lastDeletedEntity as? FeedingEntity)?.let { feedingRepo.insert(it) }
-                "sleep" -> (lastDeletedEntity as? SleepEntity)?.let { sleepRepo.insert(it) }
-                "diaper" -> (lastDeletedEntity as? DiaperEntity)?.let { diaperRepo.insert(it) }
-                "growth" -> (lastDeletedEntity as? GrowthEntity)?.let { growthRepo.insert(it) }
-                "health" -> (lastDeletedEntity as? HealthRecordEntity)?.let { healthRepo.insert(it) }
+                "feeding" -> (lastDeletedEntity as? Feeding)?.let { feedingRepo.insert(it) }
+                "sleep" -> (lastDeletedEntity as? Sleep)?.let { sleepRepo.insert(it) }
+                "diaper" -> (lastDeletedEntity as? Diaper)?.let { diaperRepo.insert(it) }
+                "growth" -> (lastDeletedEntity as? Growth)?.let { growthRepo.insert(it) }
+                "health" -> (lastDeletedEntity as? HealthRecord)?.let { healthRepo.insert(it) }
             }
             lastDeletedEntity = null
             lastDeletedType = null

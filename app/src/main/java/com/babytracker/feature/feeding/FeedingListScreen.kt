@@ -21,7 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.navigation.NavController
-import com.babytracker.core.database.entity.FeedingEntity
+import com.babytracker.core.domain.model.Feeding
+import com.babytracker.core.domain.model.FeedingType
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -48,7 +49,7 @@ fun FeedingListScreen(navController: NavController) {
     if (babyId == 0) return
     val feedings by feedingRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var editingFeeding by remember { mutableStateOf<FeedingEntity?>(null) }
+    var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -125,7 +126,7 @@ fun FeedingListScreen(navController: NavController) {
                         }
                         items(items = records, key = { it.id }) { f ->
                             val tint = if (f.id % 2 == 1) c.warning else c.primary
-                            val emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }
+                            val emoji = when (f.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" }
                             val time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" }
                             RecordCard(
                                 modifier = Modifier.padding(bottom = 8.dp),
@@ -158,12 +159,12 @@ fun FeedingListScreen(navController: NavController) {
                                 ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(DateUtils.feedingTypeLabel(f.type), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text(DateUtils.feedingTypeLabel(FeedingType.raw(f.type)), style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
                                     Text(
                                         when (f.type) {
-                                            "breast" -> "${f.breastSide ?: "双侧"} · ${f.durationMin}分钟"
-                                            "formula" -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
-                                            "food" -> "${f.foodName} ${f.amountG}g"
+                                            FeedingType.BREAST -> "${f.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: "双侧"} · ${f.durationMin}分钟"
+                                            FeedingType.FORMULA -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
+                                            FeedingType.FOOD -> "${f.foodName} ${f.amountG}g"
                                             else -> "${f.amountMl}ml"
                                         },
                                         style = MaterialTheme.typography.bodySmall,
@@ -207,15 +208,15 @@ fun FeedingListScreen(navController: NavController) {
 @Composable
 fun FeedingFormDialog(
     babyId: Int,
-    editEntity: FeedingEntity? = null,
+    editEntity: Feeding? = null,
     onDismiss: () -> Unit,
-    onSave: (FeedingEntity) -> Unit,
+    onSave: (Feeding) -> Unit,
 ) {
     val isEdit = editEntity != null
-    var type by remember { mutableStateOf(editEntity?.type ?: "breast") }
+    var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
     var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
     var durationMin by remember { mutableStateOf(editEntity?.durationMin?.toString() ?: "") }
-    var breastSide by remember { mutableStateOf(editEntity?.breastSide ?: "双侧") }
+    var breastSide by remember { mutableStateOf(editEntity?.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: "双侧") }
     var foodName by remember { mutableStateOf(editEntity?.foodName ?: "") }
     var amountG by remember { mutableStateOf(editEntity?.amountG?.toString() ?: "") }
     var brand by remember { mutableStateOf(editEntity?.brand ?: "") }
@@ -315,21 +316,21 @@ fun FeedingFormDialog(
                 onClick = {
                     val feeding = if (isEdit) {
                         editEntity.copy(
-                            type = type,
+                            type = FeedingType.fromRaw(type),
                             amountMl = amountMl.toIntOrNull(),
                             durationMin = durationMin.toIntOrNull(),
-                            breastSide = if (type == "breast") breastSide else null,
+                            breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
                             foodName = if (type == "food") foodName else null,
                             amountG = amountG.toIntOrNull(),
                             brand = brand.ifBlank { null },
                             timestamp = feedingDateTime.replace(" ", "T") + ":00",
                         )
                     } else {
-                        FeedingEntity(
-                            babyId = babyId, type = type,
+                        Feeding(
+                            babyId = babyId, type = FeedingType.fromRaw(type),
                             amountMl = amountMl.toIntOrNull(),
                             durationMin = durationMin.toIntOrNull(),
-                            breastSide = if (type == "breast") breastSide else null,
+                            breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
                             foodName = if (type == "food") foodName else null,
                             amountG = amountG.toIntOrNull(),
                             brand = brand.ifBlank { null },

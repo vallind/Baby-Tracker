@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.babytracker.core.database.entity.BabyEntity
+import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
@@ -78,7 +78,7 @@ private fun abilityDescription(title: String, score: Int): String = when (score)
     else -> "--"
 }
 
-/** 由 [BabyEntity.birthDate] 计算当前月龄（Int 月份）。 */
+/** 由 [Baby.birthDate] 计算当前月龄（Int 月份）。 */
 private fun babyAgeMonths(birthDate: String): Int {
     return try {
         val birth = LocalDate.parse(birthDate.take(10))
@@ -186,7 +186,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
 
 // —— 顶部宝宝信息区 ——
 @Composable
-private fun BabyHeader(baby: BabyEntity) {
+private fun BabyHeader(baby: Baby) {
     val c = LocalAppColors.current
     Box(
         Modifier

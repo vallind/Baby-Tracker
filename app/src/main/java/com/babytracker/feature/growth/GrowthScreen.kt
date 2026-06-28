@@ -28,7 +28,8 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.GrowthEntity
+import com.babytracker.core.domain.model.Growth
+import com.babytracker.core.domain.model.GrowthType
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -54,12 +55,12 @@ fun GrowthScreen(navController: NavController) {
     if (babyId == 0) return
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var editingGrowth by remember { mutableStateOf<GrowthEntity?>(null) }
+    var editingGrowth by remember { mutableStateOf<Growth?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
-    val types = listOf("height", "weight", "head")
+    val types = listOf(GrowthType.HEIGHT, GrowthType.WEIGHT, GrowthType.HEAD)
 
     Scaffold(containerColor = c.pageBackground, topBar = {
         CenterAlignedTopAppBar(title = { Text("生长记录", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
@@ -94,9 +95,9 @@ fun GrowthScreen(navController: NavController) {
             val chartData = remember(growths, tab) { growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt } }
             val latest = chartData.lastOrNull()
             val normalRangeHint = when (types[tab]) {
-                "height" -> "WHO 参考范围 50-80 cm（6 月龄约 67 cm）"
-                "weight" -> "WHO 参考范围 3-12 kg（6 月龄约 7.5 kg）"
-                "head" -> "WHO 参考范围 34-48 cm（6 月龄约 43 cm）"
+                GrowthType.HEIGHT -> "WHO 参考范围 50-80 cm（6 月龄约 67 cm）"
+                GrowthType.WEIGHT -> "WHO 参考范围 3-12 kg（6 月龄约 7.5 kg）"
+                GrowthType.HEAD -> "WHO 参考范围 34-48 cm（6 月龄约 43 cm）"
                 else -> ""
             }
             val currentShape = RoundedCornerShape(DT.cardRadius.dp)
@@ -164,7 +165,7 @@ fun GrowthScreen(navController: NavController) {
                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
                     val w = size.width; val h = size.height
                     for (i in 0..3) { drawLine(gridColor, Offset(0f, h * i / 4), Offset(w, h * i / 4), strokeWidth = 1f) }
-                    val whoLines = whoReferenceLines(types[tab], minVal, maxVal, range)
+                    val whoLines = whoReferenceLines(GrowthType.raw(types[tab]), minVal, maxVal, range)
                     whoLines.forEach { percentile ->
                         val y = h * (1f - ((percentile - minVal) / range).toFloat()).coerceIn(0f, h)
                         val dashed = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
@@ -258,7 +259,7 @@ fun GrowthScreen(navController: NavController) {
                                 Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.success.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+                                    Text("${DateUtils.growthTypeLabel(GrowthType.raw(g.type))} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
                                     Text(DateUtils.formatDate(java.time.LocalDateTime.parse(g.measuredAt, java.time.format.DateTimeFormatter.ISO_DATE_TIME)), style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                                 }
                             }
@@ -297,13 +298,13 @@ fun GrowthScreen(navController: NavController) {
 @Composable
 fun GrowthFormDialog(
     babyId: Int,
-    editEntity: GrowthEntity? = null,
+    editEntity: Growth? = null,
     onDismiss: () -> Unit,
-    onSave: (GrowthEntity) -> Unit,
+    onSave: (Growth) -> Unit,
 ) {
     val c = LocalAppColors.current
     val isEdit = editEntity != null
-    var type by remember { mutableStateOf(editEntity?.type ?: "height") }
+    var type by remember { mutableStateOf(editEntity?.let { GrowthType.raw(it.type) } ?: "height") }
     var value by remember { mutableStateOf(editEntity?.value?.let { if (it == it.toLong().toDouble() && it == 0.0) "" else String.format("%.1f", it) } ?: "") }
     var measuredAt by remember {
         mutableStateOf(
@@ -360,14 +361,14 @@ fun GrowthFormDialog(
                 onClick = {
                     val growth = if (isEdit) {
                         editEntity.copy(
-                            type = type,
+                            type = GrowthType.fromRaw(type),
                             value = value.toDoubleOrNull() ?: 0.0,
                             measuredAt = measuredAt.replace(" ", "T") + ":00",
                             note = note.ifBlank { null },
                         )
                     } else {
-                        GrowthEntity(
-                            babyId = babyId, type = type,
+                        Growth(
+                            babyId = babyId, type = GrowthType.fromRaw(type),
                             value = value.toDoubleOrNull() ?: 0.0,
                             measuredAt = measuredAt.replace(" ", "T") + ":00",
                             note = note.ifBlank { null },

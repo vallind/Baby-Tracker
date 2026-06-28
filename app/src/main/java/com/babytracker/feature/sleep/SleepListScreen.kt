@@ -18,7 +18,8 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.babytracker.core.database.entity.SleepEntity
+import com.babytracker.core.domain.model.Sleep
+import com.babytracker.core.domain.model.SleepType
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
@@ -44,11 +45,11 @@ fun SleepListScreen(navController: NavController) {
     if (babyId == 0) return
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
-    var editingSleep by remember { mutableStateOf<SleepEntity?>(null) }
+    var editingSleep by remember { mutableStateOf<Sleep?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     val today = java.time.LocalDate.now().toString()
-    val night = sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }.firstOrNull()
+    val night = sleeps.filter { it.type == SleepType.NIGHT && it.startTime.startsWith(today) }.firstOrNull()
     val nightDurSec = night?.let { DateUtils.durationToTotalSeconds(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)) } ?: 0
     val nightRange = night?.let {
         val s = LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm"))
@@ -110,7 +111,7 @@ fun SleepListScreen(navController: NavController) {
             } else {
                 val night = remember(sleeps) {
                     val today = java.time.LocalDate.now().toString()
-                    sleeps.filter { it.type == "night" && it.startTime.startsWith(today) }.firstOrNull()
+                    sleeps.filter { it.type == SleepType.NIGHT && it.startTime.startsWith(today) }.firstOrNull()
                 }
                 val nightDurSec = remember(night) {
                     night?.let { DateUtils.durationToTotalSeconds(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)) } ?: 0
@@ -212,10 +213,10 @@ fun SleepListScreen(navController: NavController) {
                                         .clip(RoundedCornerShape(DT.iconBgRadius.dp))
                                         .background(tint.copy(alpha = 0.14f)),
                                     contentAlignment = Alignment.Center,
-                                ) { Text(if (s.type == "night") "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
+                                ) { Text(if (s.type == SleepType.NIGHT) "🌙" else "☀️", style = MaterialTheme.typography.titleLarge) }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text(if (s.type == "night") "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
+                                    Text(if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡", style = MaterialTheme.typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
                                     Text("${start.format(DateTimeFormatter.ofPattern("HH:mm"))}-${end.format(DateTimeFormatter.ofPattern("HH:mm"))}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                                 }
                                 Text(DateUtils.durationFullText(DateUtils.durationToTotalSeconds(start, end)), color = c.primary, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
@@ -255,14 +256,14 @@ fun SleepListScreen(navController: NavController) {
 @Composable
 fun SleepFormDialog(
     babyId: Int,
-    editEntity: SleepEntity? = null,
+    editEntity: Sleep? = null,
     onDismiss: () -> Unit,
-    onSave: (SleepEntity) -> Unit,
+    onSave: (Sleep) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val isEdit = editEntity != null
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var selectedType by remember { mutableStateOf(editEntity?.type ?: "night") }
+    var selectedType by remember { mutableStateOf(editEntity?.let { SleepType.raw(it.type) } ?: "night") }
     val now = LocalDateTime.now()
     var startTime by remember {
         mutableStateOf(
@@ -303,15 +304,15 @@ fun SleepFormDialog(
             Button(onClick = {
                 val sleep = if (isEdit) {
                     editEntity.copy(
-                        type = selectedType,
+                        type = SleepType.fromRaw(selectedType),
                         startTime = startTime.replace(" ", "T") + ":00",
                         endTime = endTime.replace(" ", "T") + ":00",
                         note = note.ifBlank { null },
                     )
                 } else {
-                    SleepEntity(
+                    Sleep(
                         babyId = babyId,
-                        type = selectedType,
+                        type = SleepType.fromRaw(selectedType),
                         startTime = startTime.replace(" ", "T") + ":00",
                         endTime = endTime.replace(" ", "T") + ":00",
                         note = note.ifBlank { null },
