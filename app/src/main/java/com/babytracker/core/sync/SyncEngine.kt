@@ -218,14 +218,16 @@ class SyncEngine(
         db.beginTransaction()
         try {
             for (table in tables) {
-                db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
-                db.execSQL("""
-                    INSERT INTO sync_metadata (tableName, localId, remoteUuid, syncStatus, updatedAt)
-                    SELECT '$table', id, uuid, 'pending', COALESCE(updatedAt, 0)
-                    FROM $table
-                    WHERE deletedAt IS NULL AND uuid IS NOT NULL
-                      AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')
-                """)
+                try {
+                    db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
+                    db.execSQL("""
+                        INSERT INTO sync_metadata (tableName, localId, remoteUuid, syncStatus, updatedAt)
+                        SELECT '$table', id, uuid, 'pending', COALESCE(updatedAt, 0)
+                        FROM $table
+                        WHERE deletedAt IS NULL AND uuid IS NOT NULL
+                          AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')
+                    """)
+                } catch (_: Exception) { /* 单表失败不影响其他表 */ }
             }
             db.setTransactionSuccessful()
         } finally {
