@@ -4,6 +4,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -87,25 +88,20 @@ class FamilyService(
         family
     }
 
-    /** 通过邀请码加入家庭 */
+    /** 通过邀请码加入家庭（调用 SECURITY DEFINER 函数绕过 RLS） */
     suspend fun joinFamily(inviteCode: String): Result<Family> = runCatching {
-        // 查找邀请码对应的家庭
-        val families: List<Family> = client.postgrest.from("families")
-            .select(columns = Columns.ALL) {
-                filter { eq("invite_code", inviteCode) }
-            }
-            .decodeList<Family>()
-
-        val family = families.firstOrNull() ?: throw Exception("邀请码无效")
         val userId = client.auth.currentUserOrNull()?.id ?: throw Exception("请先登录")
 
-        // 加入家庭
-        client.postgrest.from("family_members").insert(
-            mapOf("family_id" to family.id, "user_id" to userId, "role" to "member")
+        // 调用 PostgreSQL SECURITY DEFINER 函数，绕过 families 表 RLS 限制
+        // 该函数内部：查找 invite_code → 插入 family_members → 返回 family_id
+        client.postgrest.rpc(
+            function = "join_family",
+            parameters = mapOf("invite_code" to inviteCode.uppercase())
         )
 
+        // 刷新当前用户的家庭列表（加入后 is_family_member 已生效，RLS 放行）
         loadMyFamilies()
-        family
+        _currentFamily.value ?: throw Exception("加入家庭失败")
     }
 
     /** 获取当前用户的所有家庭 */

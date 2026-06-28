@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**修复加入家庭"邀请码无效"问题：**
++- 根因：`families` 表 RLS 策略 `is_family_member(id)` 阻止非成员查询邀请码，形成闭环死锁
++- 修复：`joinFamily()` 改为调用 PostgreSQL `join_family(invite_code)` SECURITY DEFINER 函数（RPC），该函数绕过 RLS 完成查找+加入
++- 同时统一将邀请码转大写
+
 **移除一级页面 TopBar 返回箭头：**
 +- Timeline（记录）、Stats（统计分析）、Message（消息中心）均为一级 Tab 页面，去掉 TopBar 的 `onBack` 返回箭头
 
