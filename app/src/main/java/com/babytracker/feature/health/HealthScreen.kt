@@ -29,6 +29,7 @@ import com.babytracker.core.data.repository.VaccinationRepository
 import kotlinx.coroutines.launch
 import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -371,100 +372,91 @@ fun HealthFormDialog(
         "doctor_note" to "📋 医生备注",
     )
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val buildEntity = {
+        if (isEdit) {
+            editEntity.copy(
+                category = category,
+                description = description,
+                doctorName = doctorName.ifBlank { null },
+                recordDate = recordDate + "T00:00:00",
+                note = note.ifBlank { null },
+            )
+        } else {
+            HealthRecord(
+                babyId = babyId,
+                category = category,
+                description = description,
+                doctorName = doctorName.ifBlank { null },
+                recordDate = recordDate + "T00:00:00",
+                note = note.ifBlank { null },
+            )
+        }
+    }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.padding(horizontal = DT.pageMargin.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
-            Text(if (isEdit) "编辑健康记录" else "添加健康记录", style = MaterialTheme.typography.headlineSmall, color = c.textPrimary)
-            Spacer(Modifier.height(16.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState())) {
-                categories.forEach { (key, label) ->
-                    FilterChip(
-                        selected = category == key,
-                        onClick = { category = key },
-                        label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = c.primary.copy(alpha = 0.12f),
-                            selectedLabelColor = c.primary,
-                        ),
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("描述") },
-                isError = description.isBlank(),
-                supportingText = { if (description.isBlank()) Text("描述不能为空") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = doctorName,
-                onValueChange = { doctorName = it },
-                label = { Text("医生 (可选)") },
-                leadingIcon = { Text("👨‍⚕️", style = MaterialTheme.typography.titleMedium) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = recordDate,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("记录日期") },
-                leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) },
-                modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
-                shape = MaterialTheme.shapes.medium,
-                enabled = false,
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledBorderColor = c.outline,
-                    disabledTextColor = c.textPrimary,
-                    disabledLabelColor = c.textSecondary,
-                ),
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                label = { Text("备注 (可选)") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
-            )
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = {
-                    val record = if (isEdit) {
-                        editEntity.copy(
-                            category = category,
-                            description = description,
-                            doctorName = doctorName.ifBlank { null },
-                            recordDate = recordDate + "T00:00:00",
-                            note = note.ifBlank { null },
-                        )
-                    } else {
-                        HealthRecord(
-                            babyId = babyId,
-                            category = category,
-                            description = description,
-                            doctorName = doctorName.ifBlank { null },
-                            recordDate = recordDate + "T00:00:00",
-                            note = note.ifBlank { null },
-                        )
-                    }
-                    onSave(record)
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
-                enabled = description.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = c.primary, contentColor = Color.White)
-            ) {
-                Text(if (isEdit) "更新" else "保存", style = MaterialTheme.typography.titleSmall)
+    AppFormSheet(
+        title = if (isEdit) "编辑健康记录" else "添加健康记录",
+        onDismiss = onDismiss,
+        onSave = { onSave(buildEntity()) },
+        saveText = if (isEdit) "更新" else "保存",
+        saveEnabled = description.isNotBlank(),
+    ) {
+        Row(Modifier.horizontalScroll(rememberScrollState())) {
+            categories.forEach { (key, label) ->
+                FilterChip(
+                    selected = category == key,
+                    onClick = { category = key },
+                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = c.primary.copy(alpha = 0.12f),
+                        selectedLabelColor = c.primary,
+                    ),
+                    modifier = Modifier.padding(end = 8.dp)
+                )
             }
         }
+        Spacer(Modifier.height(16.dp))
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("描述") },
+            isError = description.isBlank(),
+            supportingText = { if (description.isBlank()) Text("描述不能为空") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+        )
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = doctorName,
+            onValueChange = { doctorName = it },
+            label = { Text("医生 (可选)") },
+            leadingIcon = { Text("👨‍⚕️", style = MaterialTheme.typography.titleMedium) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+        )
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = recordDate,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("记录日期") },
+            leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) },
+            modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
+            shape = MaterialTheme.shapes.medium,
+            enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledBorderColor = c.outline,
+                disabledTextColor = c.textPrimary,
+                disabledLabelColor = c.textSecondary,
+            ),
+        )
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = note,
+            onValueChange = { note = it },
+            label = { Text("备注 (可选)") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+        )
     }
 
     if (showDatePicker) {

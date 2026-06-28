@@ -29,6 +29,7 @@ import com.babytracker.core.data.repository.SleepRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import kotlinx.coroutines.launch
@@ -410,7 +411,6 @@ fun SleepFormDialog(
     onSave: (Sleep) -> Unit,
 ) {
     val isEdit = editEntity != null
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var selectedType by remember { mutableStateOf(editEntity?.let { SleepType.raw(it.type) } ?: "night") }
     val now = LocalDateTime.now()
     var startTime by remember {
@@ -435,43 +435,41 @@ fun SleepFormDialog(
     var showCascadePicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableIntStateOf(0) }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
-            Text(if (isEdit) "编辑睡眠" else "记录睡眠", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(bottom = 16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = { Text("\uD83C\uDF19 夜间睡眠") })
-                FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("\u2600\uFE0F 小睡") })
-            }
-            Spacer(Modifier.height(16.dp))
-            OutlinedTextField(value = startTime, onValueChange = {}, readOnly = true, label = { Text("开始时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showCascadePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = endTime, onValueChange = {}, readOnly = true, label = { Text("结束时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showCascadePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small)
-            Spacer(Modifier.height(20.dp))
-            Button(onClick = {
-                val sleep = if (isEdit) {
-                    editEntity.copy(
-                        type = SleepType.fromRaw(selectedType),
-                        startTime = startTime.replace(" ", "T") + ":00",
-                        endTime = endTime.replace(" ", "T") + ":00",
-                        note = note.ifBlank { null },
-                    )
-                } else {
-                    Sleep(
-                        babyId = babyId,
-                        type = SleepType.fromRaw(selectedType),
-                        startTime = startTime.replace(" ", "T") + ":00",
-                        endTime = endTime.replace(" ", "T") + ":00",
-                        note = note.ifBlank { null },
-                    )
-                }
-                onSave(sleep)
-            }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = MaterialTheme.shapes.small) {
-                Text(if (isEdit) "更新" else "保存")
-            }
-            Spacer(Modifier.height(16.dp))
+    val buildEntity = {
+        if (isEdit) {
+            editEntity.copy(
+                type = SleepType.fromRaw(selectedType),
+                startTime = startTime.replace(" ", "T") + ":00",
+                endTime = endTime.replace(" ", "T") + ":00",
+                note = note.ifBlank { null },
+            )
+        } else {
+            Sleep(
+                babyId = babyId,
+                type = SleepType.fromRaw(selectedType),
+                startTime = startTime.replace(" ", "T") + ":00",
+                endTime = endTime.replace(" ", "T") + ":00",
+                note = note.ifBlank { null },
+            )
         }
+    }
+
+    AppFormSheet(
+        title = if (isEdit) "编辑睡眠" else "记录睡眠",
+        onDismiss = onDismiss,
+        onSave = { onSave(buildEntity()) },
+        saveText = if (isEdit) "更新" else "保存",
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = { Text("\uD83C\uDF19 夜间睡眠") })
+            FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("\u2600\uFE0F 小睡") })
+        }
+        Spacer(Modifier.height(16.dp))
+        OutlinedTextField(value = startTime, onValueChange = {}, readOnly = true, label = { Text("开始时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showCascadePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(value = endTime, onValueChange = {}, readOnly = true, label = { Text("结束时间") }, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showCascadePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注") }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.small)
     }
 
     fun pickerField() = if (pickerTarget == 0) startTime else endTime

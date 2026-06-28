@@ -29,6 +29,7 @@ import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -423,70 +424,64 @@ fun DiaperFormDialog(
     }
     var showCascadePicker by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.padding(20.dp).verticalScroll(rememberScrollState())) {
-            Text(if (isEdit) "编辑尿布" else "记录尿布", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(bottom = 16.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-                listOf("wet" to "💧 小便", "poop" to "💩 大便", "both" to "🔄 混合").forEach { (t, label) ->
-                    FilterChip(
-                        selected = selectedType == t,
-                        onClick = { selectedType = t },
-                        label = { Text(label) },
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = diaperDateTime,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("时间") },
-                modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium,
-                enabled = false,
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                ),
+    val buildEntity = {
+        if (isEdit) {
+            editEntity.copy(
+                type = DiaperType.fromRaw(selectedType),
+                timestamp = diaperDateTime.replace(" ", "T") + ":00",
+                note = note.ifBlank { null },
             )
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                label = { Text("备注 (可选)") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
+        } else {
+            Diaper(
+                babyId = babyId,
+                type = DiaperType.fromRaw(selectedType),
+                timestamp = diaperDateTime.replace(" ", "T") + ":00",
+                note = note.ifBlank { null },
             )
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = {
-                    val diaper = if (isEdit) {
-                        editEntity.copy(
-                            type = DiaperType.fromRaw(selectedType),
-                            timestamp = diaperDateTime.replace(" ", "T") + ":00",
-                            note = note.ifBlank { null },
-                        )
-                    } else {
-                        Diaper(
-                            babyId = babyId,
-                            type = DiaperType.fromRaw(selectedType),
-                            timestamp = diaperDateTime.replace(" ", "T") + ":00",
-                            note = note.ifBlank { null },
-                        )
-                    }
-                    onSave(diaper)
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = MaterialTheme.shapes.medium,
-            ) { Text(if (isEdit) "更新" else "保存") }
-            Spacer(Modifier.height(24.dp))
         }
+    }
+
+    AppFormSheet(
+        title = if (isEdit) "编辑尿布" else "记录尿布",
+        onDismiss = onDismiss,
+        onSave = { onSave(buildEntity()) },
+        saveText = if (isEdit) "更新" else "保存",
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+            listOf("wet" to "💧 小便", "poop" to "💩 大便", "both" to "🔄 混合").forEach { (t, label) ->
+                FilterChip(
+                    selected = selectedType == t,
+                    onClick = { selectedType = t },
+                    label = { Text(label) },
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = diaperDateTime,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("时间") },
+            modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
+            singleLine = true,
+            shape = MaterialTheme.shapes.medium,
+            enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+        )
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = note,
+            onValueChange = { note = it },
+            label = { Text("备注 (可选)") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.small,
+        )
     }
 
     DateTimeCascadeDialog(

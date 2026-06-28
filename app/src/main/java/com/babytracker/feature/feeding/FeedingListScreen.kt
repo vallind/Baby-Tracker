@@ -32,6 +32,7 @@ import com.babytracker.core.data.repository.FeedingRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import kotlinx.coroutines.launch
@@ -404,119 +405,123 @@ fun FeedingFormDialog(
         )
     }
     var showCascadePicker by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.padding(horizontal = DT.pageMargin.dp).verticalScroll(rememberScrollState())) {
-            Text(if (isEdit) "编辑喂养" else "记录喂养", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 16.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-                listOf("breast" to "🤱 母乳", "formula" to "💧 配方", "food" to "🥣 辅食", "water" to "🥤 饮水").forEach { (t, label) ->
-                    FilterChip(
-                        selected = type == t,
-                        onClick = { type = t },
-                        label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-                    )
-                }
-            }
-
-            when (type) {
-                "breast" -> {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
-                        listOf("左侧", "右侧", "双侧").forEach { s ->
-                            FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
-                        }
-                    }
-                    OutlinedTextField(
-                        value = durationMin, onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
-                        label = { Text("时长 (分钟)") }, singleLine = true,
-                        leadingIcon = { Text("⏱", style = MaterialTheme.typography.titleMedium) },
-                        isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
-                        supportingText = { if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) Text("请输入 0-600 之间的数字") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-                    )
-                }
-                "formula" -> {
-                    OutlinedTextField(
-                        value = amountMl, onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                        label = { Text("奶量 (ml)") }, singleLine = true,
-                        leadingIcon = { Text("💧", style = MaterialTheme.typography.titleMedium) },
-                        isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
-                        supportingText = { if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) Text("请输入 1-500 之间的数字") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = MaterialTheme.shapes.medium,
-                    )
-                    OutlinedTextField(
-                        value = brand, onValueChange = { brand = it },
-                        label = { Text("品牌 (可选)") }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-                    )
-                }
-                "food" -> {
-                    OutlinedTextField(
-                        value = foodName, onValueChange = { foodName = it },
-                        label = { Text("食物名称") }, singleLine = true,
-                        leadingIcon = { Text("🥣", style = MaterialTheme.typography.titleMedium) },
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = MaterialTheme.shapes.medium,
-                    )
-                    OutlinedTextField(
-                        value = amountG, onValueChange = { amountG = it.filter { c -> c.isDigit() } },
-                        label = { Text("分量 (g)") }, singleLine = true,
-                        isError = amountG.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                        supportingText = { if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) Text("请输入 0-1000 之间的数字") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-                    )
-                }
-                "water" -> {
-                    OutlinedTextField(
-                        value = amountMl, onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                        label = { Text("饮水量 (ml)") }, singleLine = true,
-                        leadingIcon = { Text("🥤", style = MaterialTheme.typography.titleMedium) },
-                        isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                        supportingText = { if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) Text("请输入 0-1000 之间的数字") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = feedingDateTime, onValueChange = {}, readOnly = true, label = { Text("时间 (yyyy-MM-dd HH:mm)") }, modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = MaterialTheme.colorScheme.outlineVariant, disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant))
-            Spacer(Modifier.height(24.dp))
-            Button(
-                onClick = {
-                    val feeding = if (isEdit) {
-                        editEntity.copy(
-                            type = FeedingType.fromRaw(type),
-                            amountMl = amountMl.toIntOrNull(),
-                            durationMin = durationMin.toIntOrNull(),
-                            breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
-                            foodName = if (type == "food") foodName else null,
-                            amountG = amountG.toIntOrNull(),
-                            brand = brand.ifBlank { null },
-                            timestamp = feedingDateTime.replace(" ", "T") + ":00",
-                        )
-                    } else {
-                        Feeding(
-                            babyId = babyId, type = FeedingType.fromRaw(type),
-                            amountMl = amountMl.toIntOrNull(),
-                            durationMin = durationMin.toIntOrNull(),
-                            breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
-                            foodName = if (type == "food") foodName else null,
-                            amountG = amountG.toIntOrNull(),
-                            brand = brand.ifBlank { null },
-                            timestamp = feedingDateTime.replace(" ", "T") + ":00",
-                        )
-                    }
-                    onSave(feeding)
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = MaterialTheme.shapes.medium,
-            ) { Text(if (isEdit) "更新" else "保存") }
-            Spacer(Modifier.height(24.dp))
+    val buildEntity = {
+        if (isEdit) {
+            editEntity.copy(
+                type = FeedingType.fromRaw(type),
+                amountMl = amountMl.toIntOrNull(),
+                durationMin = durationMin.toIntOrNull(),
+                breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
+                foodName = if (type == "food") foodName else null,
+                amountG = amountG.toIntOrNull(),
+                brand = brand.ifBlank { null },
+                timestamp = feedingDateTime.replace(" ", "T") + ":00",
+            )
+        } else {
+            Feeding(
+                babyId = babyId, type = FeedingType.fromRaw(type),
+                amountMl = amountMl.toIntOrNull(),
+                durationMin = durationMin.toIntOrNull(),
+                breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
+                foodName = if (type == "food") foodName else null,
+                amountG = amountG.toIntOrNull(),
+                brand = brand.ifBlank { null },
+                timestamp = feedingDateTime.replace(" ", "T") + ":00",
+            )
         }
+    }
+
+    AppFormSheet(
+        title = if (isEdit) "编辑喂养" else "记录喂养",
+        onDismiss = onDismiss,
+        onSave = { onSave(buildEntity()) },
+        saveText = if (isEdit) "更新" else "保存",
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+            listOf("breast" to "🤱 母乳", "formula" to "💧 配方", "food" to "🥣 辅食", "water" to "🥤 饮水").forEach { (t, label) ->
+                FilterChip(
+                    selected = type == t,
+                    onClick = { type = t },
+                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                )
+            }
+        }
+
+        when (type) {
+            "breast" -> {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+                    listOf("左侧", "右侧", "双侧").forEach { s ->
+                        FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
+                    }
+                }
+                OutlinedTextField(
+                    value = durationMin, onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
+                    label = { Text("时长 (分钟)") }, singleLine = true,
+                    leadingIcon = { Text("⏱", style = MaterialTheme.typography.titleMedium) },
+                    isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
+                    supportingText = { if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) Text("请输入 0-600 之间的数字") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                )
+            }
+            "formula" -> {
+                OutlinedTextField(
+                    value = amountMl, onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
+                    label = { Text("奶量 (ml)") }, singleLine = true,
+                    leadingIcon = { Text("💧", style = MaterialTheme.typography.titleMedium) },
+                    isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
+                    supportingText = { if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) Text("请输入 1-500 之间的数字") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = MaterialTheme.shapes.medium,
+                )
+                OutlinedTextField(
+                    value = brand, onValueChange = { brand = it },
+                    label = { Text("品牌 (可选)") }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                )
+            }
+            "food" -> {
+                OutlinedTextField(
+                    value = foodName, onValueChange = { foodName = it },
+                    label = { Text("食物名称") }, singleLine = true,
+                    leadingIcon = { Text("🥣", style = MaterialTheme.typography.titleMedium) },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = MaterialTheme.shapes.medium,
+                )
+                OutlinedTextField(
+                    value = amountG, onValueChange = { amountG = it.filter { c -> c.isDigit() } },
+                    label = { Text("分量 (g)") }, singleLine = true,
+                    isError = amountG.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
+                    supportingText = { if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) Text("请输入 0-1000 之间的数字") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                )
+            }
+            "water" -> {
+                OutlinedTextField(
+                    value = amountMl, onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
+                    label = { Text("饮水量 (ml)") }, singleLine = true,
+                    leadingIcon = { Text("🥤", style = MaterialTheme.typography.titleMedium) },
+                    isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
+                    supportingText = { if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) Text("请输入 0-1000 之间的数字") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
+            value = feedingDateTime, onValueChange = {}, readOnly = true,
+            label = { Text("时间 (yyyy-MM-dd HH:mm)") },
+            modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
+            singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+        )
     }
 
     DateTimeCascadeDialog(

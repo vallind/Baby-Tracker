@@ -30,6 +30,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.GrowthRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.recordcard.RecordCard
@@ -524,90 +525,77 @@ fun GrowthFormDialog(
     }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
     var showCascadePicker by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.padding(horizontal = DT.pageMargin.dp).verticalScroll(rememberScrollState())) {
-            Text(
-                if (isEdit) "编辑生长" else "记录生长",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(bottom = 16.dp),
+    val buildEntity = {
+        if (isEdit) {
+            editEntity.copy(
+                type = GrowthType.fromRaw(type),
+                value = value.toDoubleOrNull() ?: 0.0,
+                measuredAt = measuredAt.replace(" ", "T") + ":00",
+                note = note.ifBlank { null },
             )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-                listOf("height" to "📏 身高", "weight" to "⚖️ 体重", "head" to "📐 头围").forEach { (t, label) ->
-                    FilterChip(
-                        selected = type == t,
-                        onClick = { type = t },
-                        label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-                    )
-                }
-            }
-
-            OutlinedTextField(
-                value = value,
-                onValueChange = { value = it },
-                label = { Text("数值") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                shape = MaterialTheme.shapes.medium,
+        } else {
+            Growth(
+                babyId = babyId,
+                type = GrowthType.fromRaw(type),
+                value = value.toDoubleOrNull() ?: 0.0,
+                measuredAt = measuredAt.replace(" ", "T") + ":00",
+                note = note.ifBlank { null },
             )
-
-            OutlinedTextField(
-                value = measuredAt,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("测量时间") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showCascadePicker = true },
-                shape = MaterialTheme.shapes.medium,
-                enabled = false,
-                colors = OutlinedTextFieldDefaults.colors(
-                    disabledBorderColor = c.outline,
-                    disabledTextColor = c.textPrimary,
-                    disabledLabelColor = c.textSecondary,
-                ),
-            )
-
-            OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                label = { Text("备注 (可选)") },
-                singleLine = false,
-                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
-                shape = MaterialTheme.shapes.medium,
-                minLines = 2,
-            )
-
-            Button(
-                onClick = {
-                    val growth = if (isEdit) {
-                        editEntity.copy(
-                            type = GrowthType.fromRaw(type),
-                            value = value.toDoubleOrNull() ?: 0.0,
-                            measuredAt = measuredAt.replace(" ", "T") + ":00",
-                            note = note.ifBlank { null },
-                        )
-                    } else {
-                        Growth(
-                            babyId = babyId,
-                            type = GrowthType.fromRaw(type),
-                            value = value.toDoubleOrNull() ?: 0.0,
-                            measuredAt = measuredAt.replace(" ", "T") + ":00",
-                            note = note.ifBlank { null },
-                        )
-                    }
-                    onSave(growth)
-                },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-            ) {
-                Text(if (isEdit) "更新" else "保存", color = Color.White)
-            }
-            Spacer(Modifier.height(24.dp))
         }
+    }
+
+    AppFormSheet(
+        title = if (isEdit) "编辑生长" else "记录生长",
+        onDismiss = onDismiss,
+        onSave = { onSave(buildEntity()) },
+        saveText = if (isEdit) "更新" else "保存",
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+            listOf("height" to "📏 身高", "weight" to "⚖️ 体重", "head" to "📐 头围").forEach { (t, label) ->
+                FilterChip(
+                    selected = type == t,
+                    onClick = { type = t },
+                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                )
+            }
+        }
+
+        OutlinedTextField(
+            value = value,
+            onValueChange = { value = it },
+            label = { Text("数值") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            shape = MaterialTheme.shapes.medium,
+        )
+
+        OutlinedTextField(
+            value = measuredAt,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("测量时间") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showCascadePicker = true },
+            shape = MaterialTheme.shapes.medium,
+            enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledBorderColor = c.outline,
+                disabledTextColor = c.textPrimary,
+                disabledLabelColor = c.textSecondary,
+            ),
+        )
+
+        OutlinedTextField(
+            value = note,
+            onValueChange = { note = it },
+            label = { Text("备注 (可选)") },
+            singleLine = false,
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            minLines = 2,
+        )
     }
 
     DateTimeCascadeDialog(

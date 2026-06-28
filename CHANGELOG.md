@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**AppFormSheet：统一表单底部弹层组件：**
++- 新增 `AppFormSheet` 组件（`designsystem/components/dialog/`）：封装 ModalBottomSheet + 标题 + 保存按钮，中间 content 插槽由业务填充
++- 迁移 `FeedingFormDialog` / `SleepFormDialog` / `DiaperFormDialog` / `HealthFormDialog` / `GrowthFormDialog` → 每个减 ~15 行样板代码
++- 统一按钮形状 `DT.buttonRadius`、间距 `DT.pageMargin`，消除各 FormDialog 间的形状/间距差异
+
 **首页宝宝资料跳转 & 账户昵称支持：**
 +- 首页顶端 "宝宝资料" 点击改为跳转 `BabyProfileScreen`（宝宝信息详情页），原跳转为宝宝管理列表
 +- AuthService 新增昵称功能：`nickname` StateFlow、`setNickname()`、`clearNickname()`，通过 SharedPreferences 持久化
