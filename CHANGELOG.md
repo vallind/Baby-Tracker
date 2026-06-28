@@ -11,6 +11,10 @@
 
 ### [Unreleased] — 2026-06-28
 
+**AGENTS.md 重构：**
+- 从 219 行精简为 ~120 行地图式结构，遵循"地图而非百科"原则
+- 详细内容拆分至 `docs/design-system.md` 和 `docs/project-structure.md`
+
 **修复状态栏颜色不一致：**
 - 状态栏底色从 `background` 改为 `primaryContainer`（即 `primaryLight`），与所有页面顶部区域颜色统一
 

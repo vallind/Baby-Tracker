@@ -1,3 +1,7 @@
-# CLAUDE.md
+# Claude Code
 
- [AGENTS.md](./AGENTS.md)。**所有对话必须遵守 AGENTS.md 中的规则。
+本项目统一规范维护于：
+
+@AGENTS.md
+
+除本文件中的补充说明外，均遵循 AGENTS.md。
