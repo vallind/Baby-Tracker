@@ -19,12 +19,12 @@ import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.section.SectionHeader
 import com.babytracker.navigation.Screen
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Feeding
@@ -109,9 +109,12 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
             .background(Gradients.pageHeader(c))
             .padding(horizontal = DT.pageMargin.dp),
     ) {
-        Row(Modifier.padding(vertical = 24.dp)) {
+        Row(
+            Modifier.padding(vertical = 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Column(
-                Modifier.weight(1f).fillMaxHeight().padding(end = 16.dp),
+                Modifier.weight(1f).padding(end = 12.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -124,11 +127,11 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                     Spacer(Modifier.width(8.dp))
                     Text(
                         DateUtils.monthAge(java.time.LocalDate.parse(baby.birthDate)),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = c.textSecondary,
                     )
                 }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable(onClick = onClickProfile),
@@ -139,18 +142,18 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                         color = c.primary,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Text(" →", style = MaterialTheme.typography.labelLarge, color = c.primary)
+                    Text(" →", fontSize = 14.sp, color = c.primary)
                 }
             }
+            // 卡通宝宝插图（emoji 组合）
             Box(
                 Modifier
-                    .size(72.dp)
-                    .shadow(elevation = DT.cardElevation.dp, shape = CircleShape)
+                    .size(82.dp)
                     .clip(CircleShape)
-                    .background(Gradients.primary(c)),
+                    .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(baby.name.take(1), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("👶", fontSize = 42.sp)
             }
         }
     }
@@ -159,39 +162,46 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
 @Composable
 fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
     val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
     val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
     val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
     AppCard(
         modifier = Modifier
             .padding(horizontal = DT.pageMargin.dp)
-            .fillMaxWidth()
-            .height(128.dp),
-        cornerRadius = DT.cardRadiusLg.dp,
+            .fillMaxWidth(),
+        cornerRadius = shapes.medium,
     ) {
-        Row {
-            StatCell("🍼", animatedFeed.toString(), "喂养次数")
-            StatDivider()
-            StatCell("😴", sleepHours, "睡眠时长")
-            StatDivider()
-            StatCell("🧷", animatedDiaper.toString(), "换尿布")
+        Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+            Text("今日概览", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+            Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextStatCell(animatedFeed.toString(), "次", "喂养次数")
+                StatDivider()
+                TextStatCell(sleepHours, "", "睡眠时长")
+                StatDivider()
+                TextStatCell(animatedDiaper.toString(), "次", "换尿布")
+            }
         }
     }
 }
 
 @Composable
-fun RowScope.StatCell(emoji: String, value: String, label: String) {
+fun RowScope.TextStatCell(value: String, unit: String, label: String) {
     val c = LocalAppColors.current
     Column(
-        Modifier.weight(1f).fillMaxHeight(),
+        Modifier.weight(1f),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(emoji, fontSize = 20.sp)
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = c.primary)
+            if (unit.isNotEmpty()) {
+                Spacer(Modifier.width(2.dp))
+                Text(unit, fontSize = 12.sp, color = c.textSecondary, modifier = Modifier.padding(bottom = 2.dp))
+            }
+        }
         Spacer(Modifier.height(4.dp))
-        // 数字用 primary 大字号（强调今日数据）
-        Text(value, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.primary)
-        Spacer(Modifier.height(2.dp))
-        Text(label, fontSize = 12.sp, color = c.textSecondary)
+        Text(label, fontSize = 12.sp, color = c.textTertiary)
     }
 }
 
@@ -203,20 +213,18 @@ fun RowScope.StatDivider() {
 
 @Composable
 fun FeatureGrid(navController: NavController) {
-    val c = LocalAppColors.current
-    // 8 个功能项 = 4 列 × 2 行
+    // 8 个功能项 = 4 列 × 2 行（对齐设计图）
     val items = listOf(
-        Triple(Screen.Feeding, "🍼", "喂养"),
-        Triple(Screen.Sleep, "😴", "睡眠"),
-        Triple(Screen.Diaper, "🧷", "尿布"),
-        Triple(Screen.Growth, "📏", "生长"),
-        Triple(Screen.Vaccination, "💉", "疫苗"),
-        Triple(Screen.Health, "❤️", "健康"),
-        Triple(Screen.Stats, "📊", "统计"),
-        Triple(Screen.Settings, "⚙️", "设置"),
+        FeatureGridItemData(Screen.Feeding, "🍼", "喂养记录"),
+        FeatureGridItemData(Screen.Sleep, "🌙", "睡眠记录"),
+        FeatureGridItemData(Screen.Growth, "📏", "生长记录"),
+        FeatureGridItemData(Screen.Growth, "🧠", "发育评估"),
+        FeatureGridItemData(Screen.Vaccination, "💉", "疫苗接种"),
+        FeatureGridItemData(Screen.Health, "❤️", "健康档案"),
+        FeatureGridItemData(Screen.Stats, "📊", "统计分析"),
+        FeatureGridItemData(Screen.Settings, "🔔", "提醒中心"),
     )
     Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
-        // Text("功能", fontSize = 17.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
         Spacer(Modifier.height(14.dp))
         // 第一行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -236,18 +244,17 @@ fun FeatureGrid(navController: NavController) {
 
 @Composable
 private fun FeatureGridItem(
-    item: Triple<com.babytracker.navigation.Screen, String, String>,
+    item: FeatureGridItemData,
     useAccent: Boolean,
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
-    val (screen, emoji, label) = item
     val tint = if (useAccent) c.warning else c.primary
     Column(
         modifier
             .clip(RoundedCornerShape(DT.cardRadius.dp))
-            .clickable { navController.navigate(screen.route) }
+            .clickable { navController.navigate(item.screen.route) }
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -259,27 +266,39 @@ private fun FeatureGridItem(
                 .background(tint.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(emoji, fontSize = DT.iconSizeLg.sp)
+            Text(item.emoji, fontSize = DT.iconSizeLg.sp)
         }
         Spacer(Modifier.height(6.dp))
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+        Text(item.label, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
     }
 }
+
+private data class FeatureGridItemData(
+    val screen: com.babytracker.navigation.Screen,
+    val emoji: String,
+    val label: String,
+)
 
 @Composable
 fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
     val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
     AppCard(
         modifier = Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth(),
-        cornerRadius = DT.cardRadius.dp,
+        cornerRadius = shapes.medium,
     ) {
         Column(Modifier.padding(DT.cardInnerPadding.dp)) {
-            SectionHeader(
-                title = "最近记录",
-                actionText = "查看全部",
-                onAction = onSeeAll,
-            )
-            Spacer(Modifier.height(12.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("最近记录", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                TextButton(onClick = onSeeAll) {
+                    Text("查看全部", fontSize = 12.sp, color = c.textSecondary)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
             val recentItems = items.take(5)
             val grouped = recentItems.groupBy { item ->
                 when (item) {

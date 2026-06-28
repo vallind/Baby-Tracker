@@ -59,7 +59,7 @@ class HomeViewModel(
 
                     HomeUiState(
                         feedCount = todayFeedings.size,
-                        sleepHours = if (nightSleepMin > 0) "${nightSleepMin / 60}h${nightSleepMin % 60}min" else "--",
+                        sleepHours = if (nightSleepMin > 0) "${nightSleepMin / 60}时${nightSleepMin % 60}分" else "--",
                         diaperCount = todayDiapers.size,
                         recentItems = allItems,
                         loading = false,

@@ -4,9 +4,14 @@
 
 ### [Unreleased]
 
+**首页 UI 重做：更贴合设计图：**
++- BabyHeader：右侧改为卡通 👶 头像（品牌色浅底圆形），姓名+年龄/月龄行，宝宝资料链接
++- FeatureGrid：8 功能项名称改为设计图文本（喂养记录/睡眠记录/生长记录/发育评估/疫苗接种/健康档案/统计分析/提醒中心），新增 🔔🧠 图标
++- TodayOverviewCard：去掉 emoji 图标，改为大数字+单位+标签纯文字三列布局，新增「今日概览」标题
++- RecentRecordsSection：标题使用 Row+TextButton 替代 SectionHeader，圆角改为 shapes.medium
++- HomeViewModel sleepHours 格式从 "XhYmin" 改为 "X时Y分"
+
 **统计页重做：日/周/月/年周期 + 对比 + 柱状图：**
-- StatsPeriod 新增 DAY，StatsUiState 增加 dateRangeText、periodOffset、对比字段（feedingCompare / sleepCompare / heightCompare / weightCompare）
-- StatsViewModel 重写聚合逻辑：offset 导航、上一周期同比对比、按小时/按天分桶
 - StatsScreen UI 重做：SegmentedControl 切换周期、DateRangeNav 翻页导航、四张统计卡（喂养柱状图、睡眠柱状图、身高折线图、体重折线图）
 - 修正卡片布局：2x2 网格 → 纵向堆叠列表，卡片内图标+标题左对齐、数值右对齐、图表下方
 - 新增 MiniBarChart 组件（柱顶圆角使用 shapes.extraSmall 令牌）
