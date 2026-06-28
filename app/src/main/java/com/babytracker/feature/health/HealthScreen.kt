@@ -22,7 +22,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.HealthRepository
@@ -43,7 +43,7 @@ private val healthCategoryOrder = listOf("birth_info", "allergy", "medicalHistor
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HealthScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val healthRepo: HealthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val babyId = babyCtrl.currentBabyId
@@ -54,10 +54,10 @@ fun HealthScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(containerColor = c.bg, topBar = {
+    Scaffold(containerColor = c.pageBackground, topBar = {
         CenterAlignedTopAppBar(title = { Text("健康档案", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = c.primaryLight,
+                containerColor = c.primaryContainer,
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
             ))
@@ -70,7 +70,7 @@ fun HealthScreen(navController: NavController) {
             Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部标题区（浅蓝渐变背景）——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 20.dp)) {
                 Column {
@@ -161,14 +161,14 @@ private fun HealthCategoryCard(
     onClick: (HealthRecordEntity) -> Unit,
     onDelete: (HealthRecordEntity) -> Unit,
 ) {
-    val c = LocalThemeColors.current
-    val tint = if (useAccent) c.accent else c.primary
+    val c = LocalAppColors.current
+    val tint = if (useAccent) c.warning else c.primary
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     Card(
         Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().shadow(elevation = DT.cardElevation.dp, shape = cardShape),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Column(Modifier.padding(DT.cardInnerPadding.dp)) {
             // —— 分类标题行 ——
@@ -238,7 +238,7 @@ fun HealthFormDialog(
     onDismiss: () -> Unit,
     onSave: (HealthRecordEntity) -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val isEdit = editEntity != null
     var category by remember { mutableStateOf(editEntity?.category ?: "allergy") }
     var description by remember { mutableStateOf(editEntity?.description ?: "") }
@@ -313,7 +313,7 @@ fun HealthFormDialog(
                 shape = MaterialTheme.shapes.medium,
                 enabled = false,
                 colors = OutlinedTextFieldDefaults.colors(
-                    disabledBorderColor = c.cardBorder,
+                    disabledBorderColor = c.outline,
                     disabledTextColor = c.textPrimary,
                     disabledLabelColor = c.textSecondary,
                 ),

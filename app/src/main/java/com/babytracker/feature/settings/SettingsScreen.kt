@@ -26,7 +26,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.database.entity.BabyEntity
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -46,7 +46,7 @@ import org.koin.compose.koinInject
 
 @Composable
 fun SettingsScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val themeCtrl: ThemeController = koinInject()
@@ -55,14 +55,14 @@ fun SettingsScreen(navController: NavController) {
     var showPicker by remember { mutableStateOf(false) }
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
         Box(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.bg),
+                .background(c.pageBackground),
         ) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             // —— 顶部头部区（浅蓝渐变 + 宝宝头像 + "我的" 标题）——
@@ -190,7 +190,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
 
 @Composable
 fun SectionTitle(title: String) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Text(
         title,
         style = MaterialTheme.typography.labelMedium,
@@ -202,13 +202,13 @@ fun SectionTitle(title: String) {
 /** 统一白色设置卡片（圆角 DT.cardRadius / 阴影 DT.cardElevation）。 */
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     Card(
         Modifier.fillMaxWidth(),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Column(content = content)
     }
@@ -217,7 +217,7 @@ fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
 /** 设置项分割线（c.divider）。 */
 @Composable
 fun SettingsDivider() {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     HorizontalDivider(
         color = c.divider,
         thickness = 0.5.dp,
@@ -227,7 +227,7 @@ fun SettingsDivider() {
 
 @Composable
 fun SettingsRow(emoji: String, label: String, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Row(
         Modifier.fillMaxWidth().height(56.dp).padding(horizontal = DT.cardInnerPadding.dp).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
@@ -236,7 +236,7 @@ fun SettingsRow(emoji: String, label: String, trailing: @Composable (() -> Unit)
             Modifier
                 .size(DT.iconBgSize.dp)
                 .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                .background(c.primaryLight),
+                .background(c.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
             Text(emoji, style = MaterialTheme.typography.titleMedium)
@@ -246,14 +246,14 @@ fun SettingsRow(emoji: String, label: String, trailing: @Composable (() -> Unit)
         if (trailing != null) {
             trailing()
         } else {
-            Text("›", color = c.textHint, style = MaterialTheme.typography.titleMedium)
+            Text("›", color = c.textTertiary, style = MaterialTheme.typography.titleMedium)
         }
     }
 }
 
 @Composable
 fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val themesColors = mapOf(
         "pure" to 0xFF2563EB, "aurora" to 0xFF7C3AED, "warm" to 0xFFFF8A80,
         "sunny" to 0xFFF59E0B, "night" to 0xFF1E293B, "morandi" to 0xFF94A3B8,
@@ -271,7 +271,7 @@ fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BabyManagementScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
@@ -343,7 +343,7 @@ fun BabyManagementScreen(navController: NavController) {
                                 }
                             }
                             IconButton(onClick = { showDeleteConfirm = b }) {
-                                Icon(Icons.Default.Delete, contentDescription = "删除", tint = c.tagText)
+                                Icon(Icons.Default.Delete, contentDescription = "删除", tint = c.textSecondary)
                             }
                         }
                     }
@@ -379,7 +379,7 @@ fun BabyManagementScreen(navController: NavController) {
                 TextButton(onClick = {
                     scope.launch { babyRepo.delete(baby) }
                     showDeleteConfirm = null
-                }) { Text("删除", color = c.tagText) }
+                }) { Text("删除", color = c.textSecondary) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = null }) { Text("取消") }
@@ -520,7 +520,7 @@ fun BackupScreen(navController: NavController) {
         }
     }
 
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Scaffold(topBar = {
         CenterAlignedTopAppBar(title = { Text("备份管理") }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
             colors = TopAppBarDefaults.topAppBarColors(

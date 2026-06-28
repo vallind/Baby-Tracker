@@ -3,7 +3,7 @@ package com.babytracker.designsystem.components.scaffold
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppComponentTokens
 
 @Composable
 fun AppScaffold(
@@ -14,9 +14,8 @@ fun AppScaffold(
     modifier: Modifier = Modifier,
     content: @Composable (androidx.compose.foundation.layout.PaddingValues) -> Unit,
 ) {
-    val c = LocalThemeColors.current
     Scaffold(
-        containerColor = c.bg,
+        containerColor = LocalAppComponentTokens.current.scaffold.containerColor,
         topBar = topBar ?: {},
         bottomBar = bottomBar ?: {},
         floatingActionButton = fab ?: {},

@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.section.ListItemDefaults
-import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**
  * 分区标题 — 对标 Palette LayoutTokens，页面中的分区标题 + 可选操作链接
@@ -36,18 +35,17 @@ fun SectionHeader(
     onAction: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalThemeColors.current
     Row(
         modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, fontSize = LocalAppTypography.current.titleMedium.fontSize, fontWeight = FontWeight.Bold, color = c.textPrimary)
+        Text(title, fontSize = LocalAppTypography.current.titleMedium.fontSize, fontWeight = FontWeight.Bold, color = ListItemDefaults.titleColor())
         Spacer(Modifier.weight(1f))
         if (actionText != null && onAction != null) {
             Text(
                 actionText,
                 fontSize = LocalAppTypography.current.labelMedium.fontSize,
-                color = c.primary,
+                color = ListItemDefaults.actionColor(),
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable(onClick = onAction),
             )
@@ -83,8 +81,6 @@ fun AppListItem(
     showDivider: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalThemeColors.current
-
     Column(modifier.fillMaxWidth()) {
         Row(
             modifier = modifier
@@ -98,9 +94,9 @@ fun AppListItem(
                 Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(title, fontSize = titleSize, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                Text(title, fontSize = titleSize, fontWeight = FontWeight.Medium, color = ListItemDefaults.titleColor())
                 if (subtitle != null) {
-                    Text(subtitle, fontSize = subtitleSize, color = c.textSecondary)
+                    Text(subtitle, fontSize = subtitleSize, color = ListItemDefaults.subtitleColor())
                 }
             }
             if (trailing != null) {
@@ -108,7 +104,7 @@ fun AppListItem(
             }
         }
         if (showDivider) {
-            HorizontalDivider(color = c.divider.copy(alpha = dividerAlpha), thickness = 0.5.dp)
+            HorizontalDivider(color = ListItemDefaults.dividerColor().copy(alpha = dividerAlpha), thickness = 0.5.dp)
         }
     }
 }

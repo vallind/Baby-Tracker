@@ -26,7 +26,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.babytracker.designsystem.components.bottomnav.BottomBarDefaults
-import com.babytracker.designsystem.theme.LocalThemeColors
 import com.babytracker.core.data.repository.MessageRepository
 import com.babytracker.navigation.Screen
 import org.koin.compose.koinInject
@@ -42,15 +41,14 @@ import org.koin.compose.koinInject
  */
 @Composable
 fun BottomNavBar(navController: NavController) {
-    val c = LocalThemeColors.current
     val messageRepo: MessageRepository = koinInject()
     val unreadCount by messageRepo.watchUnreadCount().collectAsState(initial = 0)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationBar(
-        containerColor = c.card,
-        contentColor = c.textPrimary,
+        containerColor = BottomBarDefaults.containerColor(),
+        contentColor = BottomBarDefaults.contentColor(),
         tonalElevation = 0.dp,
         modifier = Modifier.height(BottomBarDefaults.height()),
     ) {
@@ -86,11 +84,11 @@ fun BottomNavBar(navController: NavController) {
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = c.primary,
-                    selectedTextColor = c.primary,
-                    unselectedIconColor = c.textSecondary,
-                    unselectedTextColor = c.textSecondary,
-                    indicatorColor = c.primaryLight,
+                    selectedIconColor = BottomBarDefaults.selectedColor(),
+                    selectedTextColor = BottomBarDefaults.selectedColor(),
+                    unselectedIconColor = BottomBarDefaults.unselectedColor(),
+                    unselectedTextColor = BottomBarDefaults.unselectedColor(),
+                    indicatorColor = BottomBarDefaults.indicatorColor(),
                 ),
             )
         }

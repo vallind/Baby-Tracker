@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
-import com.babytracker.designsystem.theme.ThemeColors
+import com.babytracker.designsystem.theme.AppColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.Reminder
@@ -37,7 +37,7 @@ import java.time.temporal.ChronoUnit
  * 提醒中心 —— 待办提醒 + 历史提醒。
  *
  * 视觉规范：
- * - 页面背景 `c.bg` 浅蓝；顶部 `Gradients.pageHeader(c)` 渐变 header + 返回按钮 + 标题"提醒中心"。
+ * - 页面背景 `c.pageBackground` 浅蓝；顶部 `Gradients.pageHeader(c)` 渐变 header + 返回按钮 + 标题"提醒中心"。
  * - Tab 切换：待办提醒 / 历史提醒（选中 `c.primary` + 下方 3dp 圆角指示器）。
  * - 待办卡片：`DT.cardRadius`(16dp) 白卡 + `DT.cardElevation` 阴影；左侧 `DT.iconBgSize`(40dp) 圆角图标背景，按 type 着色；
  *   右侧倒计时（未到期 `c.primary` / 已逾期 `c.danger`）或用药类 `Switch`。
@@ -47,7 +47,7 @@ import java.time.temporal.ChronoUnit
  */
 @Composable
 fun ReminderScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val viewModel: ReminderViewModel = org.koin.androidx.compose.koinViewModel()
     val babyCtrl: BabyController = koinInject()
     val haptic = rememberHaptic()
@@ -60,7 +60,7 @@ fun ReminderScreen(navController: NavController) {
         if (babyId != 0) viewModel.load(babyId)
     }
 
-    Scaffold(containerColor = c.bg) { padding ->
+    Scaffold(containerColor = c.pageBackground) { padding ->
         if (babyId == 0) {
             EmptyState(
                 emoji = "🍼",
@@ -76,7 +76,7 @@ fun ReminderScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .background(c.bg),
+                .background(c.pageBackground),
         ) {
             // —— 顶部渐变 header + 返回按钮 + 标题 ——
             ReminderHeader(onBack = { navController.popBackStack() })
@@ -142,7 +142,7 @@ fun ReminderScreen(navController: NavController) {
 
 @Composable
 private fun ReminderHeader(onBack: () -> Unit) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Box(
         Modifier
             .fillMaxWidth()
@@ -183,7 +183,7 @@ private fun ReminderHeader(onBack: () -> Unit) {
 
 @Composable
 private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Row(
         Modifier
             .fillMaxWidth()
@@ -228,7 +228,7 @@ private fun PendingReminderCard(
     onToggleEnabled: (Boolean) -> Unit,
     onLongPress: () -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
 
@@ -240,7 +240,7 @@ private fun PendingReminderCard(
             .longPressDeletable(haptic, onLongClick = onLongPress),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Row(
             Modifier.padding(DT.cardInnerPadding.dp),
@@ -282,7 +282,7 @@ private fun PendingReminderCard(
                     Text(
                         reminder.repeatRule,
                         fontSize = 11.sp,
-                        color = c.textHint,
+                        color = c.textTertiary,
                     )
                 }
             }
@@ -293,7 +293,7 @@ private fun PendingReminderCard(
                     checked = reminder.isEnabled,
                     onCheckedChange = onToggleEnabled,
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = c.card,
+                        checkedThumbColor = c.surface,
                         checkedTrackColor = c.primary,
                     ),
                 )
@@ -312,7 +312,7 @@ private fun PendingReminderCard(
                         Text(
                             DateUtils.formatDate(reminder.dueDate),
                             fontSize = 11.sp,
-                            color = c.textHint,
+                            color = c.textTertiary,
                         )
                     }
                     Spacer(Modifier.width(4.dp))
@@ -345,7 +345,7 @@ private fun HistoryReminderCard(
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     onLongPress: () -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     val doneText = reminder.doneDate?.let { "完成于 ${DateUtils.formatDate(it)}" } ?: "已完成"
@@ -358,7 +358,7 @@ private fun HistoryReminderCard(
             .longPressDeletable(haptic, onLongClick = onLongPress),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card.copy(alpha = 0.7f)),
+        colors = CardDefaults.cardColors(containerColor = c.surface.copy(alpha = 0.7f)),
     ) {
         Row(
             Modifier.padding(DT.cardInnerPadding.dp),
@@ -384,7 +384,7 @@ private fun HistoryReminderCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(2.dp))
-                Text(doneText, fontSize = 12.sp, color = c.textHint)
+                Text(doneText, fontSize = 12.sp, color = c.textTertiary)
             }
             Text("✅", fontSize = 18.sp)
         }
@@ -393,12 +393,12 @@ private fun HistoryReminderCard(
 
 // —— 辅助：类型 → emoji + 主题色（跟随 LocalThemeColors）——
 
-private fun ReminderType.toVisual(c: ThemeColors): Pair<String, Color> = when (this) {
-    ReminderType.VACCINE    -> "💉" to c.accent    // 橙
+private fun ReminderType.toVisual(c: AppColors): Pair<String, Color> = when (this) {
+    ReminderType.VACCINE    -> "💉" to c.warning    // 橙
     ReminderType.CHECKUP    -> "🏥" to c.primary    // 蓝
     ReminderType.MEDICATION -> "💊" to c.success    // 绿
-    ReminderType.ASSESSMENT -> "📋" to c.purple     // 紫
-    ReminderType.OTHER      -> "📌" to c.textHint   // 灰
+    ReminderType.ASSESSMENT -> "📋" to c.secondary     // 紫
+    ReminderType.OTHER      -> "📌" to c.textTertiary   // 灰
 }
 
 // —— 辅助：倒计时文案 ——

@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
@@ -37,7 +37,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val viewModel: HomeViewModel = org.koin.androidx.compose.koinViewModel()
@@ -53,7 +53,7 @@ fun HomeScreen(navController: NavController) {
     }
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
         if (baby == null) {
@@ -73,7 +73,7 @@ fun HomeScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .background(c.bg),
+                .background(c.pageBackground),
         ) {
             // —— 顶部宝宝信息区（浅蓝渐变背景 + 圆形头像）——
             BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyManagement.route) })
@@ -99,7 +99,7 @@ fun HomeScreen(navController: NavController) {
 
 @Composable
 private fun BabyHeader(baby: com.babytracker.core.database.entity.BabyEntity, onClickProfile: () -> Unit) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Box(
         Modifier
             .fillMaxWidth()
@@ -155,7 +155,7 @@ private fun BabyHeader(baby: com.babytracker.core.database.entity.BabyEntity, on
 
 @Composable
 fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
     val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
     AppCard(
@@ -177,7 +177,7 @@ fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
 
 @Composable
 fun RowScope.StatCell(emoji: String, value: String, label: String) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Column(
         Modifier.weight(1f).fillMaxHeight(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -194,13 +194,13 @@ fun RowScope.StatCell(emoji: String, value: String, label: String) {
 
 @Composable
 fun RowScope.StatDivider() {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Box(Modifier.width(1.dp).height(40.dp).align(Alignment.CenterVertically).background(c.divider))
 }
 
 @Composable
 fun FeatureGrid(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     // 8 个功能项 = 4 列 × 2 行
     val items = listOf(
         Triple(Screen.Feeding, "🍼", "喂养"),
@@ -238,9 +238,9 @@ private fun FeatureGridItem(
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val (screen, emoji, label) = item
-    val tint = if (useAccent) c.accent else c.primary
+    val tint = if (useAccent) c.warning else c.primary
     Column(
         modifier
             .clip(RoundedCornerShape(DT.cardRadius.dp))
@@ -265,7 +265,7 @@ private fun FeatureGridItem(
 
 @Composable
 fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     AppCard(
         modifier = Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth(),
         cornerRadius = DT.cardRadius.dp,
@@ -311,7 +311,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
 
 @Composable
 private fun TimelineRecordRow(item: Any) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         // 时间轴小圆点（primary 色）
         Box(
@@ -329,7 +329,7 @@ private fun TimelineRecordRow(item: Any) {
                     Text(DateUtils.feedingTypeLabel(item.type), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
                     Text(if (item.type == "breast") "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", fontSize = 12.sp, color = c.textSecondary)
                 }
-                Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textTertiary)
             }
             is SleepEntity -> {
                 Text(if (item.type == "night") "🌙" else "☀️", fontSize = 18.sp)
@@ -347,7 +347,7 @@ private fun TimelineRecordRow(item: Any) {
                         color = c.textSecondary,
                     )
                 }
-                Text(item.startTime.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                Text(item.startTime.substring(11, 16), fontSize = 12.sp, color = c.textTertiary)
             }
             is DiaperEntity -> {
                 Text("🧷", fontSize = 18.sp)
@@ -356,7 +356,7 @@ private fun TimelineRecordRow(item: Any) {
                     Text("换尿布", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
                     Text(DateUtils.diaperTypeLabel(item.type), fontSize = 12.sp, color = c.textSecondary)
                 }
-                Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textHint)
+                Text(item.timestamp.substring(11, 16), fontSize = 12.sp, color = c.textTertiary)
             }
         }
     }

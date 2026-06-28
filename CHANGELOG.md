@@ -21,6 +21,13 @@
 - 标签/Chip：cornerRadius 20dp→shapes.full 胶囊形
 - Card 新增 borderColor/borderWidth 参数支持
 
+**令牌系统全面迁移（LocalThemeColors → LocalAppColors）：**
+- 组件层：13 个组件全部迁移到新令牌系统（Fab/Input/Section/TopBar/BottomNav/Button/Chip/Dialog/IconButton/Scaffold/RecordCard/BabyIllustration/BorderContainer）
+- 补充令牌定义：FabTokens/BottomBarTokens/AppBarTokens/ListItemTokens/ChipTokens 新增颜色字段；新增 IconButtonTokens/ScaffoldTokens/BorderContainerTokens
+- Feature 层：13 个页面文件批量迁移，属性映射 bg→pageBackground, primaryLight→primaryContainer, card→surface, accent→warning 等
+- Gradients 工具类参数类型从 ThemeColors 迁移到 AppColors
+- 消除全部硬编码颜色值：CountdownChip/BadgeIcon/BabyIllustration/RecordCard 改用令牌
+
 ### [1.4.0] — 2026-06-25
 
 **记录编辑与删除优化：**

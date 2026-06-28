@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -23,6 +24,7 @@ fun CountdownChip(
 ) {
     if (dueDate.isNullOrBlank()) return
 
+    val colors = LocalAppColors.current
     val result = remember(dueDate) {
         val localDate = try {
             val clean = if (dueDate.length >= 10) dueDate.take(10) else return@remember null
@@ -31,9 +33,9 @@ fun CountdownChip(
         val today = LocalDate.now()
         val days = ChronoUnit.DAYS.between(today, localDate).toInt()
         when {
-            days < 0 -> Pair(Color(0xFFE53935), "已过期 ${-days} 天")
-            days == 0 -> Pair(Color(0xFFF59E0B), "今天")
-            days <= 7 -> Pair(Color(0xFF4285F4), "还有 ${days} 天")
+            days < 0 -> Pair(colors.danger, "已过期 ${-days} 天")
+            days == 0 -> Pair(colors.warning, "今天")
+            days <= 7 -> Pair(colors.primary, "还有 ${days} 天")
             else -> return@remember null
         }
     }

@@ -5,7 +5,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
  * 确认删除对话框 — 消除 6+ 处重复的 AlertDialog 样板
@@ -37,7 +37,7 @@ fun AppConfirmDialog(
         text = { Text(message) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(confirmText, color = LocalThemeColors.current.danger)
+                Text(confirmText, color = LocalAppColors.current.danger)
             }
         },
         dismissButton = {

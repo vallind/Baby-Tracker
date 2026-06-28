@@ -24,7 +24,7 @@ import androidx.navigation.NavController
 import com.babytracker.core.database.entity.FeedingEntity
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
@@ -39,7 +39,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FeedingListScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val feedingRepo: FeedingRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -51,7 +51,7 @@ fun FeedingListScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {
@@ -61,14 +61,14 @@ fun FeedingListScreen(navController: NavController) {
                     showForm = true
                 },
                 containerColor = c.primary,
-                contentColor = c.card,
+                contentColor = c.surface,
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
                 icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 text = { Text("记录喂养", style = MaterialTheme.typography.titleSmall) },
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部页头 ——
             Row(
                 Modifier
@@ -123,7 +123,7 @@ fun FeedingListScreen(navController: NavController) {
                             )
                         }
                         items(items = records, key = { it.id }) { f ->
-                            val tint = if (f.id % 2 == 1) c.accent else c.primary
+                            val tint = if (f.id % 2 == 1) c.warning else c.primary
                             val emoji = when (f.type) { "breast" -> "🤱"; "formula" -> "💧"; "food" -> "🥣"; else -> "🥤" }
                             val time = try { LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (_: Exception) { "" }
                             RecordCard(
@@ -169,7 +169,7 @@ fun FeedingListScreen(navController: NavController) {
                                         color = c.textSecondary,
                                     )
                                 }
-                                Text(time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
+                                Text(time, style = MaterialTheme.typography.labelMedium, color = c.textTertiary)
                             }
                         }
                     }

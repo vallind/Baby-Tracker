@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.ButtonDefaults as AppButtonDefaults
-import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
  * 主按钮（填充） — 对标 Palette Button 组件，消费 AppComponentTokens.button
@@ -41,18 +40,16 @@ fun PrimaryButton(
     iconSize: Dp = AppButtonDefaults.iconSize(),
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalAppColors.current
-
     Button(
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(cornerRadius),
         modifier = modifier.height(height),
         colors = ButtonDefaults.buttonColors(
-            containerColor = colors.primary,
-            contentColor = colors.onPrimary,
-            disabledContainerColor = colors.bgDisabled,
-            disabledContentColor = colors.textDisabled,
+            containerColor = AppButtonDefaults.containerColor(),
+            contentColor = AppButtonDefaults.contentColor(),
+            disabledContainerColor = AppButtonDefaults.disabledContainerColor(),
+            disabledContentColor = AppButtonDefaults.disabledContentColor(),
         ),
     ) {
         if (icon != null) {
@@ -78,8 +75,6 @@ fun SecondaryButton(
     iconSize: Dp = AppButtonDefaults.iconSize(),
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalAppColors.current
-
     OutlinedButton(
         onClick = onClick,
         enabled = enabled,
@@ -87,8 +82,8 @@ fun SecondaryButton(
         modifier = modifier.height(height),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
-            contentColor = colors.primary,
-            disabledContentColor = colors.textDisabled,
+            contentColor = AppButtonDefaults.contentColor(),
+            disabledContentColor = AppButtonDefaults.disabledContentColor(),
         ),
         border = ButtonDefaults.outlinedButtonBorder(enabled = enabled),
     ) {
@@ -111,15 +106,13 @@ fun AppTextButton(
     fontWeight: FontWeight = AppButtonDefaults.fontWeight(),
     modifier: Modifier = Modifier,
 ) {
-    val colors = LocalAppColors.current
-
     TextButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = colors.primary,
-            disabledContentColor = colors.textDisabled,
+            contentColor = AppButtonDefaults.contentColor(),
+            disabledContentColor = AppButtonDefaults.disabledContentColor(),
         ),
     ) {
         Text(label, fontSize = fontSize, fontWeight = fontWeight)

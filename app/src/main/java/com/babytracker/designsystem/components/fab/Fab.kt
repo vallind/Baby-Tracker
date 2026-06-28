@@ -9,12 +9,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.fab.FabDefaults
-import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**
  * 浮动操作按钮 — 对标 Palette FAB，消费 AppComponentTokens.fab
@@ -34,16 +32,14 @@ fun AppFAB(
     elevation: Dp = FabDefaults.elevation(),
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalThemeColors.current
-
     if (label != null) {
         androidx.compose.material3.ExtendedFloatingActionButton(
             onClick = onClick,
             icon = { Icon(icon, contentDescription = label, modifier = Modifier.size(iconSize)) },
             text = { androidx.compose.material3.Text(label) },
             shape = RoundedCornerShape(cornerRadius),
-            containerColor = c.primary,
-            contentColor = Color.White,
+            containerColor = FabDefaults.containerColor(),
+            contentColor = FabDefaults.contentColor(),
             elevation = FloatingActionButtonDefaults.elevation(defaultElevation = elevation),
             modifier = modifier,
         )
@@ -51,8 +47,8 @@ fun AppFAB(
         FloatingActionButton(
             onClick = onClick,
             shape = RoundedCornerShape(cornerRadius),
-            containerColor = c.primary,
-            contentColor = Color.White,
+            containerColor = FabDefaults.containerColor(),
+            contentColor = FabDefaults.contentColor(),
             elevation = FloatingActionButtonDefaults.elevation(defaultElevation = elevation),
             modifier = modifier.size(size),
         ) {

@@ -23,8 +23,8 @@ import androidx.navigation.NavController
 import com.babytracker.core.database.entity.BabyEntity
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
-import com.babytracker.designsystem.theme.ThemeColors
+import com.babytracker.designsystem.theme.AppColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.AssessmentItem
@@ -61,12 +61,12 @@ private fun scoreLabel(score: Int): String = when (score) {
     else -> "--"
 }
 
-private fun scoreColor(score: Int, c: ThemeColors): Color = when (score) {
-    0 -> c.textHint
+private fun scoreColor(score: Int, c: AppColors): Color = when (score) {
+    0 -> c.textTertiary
     1 -> c.warning
     2 -> c.success
     3 -> c.danger
-    else -> c.textHint
+    else -> c.textTertiary
 }
 
 /** 各能力在不同评分下的简短描述（UI 展示用）。 */
@@ -92,7 +92,7 @@ private fun babyAgeMonths(birthDate: String): Int {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DevelopmentAssessmentScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val viewModel: DevelopmentAssessmentViewModel = koinViewModel()
@@ -106,7 +106,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
     }
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("发育评估", fontWeight = FontWeight.SemiBold) },
@@ -116,7 +116,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = c.primaryLight,
+                    containerColor = c.primaryContainer,
                     titleContentColor = c.textPrimary,
                     navigationIconContentColor = c.textPrimary,
                 ),
@@ -138,7 +138,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .background(c.bg),
+                .background(c.pageBackground),
         ) {
             // —— 顶部宝宝信息区（浅蓝渐变 + 圆形头像）——
             BabyHeader(baby)
@@ -187,7 +187,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
 // —— 顶部宝宝信息区 ——
 @Composable
 private fun BabyHeader(baby: BabyEntity) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Box(
         Modifier
             .fillMaxWidth()
@@ -227,7 +227,7 @@ private fun BabyHeader(baby: BabyEntity) {
 // —— 最近一次评估概览卡 ——
 @Composable
 private fun AssessmentSummaryCard(latest: DevelopmentAssessment) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val cardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
     val dateText = remember(latest.assessDate) {
         latest.assessDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
@@ -239,7 +239,7 @@ private fun AssessmentSummaryCard(latest: DevelopmentAssessment) {
             .shadow(elevation = DT.cardElevation.dp, shape = cardShape),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Column(Modifier.padding(DT.cardInnerPadding.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -278,8 +278,8 @@ private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
 
 @Composable
 private fun AssessmentItemCard(item: AssessmentItem, useAccent: Boolean) {
-    val c = LocalThemeColors.current
-    val tint = if (useAccent) c.accent else c.primary
+    val c = LocalAppColors.current
+    val tint = if (useAccent) c.warning else c.primary
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     val statusColor = scoreColor(item.score, c)
     Card(
@@ -288,7 +288,7 @@ private fun AssessmentItemCard(item: AssessmentItem, useAccent: Boolean) {
             .shadow(elevation = DT.cardElevation.dp, shape = cardShape),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Row(
             Modifier.padding(DT.cardInnerPadding.dp),
@@ -333,7 +333,7 @@ private fun ScoreTag(text: String, color: Color) {
 // —— 下次评估提示 ——
 @Composable
 private fun NextAssessmentHint(latest: DevelopmentAssessment?) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val nextDateText = remember(latest?.assessDate) {
         val base = latest?.assessDate ?: LocalDateTime.now()
         base.plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
@@ -343,11 +343,11 @@ private fun NextAssessmentHint(latest: DevelopmentAssessment?) {
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(DT.cardRadius.dp))
-                .background(c.accent.copy(alpha = 0.10f))
+                .background(c.warning.copy(alpha = 0.10f))
                 .padding(DT.cardInnerPadding.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Default.Notifications, contentDescription = null, tint = c.accent, modifier = Modifier.size(DT.iconSize.dp))
+            Icon(Icons.Default.Notifications, contentDescription = null, tint = c.warning, modifier = Modifier.size(DT.iconSize.dp))
             Spacer(Modifier.width(10.dp))
             Text("下次评估时间：1 个月后（$nextDateText）", fontSize = 13.sp, color = c.textPrimary)
         }
@@ -357,7 +357,7 @@ private fun NextAssessmentHint(latest: DevelopmentAssessment?) {
 // —— 重新评估按钮（胶囊 + 主色渐变）——
 @Composable
 private fun ReassessButton(onClick: () -> Unit) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val shape = RoundedCornerShape(DT.buttonRadius.dp)
     Box(
         Modifier
@@ -387,7 +387,7 @@ private fun AssessmentFormDialog(
     onDismiss: () -> Unit,
     onSubmit: (DevelopmentAssessment) -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     // 5 项评分初始值（默认 2=正常）
     val scores = remember {
@@ -398,7 +398,7 @@ private fun AssessmentFormDialog(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = c.card,
+        containerColor = c.surface,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
         Column(
@@ -475,8 +475,8 @@ private fun ScoreSelector(
     onSelect: (Int) -> Unit,
     useAccent: Boolean,
 ) {
-    val c = LocalThemeColors.current
-    val tint = if (useAccent) c.accent else c.primary
+    val c = LocalAppColors.current
+    val tint = if (useAccent) c.warning else c.primary
     val options = listOf(0 to "未观察", 1 to "落后", 2 to "正常", 3 to "超前")
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {

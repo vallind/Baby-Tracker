@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppComponentTokens
 
 /**
  * 带边框的容器 — 对标 Palette BorderContainer
@@ -21,16 +21,16 @@ import com.babytracker.designsystem.theme.LocalThemeColors
  */
 @Composable
 fun BorderContainer(
-    borderColor: Color = LocalThemeColors.current.cardBorder,
-    cornerRadius: Dp = 12.dp,
-    padding: Dp = 16.dp,
+    borderColor: Color = LocalAppComponentTokens.current.borderContainer.borderColor,
+    cornerRadius: Dp = LocalAppComponentTokens.current.borderContainer.cornerRadius,
+    padding: Dp = LocalAppComponentTokens.current.borderContainer.padding,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     Box(
         modifier = modifier
-            .border(width = 1.dp, color = borderColor, shape = shape)
+            .border(width = LocalAppComponentTokens.current.borderContainer.borderWidth, color = borderColor, shape = shape)
             .background(Color.Transparent, shape)
             .padding(padding),
     ) {

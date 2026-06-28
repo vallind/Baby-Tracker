@@ -31,7 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.database.entity.GrowthEntity
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.GrowthRepository
@@ -45,7 +45,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GrowthScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val growthRepo: GrowthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -60,10 +60,10 @@ fun GrowthScreen(navController: NavController) {
     val tabs = listOf("身高", "体重", "头围")
     val types = listOf("height", "weight", "head")
 
-    Scaffold(containerColor = c.bg, topBar = {
+    Scaffold(containerColor = c.pageBackground, topBar = {
         CenterAlignedTopAppBar(title = { Text("生长记录", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = c.primaryLight,
+                containerColor = c.primaryContainer,
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
             ))
@@ -76,7 +76,7 @@ fun GrowthScreen(navController: NavController) {
             Icon(Icons.Default.Add, contentDescription = "添加记录")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部 Tab 区 ——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
                 Row(Modifier.fillMaxWidth()) {
@@ -103,7 +103,7 @@ fun GrowthScreen(navController: NavController) {
                 Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().shadow(elevation = DT.cardElevation.dp, shape = currentShape),
                 shape = currentShape,
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                colors = CardDefaults.cardColors(containerColor = c.card),
+                colors = CardDefaults.cardColors(containerColor = c.surface),
             ) {
                 Row(Modifier.padding(DT.cardInnerPadding.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.primary.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
@@ -138,7 +138,7 @@ fun GrowthScreen(navController: NavController) {
             )
             val gridColor = c.divider
             val lineColor = c.primary
-            val bgColor = c.card
+            val bgColor = c.surface
             val areaBrush = Gradients.growthChart(c)
             val minVal = chartData.minOfOrNull { it.value } ?: 0.0
             val maxVal = chartData.maxOfOrNull { it.value } ?: 100.0
@@ -154,7 +154,7 @@ fun GrowthScreen(navController: NavController) {
                 Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth().shadow(elevation = DT.cardElevation.dp, shape = chartCardShape),
                 shape = chartCardShape,
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                colors = CardDefaults.cardColors(containerColor = c.card),
+                colors = CardDefaults.cardColors(containerColor = c.surface),
             ) {
                 Box(Modifier.fillMaxWidth().height(300.dp).padding(DT.cardInnerPadding.dp)) {
                 Column(Modifier.fillMaxHeight().width(36.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.SpaceBetween) {
@@ -254,7 +254,7 @@ fun GrowthScreen(navController: NavController) {
                                     showForm = true
                                 },
                             ) {
-                                Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.green.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
+                                Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(c.success.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text("📏", style = MaterialTheme.typography.titleLarge) }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text("${DateUtils.growthTypeLabel(g.type)} ${g.value}", style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
@@ -300,7 +300,7 @@ fun GrowthFormDialog(
     onDismiss: () -> Unit,
     onSave: (GrowthEntity) -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val isEdit = editEntity != null
     var type by remember { mutableStateOf(editEntity?.type ?: "height") }
     var value by remember { mutableStateOf(editEntity?.value?.let { if (it == it.toLong().toDouble() && it == 0.0) "" else String.format("%.1f", it) } ?: "") }
@@ -345,7 +345,7 @@ fun GrowthFormDialog(
                 label = { Text("测量时间") }, singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showDatePicker = true },
                 shape = MaterialTheme.shapes.medium, enabled = false,
-                colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary),
+                colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.outline, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary),
             )
 
             OutlinedTextField(

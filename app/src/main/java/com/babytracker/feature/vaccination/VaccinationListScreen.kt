@@ -22,7 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.database.entity.VaccinationEntity
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun VaccinationListScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val vacRepo: VaccinationRepository = koinInject()
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -54,10 +54,10 @@ fun VaccinationListScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Scaffold(containerColor = c.bg, topBar = {
+    Scaffold(containerColor = c.pageBackground, topBar = {
         CenterAlignedTopAppBar(title = { Text("疫苗接种", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = c.primaryLight,
+                containerColor = c.primaryContainer,
                 titleContentColor = c.textPrimary,
                 navigationIconContentColor = c.textPrimary,
             ))
@@ -70,7 +70,7 @@ fun VaccinationListScreen(navController: NavController) {
             Icon(Icons.Default.Add, contentDescription = "添加")
         }
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部 Tab 区 ——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
                 Row(Modifier.fillMaxWidth()) {
@@ -126,13 +126,13 @@ fun VaccinationListScreen(navController: NavController) {
                                 showForm = true
                             },
                         ) {
-                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.accent.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
+                            Box(Modifier.size(DT.iconBgSize.dp).clip(RoundedCornerShape(DT.iconBgRadius.dp)).background(if (v.status == "done") c.success.copy(alpha = 0.14f) else c.warning.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) { Text(if (v.status == "done") "✅" else "💉", style = MaterialTheme.typography.titleLarge) }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(v.name, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
                                 Text("${v.dose ?: ""}${if (v.scheduledDate != null) " · ${DateUtils.formatDate(LocalDateTime.parse(v.scheduledDate, DateTimeFormatter.ISO_DATE_TIME))}" else ""}", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                             }
-                            val tagColor = if (v.status == "done") c.success else c.accent
+                            val tagColor = if (v.status == "done") c.success else c.warning
                             Box(Modifier.background(tagColor.copy(alpha = 0.12f), RoundedCornerShape(DT.chipRadius.dp)).padding(horizontal = 10.dp, vertical = 4.dp)) {
                                 Text(if (v.status == "done") "已接种" else if (v.status == "pending") "未接种" else "已跳过", style = MaterialTheme.typography.labelSmall, color = tagColor, fontWeight = FontWeight.SemiBold)
                             }
@@ -207,7 +207,7 @@ fun VaccinationFormDialog(
     onSave: (VaccinationEntity) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val isEdit = editEntity != null
     var name by remember { mutableStateOf(editEntity?.name ?: "") }
     var dose by remember { mutableStateOf(editEntity?.dose ?: "") }
@@ -249,10 +249,10 @@ fun VaccinationFormDialog(
                 }
             }
 
-            OutlinedTextField(value = scheduledDate, onValueChange = {}, readOnly = true, label = { Text("计划接种日期 (可选)") }, leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showScheduledDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
+            OutlinedTextField(value = scheduledDate, onValueChange = {}, readOnly = true, label = { Text("计划接种日期 (可选)") }, leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showScheduledDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.outline, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
 
             if (status == "done") {
-                OutlinedTextField(value = administeredDate, onValueChange = {}, readOnly = true, label = { Text("实际接种日期 (可选)") }, leadingIcon = { Text("✅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showAdministeredDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.cardBorder, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
+                OutlinedTextField(value = administeredDate, onValueChange = {}, readOnly = true, label = { Text("实际接种日期 (可选)") }, leadingIcon = { Text("✅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showAdministeredDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.outline, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
             }
 
             OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), singleLine = true, shape = MaterialTheme.shapes.medium)

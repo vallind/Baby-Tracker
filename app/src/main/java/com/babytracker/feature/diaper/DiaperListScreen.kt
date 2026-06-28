@@ -21,7 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.database.entity.DiaperEntity
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
@@ -35,7 +35,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DiaperListScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val diaperRepo: DiaperRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -47,7 +47,7 @@ fun DiaperListScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -56,14 +56,14 @@ fun DiaperListScreen(navController: NavController) {
                     showForm = true
                 },
                 containerColor = c.primary,
-                contentColor = c.card,
+                contentColor = c.surface,
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
                 icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 text = { Text("记录尿布", style = MaterialTheme.typography.titleSmall) },
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部页头 ——
             Row(
                 Modifier
@@ -113,7 +113,7 @@ fun DiaperListScreen(navController: NavController) {
                             Text(date, style = MaterialTheme.typography.labelSmall, color = c.textSecondary, modifier = Modifier.padding(bottom = 4.dp))
                         }
                         items(items = records, key = { it.id }) { d ->
-                            val tint = if (d.id % 2 == 1) c.accent else c.primary
+                            val tint = if (d.id % 2 == 1) c.warning else c.primary
                             RecordCard(
                                 modifier = Modifier.padding(bottom = 8.dp),
                                 onDelete = {
@@ -149,7 +149,7 @@ fun DiaperListScreen(navController: NavController) {
                                     Text(try { LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("MM-dd HH:mm")) } catch (_: Exception) { "" }, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                                 }
                                 if (!d.note.isNullOrBlank()) {
-                                    Text(d.note.take(6), style = MaterialTheme.typography.labelSmall, color = c.textHint, modifier = Modifier.padding(start = 8.dp))
+                                    Text(d.note.take(6), style = MaterialTheme.typography.labelSmall, color = c.textTertiary, modifier = Modifier.padding(start = 8.dp))
                                 }
                             }
                         }

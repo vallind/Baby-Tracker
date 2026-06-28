@@ -489,9 +489,13 @@ data class AppBarTokens(
     val titleSize: TextUnit,
     val titleWeight: FontWeight,
     val backIconSize: Dp,
+    val containerColor: Color,
+    val titleColor: Color,
+    val iconColor: Color,
 ) {
     companion object {
         fun default(
+            colors: AppColors,
             typography: AppTypography,
             control: AppControlTokens,
         ): AppBarTokens = AppBarTokens(
@@ -499,6 +503,9 @@ data class AppBarTokens(
             titleSize = typography.titleLarge.fontSize,
             titleWeight = FontWeight.SemiBold,
             backIconSize = 22.dp,
+            containerColor = colors.primaryContainer,
+            titleColor = colors.textPrimary,
+            iconColor = colors.primary,
         )
     }
 }
@@ -511,9 +518,12 @@ data class ChipTokens(
     val fontWeight: FontWeight,
     val horizontalPadding: Dp,
     val verticalPadding: Dp,
+    val backgroundColor: Color,
+    val textColor: Color,
 ) {
     companion object {
         fun default(
+            colors: AppColors,
             shapes: AppShapes,
             typography: AppTypography,
         ): ChipTokens = ChipTokens(
@@ -522,6 +532,8 @@ data class ChipTokens(
             fontWeight = FontWeight.Medium,
             horizontalPadding = 12.dp,
             verticalPadding = 6.dp,
+            backgroundColor = colors.surfaceElevated,
+            textColor = colors.primary,
         )
     }
 }
@@ -533,9 +545,12 @@ data class FabTokens(
     val iconSize: Dp,
     val cornerRadius: Dp,
     val elevation: Dp,
+    val containerColor: Color,
+    val contentColor: Color,
 ) {
     companion object {
         fun default(
+            colors: AppColors,
             control: AppControlTokens,
             elevation: AppElevation,
         ): FabTokens = FabTokens(
@@ -543,6 +558,8 @@ data class FabTokens(
             iconSize = control.large.iconSize,
             cornerRadius = 28.dp,
             elevation = elevation.level3,
+            containerColor = colors.primary,
+            contentColor = colors.onPrimary,
         )
     }
 }
@@ -554,15 +571,26 @@ data class BottomBarTokens(
     val iconSize: Dp,
     val labelSize: TextUnit,
     val fontWeight: FontWeight,
+    val containerColor: Color,
+    val contentColor: Color,
+    val selectedColor: Color,
+    val unselectedColor: Color,
+    val indicatorColor: Color,
 ) {
     companion object {
         fun default(
+            colors: AppColors,
             typography: AppTypography,
         ): BottomBarTokens = BottomBarTokens(
             height = 64.dp,
             iconSize = 22.dp,
             labelSize = 11.sp,
             fontWeight = FontWeight.Medium,
+            containerColor = colors.surface,
+            contentColor = colors.textPrimary,
+            selectedColor = colors.primary,
+            unselectedColor = colors.textSecondary,
+            indicatorColor = colors.primaryContainer,
         )
     }
 }
@@ -576,9 +604,14 @@ data class ListItemTokens(
     val titleSize: TextUnit,
     val subtitleSize: TextUnit,
     val dividerAlpha: Float,
+    val titleColor: Color,
+    val subtitleColor: Color,
+    val dividerColor: Color,
+    val actionColor: Color,
 ) {
     companion object {
         fun default(
+            colors: AppColors,
             spacing: AppSpacing,
             typography: AppTypography,
             opacity: AppOpacity,
@@ -589,6 +622,63 @@ data class ListItemTokens(
             titleSize = typography.bodyLarge.fontSize,
             subtitleSize = typography.bodyMedium.fontSize,
             dividerAlpha = opacity.divider,
+            titleColor = colors.textPrimary,
+            subtitleColor = colors.textSecondary,
+            dividerColor = colors.divider,
+            actionColor = colors.primary,
+        )
+    }
+}
+
+// —— 图标按钮 ——
+@Immutable
+data class IconButtonTokens(
+    val iconSize: Dp,
+    val tintColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            control: AppControlTokens,
+        ): IconButtonTokens = IconButtonTokens(
+            iconSize = control.medium.iconSize,
+            tintColor = colors.primary,
+        )
+    }
+}
+
+// —— 脚手架 ——
+@Immutable
+data class ScaffoldTokens(
+    val containerColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+        ): ScaffoldTokens = ScaffoldTokens(
+            containerColor = colors.pageBackground,
+        )
+    }
+}
+
+// —— 边框容器 ——
+@Immutable
+data class BorderContainerTokens(
+    val borderColor: Color,
+    val cornerRadius: Dp,
+    val borderWidth: Dp,
+    val padding: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            spacing: AppSpacing,
+        ): BorderContainerTokens = BorderContainerTokens(
+            borderColor = colors.outline,
+            cornerRadius = shapes.scaled(shapes.medium),
+            borderWidth = 1.dp,
+            padding = spacing.md,
         )
     }
 }
@@ -620,6 +710,9 @@ data class AppComponentTokens(
     val fab: FabTokens,
     val bottomBar: BottomBarTokens,
     val listItem: ListItemTokens,
+    val iconButton: IconButtonTokens,
+    val scaffold: ScaffoldTokens,
+    val borderContainer: BorderContainerTokens,
 ) {
     companion object {
         fun default(
@@ -649,11 +742,14 @@ data class AppComponentTokens(
             pagination = PaginationTokens.default(colors, shapes),
             slider = SliderTokens.default(colors),
             rate = RateTokens.default(colors),
-            appBar = AppBarTokens.default(typography, control),
-            chip = ChipTokens.default(shapes, typography),
-            fab = FabTokens.default(control, elevation),
-            bottomBar = BottomBarTokens.default(typography),
-            listItem = ListItemTokens.default(spacing, typography, opacity),
+            appBar = AppBarTokens.default(colors, typography, control),
+            chip = ChipTokens.default(colors, shapes, typography),
+            fab = FabTokens.default(colors, control, elevation),
+            bottomBar = BottomBarTokens.default(colors, typography),
+            listItem = ListItemTokens.default(colors, spacing, typography, opacity),
+            iconButton = IconButtonTokens.default(colors, control),
+            scaffold = ScaffoldTokens.default(colors),
+            borderContainer = BorderContainerTokens.default(colors, shapes, spacing),
         )
     }
 }
@@ -684,6 +780,9 @@ inline fun ChipTokens.derive(block: ChipTokens.() -> Unit) = copy().apply(block)
 inline fun FabTokens.derive(block: FabTokens.() -> Unit) = copy().apply(block)
 inline fun BottomBarTokens.derive(block: BottomBarTokens.() -> Unit) = copy().apply(block)
 inline fun ListItemTokens.derive(block: ListItemTokens.() -> Unit) = copy().apply(block)
+inline fun IconButtonTokens.derive(block: IconButtonTokens.() -> Unit) = copy().apply(block)
+inline fun ScaffoldTokens.derive(block: ScaffoldTokens.() -> Unit) = copy().apply(block)
+inline fun BorderContainerTokens.derive(block: BorderContainerTokens.() -> Unit) = copy().apply(block)
 inline fun AppComponentTokens.derive(block: AppComponentTokens.() -> Unit) = copy().apply(block)
 
 val LocalAppComponentTokens = staticCompositionLocalOf { AppComponentTokens.default() }

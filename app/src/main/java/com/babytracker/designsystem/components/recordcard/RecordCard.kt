@@ -35,7 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
  * 记录卡片 — 滑动删除+点击编辑一体化组件
@@ -54,7 +54,7 @@ fun RecordCard(
     onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     cornerRadius: Dp = RecordCardDefaults.cornerRadius(),
-    containerColor: Color = LocalThemeColors.current.card,
+    containerColor: Color = LocalAppColors.current.surface,
     elevation: Dp = RecordCardDefaults.elevation(),
     innerPadding: Dp = RecordCardDefaults.innerPadding(),
     accentColor: Color = Color.Unspecified,
@@ -84,7 +84,7 @@ fun RecordCard(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFE53935))
+                        .background(LocalAppColors.current.danger)
                         .padding(horizontal = 20.dp),
                     contentAlignment = Alignment.CenterEnd,
                 ) {

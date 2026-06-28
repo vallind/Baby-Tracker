@@ -12,7 +12,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.babytracker.designsystem.components.chip.ChipDefaults
-import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
  * 标签组件 — 对标 Palette Tag/Chip 组件，消费 AppComponentTokens.chip
@@ -24,8 +23,8 @@ import com.babytracker.designsystem.theme.LocalAppColors
 @Composable
 fun AppChip(
     label: String,
-    backgroundColor: Color = LocalAppColors.current.surfaceElevated,
-    textColor: Color = LocalAppColors.current.primary,
+    backgroundColor: Color = ChipDefaults.backgroundColor(),
+    textColor: Color = ChipDefaults.textColor(),
     cornerRadius: Dp = ChipDefaults.cornerRadius(),
     fontSize: TextUnit = ChipDefaults.fontSize(),
     fontWeight: FontWeight = ChipDefaults.fontWeight(),

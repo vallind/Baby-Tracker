@@ -1,6 +1,7 @@
 package com.babytracker.designsystem.components.chip
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -12,4 +13,6 @@ object ChipDefaults {
     @Composable fun fontWeight(): FontWeight = LocalAppComponentTokens.current.chip.fontWeight
     @Composable fun horizontalPadding(): Dp = LocalAppComponentTokens.current.chip.horizontalPadding
     @Composable fun verticalPadding(): Dp = LocalAppComponentTokens.current.chip.verticalPadding
+    @Composable fun backgroundColor(): Color = LocalAppComponentTokens.current.chip.backgroundColor
+    @Composable fun textColor(): Color = LocalAppComponentTokens.current.chip.textColor
 }

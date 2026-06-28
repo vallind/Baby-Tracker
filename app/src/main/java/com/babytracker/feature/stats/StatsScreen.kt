@@ -21,7 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import org.koin.compose.koinInject
@@ -29,7 +29,7 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val viewModel: StatsViewModel = org.koin.androidx.compose.koinViewModel()
     val state by viewModel.state.collectAsState()
 
@@ -42,7 +42,7 @@ fun StatsScreen(navController: NavController) {
     }
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("统计分析", fontWeight = FontWeight.SemiBold) },
@@ -52,7 +52,7 @@ fun StatsScreen(navController: NavController) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = c.primaryLight,
+                    containerColor = c.primaryContainer,
                     titleContentColor = c.textPrimary,
                     navigationIconContentColor = c.textPrimary,
                 ),
@@ -60,7 +60,7 @@ fun StatsScreen(navController: NavController) {
         },
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).background(c.pageBackground)) {
             // —— 顶部周期筛选区（浅蓝渐变背景 + 胶囊标签）——
             Box(Modifier.fillMaxWidth().background(Gradients.pageHeader(c)).padding(horizontal = DT.pageMargin.dp, vertical = 12.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -69,7 +69,7 @@ fun StatsScreen(navController: NavController) {
                         Box(
                             Modifier
                                 .clip(RoundedCornerShape(DT.chipRadius.dp))
-                                .background(if (selected) c.primary else c.card)
+                                .background(if (selected) c.primary else c.surface)
                                 .clickable { viewModel.loadData(babyId, p) }
                                 .padding(horizontal = 18.dp, vertical = 8.dp),
                         ) {
@@ -108,13 +108,13 @@ fun StatsScreen(navController: NavController) {
 
 @Composable
 fun RowScope.StatCard(title: String, value: String, points: List<Float>) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     Card(
         Modifier.weight(1f).shadow(elevation = DT.cardElevation.dp, shape = cardShape),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Column(Modifier.padding(DT.cardInnerPadding.dp)) {
             Text(title, fontSize = 12.sp, color = c.textSecondary)
@@ -130,7 +130,7 @@ fun RowScope.StatCard(title: String, value: String, points: List<Float>) {
 
 @Composable
 fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val lineColor = c.primary
     val areaBrush = Gradients.chartArea(c)
     Canvas(modifier) {

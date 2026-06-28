@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
@@ -36,19 +36,19 @@ import java.time.temporal.ChronoUnit
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessageScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val viewModel: MessageViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.bg),
+                .background(c.pageBackground),
         ) {
             // —— 顶部渐变 Header —— 标题 + 返回 + "全部已读" ——
             MessageHeader(
@@ -109,7 +109,7 @@ private fun MessageHeader(
     onBack: () -> Unit,
     onMarkAllRead: () -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     Box(
         Modifier
             .fillMaxWidth()
@@ -150,7 +150,7 @@ private fun MessageHeader(
                 "全部已读",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (canMarkAll) c.primary else c.textHint,
+                color = if (canMarkAll) c.primary else c.textTertiary,
                 modifier = Modifier
                     .clip(RoundedCornerShape(DT.buttonRadiusSm.dp))
                     .clickable(enabled = canMarkAll, onClick = onMarkAllRead)
@@ -199,8 +199,8 @@ private fun MessageTabItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalThemeColors.current
-    val bgColor = if (selected) c.primary else c.card
+    val c = LocalAppColors.current
+    val bgColor = if (selected) c.primary else c.surface
     val textColor = if (selected) Color.White else c.textSecondary
     Column(
         modifier
@@ -254,7 +254,7 @@ private fun MessageCard(
     onClick: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     Card(
         Modifier
@@ -263,7 +263,7 @@ private fun MessageCard(
             .clickable(onClick = onClick),
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.card),
+        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Row(
             Modifier
@@ -295,7 +295,7 @@ private fun MessageCard(
                 Text(
                     relativeTime(message.createTime),
                     fontSize = 11.sp,
-                    color = c.textHint,
+                    color = c.textTertiary,
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -304,7 +304,7 @@ private fun MessageCard(
                 Text(
                     "已读",
                     fontSize = 11.sp,
-                    color = c.textHint,
+                    color = c.textTertiary,
                 )
             } else {
                 Box(
@@ -319,7 +319,7 @@ private fun MessageCard(
             Icon(
                 Icons.Default.Close,
                 contentDescription = "删除",
-                tint = c.textHint,
+                tint = c.textTertiary,
                 modifier = Modifier
                     .size(16.dp)
                     .clickable(onClick = onDelete),
@@ -330,7 +330,7 @@ private fun MessageCard(
 
 @Composable
 private fun MessageLeadingIcon(message: AppMessage) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     when (message.type) {
         MessageType.INTERACTION -> {
             // 互动：圆形头像（无 avatar 时显示首字母占位）
@@ -368,18 +368,18 @@ private fun MessageLeadingIcon(message: AppMessage) {
             }
         }
         MessageType.SERVICE -> {
-            // 服务：c.accent 圆角图标
+            // 服务：c.warning 圆角图标
             Box(
                 Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                    .background(c.accent.copy(alpha = 0.14f)),
+                    .background(c.warning.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.Campaign,
                     contentDescription = null,
-                    tint = c.accent,
+                    tint = c.warning,
                     modifier = Modifier.size(22.dp),
                 )
             }

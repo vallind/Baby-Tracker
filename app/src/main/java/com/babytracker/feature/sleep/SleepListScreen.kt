@@ -21,7 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.database.entity.SleepEntity
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.SleepRepository
@@ -35,7 +35,7 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SleepListScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val sleepRepo: SleepRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -56,7 +56,7 @@ fun SleepListScreen(navController: NavController) {
     } ?: "--"
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -65,14 +65,14 @@ fun SleepListScreen(navController: NavController) {
                     showForm = true
                 },
                 containerColor = c.primary,
-                contentColor = c.card,
+                contentColor = c.surface,
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
                 icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 text = { Text("记录睡眠", style = MaterialTheme.typography.titleSmall) },
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg)) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部页头 ——
             Row(
                 Modifier
@@ -140,7 +140,7 @@ fun SleepListScreen(navController: NavController) {
                                 .shadow(elevation = DT.cardElevation.dp, shape = nightCardShape),
                             shape = nightCardShape,
                             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            colors = CardDefaults.cardColors(containerColor = c.card),
+                            colors = CardDefaults.cardColors(containerColor = c.surface),
                         ) {
                             Column(Modifier.padding(DT.cardInnerPadding.dp)) {
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -148,7 +148,7 @@ fun SleepListScreen(navController: NavController) {
                                         Modifier
                                             .size(DT.iconBgSizeLg.dp)
                                             .clip(RoundedCornerShape(DT.iconBgRadius.dp))
-                                            .background(c.purple.copy(alpha = 0.14f)),
+                                            .background(c.secondary.copy(alpha = 0.14f)),
                                         contentAlignment = Alignment.Center,
                                     ) { Text("🌙", style = MaterialTheme.typography.headlineSmall) }
                                     Spacer(Modifier.width(12.dp))
@@ -182,7 +182,7 @@ fun SleepListScreen(navController: NavController) {
                         items(items = records, key = { it.id }) { s ->
                             val start = LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME)
                             val end = LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME)
-                            val tint = if (s.id % 2 == 1) c.accent else c.primary
+                            val tint = if (s.id % 2 == 1) c.warning else c.primary
                             RecordCard(
                                 modifier = Modifier.padding(bottom = 8.dp),
                                 onDelete = {

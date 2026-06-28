@@ -21,7 +21,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.babytracker.designsystem.components.input.InputDefaults
-import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**
  * 统一输入框组件 — 对标 Palette TextField，消费 AppComponentTokens.input
@@ -50,8 +49,6 @@ fun AppInput(
     iconSize: Dp = InputDefaults.iconSize(),
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalThemeColors.current
-
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
@@ -72,19 +69,19 @@ fun AppInput(
         shape = RoundedCornerShape(cornerRadius),
         modifier = modifier.height(height),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = c.primary,
-            unfocusedBorderColor = c.cardBorder,
-            errorBorderColor = c.danger,
-            focusedContainerColor = c.card,
-            unfocusedContainerColor = c.card,
-            errorContainerColor = c.card,
-            cursorColor = c.primary,
-            focusedLabelColor = c.primary,
-            unfocusedLabelColor = c.textSecondary,
-            errorLabelColor = c.danger,
+            focusedBorderColor = InputDefaults.focusedBorderColor(),
+            unfocusedBorderColor = InputDefaults.unfocusedBorderColor(),
+            errorBorderColor = InputDefaults.errorBorderColor(),
+            focusedContainerColor = InputDefaults.containerColor(),
+            unfocusedContainerColor = InputDefaults.containerColor(),
+            errorContainerColor = InputDefaults.containerColor(),
+            cursorColor = InputDefaults.cursorColor(),
+            focusedLabelColor = InputDefaults.focusedBorderColor(),
+            unfocusedLabelColor = InputDefaults.placeholderColor(),
+            errorLabelColor = InputDefaults.errorBorderColor(),
         ),
         supportingText = if (isError && errorMessage != null) {
-            { androidx.compose.material3.Text(errorMessage, color = c.danger) }
+            { androidx.compose.material3.Text(errorMessage, color = InputDefaults.errorBorderColor()) }
         } else null,
     )
 }

@@ -1,6 +1,7 @@
 package com.babytracker.designsystem.components.fab
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import com.babytracker.designsystem.theme.LocalAppComponentTokens
 
@@ -9,4 +10,6 @@ object FabDefaults {
     @Composable fun iconSize(): Dp = LocalAppComponentTokens.current.fab.iconSize
     @Composable fun cornerRadius(): Dp = LocalAppComponentTokens.current.fab.cornerRadius
     @Composable fun elevation(): Dp = LocalAppComponentTokens.current.fab.elevation
+    @Composable fun containerColor(): Color = LocalAppComponentTokens.current.fab.containerColor
+    @Composable fun contentColor(): Color = LocalAppComponentTokens.current.fab.contentColor
 }

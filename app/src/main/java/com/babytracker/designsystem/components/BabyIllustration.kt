@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 
 enum class BabyPose {
     SITTING, SLEEPING, PLAYING, CRAWLING
@@ -29,8 +29,8 @@ fun BabyIllustration(
     name: String = "",
     color: Color? = null,
 ) {
-    val c = LocalThemeColors.current
-    val bgColor = color ?: c.primaryLight
+    val c = LocalAppColors.current
+    val bgColor = color ?: c.primaryContainer
 
     Box(
         modifier = Modifier.size(size.dp),
@@ -84,7 +84,7 @@ private fun SittingBaby(name: String) {
                 name.take(1),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF6C8DFF),
+                color = LocalAppColors.current.primary,
                 textAlign = TextAlign.Center,
             )
         }

@@ -19,7 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalThemeColors
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
@@ -39,7 +39,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimelineScreen(navController: NavController) {
-    val c = LocalThemeColors.current
+    val c = LocalAppColors.current
     val viewModel: TimelineViewModel = koinViewModel()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -58,21 +58,21 @@ fun TimelineScreen(navController: NavController) {
     LaunchedEffect(babyId) { viewModel.load(babyId) }
 
     Scaffold(
-        containerColor = c.bg,
+        containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showTypePicker = true },
                 containerColor = c.primary,
-                contentColor = c.card,
+                contentColor = c.surface,
                 shape = RoundedCornerShape(DT.buttonRadius.dp),
                 icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
                 text = { Text("记录", style = MaterialTheme.typography.titleSmall) },
             )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).background(c.bg).verticalScroll(rememberScrollState())) {
+        Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground).verticalScroll(rememberScrollState())) {
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -118,8 +118,8 @@ fun TimelineScreen(navController: NavController) {
                 } else {
                     val filtered = remember(state.items, typeFilter) { if (typeFilter.isEmpty()) state.items else state.items.filter { it.recordType == typeFilter } }
                     val typeColor: (String) -> Color = { when (it) {
-                        "feeding" -> c.accent; "sleep" -> c.purple; "diaper" -> c.blue
-                        "growth" -> c.green; "health" -> c.primary; else -> Color.Unspecified
+                        "feeding" -> c.warning; "sleep" -> c.secondary; "diaper" -> c.primary
+                        "growth" -> c.success; "health" -> c.primary; else -> Color.Unspecified
                     } }
                     val grouped = remember(filtered) { filtered.groupBy { it.date } }
                     var groupIndex = 0
@@ -131,7 +131,7 @@ fun TimelineScreen(navController: NavController) {
                             modifier = Modifier.padding(top = if (groupIndex == 0) 0.dp else DT.cardGapSm.dp, bottom = 4.dp),
                         )
                         items.forEachIndexed { i, item ->
-                            val tint = if (item.accent) c.accent else c.primary
+                            val tint = if (item.accent) c.warning else c.primary
                             RecordCard(
                                 modifier = Modifier.padding(bottom = 8.dp),
                                 accentColor = typeColor(item.recordType),
@@ -172,7 +172,7 @@ fun TimelineScreen(navController: NavController) {
                                     Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
                                 }
                                 if (item.time.isNotEmpty()) {
-                                    Text(item.time, style = MaterialTheme.typography.labelMedium, color = c.textHint)
+                                    Text(item.time, style = MaterialTheme.typography.labelMedium, color = c.textTertiary)
                                 }
                             }
                         }

@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.topbar.TopBarDefaults
-import com.babytracker.designsystem.theme.LocalThemeColors
 
 /**
  * 统一导航栏组件 — 对标 Palette AppBar 组件，消费 AppComponentTokens.appBar
@@ -39,15 +38,13 @@ fun AppTopBar(
     titleWeight: FontWeight = TopBarDefaults.titleWeight(),
     backIconSize: Dp = TopBarDefaults.backIconSize(),
 ) {
-    val c = LocalThemeColors.current
-
     CenterAlignedTopAppBar(
         title = {
             Text(
                 title,
                 fontSize = titleSize,
                 fontWeight = titleWeight,
-                color = c.textPrimary,
+                color = TopBarDefaults.titleColor(),
             )
         },
         navigationIcon = {
@@ -57,15 +54,15 @@ fun AppTopBar(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "返回",
                         modifier = Modifier.size(backIconSize),
-                        tint = c.primary,
+                        tint = TopBarDefaults.iconColor(),
                     )
                 }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = c.primaryLight,
-            titleContentColor = c.textPrimary,
-            navigationIconContentColor = c.primary,
+            containerColor = TopBarDefaults.containerColor(),
+            titleContentColor = TopBarDefaults.titleColor(),
+            navigationIconContentColor = TopBarDefaults.iconColor(),
         ),
     )
 }
