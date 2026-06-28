@@ -220,6 +220,10 @@ class TimelineViewModel(
     fun findGrowth(id: Int): Growth? = cachedGrowths.find { it.id == id }
     fun findHealth(id: Int): HealthRecord? = cachedHealths.find { it.id == id }
 
+    fun addFeeding(e: Feeding) { viewModelScope.launch { feedingRepo.insert(e) } }
+    fun addSleep(e: Sleep) { viewModelScope.launch { sleepRepo.insert(e) } }
+    fun addDiaper(e: Diaper) { viewModelScope.launch { diaperRepo.insert(e) } }
+
     fun updateFeeding(e: Feeding) { viewModelScope.launch { feedingRepo.update(e) } }
     fun updateSleep(e: Sleep) { viewModelScope.launch { sleepRepo.update(e) } }
     fun updateDiaper(e: Diaper) { viewModelScope.launch { diaperRepo.update(e) } }

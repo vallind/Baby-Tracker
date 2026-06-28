@@ -47,6 +47,9 @@ fun TimelineScreen(navController: NavController) {
     if (babyId == 0) return
     val state by viewModel.state.collectAsState()
     var showTypePicker by remember { mutableStateOf(false) }
+    var showAddFeeding by remember { mutableStateOf(false) }
+    var showAddSleep by remember { mutableStateOf(false) }
+    var showAddDiaper by remember { mutableStateOf(false) }
     var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
     var editingSleep by remember { mutableStateOf<Sleep?>(null) }
     var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
@@ -201,7 +204,12 @@ fun TimelineScreen(navController: NavController) {
                     TextButton(
                         onClick = {
                             showTypePicker = false
-                            navController.navigate(screen.route)
+                            when (screen) {
+                                Screen.Feeding -> showAddFeeding = true
+                                Screen.Sleep -> showAddSleep = true
+                                Screen.Diaper -> showAddDiaper = true
+                                else -> navController.navigate(screen.route)
+                            }
                         },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                     ) {
@@ -278,6 +286,50 @@ fun TimelineScreen(navController: NavController) {
                 scope.launch {
                     viewModel.updateHealth(updated)
                     editingHealth = null
+                }
+            },
+        )
+    }
+
+    // ── 快速新增表单（不跳页）──
+
+    if (showAddFeeding) {
+        FeedingFormDialog(
+            babyId = babyId,
+            editEntity = null,
+            onDismiss = { showAddFeeding = false },
+            onSave = { feeding ->
+                scope.launch {
+                    viewModel.addFeeding(feeding)
+                    showAddFeeding = false
+                }
+            },
+        )
+    }
+
+    if (showAddSleep) {
+        SleepFormDialog(
+            babyId = babyId,
+            editEntity = null,
+            onDismiss = { showAddSleep = false },
+            onSave = { sleep ->
+                scope.launch {
+                    viewModel.addSleep(sleep)
+                    showAddSleep = false
+                }
+            },
+        )
+    }
+
+    if (showAddDiaper) {
+        DiaperFormDialog(
+            babyId = babyId,
+            editEntity = null,
+            onDismiss = { showAddDiaper = false },
+            onSave = { diaper ->
+                scope.launch {
+                    viewModel.addDiaper(diaper)
+                    showAddDiaper = false
                 }
             },
         )
