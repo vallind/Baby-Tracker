@@ -145,6 +145,114 @@ fun SleepListScreen(navController: NavController) {
                     )
                 }
             } else {
+                // —— 夜间睡眠大卡：移出 LazyColumn，自然铺满页面宽度 ——
+                if (nightSleep != null) {
+                    val nightStart = LocalDateTime.parse(nightSleep.startTime, DateTimeFormatter.ISO_DATE_TIME)
+                    val nightEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
+                    val durSec = DateUtils.durationToTotalSeconds(nightStart, nightEnd)
+                    val timeRange = "${nightStart.format(DateTimeFormatter.ofPattern("HH:mm"))}-${nightEnd.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+                    val cardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
+
+                    Card(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = DT.pageMargin.dp)
+                            .padding(bottom = 16.dp),
+                        shape = cardShape,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                    ) {
+                        Box(Modifier.background(Gradients.sleepHeader(c), cardShape)) {
+                            Column(Modifier.padding(20.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        Modifier
+                                            .size(32.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color.White.copy(alpha = 0.25f)),
+                                        contentAlignment = Alignment.Center,
+                                    ) { Text("\uD83C\uDF19", fontSize = 16.sp) }
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "夜间睡眠",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color.White.copy(alpha = 0.9f),
+                                    )
+                                }
+                                Spacer(Modifier.height(20.dp))
+                                Text(
+                                    DateUtils.durationFullText(durSec),
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    timeRange,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.75f),
+                                )
+                            }
+                        }
+                    }
+
+                    // —— 睡眠详情 ——
+                    Card(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = DT.pageMargin.dp)
+                            .padding(bottom = 16.dp),
+                        shape = RoundedCornerShape(DT.cardRadius.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        colors = CardDefaults.cardColors(containerColor = c.surface),
+                    ) {
+                        Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+                            Text(
+                                "睡眠详情",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = c.textPrimary,
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            Row(Modifier.fillMaxWidth()) {
+                                val sleepStart = LocalDateTime.parse(nightSleep.startTime, DateTimeFormatter.ISO_DATE_TIME)
+                                val sleepEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
+                                SleepStatCell(
+                                    label = "入睡时间",
+                                    value = sleepStart.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                    modifier = Modifier.weight(1f),
+                                    c = c,
+                                )
+                                SleepStatCell(
+                                    label = "起床时间",
+                                    value = sleepEnd.format(DateTimeFormatter.ofPattern("HH:mm")),
+                                    modifier = Modifier.weight(1f),
+                                    c = c,
+                                )
+                                SleepStatCell(
+                                    label = "夜醒次数",
+                                    value = "-",
+                                    modifier = Modifier.weight(1f),
+                                    c = c,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // —— 小睡记录 ——
+                if (naps.isNotEmpty()) {
+                    Text(
+                        "小睡记录",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = c.textPrimary,
+                        modifier = Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 0.dp)
+                            .padding(bottom = 12.dp),
+                    )
+                }
+
                 LazyColumn(
                     modifier = Modifier
                         .weight(1f)
@@ -152,120 +260,10 @@ fun SleepListScreen(navController: NavController) {
                     contentPadding = PaddingValues(
                         start = DT.pageMargin.dp,
                         end = DT.pageMargin.dp,
-                        top = 4.dp,
                         bottom = 8.dp,
                     ),
                 ) {
-                    // —— 夜间睡眠大卡 ——
-                    if (nightSleep != null) {
-                        item {
-                            val nightStart = LocalDateTime.parse(nightSleep.startTime, DateTimeFormatter.ISO_DATE_TIME)
-                            val nightEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
-                            val durSec = DateUtils.durationToTotalSeconds(nightStart, nightEnd)
-                            val timeRange = "${nightStart.format(DateTimeFormatter.ofPattern("HH:mm"))}-${nightEnd.format(DateTimeFormatter.ofPattern("HH:mm"))}"
-                            val cardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
-
-                            Card(
-                                Modifier
-                                    .padding(horizontal = (-DT.pageMargin).dp)
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
-                                shape = cardShape,
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                            ) {
-                                Box(Modifier.background(Gradients.sleepHeader(c), cardShape)) {
-                                    Column(Modifier.padding(20.dp)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Box(
-                                                Modifier
-                                                    .size(32.dp)
-                                                    .clip(RoundedCornerShape(8.dp))
-                                                    .background(Color.White.copy(alpha = 0.25f)),
-                                                contentAlignment = Alignment.Center,
-                                            ) { Text("\uD83C\uDF19", fontSize = 16.sp) }
-                                            Spacer(Modifier.width(8.dp))
-                                            Text(
-                                                "夜间睡眠",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.Medium,
-                                                color = Color.White.copy(alpha = 0.9f),
-                                            )
-                                        }
-                                        Spacer(Modifier.height(20.dp))
-                                        Text(
-                                            DateUtils.durationFullText(durSec),
-                                            fontSize = 28.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White,
-                                        )
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            timeRange,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.White.copy(alpha = 0.75f),
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // —— 睡眠详情 ——
-                        item {
-                            Card(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
-                                shape = RoundedCornerShape(DT.cardRadius.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                colors = CardDefaults.cardColors(containerColor = c.surface),
-                            ) {
-                                Column(Modifier.padding(DT.cardInnerPadding.dp)) {
-                                    Text(
-                                        "睡眠详情",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = c.textPrimary,
-                                    )
-                                    Spacer(Modifier.height(16.dp))
-                                    Row(Modifier.fillMaxWidth()) {
-                                        val sleepStart = LocalDateTime.parse(nightSleep.startTime, DateTimeFormatter.ISO_DATE_TIME)
-                                        val sleepEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
-                                        SleepStatCell(
-                                            label = "入睡时间",
-                                            value = sleepStart.format(DateTimeFormatter.ofPattern("HH:mm")),
-                                            modifier = Modifier.weight(1f),
-                                            c = c,
-                                        )
-                                        SleepStatCell(
-                                            label = "起床时间",
-                                            value = sleepEnd.format(DateTimeFormatter.ofPattern("HH:mm")),
-                                            modifier = Modifier.weight(1f),
-                                            c = c,
-                                        )
-                                        SleepStatCell(
-                                            label = "夜醒次数",
-                                            value = "-",
-                                            modifier = Modifier.weight(1f),
-                                            c = c,
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // —— 小睡记录 ——
                     if (naps.isNotEmpty()) {
-                        item {
-                            Text(
-                                "小睡记录",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = c.textPrimary,
-                                modifier = Modifier.padding(bottom = 12.dp),
-                            )
-                        }
                         items(items = naps, key = { it.id }) { nap ->
                             val napStart = LocalDateTime.parse(nap.startTime, DateTimeFormatter.ISO_DATE_TIME)
                             val napEnd = LocalDateTime.parse(nap.endTime, DateTimeFormatter.ISO_DATE_TIME)

@@ -13,8 +13,9 @@
 +- FAB 替换为底部固定按钮（"+ 记录尿布"），添加 BottomNavBar
 +- 新增 Gradients.diaperSummary 渐变（tertiary 青绿色调）
 
-**修复睡眠夜间大卡未铺满页面：**
-+- 夜间睡眠大卡卡片添加 `padding(horizontal = (-DT.pageMargin).dp)` 抵消 LazyColumn 边距，实现边缘到边缘铺满
+**修复睡眠页面闪退：**
++- 移除负 padding 方案，改为将夜间睡眠大卡 + 睡眠详情卡移出 LazyColumn，在外层 Column 中用 `.padding(horizontal = DT.pageMargin.dp)` 正常布局
++- LazyColumn 只负责小睡记录列表，消除负 padding 导致的布局崩溃风险
 
 **生长记录 UI 重做：匹配设计图：**
 +- 顶部改用 AppTopBar（标题+返回+日历图标），Tab 切换区（身高/体重/头围）纯净无渐变
