@@ -169,3 +169,31 @@ interface ReminderDao {
     @Query("UPDATE reminders SET is_enabled = :enabled WHERE id = :id")
     suspend fun setEnabled(id: Int, enabled: Boolean)
 }
+
+// ============================================================
+// Supabase 同步元数据 Dao
+// ============================================================
+
+@Dao
+interface SyncMetadataDao {
+    @Query("SELECT * FROM sync_metadata WHERE syncStatus = 'pending' ORDER BY updatedAt ASC")
+    suspend fun getPendingChanges(): List<SyncMetadataEntity>
+
+    @Query("SELECT * FROM sync_metadata WHERE tableName = :tableName AND localId = :localId LIMIT 1")
+    suspend fun getByTableAndId(tableName: String, localId: Int): SyncMetadataEntity?
+
+    @Query("SELECT MAX(lastSyncAt) FROM sync_metadata")
+    suspend fun getLastSyncAt(): Long?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(entity: SyncMetadataEntity)
+
+    @Query("UPDATE sync_metadata SET syncStatus = 'synced', remoteUuid = :remoteUuid, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun markSynced(id: Int, remoteUuid: String?, updatedAt: Long)
+
+    @Query("UPDATE sync_metadata SET syncStatus = 'conflict', updatedAt = :updatedAt WHERE id = :id")
+    suspend fun markConflict(id: Int, updatedAt: Long)
+
+    @Query("UPDATE sync_metadata SET lastSyncAt = :lastSyncAt WHERE lastSyncAt IS NULL OR lastSyncAt < :lastSyncAt")
+    suspend fun updateLastSyncAt(lastSyncAt: Long)
+}

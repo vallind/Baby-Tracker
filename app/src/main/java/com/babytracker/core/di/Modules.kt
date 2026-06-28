@@ -13,6 +13,7 @@ import com.babytracker.feature.message.MessageViewModel
 import com.babytracker.feature.development.DevelopmentAssessmentViewModel
 import com.babytracker.feature.reminder.ReminderViewModel
 import com.babytracker.feature.timeline.TimelineViewModel
+import com.babytracker.feature.auth.LoginViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -38,6 +39,7 @@ val appModule = module {
     viewModel { DevelopmentAssessmentViewModel(get(), get()) }
     viewModel { ReminderViewModel(get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
+    viewModel { LoginViewModel(get()) }
 }
 
 val databaseModule = module {
@@ -53,4 +55,11 @@ val databaseModule = module {
     single { get<AppDatabase>().messageDao() }
     single { get<AppDatabase>().developmentAssessmentDao() }
     single { get<AppDatabase>().reminderDao() }
+    single { get<AppDatabase>().syncMetadataDao() }
+}
+
+// ── Supabase 同步模块 ──
+val syncModule = module {
+    single { com.babytracker.core.sync.SupabaseProvider.client }
+    single { com.babytracker.core.auth.AuthService(get()) }
 }

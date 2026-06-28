@@ -13,8 +13,9 @@ import com.babytracker.core.database.entity.*
     entities = [BabyEntity::class, FeedingEntity::class, SleepEntity::class,
         GrowthEntity::class, VaccinationEntity::class, HealthRecordEntity::class,
         DiaperEntity::class, BackupConfigEntity::class, MessageEntity::class,
-        DevelopmentAssessmentEntity::class, ReminderEntity::class],
-    version = 5, exportSchema = false,
+        DevelopmentAssessmentEntity::class, ReminderEntity::class,
+        SyncMetadataEntity::class],
+    version = 6, exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun babyDao(): BabyDao
@@ -28,6 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun developmentAssessmentDao(): DevelopmentAssessmentDao
     abstract fun reminderDao(): ReminderDao
+    abstract fun syncMetadataDao(): SyncMetadataDao
 
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -114,11 +116,39 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Supabase 同步：为 10 张业务表添加 uuid / updatedAt / deletedAt，并创建 sync_metadata 表
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val tables = listOf(
+                    "babies", "feedings", "sleeps", "growths", "diapers",
+                    "vaccinations", "health_records", "reminders",
+                    "development_assessments", "messages"
+                )
+                for (table in tables) {
+                    db.execSQL("ALTER TABLE $table ADD COLUMN uuid TEXT DEFAULT NULL")
+                    db.execSQL("ALTER TABLE $table ADD COLUMN updatedAt INTEGER NOT NULL DEFAULT 0")
+                    db.execSQL("ALTER TABLE $table ADD COLUMN deletedAt INTEGER DEFAULT NULL")
+                }
+                // 同步元数据表
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS sync_metadata (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        tableName TEXT NOT NULL,
+                        localId INTEGER NOT NULL,
+                        remoteUuid TEXT DEFAULT NULL,
+                        syncStatus TEXT NOT NULL DEFAULT 'pending',
+                        updatedAt INTEGER NOT NULL,
+                        lastSyncAt INTEGER DEFAULT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         @Volatile private var instance: AppDatabase? = null
         fun get(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(context, AppDatabase::class.java, "babytracker.db")
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build().also { instance = it }
             }
         }

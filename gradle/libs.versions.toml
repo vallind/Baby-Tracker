@@ -22,6 +22,10 @@ koin = "4.2.1"
 # ── Database ──
 room = "2.8.4"
 
+# ── Supabase ──
+supabase = "3.6.0"
+ktor = "3.5.1"
+
 # ── Network ──
 retrofit = "3.0.0"
 okhttp = "5.4.0"
@@ -74,6 +78,17 @@ koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compos
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+
+# ── Supabase ──
+supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabase" }
+supabase-postgrest = { group = "io.github.jan-tennert.supabase", name = "postgrest-kt" }
+supabase-realtime = { group = "io.github.jan-tennert.supabase", name = "realtime-kt" }
+supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt" }
+supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-kt" }
+
+# ── Ktor (Supabase 引擎) ──
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
+ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 
 # ── Network ──
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }

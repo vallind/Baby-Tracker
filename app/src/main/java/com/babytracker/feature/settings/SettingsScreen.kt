@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.database.entity.BabyEntity
@@ -41,6 +42,7 @@ import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.navigation.Screen
+import com.babytracker.core.auth.AuthService
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -50,6 +52,7 @@ fun SettingsScreen(navController: NavController) {
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val themeCtrl: ThemeController = koinInject()
+    val authService: AuthService = koinInject()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
     var showPicker by remember { mutableStateOf(false) }
@@ -113,6 +116,15 @@ fun SettingsScreen(navController: NavController) {
 
                 SectionTitle("设置")
                 SettingsCard {
+                    SettingsRow(
+                        "🔐",
+                        if (authService.isLoggedIn()) "账户（已登录）" else "登录账户",
+                        trailing = if (authService.isLoggedIn()) {
+                            { Text("已连接", color = c.success, fontSize = 12.sp) }
+                        } else null,
+                        onClick = { navController.navigate(Screen.Login.route) },
+                    )
+                    SettingsDivider()
                     SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
                     SettingsDivider()
                     SettingsRow("☁️", "数据备份", onClick = { navController.navigate(Screen.Backup.route) })

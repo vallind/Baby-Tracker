@@ -11,6 +11,18 @@
 - 认证方案调整为"不强制登录，本地优先"：只保留账户名+密码，去掉手机号 OTP 和微信登录
 - 全文"邮箱"改为"账户"，Supabase Auth 底层用 email 字段存账户名，关闭邮箱验证
 
+**Supabase 后端集成 Phase 1（基础架构）：**
+- 添加 supabase-kt BOM 3.6.0 + Ktor 3.5.1 依赖（libs.versions.toml + build.gradle.kts）
+- Room Migration 5→6：10 张业务表增加 uuid / updatedAt / deletedAt 字段
+- 新增 sync_metadata 表（SyncMetadataEntity + SyncMetadataDao），跟踪同步状态
+- 新增 SupabaseProvider 单例（Postgrest + Auth + Realtime + Storage）
+- 新增 AuthService：账户名+密码注册/登录/退出，sessionStatus 状态监听
+- 新增 LoginScreen + LoginViewModel：账户登录/注册页面
+- AppNavigation 新增 /login 路由
+- Settings 新增"登录账户"入口（显示登录状态）
+- Koin DI 新增 syncModule，注册 SupabaseClient / AuthService / LoginViewModel
+- 数据库 module 补充 SyncMetadataDao
+
 ### [1.4.2] — 2026-06-28
 
 **DatePicker & TimePicker TDesign 风格重构：**

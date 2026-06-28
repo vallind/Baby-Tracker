@@ -16,6 +16,10 @@ data class BabyEntity(
     val birthHeight: Double? = null,
     val avatarPath: String? = null,
     val createdAt: String = "",
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,             // Supabase 云端 UUID
+    val updatedAt: Long = 0L,             // 最后更新时间戳（epoch milli）
+    val deletedAt: Long? = null,          // 软删除时间戳，非空表示已删除
 )
 
 @Entity(tableName = "feedings")
@@ -31,6 +35,10 @@ data class FeedingEntity(
     val brand: String? = null,
     val note: String? = null,
     val timestamp: String,
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 @Entity(tableName = "sleeps")
@@ -41,6 +49,10 @@ data class SleepEntity(
     @ColumnInfo(name = "start_time") val startTime: String,
     @ColumnInfo(name = "end_time") val endTime: String,
     val note: String? = null,
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 @Entity(tableName = "growths")
@@ -51,6 +63,10 @@ data class GrowthEntity(
     val value: Double,
     @ColumnInfo(name = "measured_at") val measuredAt: String,
     val note: String? = null,
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 @Entity(tableName = "vaccinations")
@@ -63,6 +79,10 @@ data class VaccinationEntity(
     @ColumnInfo(name = "administered_date") val administeredDate: String? = null,
     val status: String = "pending",
     val note: String? = null,
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 @Entity(tableName = "health_records")
@@ -75,6 +95,10 @@ data class HealthRecordEntity(
     @ColumnInfo(name = "record_date") val recordDate: String,
     val attachments: String? = null,
     val note: String? = null,
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 @Entity(tableName = "diapers")
@@ -84,6 +108,10 @@ data class DiaperEntity(
     val type: String,
     val timestamp: String,
     val note: String? = null,
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 @Entity(tableName = "backup_config")
@@ -111,6 +139,10 @@ data class MessageEntity(
     val createTime: Long,       // epoch milli
     val isRead: Boolean = false,
     val extraData: String = "",
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 /**
@@ -144,6 +176,10 @@ data class DevelopmentAssessmentEntity(
     val social: Int,              // 社交能力 0-3
     val cognitive: Int,           // 认知能力 0-3
     val note: String = "",
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
 )
 
 /**
@@ -180,4 +216,28 @@ data class ReminderEntity(
     @ColumnInfo(name = "done_date") val doneDate: Long? = null,
     @ColumnInfo(name = "is_enabled") val isEnabled: Boolean = true,
     @ColumnInfo(name = "repeat_rule") val repeatRule: String = "",
+    // ── Supabase 同步字段 ──
+    val uuid: String? = null,
+    val updatedAt: Long = 0L,
+    val deletedAt: Long? = null,
+)
+
+// ============================================================
+// Supabase 同步元数据表 —— 跟踪每条记录的同步状态
+// ============================================================
+
+/**
+ * 同步元数据实体。
+ * 每条业务记录的同步状态记录：哪张表、哪个本地 ID、对应的云端 UUID、同步状态。
+ * lastSyncAt 存 epoch milli，作为全局增量同步的锚点。
+ */
+@Entity(tableName = "sync_metadata")
+data class SyncMetadataEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val tableName: String,                  // 表名："feedings", "sleeps", ...
+    val localId: Int,                       // Room 表的 id
+    val remoteUuid: String? = null,         // Supabase 的 UUID
+    val syncStatus: String = "pending",     // pending | synced | conflict
+    val updatedAt: Long = System.currentTimeMillis(),
+    val lastSyncAt: Long? = null,           // 全局上次同步时间戳
 )
