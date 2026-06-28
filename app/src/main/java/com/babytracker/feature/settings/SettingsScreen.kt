@@ -141,12 +141,12 @@ fun SettingsScreen(navController: NavController) {
                 SettingsCard {
                     SettingsRow(
                         "🔐",
-                        if (authService.isLoggedIn()) "账户（已登录）" else "登录账户",
-                        trailing = if (authService.isLoggedIn()) {
+                        if (isLoggedIn) "账户（已登录）" else "登录账户",
+                        trailing = if (isLoggedIn) {
                             { Text("已连接", color = c.success, fontSize = 12.sp) }
                         } else null,
                         onClick = {
-                            if (authService.isLoggedIn()) {
+                            if (isLoggedIn) {
                                 showLogoutConfirm = true
                             } else {
                                 navController.navigate(Screen.Login.route)
