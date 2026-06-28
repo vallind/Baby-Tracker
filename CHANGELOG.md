@@ -2,6 +2,12 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.4.1] — 2026-06-28
+
+**文档补充：新增组件判断标准**
+- AGENTS.md 第八节新增组件判断标准（视觉形态 ≥ 2 处 + 需封装设计令牌才新增）
+- docs/design-system.md 新增「判断标准」小节（计数规则、三原则、反例、检查清单）
+
 ### [1.4.0] — 2026-06-25
 
 **记录编辑与删除优化：**

@@ -105,6 +105,10 @@ app/src/main/java/com/babytracker/
 ## 八、关键约束
 
 - **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button` → `AppButton`/`PrimaryButton`，`AlertDialog` → `AppConfirmDialog`。完整列表见 `docs/design-system.md`。
+- **新增组件判断标准**（两者同时满足才新增）：
+  1. 同一视觉形态在项目中已出现 ≥ 2 处（跨功能重复算，按视觉形态计数，不是调用次数）
+  2. 需要封装设计令牌（颜色/圆角/间距），而非纯布局组合
+  → 否则直接用 Compose 原生或内联实现，不新增组件
 - **Snackbar** 用 `snackbar.showUndo(onUndo = { ... })` 模式。
 
 ---
