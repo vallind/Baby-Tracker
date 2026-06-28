@@ -4,6 +4,13 @@
 
 ### [Unreleased]
 
+**首页宝宝资料跳转 & 账户昵称支持：**
++- 首页顶端 "宝宝资料" 点击改为跳转 `BabyProfileScreen`（宝宝信息详情页），原跳转为宝宝管理列表
++- AuthService 新增昵称功能：`nickname` StateFlow、`setNickname()`、`clearNickname()`，通过 SharedPreferences 持久化
++- 设置页 UserInfoCard 显示昵称（优先于账户名），已登录时名称旁显示 ✏️ 编辑图标
++- 新增 `NicknameEditDialog`：输入昵称 / 清除 / 保存，Toast 确认保存
++- AppStrings 新增 `nickname`、`editNickname`、`nicknameHint`、`nicknameSaved`
+
 **修复记录页面闪退：LazyColumn key 冲突导致崩溃：**
 +- 修复：`items(key = { it.id })` → `items(key = { "${it.recordType}-${it.id}" })`，因为不同 Room 表各自从 1 自增，喂养/睡眠/尿布等记录的 id 会重复，导致 LazyColumn 检测到重复 key 直接崩溃
 +- 重命名 `forEach` 解构变量 `items` → `records` / 列表项参数 `item` → `record`，消除名称遮蔽歧义

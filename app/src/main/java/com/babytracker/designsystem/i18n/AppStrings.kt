@@ -27,6 +27,12 @@ object AppStrings {
     const val loading = "加载中..."
     const val noData = "暂无数据"
 
+    // —— 账户 ——
+    const val nickname = "昵称"
+    const val editNickname = "修改昵称"
+    const val nicknameHint = "请输入昵称"
+    const val nicknameSaved = "昵称已保存"
+
     // —— 表单 ——
     const val pleaseSelect = "请选择"
     const val pleaseInput = "请输入"

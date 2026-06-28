@@ -36,6 +36,7 @@ class AuthService(
         private const val SYNTHETIC_DOMAIN = "@baby-tracker.app"
         private const val KEY_LOGGED_IN = "auth_logged_in"
         private const val KEY_DISPLAY_ACCOUNT = "auth_display_account"
+        private const val KEY_NICKNAME = "auth_nickname"
     }
 
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
@@ -45,15 +46,20 @@ class AuthService(
     private val _displayAccount = MutableStateFlow<String?>(null)
     val displayAccount: StateFlow<String?> = _displayAccount.asStateFlow()
 
+    /** 用户自定义昵称（本地 SharedPreferences 存储，未登录时为 null） */
+    private val _nickname = MutableStateFlow<String?>(null)
+    val nickname: StateFlow<String?> = _nickname.asStateFlow()
+
     init {
         try {
             _currentUser.value = client.auth.currentUserOrNull()
         } catch (_: Exception) {
             _currentUser.value = null
         }
-        // 无论会话是否立即恢复，都从 SharedPreferences 加载账户名
+        // 无论会话是否立即恢复，都从 SharedPreferences 加载账户名和昵称
         if (prefs.getBoolean(KEY_LOGGED_IN, false)) {
             _displayAccount.value = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
+            _nickname.value = prefs.getString(KEY_NICKNAME, null)
         }
         if (_currentUser.value != null) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
@@ -93,6 +99,7 @@ class AuthService(
         // 持久化登录标记 + 账户名
         prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_DISPLAY_ACCOUNT, account).apply()
         _displayAccount.value = account
+        // 登录时不清空已有昵称（可能从 SharedPreferences 已恢复）
         user
     }
 
@@ -120,7 +127,22 @@ class AuthService(
         } catch (_: Exception) { }
         _currentUser.value = null
         _displayAccount.value = null
-        prefs.edit().putBoolean(KEY_LOGGED_IN, false).remove(KEY_DISPLAY_ACCOUNT).apply()
+        _nickname.value = null
+        prefs.edit().putBoolean(KEY_LOGGED_IN, false).remove(KEY_DISPLAY_ACCOUNT).remove(KEY_NICKNAME).apply()
+    }
+
+    // ─── 昵称管理 ───
+
+    /** 设置用户自定义昵称（仅在已登录时生效） */
+    fun setNickname(newNickname: String) {
+        _nickname.value = newNickname
+        prefs.edit().putString(KEY_NICKNAME, newNickname).apply()
+    }
+
+    /** 清除昵称 */
+    fun clearNickname() {
+        _nickname.value = null
+        prefs.edit().remove(KEY_NICKNAME).apply()
     }
 
     // ─── 状态查询 ───

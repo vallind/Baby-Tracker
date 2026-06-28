@@ -79,7 +79,7 @@ fun HomeScreen(navController: NavController) {
                 .background(c.pageBackground),
         ) {
             // —— 顶部宝宝信息区（浅蓝渐变背景 + 圆形头像）——
-            BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyManagement.route) })
+            BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyProfile.route) })
 
             Spacer(Modifier.height(DT.cardGap.dp))
             FeatureGrid(navController)

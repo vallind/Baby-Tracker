@@ -49,6 +49,7 @@ import com.babytracker.navigation.Screen
 import com.babytracker.core.auth.AuthService
 import com.babytracker.core.sync.SyncState
 import com.babytracker.core.sync.RealtimeState
+import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -61,6 +62,7 @@ fun SettingsScreen(navController: NavController) {
     val themeCtrl: ThemeController = koinInject()
     val authService: AuthService = koinInject()
     val displayAccount by authService.displayAccount.collectAsState()
+    val nickname by authService.nickname.collectAsState()
     val settingsVM: SettingsViewModel = koinViewModel()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
@@ -71,6 +73,7 @@ fun SettingsScreen(navController: NavController) {
     val isLoggedIn by settingsVM.isLoggedIn.collectAsState()
     val syncResult by settingsVM.syncResult.collectAsState()
     var showLogoutConfirm by remember { mutableStateOf(false) }
+    var showNicknameDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -112,6 +115,7 @@ fun SettingsScreen(navController: NavController) {
             UserInfoCard(
                 babyName = baby?.name ?: "未设置",
                 displayAccount = displayAccount,
+                nickname = nickname,
                 isLoggedIn = isLoggedIn,
                 onClick = {
                     if (isLoggedIn) {
@@ -120,6 +124,9 @@ fun SettingsScreen(navController: NavController) {
                         navController.navigate(Screen.Login.route)
                     }
                 },
+                onEditNickname = if (isLoggedIn) {
+                    { showNicknameDialog = true }
+                } else null,
             )
 
             Spacer(Modifier.height(DT.cardGap.dp))
@@ -251,6 +258,23 @@ fun SettingsScreen(navController: NavController) {
         },
         onDismiss = { showLogoutConfirm = false },
     )
+
+    // 昵称编辑弹窗
+    if (showNicknameDialog) {
+        NicknameEditDialog(
+            currentNickname = nickname ?: "",
+            onDismiss = { showNicknameDialog = false },
+            onSave = { newNickname ->
+                authService.setNickname(newNickname)
+                showNicknameDialog = false
+                Toast.makeText(context, AppStrings.nicknameSaved, Toast.LENGTH_SHORT).show()
+            },
+            onClear = {
+                authService.clearNickname()
+                showNicknameDialog = false
+            },
+        )
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -261,10 +285,13 @@ fun SettingsScreen(navController: NavController) {
 private fun UserInfoCard(
     babyName: String,
     displayAccount: String?,
+    nickname: String?,
     isLoggedIn: Boolean,
     onClick: (() -> Unit)? = null,
+    onEditNickname: (() -> Unit)? = null,
 ) {
     val c = LocalAppColors.current
+    val displayName = nickname ?: displayAccount ?: babyName
 
     AppCard(
         modifier = Modifier
@@ -293,7 +320,7 @@ private fun UserInfoCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    (displayAccount?.take(1) ?: babyName.take(1)).ifEmpty { "?" },
+                    displayName.take(1).ifEmpty { "?" },
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
@@ -304,15 +331,31 @@ private fun UserInfoCard(
 
             // 名称 + ID
             Column(Modifier.weight(1f)) {
-                Text(
-                    text = displayAccount ?: babyName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = c.textPrimary,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = c.textPrimary,
+                    )
+                    // 已登录时显示编辑昵称图标
+                    if (isLoggedIn && onEditNickname != null) {
+                        Spacer(Modifier.width(6.dp))
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "修改昵称",
+                            tint = c.textTertiary,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable(onClick = onEditNickname),
+                        )
+                    }
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = if (isLoggedIn && displayAccount != null) "ID: ${displayAccount.take(8)}…" else "点击登录账号",
+                    text = if (isLoggedIn && displayAccount != null) {
+                        if (nickname != null) "账号: ${displayAccount.take(8)}…" else "ID: ${displayAccount.take(8)}…"
+                    } else "点击登录账号",
                     style = MaterialTheme.typography.bodySmall,
                     color = c.textTertiary,
                     maxLines = 1,
@@ -766,6 +809,49 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("取消") }
+        },
+    )
+}
+
+@Composable
+private fun NicknameEditDialog(
+    currentNickname: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+    onClear: () -> Unit,
+) {
+    val c = LocalAppColors.current
+    var input by remember(currentNickname) { mutableStateOf(currentNickname) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(AppStrings.editNickname) },
+        text = {
+            OutlinedTextField(
+                value = input,
+                onValueChange = { input = it },
+                label = { Text(AppStrings.nicknameHint) },
+                placeholder = { Text("输入你喜欢的昵称", color = c.textTertiary) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSave(input.trim()) },
+                enabled = input.isNotBlank(),
+            ) { Text(AppStrings.save) }
+        },
+        dismissButton = {
+            Row {
+                if (currentNickname.isNotEmpty()) {
+                    TextButton(onClick = onClear) {
+                        Text("清除", color = c.textTertiary, fontSize = 14.sp)
+                    }
+                }
+                TextButton(onClick = onDismiss) { Text(AppStrings.cancel) }
+            }
         },
     )
 }
