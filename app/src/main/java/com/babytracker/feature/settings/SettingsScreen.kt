@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,6 +74,13 @@ fun SettingsScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
 
+    // 获取版本号
+    val versionName = remember {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+        } catch (_: Exception) { "1.0.0" }
+    }
+
     // 同步结果 Toast 弹窗提醒
     LaunchedEffect(syncResult) {
         syncResult?.let {
@@ -83,170 +91,147 @@ fun SettingsScreen(navController: NavController) {
 
     Scaffold(
         containerColor = c.pageBackground,
+        topBar = {
+            AppTopBar(
+                title = "我的",
+                showBack = false,
+            )
+        },
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
-        Box(
+        Column(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = DT.pageMargin.dp),
         ) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            // —— 顶部头部区（浅蓝渐变 + 宝宝头像 + "我的" 标题）——
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(Gradients.pageHeader(c))
-                    .padding(horizontal = DT.pageMargin.dp),
-            ) {
+            Spacer(Modifier.height(DT.cardGap.dp))
+
+            // —— 1. 用户信息卡片 ——
+            UserInfoCard(
+                babyName = baby?.name ?: "未设置",
+                displayAccount = displayAccount,
+                isLoggedIn = isLoggedIn,
+                onClick = {
+                    if (isLoggedIn) {
+                        navController.navigate(Screen.BabyProfile.route)
+                    } else {
+                        navController.navigate(Screen.Login.route)
+                    }
+                },
+            )
+
+            Spacer(Modifier.height(DT.cardGap.dp))
+
+            // —— 2. 常用功能宫格 ——
+            FunctionGrid(
+                items = listOf(
+                    FunctionGridItem("👶", "宝宝管理", onClick = { navController.navigate(Screen.BabyManagement.route) }),
+                    FunctionGridItem("⭐", "我的收藏", onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() }),
+                    FunctionGridItem("📤", "数据导出", onClick = { navController.navigate(Screen.Backup.route) }),
+                    FunctionGridItem("🔔", "提醒设置", onClick = { navController.navigate(Screen.Reminder.route) }),
+                ),
+            )
+
+            Spacer(Modifier.height(DT.cardGap.dp))
+
+            // —— 3. 设置列表 ——
+            SettingsSectionTitle("设置")
+            SettingsCard {
+                SettingsRow(
+                    emoji = "🎨",
+                    label = "主题模式",
+                    subtitle = when (themeCtrl.currentTheme.name) {
+                        "pure" -> "纯净蓝"
+                        "aurora" -> "极光紫"
+                        "warm" -> "暖阳粉"
+                        "sunny" -> "阳光黄"
+                        "night" -> "暗夜深"
+                        "morandi" -> "莫兰迪"
+                        else -> "跟随系统"
+                    },
+                    onClick = { showPicker = true },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    emoji = "🔒",
+                    label = "隐私设置",
+                    onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    emoji = "❓",
+                    label = "帮助与反馈",
+                    onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    emoji = "ℹ️",
+                    label = "关于我们",
+                    subtitle = "版本 $versionName",
+                    onClick = { },
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            // —— 4. 退出登录 ——
+            if (isLoggedIn) {
+                Box(
+                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    TextButton(onClick = { showLogoutConfirm = true }) {
+                        Text(
+                            "退出登录",
+                            color = c.danger,
+                            fontSize = 15.sp,
+                        )
+                    }
+                }
+            }
+
+            // 同步状态提示（仅登录时显示）
+            if (isLoggedIn) {
                 Row(
-                    Modifier.padding(vertical = 24.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DT.cardInnerPadding.dp)
+                        .padding(bottom = 24.dp),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
                         Modifier
-                            .size(64.dp)
+                            .size(6.dp)
                             .clip(CircleShape)
-                            .background(Gradients.primary(c)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            baby?.name?.take(1) ?: "?",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                        )
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            baby?.name ?: "未设置",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = c.textPrimary,
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            "${baby?.let { DateUtils.monthAge(java.time.LocalDate.parse(it.birthDate)) } ?: ""} · ${baby?.let { if (it.gender == "男") "男宝" else "女宝" } ?: ""}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = c.textSecondary,
-                        )
-                    }
-                }
-            }
-
-            Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
-                Spacer(Modifier.height(DT.cardGap.dp))
-
-                SectionTitle("设置")
-                SettingsCard {
-                    SettingsRow(
-                        "🔐",
-                        if (isLoggedIn && displayAccount != null) "账户：$displayAccount" 
-                        else if (isLoggedIn) "账户（已登录）" 
-                        else "登录账户",
-                        trailing = if (isLoggedIn) {
-                            { Text("已连接", color = c.success, fontSize = 12.sp) }
-                        } else null,
-                        onClick = {
-                            if (isLoggedIn) {
-                                showLogoutConfirm = true
-                            } else {
-                                navController.navigate(Screen.Login.route)
-                            }
-                        },
-                    )
-                    if (isLoggedIn) {
-                        SettingsDivider()
-                        // 云同步状态行
-                        SettingsRow(
-                            "🔄",
-                            "云同步",
-                            trailing = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // 同步状态指示点
-                                    Box(
-                                        Modifier
-                                            .size(8.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                when {
-                                                    syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING -> c.primary
-                                                    settingsVM.connectionState.collectAsState().value == RealtimeState.CONNECTED -> c.success
-                                                    settingsVM.connectionState.collectAsState().value == RealtimeState.ERROR -> c.error
-                                                    else -> c.textTertiary
-                                                }
-                                            ),
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        syncStatusText,
-                                        color = c.textSecondary,
-                                        fontSize = 12.sp,
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    // 手动同步按钮
-                                    TextButton(
-                                        onClick = { settingsVM.manualSync() },
-                                        enabled = syncState != SyncState.SYNCING && syncState != SyncState.PUSHING && syncState != SyncState.PULLING,
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                                    ) {
-                                        Text(
-                                            if (syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING) "同步中..." else "立即同步",
-                                            fontSize = 12.sp,
-                                            color = if (syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING) c.textTertiary else c.primary,
-                                        )
-                                    }
+                            .background(
+                                when {
+                                    syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING -> c.primary
+                                    settingsVM.connectionState.collectAsState().value == RealtimeState.CONNECTED -> c.success
+                                    settingsVM.connectionState.collectAsState().value == RealtimeState.ERROR -> c.error
+                                    else -> c.textTertiary
                                 }
-                            },
-                        )
-                    }
-                    if (isLoggedIn) {
-                        SettingsDivider()
-                        SettingsRow(
-                            "👨‍👩‍👧",
-                            "家庭共享",
-                            trailing = {
-                                Text(
-                                    if (settingsVM.isLoggedIn.collectAsState().value) "已开启" else "",
-                                    color = c.success,
-                                    fontSize = 12.sp,
-                                )
-                            },
-                            onClick = { navController.navigate(Screen.Family.route) },
-                        )
-                    }
-                    SettingsDivider()
-                    SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyProfile.route) })
-                    SettingsDivider()
-                    SettingsRow("☁️", "数据备份", onClick = { navController.navigate(Screen.Backup.route) })
-                    SettingsDivider()
-                    SettingsRow("🎨", "主题", trailing = { ThemeDots(themeCtrl.currentTheme.name, onClick = { showPicker = true }) }, onClick = { showPicker = true })
-                    SettingsDivider()
-                    SettingsRow("🔔", "通知提醒", trailing = {
-                        Switch(
-                            checked = true,
-                            onCheckedChange = {},
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = c.primary,
-                                checkedThumbColor = Color.White,
-                                uncheckedTrackColor = c.divider,
-                                uncheckedThumbColor = Color.White,
                             ),
-                        )
-                    })
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        syncStatusText,
+                        color = c.textTertiary,
+                        fontSize = 12.sp,
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        "立即同步",
+                        color = c.primary,
+                        fontSize = 12.sp,
+                        modifier = Modifier.clickable { settingsVM.manualSync() },
+                    )
                 }
-                Spacer(Modifier.height(DT.cardGap.dp))
-
-                SectionTitle("其他")
-                SettingsCard {
-                    SettingsRow("ℹ️", "关于我们", onClick = { })
-                    SettingsDivider()
-                    SettingsRow("⭐", "给我们评分", onClick = { })
-                }
-                Spacer(Modifier.height(40.dp))
             }
-        }
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 
@@ -265,6 +250,156 @@ fun SettingsScreen(navController: NavController) {
             showLogoutConfirm = false
         },
         onDismiss = { showLogoutConfirm = false },
+    )
+}
+
+// ═══════════════════════════════════════════════════════════
+//  用户信息卡片（头像 + 名称 + ID + 箭头）
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun UserInfoCard(
+    babyName: String,
+    displayAccount: String?,
+    isLoggedIn: Boolean,
+    onClick: () -> Unit,
+) {
+    val c = LocalAppColors.current
+
+    AppCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        cornerRadius = DT.cardRadius.dp,
+        elevation = DT.cardElevation.dp,
+        containerColor = c.surface,
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(DT.cardInnerPadding.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // 头像
+            Box(
+                Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(c.primary, c.primary.copy(alpha = 0.7f)),
+                        )
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    (displayAccount?.take(1) ?: babyName.take(1)).ifEmpty { "?" },
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
+
+            Spacer(Modifier.width(14.dp))
+
+            // 名称 + ID
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = displayAccount ?: babyName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = c.textPrimary,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = if (isLoggedIn && displayAccount != null) "ID: ${displayAccount.take(8)}…" else "点击登录账号",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = c.textTertiary,
+                    maxLines = 1,
+                )
+            }
+
+            // 右箭头
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = c.textTertiary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  常用功能宫格（4 列等宽）
+// ═══════════════════════════════════════════════════════════
+
+private data class FunctionGridItem(
+    val emoji: String,
+    val label: String,
+    val onClick: () -> Unit,
+)
+
+@Composable
+private fun FunctionGrid(items: List<FunctionGridItem>) {
+    val c = LocalAppColors.current
+
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = DT.cardRadius.dp,
+        elevation = DT.cardElevation.dp,
+        containerColor = c.surface,
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = DT.cardInnerPadding.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            items.forEach { item ->
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = item.onClick)
+                        .padding(vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                            .background(c.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            item.emoji,
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        item.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = c.textSecondary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  设置区块标题
+// ═══════════════════════════════════════════════════════════
+
+@Composable
+private fun SettingsSectionTitle(title: String) {
+    val c = LocalAppColors.current
+    Text(
+        title,
+        style = MaterialTheme.typography.labelMedium,
+        color = c.textSecondary,
+        modifier = Modifier.padding(bottom = 8.dp),
     )
 }
 
@@ -310,17 +445,6 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
     }
 }
 
-@Composable
-fun SectionTitle(title: String) {
-    val c = LocalAppColors.current
-    Text(
-        title,
-        style = MaterialTheme.typography.labelMedium,
-        color = c.textSecondary,
-        modifier = Modifier.padding(bottom = 8.dp),
-    )
-}
-
 /** 统一白色设置卡片（圆角 DT.cardRadius / 阴影 DT.cardElevation）。 */
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
@@ -346,10 +470,10 @@ fun SettingsDivider() {
 }
 
 @Composable
-fun SettingsRow(emoji: String, label: String, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
+fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
     val c = LocalAppColors.current
     Row(
-        Modifier.fillMaxWidth().height(56.dp).padding(horizontal = DT.cardInnerPadding.dp).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().height(if (subtitle != null) 64.dp else 56.dp).padding(horizontal = DT.cardInnerPadding.dp).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -362,11 +486,21 @@ fun SettingsRow(emoji: String, label: String, trailing: @Composable (() -> Unit)
             Text(emoji, style = MaterialTheme.typography.titleMedium)
         }
         Spacer(Modifier.width(12.dp))
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = c.textPrimary)
+        Column(Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.bodyMedium, color = c.textPrimary)
+            if (subtitle != null) {
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.textTertiary)
+            }
+        }
         if (trailing != null) {
             trailing()
         } else {
-            Text("›", color = c.textTertiary, style = MaterialTheme.typography.titleMedium)
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = c.textTertiary,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }
