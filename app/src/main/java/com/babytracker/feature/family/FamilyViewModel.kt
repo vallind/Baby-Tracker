@@ -151,6 +151,7 @@ class FamilyViewModel(
     }
 
     fun selectFamily(family: Family) {
+        familyService.selectFamily(family)  // 同步全局状态 → SettingsViewModel 感知切换
         _uiState.update { it.copy(currentFamily = family) }
         loadMembers(family.id)
     }

@@ -165,6 +165,7 @@ class SyncEngine(
     /** 下行同步，返回实际拉取的记录数 */
     suspend fun pull(): Int {
         if (_syncState.value == SyncState.SYNCING) return 0
+        val fid = currentFamilyId ?: return 0  // 无家庭上下文，不拉取
         _syncState.value = SyncState.SYNCING
         var pulled = 0
         try {
@@ -176,15 +177,14 @@ class SyncEngine(
             )
             for (tableName in tables) {
                 try {
-                    val result: List<JsonObject> = if (lastSyncAt != null) {
-                        supabase.postgrest.from(tableName)
-                            .select(columns = Columns.ALL) { filter { gte("updatedAt", lastSyncAt) } }
-                            .decodeList<JsonObject>()
-                    } else {
-                        supabase.postgrest.from(tableName)
-                            .select(columns = Columns.ALL)
-                            .decodeList<JsonObject>()
-                    }
+                    val result: List<JsonObject> = supabase.postgrest.from(tableName)
+                        .select(columns = Columns.ALL) {
+                            filter {
+                                eq("family_id", fid)
+                                if (lastSyncAt != null) gte("updatedAt", lastSyncAt)
+                            }
+                        }
+                        .decodeList<JsonObject>()
                     for (row in result) { applyRemoteChange(tableName, row); pulled++ }
                 } catch (_: Exception) { }
             }

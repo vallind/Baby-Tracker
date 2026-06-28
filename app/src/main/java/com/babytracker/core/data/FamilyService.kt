@@ -101,6 +101,9 @@ class FamilyService(
 
         // 刷新当前用户的家庭列表（加入后 is_family_member 已生效，RLS 放行）
         loadMyFamilies()
+        // 自动切换到刚加入的家庭（按邀请码匹配）
+        val joined = _myFamilies.value.find { it.inviteCode == inviteCode.uppercase() }
+        if (joined != null) _currentFamily.value = joined
         _currentFamily.value ?: throw Exception("加入家庭失败")
     }
 
@@ -137,6 +140,11 @@ class FamilyService(
         _myFamilies.value = allFamilies
         if (_currentFamily.value == null) _currentFamily.value = allFamilies.firstOrNull()
         return allFamilies
+    }
+
+    /** 手动切换当前家庭（供 FamilyPage 的 FilterChip 使用） */
+    fun selectFamily(family: Family) {
+        _currentFamily.value = family
     }
 
     /** 获取家庭成员列表 */
