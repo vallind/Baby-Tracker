@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**备份还原补齐 3 张缺失的表（消息/发育评估/提醒）：**
+- Bug：`MessageEntity`、`DevelopmentAssessmentEntity`、`ReminderEntity` 未纳入备份导出和还原，导致还原后丢失消息、发育评估、提醒数据
+- 修复：在 `exportAll()` 和 `doRestore()` 中新增这三张表的完整导出/导入逻辑，包括 `toJson()` 和 `parse*()` 方法
+- 顺带修复：`doRestore()` 中 `parseBabies` 硬编码 `id=0` 导致 `prefix` 始终为 `"baby_0"`，无法匹配 JSON 中实际 `"baby_{origId}_*"` 键名，所有子记录（喂养/睡眠等）还原时被丢弃。改为保留原始 ID 做 prefix 匹配
+
 **修复家庭页面无法显示当前选中家庭：**
 - Bug：`FamilyViewModel.init` 始终 `currentFamily = families.firstOrNull()`，切换家庭后再次进入页面显示错误家庭
 - 修复：优先读取 `FamilyService.currentFamily` 中已选中的家庭
