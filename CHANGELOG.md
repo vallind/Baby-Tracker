@@ -4,6 +4,15 @@
 
 ### [Unreleased]
 
+**睡眠记录 UI 重做：匹配设计图：**
++- 顶部改用 AppTopBar（标题+返回+日历图标），替换旧版渐变 Header
++- 新增日期选择器行（今天/昨天/明天 + 完整日期 + 下拉箭头），支持 DatePickerDialog
++- 夜间睡眠大卡：紫色渐变背景（Gradients.sleepHeader），展示时长+时间范围
++- 睡眠详情卡片：入睡时间 / 起床时间 / 夜醒次数 三列网格
++- 小睡列表：RecordCard + accent 橙黄色条，展示时间段+时长
++- FAB 替换为底部固定按钮（"+ 记录睡眠"），添加 BottomNavBar
++- 按日期过滤记录，仅显示当天数据
+
 **喂养记录 UI 重做：匹配设计图：**
 +- 顶部改用 AppTopBar（标题+返回+日历图标），替换旧版渐变 Header
 +- 新增日期选择器行（今天/昨天/明天 + 完整日期 + 下拉箭头），支持 DatePickerDialog
