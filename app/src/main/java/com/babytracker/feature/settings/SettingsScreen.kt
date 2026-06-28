@@ -115,7 +115,7 @@ fun SettingsScreen(navController: NavController) {
                 isLoggedIn = isLoggedIn,
                 onClick = {
                     if (isLoggedIn) {
-                        navController.navigate(Screen.BabyProfile.route)
+                        navController.navigate(Screen.Family.route)
                     } else {
                         navController.navigate(Screen.Login.route)
                     }
@@ -262,14 +262,14 @@ private fun UserInfoCard(
     babyName: String,
     displayAccount: String?,
     isLoggedIn: Boolean,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)? = null,
 ) {
     val c = LocalAppColors.current
 
     AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         cornerRadius = DT.cardRadius.dp,
         elevation = DT.cardElevation.dp,
         containerColor = c.surface,
@@ -319,13 +319,15 @@ private fun UserInfoCard(
                 )
             }
 
-            // 右箭头
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = c.textTertiary,
-                modifier = Modifier.size(20.dp),
-            )
+            // 右箭头（仅可点击时显示）
+            if (onClick != null) {
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = c.textTertiary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }
