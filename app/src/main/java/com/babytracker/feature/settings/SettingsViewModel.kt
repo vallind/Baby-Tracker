@@ -89,7 +89,8 @@ class SettingsViewModel(
     private suspend fun tryAutoSync() {
         try {
             syncEngine.currentFamilyId = ensureFamily()
-            if (syncEngine.currentFamilyId == null) return  // 无家庭则跳过同步
+            if (syncEngine.currentFamilyId == null) return
+            syncEngine.markExistingPending()  // 首次同步标记存量
             realtimeManager.subscribeAll()
             syncEngine.fullSync()
         } catch (_: Exception) { }
@@ -114,7 +115,6 @@ class SettingsViewModel(
                 return@launch
             }
             try {
-                // 确保有 family_id，否则 Supabase RLS 会静默拦截
                 if (syncEngine.currentFamilyId == null) {
                     syncEngine.currentFamilyId = ensureFamily()
                 }
@@ -122,6 +122,8 @@ class SettingsViewModel(
                     _syncResult.value = "请先创建或加入家庭"
                     return@launch
                 }
+                // 首次同步：标记存量数据为 pending
+                syncEngine.markExistingPending()
                 syncEngine.fullSync()
                 _syncResult.value = "同步完成 ✓"
             } catch (e: Exception) {

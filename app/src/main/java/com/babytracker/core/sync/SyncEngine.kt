@@ -223,6 +223,29 @@ class SyncEngine(
         pull()
     }
 
+    /**
+     * 将本地所有已有的、未标记 pending 的记录标记为 pending。
+     * 用于存量数据首次同步——之前创建的数据没有 sync_metadata 记录。
+     */
+    suspend fun markExistingPending() {
+        val db = db.openHelper.writableDatabase
+        val tables = listOf(
+            "babies", "feedings", "sleeps", "growths", "vaccinations",
+            "health_records", "diapers", "messages", "development_assessments", "reminders",
+        )
+        for (table in tables) {
+            try {
+                db.execSQL("""
+                    INSERT INTO sync_metadata (tableName, localId, remoteUuid, syncStatus, updatedAt)
+                    SELECT '$table', id, uuid, 'pending', COALESCE(updatedAt, 0)
+                    FROM $table
+                    WHERE deletedAt IS NULL
+                      AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')
+                """)
+            } catch (_: Exception) { }
+        }
+    }
+
     // ================================================================
     // 内部：将远程变更应用到本地
     // ================================================================
