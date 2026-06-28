@@ -169,7 +169,7 @@ fun TimelineScreen(navController: NavController) {
                             bottom = 80.dp,
                         ),
                     ) {
-                        grouped.forEach { (date, items) ->
+                        grouped.forEach { (date, records) ->
                             // —— 日期分组标题 ——
                             item(key = "header-$date") {
                                 Row(
@@ -192,7 +192,7 @@ fun TimelineScreen(navController: NavController) {
                                             .padding(horizontal = 6.dp, vertical = 1.dp),
                                     ) {
                                         Text(
-                                            "${items.size}次",
+                                            "${records.size}次",
                                             fontSize = 10.sp,
                                             color = c.textTertiary,
                                         )
@@ -201,16 +201,16 @@ fun TimelineScreen(navController: NavController) {
                             }
 
                             // —— 记录卡片列表 ——
-                            items(items = items, key = { it.id }) { item ->
-                                val accent = typeColor(item.recordType)
+                            items(items = records, key = { "${it.recordType}-${it.id}" }) { record ->
+                                val accent = typeColor(record.recordType)
                                 RecordCard(
                                     modifier = Modifier.padding(bottom = 8.dp),
                                     accentColor = accent,
                                     onDelete = {
                                         scope.launch {
-                                            viewModel.delete(item)
+                                            viewModel.delete(record)
                                             val result = snackbarHostState.showSnackbar(
-                                                message = "已删除「${item.title}」",
+                                                message = "已删除「${record.title}」",
                                                 actionLabel = "撤销",
                                                 duration = SnackbarDuration.Short,
                                             )
@@ -221,12 +221,12 @@ fun TimelineScreen(navController: NavController) {
                                     },
                                     onClick = {},
                                     onLongClick = {
-                                        when (item.recordType) {
-                                            "feeding" -> editingFeeding = viewModel.findFeeding(item.id)
-                                            "sleep" -> editingSleep = viewModel.findSleep(item.id)
-                                            "diaper" -> editingDiaper = viewModel.findDiaper(item.id)
-                                            "growth" -> editingGrowth = viewModel.findGrowth(item.id)
-                                            "health" -> editingHealth = viewModel.findHealth(item.id)
+                                        when (record.recordType) {
+                                            "feeding" -> editingFeeding = viewModel.findFeeding(record.id)
+                                            "sleep" -> editingSleep = viewModel.findSleep(record.id)
+                                            "diaper" -> editingDiaper = viewModel.findDiaper(record.id)
+                                            "growth" -> editingGrowth = viewModel.findGrowth(record.id)
+                                            "health" -> editingHealth = viewModel.findHealth(record.id)
                                         }
                                     },
                                 ) {
@@ -238,27 +238,27 @@ fun TimelineScreen(navController: NavController) {
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
-                                            item.emoji,
+                                            record.emoji,
                                             style = MaterialTheme.typography.titleLarge,
                                         )
                                     }
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(
-                                            item.title,
+                                            record.title,
                                             style = MaterialTheme.typography.titleSmall,
                                             color = c.textPrimary,
                                             fontWeight = FontWeight.Medium,
                                         )
                                         Text(
-                                            item.subtitle,
+                                            record.subtitle,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = c.textSecondary,
                                         )
                                     }
-                                    if (item.time.isNotEmpty()) {
+                                    if (record.time.isNotEmpty()) {
                                         Text(
-                                            item.time,
+                                            record.time,
                                             style = MaterialTheme.typography.labelMedium,
                                             color = c.textTertiary,
                                         )

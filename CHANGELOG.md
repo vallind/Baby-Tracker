@@ -4,6 +4,10 @@
 
 ### [Unreleased]
 
+**修复记录页面闪退：LazyColumn key 冲突导致崩溃：**
++- 修复：`items(key = { it.id })` → `items(key = { "${it.recordType}-${it.id}" })`，因为不同 Room 表各自从 1 自增，喂养/睡眠/尿布等记录的 id 会重复，导致 LazyColumn 检测到重复 key 直接崩溃
++- 重命名 `forEach` 解构变量 `items` → `records` / 列表项参数 `item` → `record`，消除名称遮蔽歧义
+
 **记录（Timeline）页面重做：**
 +- 替换自定义渐变 Header 为 AppTopBar 统一导航栏
 +- 用 LazyColumn 替换 Column+verticalScroll，支持大量记录的高性能滚动
