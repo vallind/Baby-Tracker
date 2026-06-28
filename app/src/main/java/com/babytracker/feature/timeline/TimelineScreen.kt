@@ -24,6 +24,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.core.domain.model.*
 import com.babytracker.feature.diaper.DiaperFormDialog
@@ -65,14 +66,7 @@ fun TimelineScreen(navController: NavController) {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { showTypePicker = true },
-                containerColor = c.primary,
-                contentColor = c.surface,
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
-                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                text = { Text("记录", style = MaterialTheme.typography.titleSmall) },
-            )
+            AppFAB(icon = Icons.Default.Add, onClick = { showTypePicker = true })
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground).verticalScroll(rememberScrollState())) {

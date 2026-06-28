@@ -30,6 +30,8 @@ import kotlinx.coroutines.launch
 import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -55,20 +57,10 @@ fun HealthScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     Scaffold(containerColor = c.pageBackground, topBar = {
-        CenterAlignedTopAppBar(title = { Text("健康档案", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = c.primaryContainer,
-                titleContentColor = c.textPrimary,
-                navigationIconContentColor = c.textPrimary,
-            ))
+        AppTopBar(title = "健康档案", onBack = { navController.popBackStack() })
     }, snackbarHost = { SnackbarHost(snackbarHostState) },
     floatingActionButton = {
-        FloatingActionButton(onClick = {
-            editingRecord = null
-            showForm = true
-        }, containerColor = c.primary, contentColor = Color.White) {
-            Icon(Icons.Default.Add, contentDescription = "添加记录")
-        }
+        AppFAB(icon = Icons.Default.Add, onClick = { editingRecord = null; showForm = true })
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部标题区（浅蓝渐变背景）——

@@ -33,6 +33,7 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.fab.AppFAB
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -57,17 +58,7 @@ fun FeedingListScreen(navController: NavController) {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    editingFeeding = null
-                    showForm = true
-                },
-                containerColor = c.primary,
-                contentColor = c.surface,
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
-                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                text = { Text("记录喂养", style = MaterialTheme.typography.titleSmall) },
-            )
+            AppFAB(icon = Icons.Default.Add, onClick = { editingFeeding = null; showForm = true })
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {

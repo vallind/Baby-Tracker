@@ -30,6 +30,7 @@ import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.AssessmentItem
 import com.babytracker.core.domain.model.DevelopmentAssessment
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -108,19 +109,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
     Scaffold(
         containerColor = c.pageBackground,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("发育评估", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = c.primaryContainer,
-                    titleContentColor = c.textPrimary,
-                    navigationIconContentColor = c.textPrimary,
-                ),
-            )
+            AppTopBar(title = "发育评估", onBack = { navController.popBackStack() })
         },
     ) { padding ->
         if (baby == null) {

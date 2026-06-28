@@ -31,6 +31,8 @@ import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -56,20 +58,10 @@ fun VaccinationListScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     Scaffold(containerColor = c.pageBackground, topBar = {
-        CenterAlignedTopAppBar(title = { Text("疫苗接种", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = c.primaryContainer,
-                titleContentColor = c.textPrimary,
-                navigationIconContentColor = c.textPrimary,
-            ))
+        AppTopBar(title = "疫苗接种", onBack = { navController.popBackStack() })
     }, snackbarHost = { SnackbarHost(snackbarHostState) },
     floatingActionButton = {
-        FloatingActionButton(onClick = {
-            editingVac = null
-            showForm = true
-        }, containerColor = c.primary, contentColor = Color.White) {
-            Icon(Icons.Default.Add, contentDescription = "添加")
-        }
+        AppFAB(icon = Icons.Default.Add, onClick = { editingVac = null; showForm = true })
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部 Tab 区 ——

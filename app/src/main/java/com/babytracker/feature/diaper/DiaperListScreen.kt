@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.fab.AppFAB
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -52,17 +53,7 @@ fun DiaperListScreen(navController: NavController) {
         containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    editingDiaper = null
-                    showForm = true
-                },
-                containerColor = c.primary,
-                contentColor = c.surface,
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
-                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                text = { Text("记录尿布", style = MaterialTheme.typography.titleSmall) },
-            )
+            AppFAB(icon = Icons.Default.Add, onClick = { editingDiaper = null; showForm = true })
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {

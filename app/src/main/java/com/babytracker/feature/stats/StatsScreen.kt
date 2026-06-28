@@ -24,6 +24,7 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,19 +45,7 @@ fun StatsScreen(navController: NavController) {
     Scaffold(
         containerColor = c.pageBackground,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("统计分析", fontWeight = FontWeight.SemiBold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = c.primaryContainer,
-                    titleContentColor = c.textPrimary,
-                    navigationIconContentColor = c.textPrimary,
-                ),
-            )
+            AppTopBar(title = "统计分析", onBack = { navController.popBackStack() })
         },
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->

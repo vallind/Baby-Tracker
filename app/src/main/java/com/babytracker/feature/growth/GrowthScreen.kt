@@ -40,6 +40,8 @@ import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -63,20 +65,10 @@ fun GrowthScreen(navController: NavController) {
     val types = listOf(GrowthType.HEIGHT, GrowthType.WEIGHT, GrowthType.HEAD)
 
     Scaffold(containerColor = c.pageBackground, topBar = {
-        CenterAlignedTopAppBar(title = { Text("生长记录", fontWeight = FontWeight.SemiBold) }, navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") } },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = c.primaryContainer,
-                titleContentColor = c.textPrimary,
-                navigationIconContentColor = c.textPrimary,
-            ))
+        AppTopBar(title = "生长记录", onBack = { navController.popBackStack() })
     }, snackbarHost = { SnackbarHost(snackbarHostState) },
     floatingActionButton = {
-        FloatingActionButton(onClick = {
-            editingGrowth = null
-            showForm = true
-        }, containerColor = c.primary, contentColor = Color.White) {
-            Icon(Icons.Default.Add, contentDescription = "添加记录")
-        }
+        AppFAB(icon = Icons.Default.Add, onClick = { editingGrowth = null; showForm = true })
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
             // —— 顶部 Tab 区 ——

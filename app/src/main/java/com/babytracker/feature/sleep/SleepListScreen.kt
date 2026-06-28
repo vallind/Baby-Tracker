@@ -30,6 +30,7 @@ import com.babytracker.core.data.repository.SleepRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.fab.AppFAB
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -61,17 +62,7 @@ fun SleepListScreen(navController: NavController) {
         containerColor = c.pageBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    editingSleep = null
-                    showForm = true
-                },
-                containerColor = c.primary,
-                contentColor = c.surface,
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
-                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                text = { Text("记录睡眠", style = MaterialTheme.typography.titleSmall) },
-            )
+            AppFAB(icon = Icons.Default.Add, onClick = { editingSleep = null; showForm = true })
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).background(c.pageBackground)) {
