@@ -20,6 +20,7 @@ import com.babytracker.feature.message.MessageScreen
 import com.babytracker.feature.development.DevelopmentAssessmentScreen
 import com.babytracker.feature.reminder.ReminderScreen
 import com.babytracker.feature.auth.LoginScreen
+import com.babytracker.feature.family.FamilyPage
 
 sealed class Screen(val route: String) {
     object Home : Screen("/")
@@ -34,6 +35,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("/settings")
     object BabyManagement : Screen("/settings/babies")
     object Backup : Screen("/settings/backup")
+    object Family : Screen("/settings/family")
     object Message : Screen("/message")
     object DevelopmentAssessment : Screen("/development_assessment")
     object Reminder : Screen("/reminder")
@@ -56,6 +58,7 @@ fun AppNavigation() {
         composable(Screen.Settings.route) { SettingsScreen(navController) }
         composable(Screen.BabyManagement.route) { BabyManagementScreen(navController) }
         composable(Screen.Backup.route) { BackupScreen(navController) }
+        composable(Screen.Family.route) { FamilyPage(navController) }
         composable(Screen.Message.route) { MessageScreen(navController) }
         composable(Screen.DevelopmentAssessment.route) { DevelopmentAssessmentScreen(navController) }
         composable(Screen.Reminder.route) { ReminderScreen(navController) }

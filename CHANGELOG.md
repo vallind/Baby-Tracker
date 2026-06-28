@@ -4,7 +4,15 @@
 
 ### [Unreleased]
 
-**Supabase Phase 3：同步引擎接入 UI & 设置页集成：**
+**Supabase Phase 6：家庭共享：**
+- Supabase 建表：profiles（用户档案）、families（家庭 + 6位邀请码）、family_members（成员关系 owner/member）
+- 新增 join_family RPC 函数 + is_family_member 辅助函数 + 三表 RLS 策略
+- 新增 FamilyService：创建家庭、通过邀请码加入、成员列表查询（Supabase API）
+- 新增 FamilyViewModel + FamilyPage UI：空态提示、家庭详情、邀请码复制、成员列表、家庭切换
+- 导航新增 /settings/family 路由，Settings 页添加"👨‍👩‍👧 家庭共享"入口（登录后可见）
+- DI 注册 FamilyService + FamilyViewModel
+
+**修复 Supabase 注册 & 设置优化：**
 - 新增 SettingsViewModel：管理同步状态（syncState / connectionState / isLoggedIn），监听登录态自动启动/停止 Realtime 订阅
 - SettingsScreen 接入 ViewModel：登录后显示云同步状态行（连接状态指示点 + 状态文本 + "立即同步"按钮）
 - RealtimeManager DELETE 事件实现：通过 uuid 查找并软删除本地记录（softDeleteByUuid）

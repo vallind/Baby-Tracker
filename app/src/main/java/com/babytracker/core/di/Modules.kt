@@ -15,6 +15,8 @@ import com.babytracker.feature.reminder.ReminderViewModel
 import com.babytracker.feature.timeline.TimelineViewModel
 import com.babytracker.feature.auth.LoginViewModel
 import com.babytracker.feature.settings.SettingsViewModel
+import com.babytracker.feature.family.FamilyViewModel
+import com.babytracker.core.data.FamilyService
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -42,6 +44,7 @@ val appModule = module {
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get(), get(), get()) }
+    viewModel { FamilyViewModel(get()) }
 }
 
 val databaseModule = module {
@@ -66,4 +69,5 @@ val syncModule = module {
     single { com.babytracker.core.auth.AuthService(get()) }
     single { com.babytracker.core.sync.SyncEngine(get(), get()) }
     single { com.babytracker.core.sync.RealtimeManager(get(), get(), get()) }
+    single { FamilyService(get()) }
 }

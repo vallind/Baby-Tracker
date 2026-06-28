@@ -188,6 +188,21 @@ fun SettingsScreen(navController: NavController) {
                             },
                         )
                     }
+                    if (isLoggedIn) {
+                        SettingsDivider()
+                        SettingsRow(
+                            "👨‍👩‍👧",
+                            "家庭共享",
+                            trailing = {
+                                Text(
+                                    if (settingsVM.isLoggedIn.collectAsState().value) "已开启" else "",
+                                    color = c.success,
+                                    fontSize = 12.sp,
+                                )
+                            },
+                            onClick = { navController.navigate(Screen.Family.route) },
+                        )
+                    }
                     SettingsDivider()
                     SettingsRow("👤", "宝宝信息", onClick = { navController.navigate(Screen.BabyManagement.route) })
                     SettingsDivider()
