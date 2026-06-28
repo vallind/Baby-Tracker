@@ -206,6 +206,9 @@ class SyncEngine(
         return pulled
     }
 
+    /** 查询当前 pending 记录数（仅诊断用） */
+    suspend fun pendingCount(): Int = syncMeta.getPendingChanges().size
+
     /** 全量同步，返回 [推送数, 拉取数] */
     suspend fun fullSync(): Pair<Int, Int> {
         val pushed = push()
