@@ -20,16 +20,17 @@ import kotlinx.coroutines.flow.stateIn
  * 设计原则：不强制登录，本地优先。
  * - 未登录时 App 完全本地使用，所有数据存 Room
  * - 登录为可选操作，登录后开启云同步和家庭共享
- * - 支持账户名 + 密码。Supabase Email Auth 要求邮箱格式，
- *   纯账户名自动拼接 @baby.local 域名字段传给 Supabase。
+ * - 支持账户名 + 密码。Supabase Email Auth 要求合法邮箱格式，
+ *   纯账户名自动拼接虚拟域名后传给 Supabase。
+ *   需在 Supabase Dashboard → Authentication → Settings 关闭 "Confirm email"。
  */
 class AuthService(
     private val client: SupabaseClient,
 ) {
 
     companion object {
-        /** 纯账户名自动拼接的虚拟域名，用于绕过 Supabase 邮箱格式校验 */
-        private const val SYNTHETIC_DOMAIN = "@baby.local"
+        /** 纯账户名自动拼接的虚拟域名（需合法 TLD，.local 会被拒绝） */
+        private const val SYNTHETIC_DOMAIN = "@baby-tracker.app"
     }
 
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
@@ -52,17 +53,28 @@ class AuthService(
 
     /**
      * 注册新账户。
-     * @param account 账户名（纯用户名自动拼接 @baby.local）
+     * @param account 账户名（纯用户名自动拼接 @baby-tracker.app）
      * @param password 密码
      */
     suspend fun signUp(account: String, password: String): Result<UserInfo> = runCatching {
-        client.auth.signUpWith(Email) {
+        // signUpWith(Email) 返回值取决于 Confirm email 设置：
+        // - 确认开启 → 返回 User，无会话 → 用返回值
+        // - 确认关闭 → 返回 null，自动登录 → 从会话获取
+        val signUpResult = client.auth.signUpWith(Email) {
             email = toEmail(account)
             this.password = password
         }
-        // signUp 成功后通过 retrieveUser 获取用户信息
-        val user = client.auth.retrieveUserForCurrentSession()
-        _currentUser.value = user
+
+        val user: UserInfo = if (signUpResult != null) {
+            // 确认开启：直接用返回值
+            _currentUser.value = signUpResult
+            signUpResult
+        } else {
+            // 确认关闭：从当前会话获取
+            val sessionUser = client.auth.retrieveUserForCurrentSession()
+            _currentUser.value = sessionUser
+            sessionUser
+        }
         user
     }
 
