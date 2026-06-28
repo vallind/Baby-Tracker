@@ -7,19 +7,32 @@ import com.babytracker.core.data.repository.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-enum class StatsPeriod { WEEK, MONTH, YEAR }
+enum class StatsPeriod { DAY, WEEK, MONTH, YEAR }
 
 data class StatsUiState(
     val period: StatsPeriod = StatsPeriod.WEEK,
+    /** 当前展示周期的偏移量（0 = 本周/今日, -1 = 上一期, 1 = 下一期），由导航箭头控制 */
+    val periodOffset: Int = 0,
+    /** 日期范围展示文本，如 "5.13 - 5.19" */
+    val dateRangeText: String = "",
+    // —— 当前周期数据 ——
     val feedingCount: Int = 0,
-    val sleepHours: Float = 0f,
-    val diaperCount: Int = 0,
+    val sleepMinutes: Long = 0,
     val height: String = "--",
+    val heightRaw: Float = 0f,
     val weight: String = "--",
+    val weightRaw: Float = 0f,
+    // —— 对比文案（与上一周期比较） ——
+    val feedingCompare: String = "",
+    val sleepCompare: String = "",
+    val heightCompare: String = "",
+    val weightCompare: String = "",
+    // —— 图表数据点 ——
     val feedingPoints: List<Float> = emptyList(),
     val sleepPoints: List<Float> = emptyList(),
     val heightPoints: List<Float> = emptyList(),
@@ -36,19 +49,21 @@ class StatsViewModel(
     private val _state = MutableStateFlow(StatsUiState())
     val state: StateFlow<StatsUiState> = _state.asStateFlow()
 
-    private val _trigger = MutableStateFlow<Pair<Int, StatsPeriod>?>(null)
+    /** 触发器：babyId + period + offset 三元组 */
+    private data class Trigger(val babyId: Int, val period: StatsPeriod, val offset: Int)
+
+    private val _trigger = MutableStateFlow<Trigger?>(null)
 
     init {
         _trigger
             .filterNotNull()
-            .flatMapLatest { (babyId, period) ->
+            .flatMapLatest { (babyId, period, offset) ->
                 combine(
                     feedingRepo.watchByBaby(babyId),
                     sleepRepo.watchByBaby(babyId),
                     growthRepo.watchByBaby(babyId),
-                    diaperRepo.watchByBaby(babyId),
-                ) { feedings, sleeps, growths, diapers ->
-                    aggregate(period, feedings, sleeps, growths, diapers)
+                ) { feedings, sleeps, growths ->
+                    aggregate(period, offset, feedings, sleeps, growths)
                 }
             }
             .distinctUntilChanged()
@@ -56,87 +71,245 @@ class StatsViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun loadData(babyId: Int, period: StatsPeriod = StatsPeriod.WEEK) {
-        _trigger.value = babyId to period
+    fun selectPeriod(babyId: Int, period: StatsPeriod) {
+        _trigger.value = Trigger(babyId, period, 0)
     }
+
+    fun goBack(babyId: Int) {
+        val t = _trigger.value ?: return
+        _trigger.value = t.copy(offset = t.offset - 1)
+    }
+
+    fun goForward(babyId: Int) {
+        val t = _trigger.value ?: return
+        if (t.offset < 0) _trigger.value = t.copy(offset = t.offset + 1)
+    }
+
+    fun loadData(babyId: Int, period: StatsPeriod = StatsPeriod.WEEK) {
+        _trigger.value = Trigger(babyId, period, 0)
+    }
+
+    // ── 聚合核心 ──
 
     private fun aggregate(
         period: StatsPeriod,
+        offset: Int,
         feedings: List<Feeding>,
         sleeps: List<Sleep>,
         growths: List<Growth>,
-        diapers: List<Diaper>,
     ): StatsUiState {
         val now = LocalDateTime.now()
-        val start = when (period) {
-            StatsPeriod.WEEK -> now.minusDays(7)
-            StatsPeriod.MONTH -> now.minusDays(30)
-            StatsPeriod.YEAR -> now.minusDays(365)
-        }
-
         val fmt = DateTimeFormatter.ISO_DATE_TIME
         fun safeParse(dt: String) = try { LocalDateTime.parse(dt, fmt) } catch (_: Exception) { null }
 
-        val feedingsInPeriod = feedings.filter { safeParse(it.timestamp)?.isAfter(start) == true }
-        val feedingCount = feedingsInPeriod.size
-        val dayCount = ChronoUnit.DAYS.between(start.toLocalDate(), now.toLocalDate()).toInt()
-        val feedingPoints = if (feedingsInPeriod.isEmpty()) emptyList() else {
-            val byDay = feedingsInPeriod.groupBy { safeParse(it.timestamp)?.toLocalDate() }
-            (0 until dayCount).map { offset ->
-                val day = start.toLocalDate().plusDays(offset.toLong())
-                (byDay[day]?.size ?: 0).toFloat()
-            }
+        // 计算当前展示窗口 [start, end)
+        val start = periodStart(period, offset)
+        val end = periodEnd(period, offset)
+
+        // 日期范围文案
+        val dateRangeText = buildDateRangeText(period, start, end)
+
+        // 计算上一周期窗口（用于对比）
+        val prevStart = periodStart(period, offset - 1)
+        val prevEnd = periodEnd(period, offset - 1)
+
+        // ── 喂养：统计次数，按天分桶用于柱状图 ──
+        val feedingInRange = feedings.filter {
+            val t = safeParse(it.timestamp) ?: return@filter false
+            !t.isBefore(start) && t.isBefore(end)
+        }
+        val feedingPrevInRange = feedings.filter {
+            val t = safeParse(it.timestamp) ?: return@filter false
+            !t.isBefore(prevStart) && t.isBefore(prevEnd)
+        }
+        val feedingCount = feedingInRange.size
+        val feedingCompare = buildCompare((feedingCount - feedingPrevInRange.size).toLong(), "次")
+
+        val bucketCount = periodBucketCount(period)
+        val feedingPoints = bucketByDay(period, feedingInRange, start, bucketCount) { 1f }
+        val sleepPoints = bucketByDay(
+            period,
+            sleeps.filter {
+                val st = safeParse(it.startTime) ?: return@filter false
+                !st.isBefore(start) && st.isBefore(end)
+            },
+            start,
+            bucketCount,
+        ) { s ->
+            val st = safeParse(s.startTime) ?: return@bucketByDay 0f
+            val et = safeParse(s.endTime) ?: return@bucketByDay 0f
+            Duration.between(st, et).toMinutes().coerceAtLeast(0).toFloat() / 60f
         }
 
-        val sleepsInPeriod = sleeps.filter { safeParse(it.startTime)?.isAfter(start) == true }
-        val totalSleepMins = sleepsInPeriod.sumOf { s ->
+        // ── 睡眠：累计分钟数 ──
+        val sleepMinutes = sleeps.filter {
+            val st = safeParse(it.startTime) ?: return@filter false
+            !st.isBefore(start) && st.isBefore(end)
+        }.sumOf { s ->
             val st = safeParse(s.startTime) ?: return@sumOf 0L
             val et = safeParse(s.endTime) ?: return@sumOf 0L
             Duration.between(st, et).toMinutes().coerceAtLeast(0)
         }
-        val sleepHours = ((totalSleepMins / 60f) * 10).toInt() / 10f
-        val sleepPoints = if (sleepsInPeriod.isEmpty()) emptyList() else {
-            val byDay: Map<java.time.LocalDate, Long> = sleepsInPeriod.groupBy(
-                { safeParse(it.startTime)?.toLocalDate() ?: java.time.LocalDate.MIN },
-            ) { s ->
-                val st = safeParse(s.startTime) ?: return@groupBy 0L
-                val et = safeParse(s.endTime) ?: return@groupBy 0L
-                Duration.between(st, et).toMinutes().coerceAtLeast(0)
-            }.mapValues { it.value.sum() }
-            (0 until dayCount).map { offset ->
-                val day = start.toLocalDate().plusDays(offset.toLong())
-                ((byDay[day]?.toFloat() ?: 0f) / 60f * 10).toInt() / 10f
-            }
+        val sleepPrevMinutes = sleeps.filter {
+            val st = safeParse(it.startTime) ?: return@filter false
+            !st.isBefore(prevStart) && st.isBefore(prevEnd)
+        }.sumOf { s ->
+            val st = safeParse(s.startTime) ?: return@sumOf 0L
+            val et = safeParse(s.endTime) ?: return@sumOf 0L
+            Duration.between(st, et).toMinutes().coerceAtLeast(0)
         }
+        // 睡眠对比：分钟差换算为小时展示
+        val sleepDiffHours = if (sleepMinutes == 0L && sleepPrevMinutes == 0L) 0L
+        else (sleepMinutes - sleepPrevMinutes + 30) / 60 // 四舍五入取整
+        val sleepCompare = buildCompare(sleepDiffHours, "时")
 
-        val diapersInPeriod = diapers.filter { safeParse(it.timestamp)?.isAfter(start) == true }
-        val diaperCount = diapersInPeriod.size
-
-        val heights = growths
-            .filter { it.type == GrowthType.HEIGHT && safeParse(it.measuredAt)?.isAfter(start) == true }
+        // ── 身高：取最近一条 ──
+        val heightsInRange = growths
+            .filter { it.type == GrowthType.HEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(start) && t.isBefore(end) } == true }
             .sortedBy { it.measuredAt }
-        val height = if (heights.isEmpty()) "--"
-        else "${(heights.last().value * 10).toInt() / 10.0}cm"
-        val heightPoints = heights.map { it.value.toFloat() }
-
-        val weights = growths
-            .filter { it.type == GrowthType.WEIGHT && safeParse(it.measuredAt)?.isAfter(start) == true }
+        val heightsPrev = growths
+            .filter { it.type == GrowthType.HEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(prevStart) && t.isBefore(prevEnd) } == true }
             .sortedBy { it.measuredAt }
-        val weight = if (weights.isEmpty()) "--"
-        else "${(weights.last().value * 10).toInt() / 10.0}kg"
-        val weightPoints = weights.map { it.value.toFloat() }
+        val heightRaw = heightsInRange.lastOrNull()?.value?.toFloat() ?: -1f
+        val height = if (heightRaw < 0) "--" else "${(heightRaw * 10).toInt() / 10.0}cm"
+        val heightPrevRaw = heightsPrev.lastOrNull()?.value?.toFloat() ?: -1f
+        val heightCompare = if (heightRaw < 0 || heightPrevRaw < 0) ""
+        else buildCompare(((heightRaw - heightPrevRaw) * 10).toInt() / 10f, "cm")
+        val heightPoints = heightsInRange.map { it.value.toFloat() }
+
+        // ── 体重 ──
+        val weightsInRange = growths
+            .filter { it.type == GrowthType.WEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(start) && t.isBefore(end) } == true }
+            .sortedBy { it.measuredAt }
+        val weightsPrev = growths
+            .filter { it.type == GrowthType.WEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(prevStart) && t.isBefore(prevEnd) } == true }
+            .sortedBy { it.measuredAt }
+        val weightRaw = weightsInRange.lastOrNull()?.value?.toFloat() ?: -1f
+        val weight = if (weightRaw < 0) "--" else "${(weightRaw * 10).toInt() / 10.0}kg"
+        val weightPrevRaw = weightsPrev.lastOrNull()?.value?.toFloat() ?: -1f
+        val weightCompare = if (weightRaw < 0 || weightPrevRaw < 0) ""
+        else buildCompare(((weightRaw - weightPrevRaw) * 10).toInt() / 10f, "kg")
+        val weightPoints = weightsInRange.map { it.value.toFloat() }
 
         return StatsUiState(
             period = period,
+            periodOffset = offset,
+            dateRangeText = dateRangeText,
             feedingCount = feedingCount,
-            sleepHours = sleepHours,
-            diaperCount = diaperCount,
+            sleepMinutes = sleepMinutes,
             height = height,
+            heightRaw = heightRaw,
             weight = weight,
+            weightRaw = weightRaw,
+            feedingCompare = feedingCompare,
+            sleepCompare = sleepCompare,
+            heightCompare = heightCompare,
+            weightCompare = weightCompare,
             feedingPoints = feedingPoints,
             sleepPoints = sleepPoints,
             heightPoints = heightPoints,
             weightPoints = weightPoints,
         )
+    }
+
+    // ── 时间窗口工具 ──
+
+    /** 周期的起始时间（以当前 offset 计算） */
+    private fun periodStart(period: StatsPeriod, offset: Int): LocalDateTime {
+        val now = LocalDate.now()
+        return when (period) {
+            StatsPeriod.DAY -> now.plusDays(offset.toLong()).atStartOfDay()
+            StatsPeriod.WEEK -> {
+                // 周日作为一周开始
+                val dayOfWeek = now.dayOfWeek.value % 7 // 0=周日
+                val thisWeekStart = now.minusDays(dayOfWeek.toLong())
+                thisWeekStart.plusWeeks(offset.toLong()).atStartOfDay()
+            }
+            StatsPeriod.MONTH -> now.withDayOfMonth(1).plusMonths(offset.toLong()).atStartOfDay()
+            StatsPeriod.YEAR -> now.withDayOfYear(1).plusYears(offset.toLong()).atStartOfDay()
+        }
+    }
+
+    /** 周期的结束时间（不含） */
+    private fun periodEnd(period: StatsPeriod, offset: Int): LocalDateTime {
+        return when (period) {
+            StatsPeriod.DAY -> periodStart(period, offset).plusDays(1)
+            StatsPeriod.WEEK -> periodStart(period, offset).plusWeeks(1)
+            StatsPeriod.MONTH -> periodStart(period, offset).plusMonths(1)
+            StatsPeriod.YEAR -> periodStart(period, offset).plusYears(1)
+        }
+    }
+
+    /** 用于图表分桶的天数 */
+    private fun periodBucketCount(period: StatsPeriod): Int = when (period) {
+        StatsPeriod.DAY -> 24  // 按小时
+        StatsPeriod.WEEK -> 7
+        StatsPeriod.MONTH -> 30
+        StatsPeriod.YEAR -> 12 // 按月
+    }
+
+    // ── 格式化工具 ──
+
+    private fun buildDateRangeText(period: StatsPeriod, start: LocalDateTime, end: LocalDateTime): String {
+        val fmt = when (period) {
+            StatsPeriod.DAY -> DateTimeFormatter.ofPattern("M.d")
+            StatsPeriod.WEEK, StatsPeriod.MONTH -> DateTimeFormatter.ofPattern("M.d")
+            StatsPeriod.YEAR -> DateTimeFormatter.ofPattern("yyyy.M.d")
+        }
+        val endDisplay = end.minusDays(1)
+        return "${start.format(fmt)} - ${endDisplay.format(fmt)}"
+    }
+
+    /** 构建同比对比文案：+6次 / -2时 */
+    private fun buildCompare(diff: Long, suffix: String): String = when {
+        diff > 0 -> "+$diff$suffix"
+        diff < 0 -> "$diff$suffix"
+        else -> ""
+    }
+
+    /** Float 版对比文案 */
+    private fun buildCompare(diff: Float, suffix: String): String = when {
+        diff > 0f -> "+$diff$suffix"
+        diff < 0f -> "$diff$suffix"
+        else -> ""
+    }
+
+    // ── 分桶辅助：按日分组数据 → points 列表 ──
+
+    private fun <T> bucketByDay(
+        period: StatsPeriod,
+        items: List<T>,
+        periodStart: LocalDateTime,
+        bucketCount: Int,
+        valueExtractor: (T) -> Float,
+    ): List<Float> {
+        if (period.let { it == StatsPeriod.DAY }) {
+            // 日视图：按小时分 24 桶
+            val byHour = items.groupBy { item ->
+                try {
+                    val ts = when (item) {
+                        is Feeding -> item.timestamp
+                        is Sleep -> item.startTime
+                        else -> ""
+                    }
+                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).hour
+                } catch (_: Exception) { -1 }
+            }
+            return (0 until 24).map { hour -> byHour[hour]?.sumOf { valueExtractor(it).toDouble() }?.toFloat() ?: 0f }
+        }
+        val byDay: Map<LocalDate, Float> = items.groupBy { item ->
+            val ts = when (item) {
+                is Feeding -> item.timestamp
+                is Sleep -> item.startTime
+                else -> ""
+            }
+            try { LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).toLocalDate() }
+            catch (_: Exception) { LocalDate.MIN }
+        }.mapValues { (_, list) -> list.sumOf { valueExtractor(it).toDouble() }.toFloat() }
+
+        return (0 until bucketCount).map { offset ->
+            val day = periodStart.toLocalDate().plusDays(offset.toLong())
+            byDay[day] ?: 0f
+        }
     }
 }

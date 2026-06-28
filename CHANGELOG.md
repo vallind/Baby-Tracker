@@ -4,6 +4,12 @@
 
 ### [Unreleased]
 
+**统计页重做：日/周/月/年周期 + 对比 + 柱状图：**
+- StatsPeriod 新增 DAY，StatsUiState 增加 dateRangeText、periodOffset、对比字段（feedingCompare / sleepCompare / heightCompare / weightCompare）
+- StatsViewModel 重写聚合逻辑：offset 导航、上一周期同比对比、按小时/按天分桶
+- StatsScreen UI 重做：SegmentedControl 切换周期、DateRangeNav 翻页导航、四张统计卡（喂养柱状图、睡眠柱状图、身高折线图、体重折线图）
+- 新增 MiniBarChart 组件（柱顶圆角使用 shapes.extraSmall 令牌）
+
 **Phase 7：RLS 家庭隔离策略升级：**
 - Supabase 10 张业务表增加 `family_id UUID` 列（外键关联 families 表）
 - 删除旧 `TO authenticated` 宽松策略，替换为 `is_family_member(family_id)` 按家庭隔离
