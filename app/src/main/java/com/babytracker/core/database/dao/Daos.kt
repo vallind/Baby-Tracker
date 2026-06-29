@@ -24,7 +24,7 @@ interface BabyDao {
 
 @Dao
 interface FeedingDao {
-    @Query("SELECT * FROM feedings WHERE baby_id = :babyId ORDER BY timestamp DESC")
+    @Query("SELECT * FROM feedings WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY timestamp DESC")
     fun watchByBaby(babyId: Int): Flow<List<FeedingEntity>>
     @Query("SELECT * FROM feedings WHERE id = :id")
     suspend fun getById(id: Int): FeedingEntity?
@@ -42,7 +42,7 @@ interface FeedingDao {
 
 @Dao
 interface SleepDao {
-    @Query("SELECT * FROM sleeps WHERE baby_id = :babyId ORDER BY start_time DESC")
+    @Query("SELECT * FROM sleeps WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY start_time DESC")
     fun watchByBaby(babyId: Int): Flow<List<SleepEntity>>
     @Query("SELECT * FROM sleeps WHERE id = :id")
     suspend fun getById(id: Int): SleepEntity?
@@ -60,7 +60,7 @@ interface SleepDao {
 
 @Dao
 interface GrowthDao {
-    @Query("SELECT * FROM growths WHERE baby_id = :babyId ORDER BY measured_at DESC")
+    @Query("SELECT * FROM growths WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY measured_at DESC")
     fun watchByBaby(babyId: Int): Flow<List<GrowthEntity>>
     @Query("SELECT * FROM growths WHERE id = :id")
     suspend fun getById(id: Int): GrowthEntity?
@@ -78,7 +78,7 @@ interface GrowthDao {
 
 @Dao
 interface VaccinationDao {
-    @Query("SELECT * FROM vaccinations WHERE baby_id = :babyId ORDER BY CASE WHEN status = 'pending' THEN 0 ELSE 1 END, scheduled_date ASC")
+    @Query("SELECT * FROM vaccinations WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY CASE WHEN status = 'pending' THEN 0 ELSE 1 END, scheduled_date ASC")
     fun watchByBaby(babyId: Int): Flow<List<VaccinationEntity>>
     @Query("SELECT * FROM vaccinations WHERE id = :id")
     suspend fun getById(id: Int): VaccinationEntity?
@@ -96,7 +96,7 @@ interface VaccinationDao {
 
 @Dao
 interface HealthRecordDao {
-    @Query("SELECT * FROM health_records WHERE baby_id = :babyId ORDER BY record_date DESC")
+    @Query("SELECT * FROM health_records WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY record_date DESC")
     fun watchByBaby(babyId: Int): Flow<List<HealthRecordEntity>>
     @Query("SELECT * FROM health_records WHERE id = :id")
     suspend fun getById(id: Int): HealthRecordEntity?
@@ -122,7 +122,7 @@ interface BackupConfigDao {
 
 @Dao
 interface DiaperDao {
-    @Query("SELECT * FROM diapers WHERE baby_id = :babyId ORDER BY timestamp DESC")
+    @Query("SELECT * FROM diapers WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY timestamp DESC")
     fun watchByBaby(babyId: Int): Flow<List<DiaperEntity>>
     @Query("SELECT * FROM diapers WHERE id = :id")
     suspend fun getById(id: Int): DiaperEntity?
@@ -140,13 +140,13 @@ interface DiaperDao {
 
 @Dao
 interface MessageDao {
-    @Query("SELECT * FROM messages WHERE type = :type ORDER BY createTime DESC")
+    @Query("SELECT * FROM messages WHERE type = :type AND deletedAt IS NULL ORDER BY createTime DESC")
     fun watchByType(type: String): Flow<List<MessageEntity>>
 
-    @Query("SELECT * FROM messages ORDER BY createTime DESC")
+    @Query("SELECT * FROM messages WHERE deletedAt IS NULL ORDER BY createTime DESC")
     fun watchAll(): Flow<List<MessageEntity>>
 
-    @Query("SELECT COUNT(*) FROM messages WHERE isRead = 0")
+    @Query("SELECT COUNT(*) FROM messages WHERE isRead = 0 AND deletedAt IS NULL")
     fun watchUnreadCount(): Flow<Int>
 
     @Query("SELECT * FROM messages WHERE id = :id")
@@ -175,11 +175,11 @@ interface MessageDao {
 
 @Dao
 interface DevelopmentAssessmentDao {
-    @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId ORDER BY assess_date DESC")
+    @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY assess_date DESC")
     fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessmentEntity>>
     @Query("SELECT * FROM development_assessments WHERE id = :id")
     suspend fun getById(id: Int): DevelopmentAssessmentEntity?
-    @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId ORDER BY assess_date DESC LIMIT 1")
+    @Query("SELECT * FROM development_assessments WHERE baby_id = :babyId AND deletedAt IS NULL ORDER BY assess_date DESC LIMIT 1")
     fun watchLatest(babyId: Int): Flow<DevelopmentAssessmentEntity?>
     @Query("SELECT * FROM development_assessments WHERE uuid = :uuid LIMIT 1")
     suspend fun getByUuid(uuid: String): DevelopmentAssessmentEntity?
@@ -195,9 +195,9 @@ interface DevelopmentAssessmentDao {
 
 @Dao
 interface ReminderDao {
-    @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 0 ORDER BY due_date ASC")
+    @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 0 AND deletedAt IS NULL ORDER BY due_date ASC")
     fun watchPending(babyId: Int): Flow<List<ReminderEntity>>
-    @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 1 ORDER BY done_date DESC")
+    @Query("SELECT * FROM reminders WHERE baby_id = :babyId AND is_done = 1 AND deletedAt IS NULL ORDER BY done_date DESC")
     fun watchHistory(babyId: Int): Flow<List<ReminderEntity>>
     @Query("SELECT * FROM reminders WHERE id = :id")
     suspend fun getById(id: Int): ReminderEntity?

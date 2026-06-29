@@ -33,6 +33,7 @@ import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -84,6 +85,7 @@ fun HealthScreen(navController: NavController) {
     var expandedCategory by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
 
     val grouped = remember(records) { records.groupBy { it.category } }
     // 已接种疫苗数
@@ -152,17 +154,8 @@ fun HealthScreen(navController: NavController) {
                                         showForm = true
                                     },
                                     onDelete = { record ->
-                                        scope.launch {
-                                            healthRepo.delete(record)
-                                            val result = snackbarHostState.showSnackbar(
-                                                message = "已删除「${record.description.take(20)}」",
-                                                actionLabel = "撤销",
-                                                duration = SnackbarDuration.Short,
-                                            )
-                                            if (result == SnackbarResult.ActionPerformed) {
-                                                healthRepo.insert(record)
-                                            }
-                                        }
+                                        scope.launch { healthRepo.delete(record) }
+                                        appSnackbar.showUndo(message = "已删除「${record.description.take(20)}」") { healthRepo.insert(record) }
                                     },
                                 )
                             }

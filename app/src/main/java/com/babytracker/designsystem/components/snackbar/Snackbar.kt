@@ -26,12 +26,13 @@ class AppSnackbar(
     /**
      * 显示"已删除，可撤销" Snackbar
      *
+     * @param message 自定义删除提示，默认使用 AppStrings.deleted
      * @param onUndo 点击撤销时执行的回调（如重新插入记录）
      */
-    fun showUndo(onUndo: () -> Unit) {
+    fun showUndo(message: String = AppStrings.deleted, onUndo: suspend () -> Unit) {
         scope.launch {
             val result = hostState.showSnackbar(
-                message = AppStrings.deleted,
+                message = message,
                 actionLabel = AppStrings.undo,
                 duration = SnackbarDuration.Short,
             )

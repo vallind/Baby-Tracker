@@ -32,6 +32,7 @@ import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDi
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -51,6 +52,7 @@ fun SleepListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingSleep by remember { mutableStateOf<Sleep?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
 
     // 日期选择状态：默认"今天"
     val today = LocalDate.now()
@@ -277,18 +279,8 @@ fun SleepListScreen(navController: NavController) {
 
                             RecordCard(
                                 onDelete = {
-                                    scope.launch {
-                                        val deleted = nap
-                                        sleepRepo.delete(deleted)
-                                        val result = snackbarHostState.showSnackbar(
-                                            message = "已删除小睡记录",
-                                            actionLabel = "撤销",
-                                            duration = SnackbarDuration.Short,
-                                        )
-                                        if (result == SnackbarResult.ActionPerformed) {
-                                            sleepRepo.insert(deleted)
-                                        }
-                                    }
+                                    scope.launch { sleepRepo.delete(nap) }
+                                    appSnackbar.showUndo(message = "已删除小睡记录") { sleepRepo.insert(nap) }
                                 },
                                 onClick = {},
                                 onLongClick = {

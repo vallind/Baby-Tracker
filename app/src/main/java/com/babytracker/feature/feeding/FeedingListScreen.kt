@@ -35,6 +35,7 @@ import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDi
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -54,6 +55,7 @@ fun FeedingListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
 
     // 日期选择状态：默认"今天"
     val today = LocalDate.now()
@@ -144,18 +146,8 @@ fun FeedingListScreen(navController: NavController) {
                     feedings = filteredFeedings,
                     snackbarHostState = snackbarHostState,
                     onDelete = { f ->
-                        scope.launch {
-                            val deleted = f
-                            feedingRepo.delete(deleted)
-                            val result = snackbarHostState.showSnackbar(
-                                message = "已删除喂养记录",
-                                actionLabel = "撤销",
-                                duration = SnackbarDuration.Short,
-                            )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                feedingRepo.insert(deleted)
-                            }
-                        }
+                        scope.launch { feedingRepo.delete(f) }
+                        appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.insert(f) }
                     },
                     onEdit = { f ->
                         editingFeeding = f

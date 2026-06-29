@@ -33,6 +33,7 @@ import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -51,6 +52,7 @@ fun DiaperListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
 
     // 日期选择状态
     val today = LocalDate.now()
@@ -270,20 +272,10 @@ fun DiaperListScreen(navController: NavController) {
                         }
 
                         RecordCard(
-                            onDelete = {
-                                scope.launch {
-                                    val deleted = d
-                                    diaperRepo.delete(deleted)
-                                    val result = snackbarHostState.showSnackbar(
-                                        message = "已删除尿布记录",
-                                        actionLabel = "撤销",
-                                        duration = SnackbarDuration.Short,
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        diaperRepo.insert(deleted)
-                                    }
-                                }
-                            },
+                        onDelete = {
+                            scope.launch { diaperRepo.delete(d) }
+                            appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.insert(d) }
+                        },
                             onClick = {},
                             onLongClick = {
                                 editingDiaper = d

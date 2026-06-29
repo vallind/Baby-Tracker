@@ -81,6 +81,7 @@ app/src/main/java/com/babytracker/
 | 7 | **AlertDialog 平级** | 弹窗套在其他 if 块内部 | 所有 `AlertDialog` 在顶层 `Column` 中**平级**独立 `if` |
 | 8 | **暗色主题来源** | `isSystemInDarkTheme()` | 只读 `theme.name == "night"` |
 | 9 | **硬编码路径** | `"/data/data/..."` | 用 `context.filesDir` 等环境变量 |
+| 10 | **改共享 API 不查调用方** | 直接改 DAO/Repository/工具类方法签名或行为 | **先 `search_content` 搜所有调用方**，评估影响后再改 |
 
 ---
 

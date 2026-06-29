@@ -35,6 +35,7 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
@@ -57,6 +58,7 @@ fun GrowthScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
 
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
@@ -381,20 +383,10 @@ fun GrowthScreen(navController: NavController) {
                                 GrowthType.HEAD -> "cm"
                             }
                             RecordCard(
-                                onDelete = {
-                                    scope.launch {
-                                        val deleted = g
-                                        growthRepo.delete(deleted)
-                                        val result = snackbarHostState.showSnackbar(
-                                            message = "已删除生长记录",
-                                            actionLabel = "撤销",
-                                            duration = SnackbarDuration.Short,
-                                        )
-                                        if (result == SnackbarResult.ActionPerformed) {
-                                            growthRepo.insert(deleted)
-                                        }
-                                    }
-                                },
+                            onDelete = {
+                                scope.launch { growthRepo.delete(g) }
+                                appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.insert(g) }
+                            },
                                 onClick = {},
                                 onLongClick = {
                                     editingGrowth = g

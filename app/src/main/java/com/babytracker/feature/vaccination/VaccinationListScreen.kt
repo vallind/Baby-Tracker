@@ -30,6 +30,7 @@ import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -110,6 +111,7 @@ fun VaccinationListScreen(navController: NavController) {
     var showGenerateConfirm by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
 
     Scaffold(
         containerColor = c.pageBackground,
@@ -238,18 +240,8 @@ fun VaccinationListScreen(navController: NavController) {
                                 showForm = true
                             },
                             onDelete = {
-                                scope.launch {
-                                    val deleted = v
-                                    vacRepo.delete(deleted)
-                                    val result = snackbarHostState.showSnackbar(
-                                        message = "已删除「${deleted.name}」",
-                                        actionLabel = "撤销",
-                                        duration = SnackbarDuration.Short,
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        vacRepo.insert(deleted)
-                                    }
-                                }
+                                scope.launch { vacRepo.delete(v) }
+                                appSnackbar.showUndo(message = "已删除「${v.name}」") { vacRepo.insert(v) }
                             },
                         )
                     }

@@ -25,6 +25,7 @@ import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.*
@@ -61,6 +62,7 @@ fun TimelineScreen(navController: NavController) {
     var typeFilter by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
 
     LaunchedEffect(babyId) { viewModel.load(babyId) }
 
@@ -204,17 +206,8 @@ fun TimelineScreen(navController: NavController) {
                                     modifier = Modifier.padding(bottom = 8.dp),
                                     accentColor = accent,
                                     onDelete = {
-                                        scope.launch {
-                                            viewModel.delete(record)
-                                            val result = snackbarHostState.showSnackbar(
-                                                message = "已删除「${record.title}」",
-                                                actionLabel = "撤销",
-                                                duration = SnackbarDuration.Short,
-                                            )
-                                            if (result == SnackbarResult.ActionPerformed) {
-                                                viewModel.undoLastDelete()
-                                            }
-                                        }
+                                        scope.launch { viewModel.delete(record) }
+                                        appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
                                     },
                                     onClick = {},
                                     onLongClick = {

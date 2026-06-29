@@ -4,6 +4,12 @@
 
 ### [Unreleased]
 
+**消除重复代码（DAO + Screen + Repository）：**
+- DAO 所有 Flow 查询统一加 `deletedAt IS NULL` 过滤，修复软删除后记录仍显示的问题
+- AGENTS.md 新增红线条目「改共享 API 不查调用方」，防止盲改全局接口
+- Screen Snackbar：7 个 Screen 的删除-撤销代码统一改用 `AppSnackbar.showUndo()`，每处 8 行缩为 3 行
+- Repository：提取 `SyncMetadataDao.pendingChange()` 扩展函数，30 处 `SyncMetadataEntity(...)` 调用统一为 `syncMeta.pendingChange(table, id, uuid, updatedAt)`
+
 **备份还原改为完全还原（ID 保持不变）：**
 - 之前还原时所有实体 `id=0` 让 Room 重新生成，导致 ID 全部改变，SyncEngine 无法匹配已有记录
 - 修复：`doRestore()` 改为先清空所有表 → 按 JSON 中原始 ID 插入，`babyId` 无需重映射
