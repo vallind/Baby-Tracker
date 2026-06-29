@@ -61,18 +61,35 @@ class BabyRepositoryImpl(
         syncMeta.pendingChange("babies", baby.id, entity.uuid, entity.updatedAt)
     }
 
-    private fun cascadeSoftDelete(babyId: Int) {
+    private suspend fun cascadeSoftDelete(babyId: Int) {
         val sql = db.openHelper.writableDatabase
+        val tables = listOf("feedings", "sleeps", "growths", "vaccinations",
+            "health_records", "diapers", "development_assessments", "reminders")
+        val now = nowEpoch
+
+        // 先收集所有待级联删除的子记录（id + uuid），用于后续 sync_metadata 标记
+        val pendingSync = mutableListOf<Triple<String, Int, String?>>()
+        for (table in tables) {
+            val cursor = sql.query("SELECT id, uuid FROM $table WHERE baby_id = $babyId AND deletedAt IS NULL")
+            while (cursor.moveToNext()) {
+                pendingSync.add(Triple(table, cursor.getInt(0), cursor.getString(1)))
+            }
+            cursor.close()
+        }
+
         sql.beginTransaction()
         try {
-            for (table in listOf("feedings", "sleeps", "growths", "vaccinations",
-                "health_records", "diapers", "development_assessments", "reminders")
-            ) {
-                sql.execSQL("UPDATE $table SET deletedAt = $nowEpoch, updatedAt = $nowEpoch WHERE baby_id = $babyId")
+            for (table in tables) {
+                sql.execSQL("UPDATE $table SET deletedAt = $now, updatedAt = $now WHERE baby_id = $babyId")
             }
             sql.setTransactionSuccessful()
         } finally {
             sql.endTransaction()
+        }
+
+        // 为所有级联删除的子记录标记 pending，确保它们能上行同步到 Supabase
+        for ((table, id, uuid) in pendingSync) {
+            syncMeta.pendingChange(table, id, uuid, now)
         }
     }
 }

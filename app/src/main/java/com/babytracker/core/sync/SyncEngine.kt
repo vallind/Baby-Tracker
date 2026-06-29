@@ -47,66 +47,116 @@ class SyncEngine(
     /** 当前家庭 ID（登录+加入家庭后设置），push 时自动注入到每条记录 */
     var currentFamilyId: String? = null
 
-    /** 表名到 DAO 操作的映射 */
+    /** 表名到 DAO 操作的映射。upsert 按 uuid 查本地：存在则 update（保留原 id），不存在则 insert */
     private suspend fun getEntityDao(tableName: String): EntityDao<*>? = when (tableName) {
         "babies" -> EntityDao(
             getById = { id -> db.babyDao().getById(id) },
             getByUuid = { uuid -> db.babyDao().getByUuid(uuid) },
-            upsert = { json -> db.babyDao().insert(parseBaby(json)) },
+            upsert = { json ->
+                val parsed = parseBaby(json)
+                val existing = db.babyDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.babyDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.babyDao().insert(parsed)
+            },
             updateLocal = { entity -> db.babyDao().update(entity as BabyEntity) },
         )
         "feedings" -> EntityDao(
             getById = { id -> db.feedingDao().getById(id) },
             getByUuid = { uuid -> db.feedingDao().getByUuid(uuid) },
-            upsert = { json -> db.feedingDao().insert(parseFeeding(json)) },
+            upsert = { json ->
+                val parsed = parseFeeding(json)
+                val existing = db.feedingDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.feedingDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.feedingDao().insert(parsed)
+            },
             updateLocal = { entity -> db.feedingDao().update(entity as FeedingEntity) },
         )
         "sleeps" -> EntityDao(
             getById = { id -> db.sleepDao().getById(id) },
             getByUuid = { uuid -> db.sleepDao().getByUuid(uuid) },
-            upsert = { json -> db.sleepDao().insert(parseSleep(json)) },
+            upsert = { json ->
+                val parsed = parseSleep(json)
+                val existing = db.sleepDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.sleepDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.sleepDao().insert(parsed)
+            },
             updateLocal = { entity -> db.sleepDao().update(entity as SleepEntity) },
         )
         "growths" -> EntityDao(
             getById = { id -> db.growthDao().getById(id) },
             getByUuid = { uuid -> db.growthDao().getByUuid(uuid) },
-            upsert = { json -> db.growthDao().insert(parseGrowth(json)) },
+            upsert = { json ->
+                val parsed = parseGrowth(json)
+                val existing = db.growthDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.growthDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.growthDao().insert(parsed)
+            },
             updateLocal = { entity -> db.growthDao().update(entity as GrowthEntity) },
         )
         "vaccinations" -> EntityDao(
             getById = { id -> db.vaccinationDao().getById(id) },
             getByUuid = { uuid -> db.vaccinationDao().getByUuid(uuid) },
-            upsert = { json -> db.vaccinationDao().insert(parseVaccination(json)) },
+            upsert = { json ->
+                val parsed = parseVaccination(json)
+                val existing = db.vaccinationDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.vaccinationDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.vaccinationDao().insert(parsed)
+            },
             updateLocal = { entity -> db.vaccinationDao().update(entity as VaccinationEntity) },
         )
         "health_records" -> EntityDao(
             getById = { id -> db.healthRecordDao().getById(id) },
             getByUuid = { uuid -> db.healthRecordDao().getByUuid(uuid) },
-            upsert = { json -> db.healthRecordDao().insert(parseHealthRecord(json)) },
+            upsert = { json ->
+                val parsed = parseHealthRecord(json)
+                val existing = db.healthRecordDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.healthRecordDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.healthRecordDao().insert(parsed)
+            },
             updateLocal = { entity -> db.healthRecordDao().update(entity as HealthRecordEntity) },
         )
         "diapers" -> EntityDao(
             getById = { id -> db.diaperDao().getById(id) },
             getByUuid = { uuid -> db.diaperDao().getByUuid(uuid) },
-            upsert = { json -> db.diaperDao().insert(parseDiaper(json)) },
+            upsert = { json ->
+                val parsed = parseDiaper(json)
+                val existing = db.diaperDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.diaperDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.diaperDao().insert(parsed)
+            },
             updateLocal = { entity -> db.diaperDao().update(entity as DiaperEntity) },
         )
         "messages" -> EntityDao(
             getById = { id -> db.messageDao().getById(id.toLong())?.let { it } },
             getByUuid = { uuid -> db.messageDao().getByUuid(uuid)?.let { it } },
-            upsert = { json -> db.messageDao().insert(parseMessage(json)) },
+            upsert = { json ->
+                val parsed = parseMessage(json)
+                val existing = db.messageDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.messageDao().update(parsed.copy(id = existing.id)); existing.id }
+                else db.messageDao().insert(parsed)
+            },
             updateLocal = { entity -> db.messageDao().update(entity as MessageEntity) },
         )
         "development_assessments" -> EntityDao(
             getById = { id -> db.developmentAssessmentDao().getById(id) },
             getByUuid = { uuid -> db.developmentAssessmentDao().getByUuid(uuid) },
-            upsert = { json -> db.developmentAssessmentDao().insert(parseDevAssessment(json)) },
+            upsert = { json ->
+                val parsed = parseDevAssessment(json)
+                val existing = db.developmentAssessmentDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.developmentAssessmentDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.developmentAssessmentDao().insert(parsed)
+            },
             updateLocal = { entity -> db.developmentAssessmentDao().update(entity as DevelopmentAssessmentEntity) },
         )
         "reminders" -> EntityDao(
             getById = { id -> db.reminderDao().getById(id) },
             getByUuid = { uuid -> db.reminderDao().getByUuid(uuid) },
-            upsert = { json -> db.reminderDao().insert(parseReminder(json)) },
+            upsert = { json ->
+                val parsed = parseReminder(json)
+                val existing = db.reminderDao().getByUuid(parsed.uuid ?: "")
+                if (existing != null) { db.reminderDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
+                else db.reminderDao().insert(parsed)
+            },
             updateLocal = { entity -> db.reminderDao().update(entity as ReminderEntity) },
         )
         else -> null

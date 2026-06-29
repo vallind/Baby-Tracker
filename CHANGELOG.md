@@ -4,6 +4,13 @@
 
 ### [Unreleased]
 
+**修复同步引擎删除链路（两处 bug）：**
+- Bug 1：`SyncEngine.applyRemoteChange()` upsert 删除记录时，本地已有同 uuid 记录 → Room 尝试 INSERT 同 uuid → `UNIQUE constraint` 冲突静默丢弃，B 侧收到 duplicate 行但无 `deletedAt`，记录残留
+- 修复：upsert 时按 uuid 查现有记录，存在则 update 覆盖，不存在才 insert
+- Bug 2：`BabyRepository.cascadeSoftDelete()` 用 raw SQL 更新子记录 `deletedAt`，绕过 `syncMeta.pendingChange()`，级联删除的子记录从不上行，B 侧滞留
+- 修复：级联删除前先用 `query()` 收集待删子集（id + uuid），SQL 执行后逐条标记 `syncMeta.pendingChange()`
+- 新增文档：`docs/sync-architecture.md`（同步完整链路文档）、`docs/data-architecture.md`（数据架构文档）
+
 **去除自动创建默认家庭，新增家庭持久化离线兜底：**
 - `SettingsViewModel.ensureFamily()` 不再自动创建"我的家庭"，家庭需用户主动创建或加入
 - 新增三层回退：内存 → Supabase API → SharedPreferences（离线/App 重启后仍可恢复上次使用的家庭 ID）
