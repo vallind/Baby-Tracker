@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**去除自动创建默认家庭，新增家庭持久化离线兜底：**
+- `SettingsViewModel.ensureFamily()` 不再自动创建"我的家庭"，家庭需用户主动创建或加入
+- 新增三层回退：内存 → Supabase API → SharedPreferences（离线/App 重启后仍可恢复上次使用的家庭 ID）
+- `isNewFamily` 同步触发条件放宽，首次创建家庭后也能正确触发全量同步
+
 **修复删除撤销闪退 + RecordCard 手势冲突：**
 - `AppSnackbar.showUndo` 改为 suspend 函数，由调用方在 `scope.launch` 内顺序调用，delete → snackbar 不再并发
 - `RecordCard` 恢复 `combinedClickable`，避免 `pointerInput` + `detectTapGestures` 与 `SwipeToDismissBox` 的手势冲突

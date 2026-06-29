@@ -194,7 +194,12 @@ private fun FamilyDetailView(
                 FilterChip(
                     selected = selected,
                     onClick = { onSelectFamily(f) },
-                    label = { Text(f.name, fontSize = 12.sp) },
+                    label = {
+                        Text(
+                            if (selected) "${f.name} · 当前" else f.name,
+                            fontSize = 12.sp,
+                        )
+                    },
                 )
             }
         }

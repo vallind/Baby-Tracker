@@ -97,7 +97,7 @@ class SettingsViewModel(
                 newId?.let { prefs.edit().putString("current_family_id", it).apply() }
 
                 // 加入/切换到新家庭时，触发全量同步（拉取该家庭的历史数据）
-                val isNewFamily = newId != null && lastSyncedFamilyId != null && newId != lastSyncedFamilyId
+                val isNewFamily = newId != null && newId != lastSyncedFamilyId
                 if (isNewFamily && _isOnline.value) {
                     viewModelScope.launch {
                         syncEngine.resetLastSync()  // 清除增量锚点，执行全量拉取
@@ -126,17 +126,21 @@ class SettingsViewModel(
         } catch (_: Exception) { }
     }
 
+    /**
+     * 获取当前家庭 ID（多层回退）：
+     * 1. 内存 currentFamily → 2. Supabase API → 3. SharedPreferences 离线兜底
+     * 不自动创建——家庭需用户主动创建或加入
+     */
     private suspend fun ensureFamily(): String? = ensureFamilyMutex.withLock {
         try {
             familyService.currentFamily.value?.let { return@withLock it.id }
             val families = familyService.loadMyFamilies()
-            if (families.isNotEmpty()) return@withLock families.first().id
-            val fid = familyService.createFamily("我的家庭").getOrNull()?.id
-            // 持久化：Supabase 挂了重启后也能直接同步
+            families.firstOrNull()?.id
+        } catch (_: Exception) {
+            // 离线回退：App 重启后内存/Supabase 都为空时，从本地持久化恢复
             val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            fid?.let { prefs.edit().putString("current_family_id", it).apply() }
-            fid
-        } catch (_: Exception) { null }
+            prefs.getString("current_family_id", null)
+        }
     }
 
     private val _syncResult = MutableStateFlow<String?>(null)
