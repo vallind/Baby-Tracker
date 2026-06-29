@@ -3,42 +3,34 @@ package com.babytracker.designsystem.components.snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import com.babytracker.designsystem.i18n.AppStrings
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 /**
- * 撤销 Snackbar 辅助 — 消除 6+ 处重复的 showSnackbar + ActionPerformed 样板
+ * 撤销 Snackbar 辅助 — 消除 7 处重复的 showSnackbar + ActionPerformed 样板
  *
  * 对标 Palette FeedbackDisplay 组件体系。
  *
  * 用法：
- *   val scope = rememberCoroutineScope()
- *   val snackbar = remember { AppSnackbar(snackbarHostState, scope) }
- *   snackbar.showUndo(onUndo = { repo.insert(record) })
+ *   scope.launch {
+ *       repo.delete(record)
+ *       snackbar.showUndo("已删除xxx记录") { repo.insert(record) }
+ *   }
  */
-class AppSnackbar(
-    private val hostState: SnackbarHostState,
-    private val scope: CoroutineScope,
-) {
+class AppSnackbar(private val hostState: SnackbarHostState) {
     /**
-     * 显示"已删除，可撤销" Snackbar
+     * 显示"已删除，可撤销" Snackbar。suspend 函数，调用方负责在协程中调用。
      *
      * @param message 自定义删除提示，默认使用 AppStrings.deleted
      * @param onUndo 点击撤销时执行的回调（如重新插入记录）
      */
-    fun showUndo(message: String = AppStrings.deleted, onUndo: suspend () -> Unit) {
-        scope.launch {
-            val result = hostState.showSnackbar(
-                message = message,
-                actionLabel = AppStrings.undo,
-                duration = SnackbarDuration.Short,
-            )
-            if (result == SnackbarResult.ActionPerformed) {
-                onUndo()
-            }
+    suspend fun showUndo(message: String = AppStrings.deleted, onUndo: suspend () -> Unit) {
+        val result = hostState.showSnackbar(
+            message = message,
+            actionLabel = AppStrings.undo,
+            duration = SnackbarDuration.Short,
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            onUndo()
         }
     }
 }

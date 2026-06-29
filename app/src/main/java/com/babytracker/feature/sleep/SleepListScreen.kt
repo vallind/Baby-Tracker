@@ -52,7 +52,7 @@ fun SleepListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingSleep by remember { mutableStateOf<Sleep?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     // 日期选择状态：默认"今天"
     val today = LocalDate.now()
@@ -279,8 +279,10 @@ fun SleepListScreen(navController: NavController) {
 
                             RecordCard(
                                 onDelete = {
-                                    scope.launch { sleepRepo.delete(nap) }
-                                    appSnackbar.showUndo(message = "已删除小睡记录") { sleepRepo.insert(nap) }
+                                    scope.launch {
+                                        sleepRepo.delete(nap)
+                                        appSnackbar.showUndo(message = "已删除小睡记录") { sleepRepo.insert(nap) }
+                                    }
                                 },
                                 onClick = {},
                                 onLongClick = {

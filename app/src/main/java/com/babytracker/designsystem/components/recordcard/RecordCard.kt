@@ -1,7 +1,8 @@
 package com.babytracker.designsystem.components.recordcard
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
@@ -45,7 +45,7 @@ import com.babytracker.designsystem.theme.LocalAppColors
  * 优先级模型：
  *   显式参数 > RecordCardDefaults > CardDefaults > 组件令牌
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Suppress("DEPRECATION")
 @Composable
 fun RecordCard(
@@ -100,12 +100,7 @@ fun RecordCard(
                     Modifier
                         .fillMaxWidth()
                         .shadow(elevation, shape)
-                        .pointerInput(onClick, onLongClick) {
-                            detectTapGestures(
-                                onTap = { onClick() },
-                                onLongPress = { onLongClick() },
-                            )
-                        },
+                        .combinedClickable(onClick = onClick, onLongClick = onLongClick),
                     shape = shape,
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     colors = CardDefaults.cardColors(containerColor = containerColor),

@@ -58,7 +58,7 @@ fun GrowthScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
@@ -384,8 +384,10 @@ fun GrowthScreen(navController: NavController) {
                             }
                             RecordCard(
                             onDelete = {
-                                scope.launch { growthRepo.delete(g) }
-                                appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.insert(g) }
+                                scope.launch {
+                                    growthRepo.delete(g)
+                                    appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.insert(g) }
+                                }
                             },
                                 onClick = {},
                                 onLongClick = {

@@ -52,7 +52,7 @@ fun DiaperListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     // 日期选择状态
     val today = LocalDate.now()
@@ -273,8 +273,10 @@ fun DiaperListScreen(navController: NavController) {
 
                         RecordCard(
                         onDelete = {
-                            scope.launch { diaperRepo.delete(d) }
-                            appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.insert(d) }
+                            scope.launch {
+                                diaperRepo.delete(d)
+                                appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.insert(d) }
+                            }
                         },
                             onClick = {},
                             onLongClick = {

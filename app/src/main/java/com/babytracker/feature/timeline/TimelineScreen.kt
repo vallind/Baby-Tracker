@@ -62,7 +62,7 @@ fun TimelineScreen(navController: NavController) {
     var typeFilter by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     LaunchedEffect(babyId) { viewModel.load(babyId) }
 
@@ -206,8 +206,10 @@ fun TimelineScreen(navController: NavController) {
                                     modifier = Modifier.padding(bottom = 8.dp),
                                     accentColor = accent,
                                     onDelete = {
-                                        scope.launch { viewModel.delete(record) }
-                                        appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
+                                        scope.launch {
+                                            viewModel.delete(record)
+                                            appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
+                                        }
                                     },
                                     onClick = {},
                                     onLongClick = {

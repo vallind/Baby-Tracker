@@ -4,6 +4,10 @@
 
 ### [Unreleased]
 
+**修复删除撤销闪退 + RecordCard 手势冲突：**
+- `AppSnackbar.showUndo` 改为 suspend 函数，由调用方在 `scope.launch` 内顺序调用，delete → snackbar 不再并发
+- `RecordCard` 恢复 `combinedClickable`，避免 `pointerInput` + `detectTapGestures` 与 `SwipeToDismissBox` 的手势冲突
+
 **消除重复代码（DAO + Screen + Repository）：**
 - DAO 所有 Flow 查询统一加 `deletedAt IS NULL` 过滤，修复软删除后记录仍显示的问题
 - AGENTS.md 新增红线条目「改共享 API 不查调用方」，防止盲改全局接口

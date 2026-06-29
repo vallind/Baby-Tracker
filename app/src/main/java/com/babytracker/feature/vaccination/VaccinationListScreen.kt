@@ -111,7 +111,7 @@ fun VaccinationListScreen(navController: NavController) {
     var showGenerateConfirm by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     Scaffold(
         containerColor = c.pageBackground,
@@ -240,8 +240,10 @@ fun VaccinationListScreen(navController: NavController) {
                                 showForm = true
                             },
                             onDelete = {
-                                scope.launch { vacRepo.delete(v) }
-                                appSnackbar.showUndo(message = "已删除「${v.name}」") { vacRepo.insert(v) }
+                                scope.launch {
+                                    vacRepo.delete(v)
+                                    appSnackbar.showUndo(message = "已删除「${v.name}」") { vacRepo.insert(v) }
+                                }
                             },
                         )
                     }

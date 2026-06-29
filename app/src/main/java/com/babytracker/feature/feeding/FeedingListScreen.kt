@@ -55,7 +55,7 @@ fun FeedingListScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     // 日期选择状态：默认"今天"
     val today = LocalDate.now()
@@ -146,8 +146,10 @@ fun FeedingListScreen(navController: NavController) {
                     feedings = filteredFeedings,
                     snackbarHostState = snackbarHostState,
                     onDelete = { f ->
-                        scope.launch { feedingRepo.delete(f) }
-                        appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.insert(f) }
+                        scope.launch {
+                            feedingRepo.delete(f)
+                            appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.insert(f) }
+                        }
                     },
                     onEdit = { f ->
                         editingFeeding = f

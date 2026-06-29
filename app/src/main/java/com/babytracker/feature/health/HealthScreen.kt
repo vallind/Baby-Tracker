@@ -85,7 +85,7 @@ fun HealthScreen(navController: NavController) {
     var expandedCategory by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val appSnackbar = remember { AppSnackbar(snackbarHostState, scope) }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     val grouped = remember(records) { records.groupBy { it.category } }
     // 已接种疫苗数
@@ -154,8 +154,10 @@ fun HealthScreen(navController: NavController) {
                                         showForm = true
                                     },
                                     onDelete = { record ->
-                                        scope.launch { healthRepo.delete(record) }
-                                        appSnackbar.showUndo(message = "已删除「${record.description.take(20)}」") { healthRepo.insert(record) }
+                                        scope.launch {
+                                            healthRepo.delete(record)
+                                            appSnackbar.showUndo(message = "已删除「${record.description.take(20)}」") { healthRepo.insert(record) }
+                                        }
                                     },
                                 )
                             }
