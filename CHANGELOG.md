@@ -4,6 +4,13 @@
 
 ### [Unreleased]
 
+**主题系统重构：ThemeColors 迁入 Theme.kt + derive() 派生模式：**
+- AppTheme / ThemeColors 从 `DesignTokens.kt` 迁入 `Theme.kt`，职责归位（DesignTokens 仅保留已弃用的 DT 常量）
+- 新增 `ThemeColors.derive(primary, isDark, ...)` 工厂函数：从主色 + 少量种子自动派生全部 29 个颜色字段
+- 内置 `Color.mix()`（线性混合）和 `Color.desaturate()`（去饱和）辅助方法，支持 `isDark` 亮暗双分支自动切换
+- 6 套主题从 ~240 行硬编码 6×29 字段精简为每行 1-5 个 `derive()` 调用，净减 ~195 行
+- 各主题只需传入主色与差异种子即可（如 `night` 仅需 `primary + isDark=true`）
+
 **修复同步引擎删除链路（两处 bug）：**
 - Bug 1：`SyncEngine.applyRemoteChange()` upsert 删除记录时，本地已有同 uuid 记录 → Room 尝试 INSERT 同 uuid → `UNIQUE constraint` 冲突静默丢弃，B 侧收到 duplicate 行但无 `deletedAt`，记录残留
 - 修复：upsert 时按 uuid 查现有记录，存在则 update 覆盖，不存在才 insert
