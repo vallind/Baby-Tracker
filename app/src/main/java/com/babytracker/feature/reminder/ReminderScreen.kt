@@ -6,7 +6,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,10 +21,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.switchcontrol.AppSwitch
+import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.Reminder
@@ -60,7 +68,7 @@ fun ReminderScreen(navController: NavController) {
         if (babyId != 0) viewModel.load(babyId)
     }
 
-    Scaffold(containerColor = c.pageBackground) { padding ->
+    AppScaffold { padding ->
         if (babyId == 0) {
             EmptyState(
                 emoji = "🍼",
@@ -68,7 +76,7 @@ fun ReminderScreen(navController: NavController) {
                 subtitle = "添加宝宝后即可查看提醒",
                 modifier = Modifier.padding(padding),
             )
-            return@Scaffold
+            return@AppScaffold
         }
 
         Column(
@@ -121,19 +129,17 @@ fun ReminderScreen(navController: NavController) {
 
     // —— 删除确认对话框 ——
     deletingReminder?.let { r ->
-        AlertDialog(
-            onDismissRequest = { deletingReminder = null },
-            title = { Text("删除提醒") },
-            text = { Text("确定要删除「${r.title}」吗？") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.delete(r)
-                    deletingReminder = null
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+        AppConfirmDialog(
+            show = true,
+            title = "删除提醒",
+            message = "确定要删除「${r.title}」吗？",
+            confirmText = "删除",
+            cancelText = "取消",
+            onConfirm = {
+                viewModel.delete(r)
+                deletingReminder = null
             },
-            dismissButton = {
-                TextButton(onClick = { deletingReminder = null }) { Text("取消") }
-            },
+            onDismiss = { deletingReminder = null },
         )
     }
 }
@@ -151,8 +157,8 @@ private fun ReminderHeader(onBack: () -> Unit) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .height(DT.appBarHeight.dp)
-                .padding(horizontal = DT.pageMarginSm.dp),
+                .height(56.dp)
+                .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -171,7 +177,7 @@ private fun ReminderHeader(onBack: () -> Unit) {
             Spacer(Modifier.width(4.dp))
             Text(
                 "提醒中心",
-                style = MaterialTheme.typography.titleLarge,
+                style = LocalAppTypography.current.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = c.textPrimary,
             )
@@ -187,13 +193,13 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         ReminderTab.entries.forEach { t ->
             Column(
                 Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(DT.cardRadius.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .clickable { onSwitch(t) }
                     .padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -230,31 +236,29 @@ private fun PendingReminderCard(
 ) {
     val c = LocalAppColors.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
-    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
 
-    Card(
-        Modifier
-            .padding(horizontal = DT.pageMargin.dp, vertical = 6.dp)
+    AppCard(
+        cornerRadius = 12.dp,
+        elevation = 2.dp,
+        containerColor = c.surface,
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 6.dp)
             .fillMaxWidth()
-            .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
             .longPressDeletable(haptic, onLongClick = onLongPress),
-        shape = cardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Row(
-            Modifier.padding(DT.cardInnerPadding.dp),
+            Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // 左侧：类型图标圆角背景
             Box(
                 Modifier
-                    .size(DT.iconBgSize.dp)
-                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(typeColor.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, fontSize = DT.iconSize.sp)
+                Text(emoji, fontSize = 20.sp)
             }
             Spacer(Modifier.width(12.dp))
             // 中间：标题 + 描述（+ 用药类重复规则）
@@ -289,13 +293,10 @@ private fun PendingReminderCard(
             Spacer(Modifier.width(8.dp))
             // 右侧：用药类 → Switch；其它 → 倒计时 + 完成按钮
             if (reminder.type == ReminderType.MEDICATION) {
-                Switch(
+                AppSwitch(
                     checked = reminder.isEnabled,
                     onCheckedChange = onToggleEnabled,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = c.surface,
-                        checkedTrackColor = c.primary,
-                    ),
+                    checkedColor = c.primary,
                 )
             } else {
                 val countdown = reminder.countdownText()
@@ -347,31 +348,29 @@ private fun HistoryReminderCard(
 ) {
     val c = LocalAppColors.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
-    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
     val doneText = reminder.doneDate?.let { "完成于 ${DateUtils.formatDate(it)}" } ?: "已完成"
 
-    Card(
-        Modifier
-            .padding(horizontal = DT.pageMargin.dp, vertical = 6.dp)
+    AppCard(
+        cornerRadius = 12.dp,
+        elevation = 2.dp,
+        containerColor = c.surface.copy(alpha = 0.7f),
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 6.dp)
             .fillMaxWidth()
-            .shadow(elevation = DT.cardElevation.dp, shape = cardShape)
             .longPressDeletable(haptic, onLongClick = onLongPress),
-        shape = cardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface.copy(alpha = 0.7f)),
     ) {
         Row(
-            Modifier.padding(DT.cardInnerPadding.dp),
+            Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 Modifier
-                    .size(DT.iconBgSize.dp)
-                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(typeColor.copy(alpha = 0.10f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, fontSize = DT.iconSize.sp)
+                Text(emoji, fontSize = 20.sp)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {

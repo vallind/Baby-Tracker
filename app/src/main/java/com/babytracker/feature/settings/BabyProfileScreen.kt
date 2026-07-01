@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +29,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.navigation.Screen
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
@@ -71,8 +75,7 @@ fun BabyProfileScreen(navController: NavController) {
         return
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         topBar = {
             AppTopBar(
                 title = "宝宝信息",

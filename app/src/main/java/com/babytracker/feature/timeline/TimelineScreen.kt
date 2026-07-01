@@ -5,7 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,10 +22,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.navigation.NavController
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.sheet.AppBottomSheet
+import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.SegmentedControl
@@ -90,14 +99,13 @@ fun TimelineScreen(navController: NavController) {
         }
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(title = "记录")
         },
         bottomBar = { BottomNavBar(navController) },
-        floatingActionButton = {
+        fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { showTypePicker = true })
         },
     ) { padding ->
@@ -115,13 +123,13 @@ fun TimelineScreen(navController: NavController) {
                 onSelect = { typeFilter = filterKeys[it] },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 6.dp),
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
             )
             HorizontalDivider(color = c.divider, thickness = 0.5.dp)
 
             if (state.loading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = c.primary)
+                    AppCircularProgress(indicatorColor = c.primary)
                 }
             } else if (state.items.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -162,8 +170,8 @@ fun TimelineScreen(navController: NavController) {
                             .weight(1f)
                             .fillMaxWidth(),
                         contentPadding = PaddingValues(
-                            start = DT.pageMargin.dp,
-                            end = DT.pageMargin.dp,
+                            start = 16.dp,
+                            end = 16.dp,
                             top = 8.dp,
                             bottom = 80.dp,
                         ),
@@ -179,7 +187,7 @@ fun TimelineScreen(navController: NavController) {
                                 ) {
                                     Text(
                                         text = DateUtils.relativeDate(date),
-                                        style = MaterialTheme.typography.labelSmall,
+                                        style = LocalAppTypography.current.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = c.textSecondary,
                                     )
@@ -224,34 +232,34 @@ fun TimelineScreen(navController: NavController) {
                                 ) {
                                     Box(
                                         Modifier
-                                            .size(DT.iconBgSize.dp)
-                                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(10.dp))
                                             .background(accent.copy(alpha = 0.12f)),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
                                             record.emoji,
-                                            style = MaterialTheme.typography.titleLarge,
+                                            style = LocalAppTypography.current.titleLarge,
                                         )
                                     }
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(
                                             record.title,
-                                            style = MaterialTheme.typography.titleSmall,
+                                            style = LocalAppTypography.current.titleSmall,
                                             color = c.textPrimary,
                                             fontWeight = FontWeight.Medium,
                                         )
                                         Text(
                                             record.subtitle,
-                                            style = MaterialTheme.typography.bodySmall,
+                                            style = LocalAppTypography.current.bodySmall,
                                             color = c.textSecondary,
                                         )
                                     }
                                     if (record.time.isNotEmpty()) {
                                         Text(
                                             record.time,
-                                            style = MaterialTheme.typography.labelMedium,
+                                            style = LocalAppTypography.current.labelMedium,
                                             color = c.textTertiary,
                                         )
                                     }
@@ -266,12 +274,14 @@ fun TimelineScreen(navController: NavController) {
 
     // ── 类型选择底部弹窗 ──
     if (showTypePicker) {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(onDismissRequest = { showTypePicker = false }, sheetState = sheetState) {
-            Column(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 8.dp)) {
+        AppBottomSheet(
+            show = true,
+            onDismiss = { showTypePicker = false },
+        ) {
+            Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Text(
                     "选择记录类型",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = LocalAppTypography.current.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 16.dp),
                 )
@@ -284,7 +294,7 @@ fun TimelineScreen(navController: NavController) {
                     Screen.Health to "❤️ 健康",
                 )
                 types.forEach { (screen, label) ->
-                    TextButton(
+                    AppTextButton(
                         onClick = {
                             showTypePicker = false
                             when (screen) {
@@ -294,10 +304,9 @@ fun TimelineScreen(navController: NavController) {
                                 else -> navController.navigate(screen.route)
                             }
                         },
+                        label = label,
                         modifier = Modifier.fillMaxWidth().height(52.dp),
-                    ) {
-                        Text(label, style = MaterialTheme.typography.bodyLarge, color = c.textPrimary)
-                    }
+                    )
                 }
                 Spacer(Modifier.height(24.dp))
             }

@@ -9,7 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,9 +30,15 @@ import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilyMember
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.SecondaryButton
+import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.components.progress.AppCircularProgress
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -37,7 +48,7 @@ fun FamilyPage(navController: NavController) {
     val uiState by vm.uiState.collectAsState()
     val context = LocalContext.current
 
-    Scaffold(
+    AppScaffold(
         topBar = {
             AppTopBar(
                 title = "家庭共享",
@@ -50,11 +61,11 @@ fun FamilyPage(navController: NavController) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = DT.pageMargin.dp, vertical = DT.pageMargin.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         ) {
             if (uiState.isLoading && uiState.families.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = c.primary)
+                    AppCircularProgress(indicatorColor = c.primary)
                 }
             } else if (uiState.currentFamily == null) {
                 // ── 无家庭：提示创建或加入 ──
@@ -88,20 +99,18 @@ fun FamilyPage(navController: NavController) {
             onDismissRequest = { vm.hideCreateDialog() },
             title = { Text("创建家庭") },
             text = {
-                OutlinedTextField(
+                AppInput(
                     value = uiState.newFamilyName,
                     onValueChange = { vm.onFamilyNameChange(it) },
-                    label = { Text("家庭名称") },
-                    singleLine = true,
+                    label = "家庭名称",
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
                 )
             },
             confirmButton = {
-                TextButton(onClick = { vm.createFamily() }) { Text("创建") }
+                AppTextButton(onClick = { vm.createFamily() }, label = "创建")
             },
             dismissButton = {
-                TextButton(onClick = { vm.hideCreateDialog() }) { Text("取消") }
+                AppTextButton(onClick = { vm.hideCreateDialog() }, label = "取消")
             },
         )
     }
@@ -113,26 +122,25 @@ fun FamilyPage(navController: NavController) {
             title = { Text("加入家庭") },
             text = {
                 Column {
-                    Text("输入家庭邀请码（6 位）", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                    Text("输入家庭邀请码（6 位）", color = c.textSecondary, fontSize = 14.sp)
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
+                    AppInput(
                         value = uiState.inviteCode,
                         onValueChange = { vm.onInviteCodeChange(it.take(6)) },
-                        label = { Text("邀请码") },
-                        singleLine = true,
+                        label = "邀请码",
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
                     )
                 }
             },
             confirmButton = {
-                TextButton(
+                AppTextButton(
                     onClick = { vm.joinFamily() },
+                    label = "加入",
                     enabled = uiState.inviteCode.length == 6,
-                ) { Text("加入") }
+                )
             },
             dismissButton = {
-                TextButton(onClick = { vm.hideJoinDialog() }) { Text("取消") }
+                AppTextButton(onClick = { vm.hideJoinDialog() }, label = "取消")
             },
         )
     }
@@ -149,22 +157,14 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
             Spacer(Modifier.height(16.dp))
             Text(
                 "创建或加入家庭\n与家人共享宝宝的成长记录",
-                style = MaterialTheme.typography.bodyLarge,
+                style = LocalAppTypography.current.bodyLarge,
                 color = c.textSecondary,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(24.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onJoinClick, shape = MaterialTheme.shapes.medium) {
-                    Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("加入家庭")
-                }
-                Button(onClick = onCreateClick, shape = MaterialTheme.shapes.medium) {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("创建家庭")
-                }
+                SecondaryButton(onClick = onJoinClick, label = "加入家庭", icon = Icons.Default.GroupAdd)
+                PrimaryButton(onClick = onCreateClick, label = "创建家庭", icon = Icons.Default.Add)
             }
         }
     }
@@ -209,7 +209,7 @@ private fun FamilyDetailView(
     // 家庭名称卡片
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        cornerRadius = DT.cardRadius.dp,
+        cornerRadius = 12.dp,
         elevation = 1.dp,
     ) {
         Column(Modifier.padding(20.dp)) {
@@ -225,8 +225,8 @@ private fun FamilyDetailView(
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(family.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    Text("${members.size} 位成员", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                    Text(family.name, style = LocalAppTypography.current.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("${members.size} 位成员", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                 }
             }
 
@@ -242,8 +242,8 @@ private fun FamilyDetailView(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("邀请码", style = MaterialTheme.typography.labelSmall, color = c.textSecondary)
-                    Text(family.inviteCode, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, letterSpacing = 4.sp, color = c.primary)
+                    Text("邀请码", style = LocalAppTypography.current.labelSmall, color = c.textSecondary)
+                    Text(family.inviteCode, style = LocalAppTypography.current.titleLarge, fontWeight = FontWeight.Bold, letterSpacing = 4.sp, color = c.primary)
                 }
                 TextButton(onClick = {
                     val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
@@ -258,14 +258,14 @@ private fun FamilyDetailView(
         }
     }
 
-    Spacer(Modifier.height(DT.cardGap.dp))
+    Spacer(Modifier.height(12.dp))
 
     // 成员列表
     if (members.isNotEmpty()) {
-        Text("家庭成员", style = MaterialTheme.typography.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = 8.dp))
+        Text("家庭成员", style = LocalAppTypography.current.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = 8.dp))
         AppCard(
             modifier = Modifier.fillMaxWidth(),
-            cornerRadius = DT.cardRadius.dp,
+            cornerRadius = 16.dp,
             elevation = 1.dp,
         ) {
             Column(Modifier.padding(horizontal = 12.dp)) {
@@ -292,12 +292,12 @@ private fun FamilyDetailView(
                         Column(Modifier.weight(1f)) {
                             Text(
                                 member.userId.take(8) + "…",
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = LocalAppTypography.current.bodyMedium,
                                 color = c.textPrimary,
                             )
                             Text(
                                 if (member.role == "owner") "创建者" else "成员",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = LocalAppTypography.current.bodySmall,
                                 color = c.textSecondary,
                             )
                         }
@@ -314,15 +314,7 @@ private fun FamilyDetailView(
 
     // 操作按钮
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton(onClick = onJoinClick, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
-            Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(4.dp))
-            Text("加入新家庭", fontSize = 13.sp)
-        }
-        OutlinedButton(onClick = onCreateClick, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(4.dp))
-            Text("创建新家庭", fontSize = 13.sp)
-        }
+        SecondaryButton(onClick = onJoinClick, label = "加入新家庭", icon = Icons.Default.GroupAdd, modifier = Modifier.weight(1f))
+        SecondaryButton(onClick = onCreateClick, label = "创建新家庭", icon = Icons.Default.Add, modifier = Modifier.weight(1f))
     }
 }

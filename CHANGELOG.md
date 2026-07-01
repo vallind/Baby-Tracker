@@ -4,6 +4,19 @@
 
 ### [Unreleased]
 
+**组件默认样式补齐 + Feature 层强制使用 Design System：**
+- 新增 5 个 Defaults 文件：IconButtonDefaults、ScaffoldDefaults、SheetDefaults、SectionHeaderDefaults、SegmentedControlDefaults
+- 新增 2 组组件令牌（SheetTokens、SegmentedControlTokens），已注册到 AppComponentTokens
+- 更新 8 个组件使用 Defaults：IconButton、AppScaffold、AppBottomSheet、SegmentedControl、SectionHeader、AppConfirmDialog、AppFormSheet、SkeletonLoader
+- AppFormSheet 移除已废弃的 DT 引用，改用 SheetDefaults
+- 全部 14 个 feature Screen 文件完成 Design System 迁移：
+  - Scaffold → AppScaffold、Card → AppCard、Button → PrimaryButton、TextButton → AppTextButton
+  - IconButton → AppIconButton、OutlinedTextField → AppInput、OutlinedButton → SecondaryButton
+  - ModalBottomSheet → AppBottomSheet、AlertDialog → AppConfirmDialog、Switch → AppSwitch
+  - CircularProgressIndicator → AppCircularProgress
+  - MaterialTheme.typography → LocalAppTypography、DT.* 废弃常量 → 硬编码值
+  - import androidx.compose.material3.* 改为具体导入
+
 **主题系统重构：ThemeColors 迁入 Theme.kt + derive() 派生模式：**
 - AppTheme / ThemeColors 从 `DesignTokens.kt` 迁入 `Theme.kt`，职责归位（DesignTokens 仅保留已弃用的 DT 常量）
 - 新增 `ThemeColors.derive(primary, isDark, ...)` 工厂函数：从主色 + 少量种子自动派生全部 29 个颜色字段

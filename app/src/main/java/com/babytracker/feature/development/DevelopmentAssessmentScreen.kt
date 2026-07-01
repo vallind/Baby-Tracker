@@ -7,7 +7,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,10 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.core.domain.model.Baby
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.sheet.AppBottomSheet
+import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.AssessmentItem
@@ -160,8 +166,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
         if (baby != null) viewModel.load(baby.id)
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         topBar = {
             AppTopBar(title = "发育评估", onBack = { navController.popBackStack() })
         },
@@ -173,7 +178,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
                 subtitle = "请先在设置中添加宝宝信息",
                 modifier = Modifier.padding(padding),
             )
-            return@Scaffold
+            return@AppScaffold
         }
 
         Column(
@@ -186,7 +191,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
             // —— 顶部宝宝信息区（与首页一致的卡通风格）——
             BabyHeader(baby)
 
-            Spacer(Modifier.height(DT.cardGap.dp))
+            Spacer(Modifier.height(16.dp))
 
             val latest = state.latest
 
@@ -202,7 +207,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
                 // 5 项能力卡片
                 AssessmentItemsSection(latest)
 
-                Spacer(Modifier.height(DT.cardGap.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // 底部：下次评估时间 + 重新评估按钮
                 BottomActionRow(latest = latest, onReassess = { showForm = true })
@@ -233,7 +238,7 @@ private fun BabyHeader(baby: Baby) {
         Modifier
             .fillMaxWidth()
             .background(Gradients.pageHeader(c))
-            .padding(horizontal = DT.pageMargin.dp),
+            .padding(horizontal = 16.dp),
     ) {
         Row(
             Modifier.padding(vertical = 20.dp),
@@ -253,14 +258,14 @@ private fun BabyHeader(baby: Baby) {
             Column {
                 Text(
                     baby.name,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = LocalAppTypography.current.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = c.textPrimary,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     babyAgeDetail(baby.birthDate),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = LocalAppTypography.current.bodyMedium,
                     color = c.textSecondary,
                 )
             }
@@ -271,7 +276,7 @@ private fun BabyHeader(baby: Baby) {
 // —— 5 项能力评估卡片（彩色圆形 emoji + 标题行 + 描述）——
 @Composable
 private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
-    Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
+    Column(Modifier.padding(horizontal = 16.dp)) {
         ABILITIES.forEachIndexed { index, meta ->
             AssessmentItemCard(
                 emoji = meta.emoji,
@@ -280,7 +285,7 @@ private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
                 score = meta.score(latest),
                 description = abilityDescription(meta.title, meta.score(latest)),
             )
-            if (index != ABILITIES.lastIndex) Spacer(Modifier.height(DT.cardGapSm.dp))
+            if (index != ABILITIES.lastIndex) Spacer(Modifier.height(8.dp))
         }
     }
 }
@@ -295,11 +300,11 @@ private fun AssessmentItemCard(
 ) {
     val c = LocalAppColors.current
     val statusColor = scoreColor(score)
-    Card(
-        Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(DT.cardRadius.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
+    AppCard(
+        cornerRadius = 12.dp,
+        elevation = 2.dp,
+        containerColor = c.surface,
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -350,7 +355,7 @@ private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Uni
     }
     Row(
         Modifier
-            .padding(horizontal = DT.pageMargin.dp)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -391,23 +396,20 @@ private fun AssessmentFormDialog(
     onSubmit: (DevelopmentAssessment) -> Unit,
 ) {
     val c = LocalAppColors.current
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     // 5 项评分初始值（默认 2=正常）
     val scores = remember {
         mutableStateListOf(2, 2, 2, 2, 2)
     }
     var note by remember { mutableStateOf("") }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = c.surface,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+    AppBottomSheet(
+        show = true,
+        onDismiss = onDismiss,
     ) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = DT.pageMargin.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
@@ -428,19 +430,15 @@ private fun AssessmentFormDialog(
             }
 
             Spacer(Modifier.height(16.dp))
-            OutlinedTextField(
+            AppInput(
                 value = note,
                 onValueChange = { note = it },
-                label = { Text("备注（可选）") },
+                label = "备注（可选）",
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(DT.inputRadius.dp),
-                singleLine = false,
-                minLines = 2,
-                maxLines = 4,
             )
 
             Spacer(Modifier.height(20.dp))
-            val shapeBtn = RoundedCornerShape(DT.buttonRadius.dp)
+            val shapeBtn = RoundedCornerShape(12.dp)
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -490,12 +488,12 @@ private fun ScoreSelector(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier
-                    .size(DT.iconBgSize.dp)
-                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(tint.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = title, tint = tint, modifier = Modifier.size(DT.iconSize.dp))
+                Icon(icon, contentDescription = title, tint = tint, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(10.dp))
             Column {
@@ -511,7 +509,7 @@ private fun ScoreSelector(
                 Box(
                     Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(DT.chipRadius.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(if (isSelected) chipColor else chipColor.copy(alpha = 0.2f))
                         .clickable { onSelect(value) }
                         .padding(vertical = 8.dp),

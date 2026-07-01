@@ -4,7 +4,10 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,10 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
@@ -56,8 +61,7 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
         if (baby == null) {
@@ -69,7 +73,7 @@ fun HomeScreen(navController: NavController) {
                 onAction = { navController.navigate(Screen.BabyManagement.route) },
                 modifier = Modifier.padding(padding),
             )
-            return@Scaffold
+            return@AppScaffold
         }
 
         Column(
@@ -82,14 +86,14 @@ fun HomeScreen(navController: NavController) {
             // —— 顶部宝宝信息区（浅蓝渐变背景 + 圆形头像）——
             BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyProfile.route) })
 
-            Spacer(Modifier.height(DT.cardGap.dp))
+            Spacer(Modifier.height(16.dp))
             FeatureGrid(navController)
 
-            Spacer(Modifier.height(DT.cardGap.dp))
+            Spacer(Modifier.height(16.dp))
             TodayOverviewCard(feedCount = state.feedCount, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
 
             if (state.recentItems.isNotEmpty()) {
-                Spacer(Modifier.height(DT.cardGap.dp))
+                Spacer(Modifier.height(16.dp))
                 RecentRecordsSection(
                     items = state.recentItems,
                     onSeeAll = { navController.navigate(Screen.Timeline.route) },
@@ -108,7 +112,7 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .background(Gradients.pageHeader(c))
-            .padding(horizontal = DT.pageMargin.dp),
+            .padding(horizontal = 16.dp),
     ) {
         Row(
             Modifier.padding(vertical = 20.dp),
@@ -168,11 +172,11 @@ fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
     val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
     AppCard(
         modifier = Modifier
-            .padding(horizontal = DT.pageMargin.dp)
+            .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         cornerRadius = shapes.medium,
     ) {
-        Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+        Column(Modifier.padding(16.dp)) {
             Text("今日概览", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -225,7 +229,7 @@ fun FeatureGrid(navController: NavController) {
         FeatureGridItemData(Screen.Health, "❤️", "健康档案"),
         FeatureGridItemData(Screen.Stats, "📊", "统计分析"),
     )
-    Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
+    Column(Modifier.padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(14.dp))
         // 第一行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -254,7 +258,7 @@ private fun FeatureGridItem(
     val tint = if (useAccent) c.warning else c.primary
     Column(
         modifier
-            .clip(RoundedCornerShape(DT.cardRadius.dp))
+            .clip(RoundedCornerShape(16.dp))
             .clickable {
                     navController.navigate(item.screen.route) {
                         popUpTo(navController.graph.findStartDestination().id) {
@@ -270,12 +274,12 @@ private fun FeatureGridItem(
     ) {
         Box(
             Modifier
-                .size(DT.iconBgSizeLg.dp)
-                .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                .size(56.dp)
+                .clip(RoundedCornerShape(10.dp))
                 .background(tint.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(item.emoji, fontSize = DT.iconSizeLg.sp)
+            Text(item.emoji, fontSize = 24.sp)
         }
         Spacer(Modifier.height(6.dp))
         Text(item.label, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
@@ -293,19 +297,17 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
     val c = LocalAppColors.current
     val shapes = LocalAppShapes.current
     AppCard(
-        modifier = Modifier.padding(horizontal = DT.pageMargin.dp).fillMaxWidth(),
+        modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
         cornerRadius = shapes.medium,
     ) {
-        Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+        Column(Modifier.padding(16.dp)) {
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("最近记录", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                TextButton(onClick = onSeeAll) {
-                    Text("查看全部", fontSize = 12.sp, color = c.textSecondary)
-                }
+                AppTextButton(onClick = onSeeAll, label = "查看全部")
             }
             Spacer(Modifier.height(8.dp))
             val recentItems = items.take(5)

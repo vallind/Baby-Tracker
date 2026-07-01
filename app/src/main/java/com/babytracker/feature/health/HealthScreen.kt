@@ -7,7 +7,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,9 +27,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.HealthRepository
@@ -93,11 +105,10 @@ fun HealthScreen(navController: NavController) {
         vaccinations.count { it.status.name == "COMPLETED" || it.status.name == "ADMINISTERED" }
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         topBar = { AppTopBar(title = "健康档案", onBack = { navController.popBackStack() }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
+        fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { editingRecord = null; showForm = true })
         },
     ) { padding ->
@@ -115,7 +126,7 @@ fun HealthScreen(navController: NavController) {
         } else {
             LazyColumn(
                 Modifier.fillMaxSize().padding(padding).background(c.pageBackground),
-                contentPadding = PaddingValues(top = DT.cardGap.dp, bottom = 80.dp),
+                contentPadding = PaddingValues(top = 12.dp, bottom = 80.dp),
             ) {
                 HEALTH_CATEGORIES.forEach { meta ->
                     item(key = meta.key) {
@@ -163,7 +174,7 @@ fun HealthScreen(navController: NavController) {
                             }
                         }
                     }
-                    item { Spacer(Modifier.height(DT.cardGapSm.dp)) }
+                    item { Spacer(Modifier.height(8.dp)) }
                 }
             }
         }
@@ -204,14 +215,14 @@ private fun HealthCategorySummaryCard(
     onClick: () -> Unit,
 ) {
     val c = LocalAppColors.current
-    Card(
-        Modifier
-            .padding(horizontal = DT.pageMargin.dp)
+    AppCard(
+        cornerRadius = 12.dp,
+        elevation = 2.dp,
+        containerColor = c.surface,
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .clickable(enabled = hasItems, onClick = onClick),
-        shape = RoundedCornerShape(DT.cardRadius.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Row(
             Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
@@ -257,14 +268,14 @@ private fun VaccinationSummaryCard(
 ) {
     val c = LocalAppColors.current
     val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
-    Card(
-        Modifier
-            .padding(horizontal = DT.pageMargin.dp)
+    AppCard(
+        cornerRadius = 12.dp,
+        elevation = 2.dp,
+        containerColor = c.surface,
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(DT.cardRadius.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Row(
             Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
@@ -304,7 +315,7 @@ private fun ExpandedCategoryItems(
 ) {
     val c = LocalAppColors.current
     val sorted = remember(items) { items.sortedByDescending { it.recordDate } }
-    Column(Modifier.padding(horizontal = DT.pageMargin.dp)) {
+    Column(Modifier.padding(horizontal = 16.dp)) {
         sorted.forEachIndexed { i, r ->
             RecordCard(
                 modifier = Modifier.padding(bottom = 12.dp),
@@ -400,7 +411,7 @@ fun HealthFormDialog(
                 FilterChip(
                     selected = category == key,
                     onClick = { category = key },
-                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                    label = { Text(label, style = LocalAppTypography.current.bodySmall) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = c.primary.copy(alpha = 0.12f),
                         selectedLabelColor = c.primary,
@@ -410,62 +421,50 @@ fun HealthFormDialog(
             }
         }
         Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
+        AppInput(
             value = description,
             onValueChange = { description = it },
-            label = { Text("描述") },
+            label = "描述",
             isError = description.isBlank(),
-            supportingText = { if (description.isBlank()) Text("描述不能为空") },
+            errorMessage = "描述不能为空",
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        AppInput(
             value = doctorName,
             onValueChange = { doctorName = it },
-            label = { Text("医生 (可选)") },
-            leadingIcon = { Text("👨‍⚕️", style = MaterialTheme.typography.titleMedium) },
+            label = "医生 (可选)",
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        AppInput(
             value = recordDate,
             onValueChange = {},
-            readOnly = true,
-            label = { Text("记录日期") },
-            leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) },
-            modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
-            shape = MaterialTheme.shapes.medium,
+            label = "记录日期",
             enabled = false,
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledBorderColor = c.outline,
-                disabledTextColor = c.textPrimary,
-                disabledLabelColor = c.textSecondary,
-            ),
+            modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        AppInput(
             value = note,
             onValueChange = { note = it },
-            label = { Text("备注 (可选)") },
+            label = "备注 (可选)",
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
         )
     }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
-            TextButton(onClick = {
+            AppTextButton(onClick = {
                 showDatePicker = false
                 datePickerState.selectedDateMillis?.let { millis ->
                     val instant = java.time.Instant.ofEpochMilli(millis)
                     recordDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
                         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                 }
-            }) { Text("确定") }
-        }, dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }) {
+            }, label = "确定")
+        }, dismissButton = { AppTextButton(onClick = { showDatePicker = false }, label = "取消") }) {
             DatePicker(state = datePickerState)
         }
     }

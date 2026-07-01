@@ -5,7 +5,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,8 +28,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
@@ -113,13 +127,12 @@ fun VaccinationListScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         topBar = {
             AppTopBar(title = "疫苗接种", onBack = { navController.popBackStack() })
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
+        fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { editingVac = null; showForm = true })
         },
     ) { padding ->
@@ -134,7 +147,7 @@ fun VaccinationListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .background(c.pageBackground)
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
             ) {
                 listOf("plan" to "接种计划", "done" to "接种记录").forEachIndexed { i, (key, label) ->
@@ -171,7 +184,7 @@ fun VaccinationListScreen(navController: NavController) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = DT.pageMargin.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -226,8 +239,8 @@ fun VaccinationListScreen(navController: NavController) {
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     contentPadding = PaddingValues(
-                        start = DT.pageMargin.dp,
-                        end = DT.pageMargin.dp,
+                        start = 16.dp,
+                        end = 16.dp,
                         bottom = 80.dp,
                     ),
                 ) {
@@ -281,12 +294,12 @@ fun VaccinationListScreen(navController: NavController) {
     }
 
     if (showGenerateConfirm) {
-        AlertDialog(
+        androidx.compose.material3.AlertDialog(
             onDismissRequest = { showGenerateConfirm = false },
             title = { Text("生成接种计划") },
             text = { Text("将根据宝宝出生日期自动生成 21 条默认接种计划。已存在的记录不会被覆盖。") },
             confirmButton = {
-                TextButton(onClick = {
+                AppTextButton(onClick = {
                     showGenerateConfirm = false
                     scope.launch {
                         val b = babyRepo.getById(babyId)
@@ -294,9 +307,9 @@ fun VaccinationListScreen(navController: NavController) {
                             VaccineSchedule.createForBaby(babyId, b.birthDate).forEach { vacRepo.insert(it) }
                         }
                     }
-                }) { Text("生成") }
+                }, label = "生成")
             },
-            dismissButton = { TextButton(onClick = { showGenerateConfirm = false }) { Text("取消") } },
+            dismissButton = { AppTextButton(onClick = { showGenerateConfirm = false }, label = "取消") },
         )
     }
 }
@@ -333,16 +346,14 @@ private fun VaccinationCard(
         else -> c.warning to "未接种"
     }
 
-    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
-
-    Card(
-        Modifier
+    AppCard(
+        cornerRadius = 12.dp,
+        elevation = 2.dp,
+        containerColor = c.surface,
+        modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .combinedClickable(onClick = onClick, onLongClick = onDelete),
-        shape = cardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             // Row 1: 名称 + 剂次 + 状态标签
@@ -421,37 +432,38 @@ fun VaccinationFormDialog(
     var showScheduledDatePicker by remember { mutableStateOf(false) }
     var showAdministeredDatePicker by remember { mutableStateOf(false) }
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    AppBottomSheet(
+        show = true,
+        onDismiss = onDismiss,
+    ) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 0.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
+            Text(if (isEdit) "编辑疫苗" else "添加疫苗", style = LocalAppTypography.current.titleMedium, modifier = Modifier.padding(bottom = 16.dp))
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.padding(horizontal = DT.pageMargin.dp, vertical = 0.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
-            Text(if (isEdit) "编辑疫苗" else "添加疫苗", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 16.dp))
+            AppInput(value = name, onValueChange = { name = it }, label = "疫苗名称", isError = name.isBlank(), errorMessage = "名称不能为空", modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("疫苗名称") }, leadingIcon = { Text("💉", style = MaterialTheme.typography.titleMedium) }, isError = name.isBlank(), supportingText = { if (name.isBlank()) Text("名称不能为空") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
+            AppInput(value = dose, onValueChange = { dose = it }, label = "剂次 (可选)", placeholder = "第1剂", modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
-            OutlinedTextField(value = dose, onValueChange = { dose = it }, label = { Text("剂次 (可选)") }, placeholder = { Text("第1剂") }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
-
-            Text("状态", style = MaterialTheme.typography.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = 8.dp))
+            Text("状态", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = 8.dp))
             Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("pending" to "未接种", "done" to "已接种", "skipped" to "已跳过").forEach { (s, l) ->
                     FilterChip(
                         selected = status == s,
                         onClick = { status = s },
-                        label = { Text(l, style = MaterialTheme.typography.bodySmall) },
+                        label = { Text(l, style = LocalAppTypography.current.bodySmall) },
                         colors = FilterChipDefaults.filterChipColors(selectedContainerColor = c.primary.copy(alpha = 0.12f), selectedLabelColor = c.primary)
                     )
                 }
             }
 
-            OutlinedTextField(value = scheduledDate, onValueChange = {}, readOnly = true, label = { Text("计划接种日期 (可选)") }, leadingIcon = { Text("📅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showScheduledDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.outline, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
+            AppInput(value = scheduledDate, onValueChange = {}, label = "计划接种日期 (可选)", enabled = false, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showScheduledDatePicker = true })
 
             if (status == "done") {
-                OutlinedTextField(value = administeredDate, onValueChange = {}, readOnly = true, label = { Text("实际接种日期 (可选)") }, leadingIcon = { Text("✅", style = MaterialTheme.typography.titleMedium) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showAdministeredDatePicker = true }, singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false, colors = OutlinedTextFieldDefaults.colors(disabledBorderColor = c.outline, disabledTextColor = c.textPrimary, disabledLabelColor = c.textSecondary))
+                AppInput(value = administeredDate, onValueChange = {}, label = "实际接种日期 (可选)", enabled = false, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showAdministeredDatePicker = true })
             }
 
-            OutlinedTextField(value = note, onValueChange = { note = it }, label = { Text("备注 (可选)") }, modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp), singleLine = true, shape = MaterialTheme.shapes.medium)
+            AppInput(value = note, onValueChange = { note = it }, label = "备注 (可选)", modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp))
 
-            Button(
+            PrimaryButton(
                 onClick = {
                     val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
                     val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
@@ -477,28 +489,25 @@ fun VaccinationFormDialog(
                     }
                     onSave(vac)
                 },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-                enabled = name.isNotBlank()
-            ) {
-                Text(if (isEdit) "更新" else "保存", color = Color.White, style = MaterialTheme.typography.titleSmall)
-            }
+                label = if (isEdit) "更新" else "保存",
+                enabled = name.isNotBlank(),
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 
     if (showScheduledDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { showScheduledDatePicker = false }, confirmButton = {
-            TextButton(onClick = {
+            AppTextButton(onClick = {
                 showScheduledDatePicker = false
                 datePickerState.selectedDateMillis?.let { millis ->
                     val instant = java.time.Instant.ofEpochMilli(millis)
                     scheduledDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
                         .toLocalDate().toString()
                 }
-            }) { Text("确定") }
-        }, dismissButton = { TextButton(onClick = { showScheduledDatePicker = false }) { Text("取消") } }) {
+            }, label = "确定")
+            }, dismissButton = { AppTextButton(onClick = { showScheduledDatePicker = false }, label = "取消") }) {
             DatePicker(state = datePickerState)
         }
     }
@@ -506,15 +515,15 @@ fun VaccinationFormDialog(
     if (showAdministeredDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { showAdministeredDatePicker = false }, confirmButton = {
-            TextButton(onClick = {
+            AppTextButton(onClick = {
                 showAdministeredDatePicker = false
                 datePickerState.selectedDateMillis?.let { millis ->
                     val instant = java.time.Instant.ofEpochMilli(millis)
                     administeredDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
                         .toLocalDate().toString()
                 }
-            }) { Text("确定") }
-        }, dismissButton = { TextButton(onClick = { showAdministeredDatePicker = false }) { Text("取消") } }) {
+            }, label = "确定")
+            }, dismissButton = { AppTextButton(onClick = { showAdministeredDatePicker = false }, label = "取消") }) {
             DatePicker(state = datePickerState)
         }
     }

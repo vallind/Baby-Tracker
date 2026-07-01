@@ -5,7 +5,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,10 +27,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.domain.model.Diaper
 import com.babytracker.core.domain.model.DiaperType
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.iconbutton.AppIconButton
+import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
@@ -85,21 +99,19 @@ fun DiaperListScreen(navController: NavController) {
         }
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = "尿布记录",
                 onBack = { navController.popBackStack() },
                 actions = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(
-                            Icons.Default.DateRange,
-                            contentDescription = "选择日期",
-                            tint = c.textPrimary,
-                        )
-                    }
+                    AppIconButton(
+                        icon = Icons.Default.DateRange,
+                        onClick = { showDatePicker = true },
+                        contentDescription = "选择日期",
+                        tint = c.textPrimary,
+                    )
                 },
             )
         },
@@ -116,12 +128,12 @@ fun DiaperListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .clickable { showDatePicker = true }
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = LocalAppTypography.current.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = c.textPrimary,
                 )
@@ -149,16 +161,16 @@ fun DiaperListScreen(navController: NavController) {
                 }
             } else {
                 // —— 今日汇总大卡：移出 LazyColumn，正常布局消除负 padding ——
-                val cardShape = RoundedCornerShape(DT.cardRadiusLg.dp)
+                val cardShape = RoundedCornerShape(16.dp)
 
-                Card(
-                    Modifier
+                AppCard(
+                    cornerRadius = 16.dp,
+                    containerColor = Color.Transparent,
+                    elevation = 0.dp,
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = DT.pageMargin.dp)
+                        .padding(horizontal = 16.dp)
                         .padding(bottom = 16.dp),
-                    shape = cardShape,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                 ) {
                     Box(
                         Modifier
@@ -177,7 +189,7 @@ fun DiaperListScreen(navController: NavController) {
                                 Spacer(Modifier.width(8.dp))
                                 Text(
                                     "今日尿布",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = LocalAppTypography.current.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.White.copy(alpha = 0.9f),
                                 )
@@ -192,7 +204,7 @@ fun DiaperListScreen(navController: NavController) {
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = LocalAppTypography.current.bodyMedium,
                                 color = Color.White.copy(alpha = 0.75f),
                             )
                         }
@@ -200,19 +212,19 @@ fun DiaperListScreen(navController: NavController) {
                 }
 
                 // —— 换尿布详情 ——
-                Card(
-                    Modifier
+                AppCard(
+                    cornerRadius = 12.dp,
+                    containerColor = c.surface,
+                    elevation = 0.dp,
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = DT.pageMargin.dp)
+                        .padding(horizontal = 16.dp)
                         .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(DT.cardRadius.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    colors = CardDefaults.cardColors(containerColor = c.surface),
                 ) {
-                    Column(Modifier.padding(DT.cardInnerPadding.dp)) {
+                    Column(Modifier.padding(16.dp)) {
                         Text(
                             "换尿布详情",
-                            style = MaterialTheme.typography.titleSmall,
+                            style = LocalAppTypography.current.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = c.textPrimary,
                         )
@@ -249,8 +261,8 @@ fun DiaperListScreen(navController: NavController) {
                         .weight(1f)
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        start = DT.pageMargin.dp,
-                        end = DT.pageMargin.dp,
+                        start = 16.dp,
+                        end = 16.dp,
                         bottom = 8.dp,
                     ),
                 ) {
@@ -287,29 +299,29 @@ fun DiaperListScreen(navController: NavController) {
                         ) {
                             Box(
                                 Modifier
-                                    .size(DT.iconBgSize.dp)
-                                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(10.dp))
                                     .background(accentColor.copy(alpha = 0.12f)),
                                 contentAlignment = Alignment.Center,
-                            ) { Text(typeEmoji, style = MaterialTheme.typography.titleLarge) }
+                            ) { Text(typeEmoji, style = LocalAppTypography.current.titleLarge) }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     label,
-                                    style = MaterialTheme.typography.titleSmall,
+                                    style = LocalAppTypography.current.titleSmall,
                                     color = c.textPrimary,
                                     fontWeight = FontWeight.Medium,
                                 )
                                 Text(
                                     timeStr,
-                                    style = MaterialTheme.typography.bodySmall,
+                                    style = LocalAppTypography.current.bodySmall,
                                     color = c.textSecondary,
                                 )
                             }
                             if (!d.note.isNullOrBlank()) {
                                 Text(
                                     d.note.take(8),
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style = LocalAppTypography.current.labelSmall,
                                     color = c.textTertiary,
                                     modifier = Modifier.padding(start = 8.dp),
                                 )
@@ -327,27 +339,19 @@ fun DiaperListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .background(c.surface)
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Button(
+                PrimaryButton(
                     onClick = {
                         editingDiaper = null
                         showForm = true
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(DT.buttonRadius.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text("记录尿布", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
+                    label = "记录尿布",
+                    icon = Icons.Default.Add,
+                    height = 48.dp,
+                    cornerRadius = 12.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
@@ -380,15 +384,15 @@ fun DiaperListScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
+                AppTextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         selectedDate = LocalDate.ofEpochDay(millis / 86400000L)
                     }
                     showDatePicker = false
-                }) { Text("确定") }
+                }, label = "确定")
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("取消") }
+                AppTextButton(onClick = { showDatePicker = false }, label = "取消")
             },
         ) {
             DatePicker(state = datePickerState)
@@ -453,28 +457,19 @@ fun DiaperFormDialog(
         }
 
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        AppInput(
             value = diaperDateTime,
             onValueChange = {},
-            readOnly = true,
-            label = { Text("时间") },
-            modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
-            singleLine = true,
-            shape = MaterialTheme.shapes.medium,
+            label = "时间",
             enabled = false,
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
+            modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        AppInput(
             value = note,
             onValueChange = { note = it },
-            label = { Text("备注 (可选)") },
+            label = "备注 (可选)",
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.small,
         )
     }
 
@@ -503,14 +498,14 @@ private fun DiaperStatCell(
         Spacer(Modifier.height(4.dp))
         Text(
             value,
-            style = MaterialTheme.typography.titleMedium,
+            style = LocalAppTypography.current.titleMedium,
             fontWeight = FontWeight.Bold,
             color = c.textPrimary,
         )
         Spacer(Modifier.height(2.dp))
         Text(
             label,
-            style = MaterialTheme.typography.bodySmall,
+            style = LocalAppTypography.current.bodySmall,
             color = c.textSecondary,
         )
     }

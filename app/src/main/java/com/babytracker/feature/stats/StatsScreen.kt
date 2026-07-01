@@ -35,6 +35,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.components.scaffold.AppScaffold
 import org.koin.compose.koinInject
 
 /**
@@ -57,8 +58,7 @@ fun StatsScreen(navController: NavController) {
         viewModel.loadData(babyId)
     }
 
-    androidx.compose.material3.Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         topBar = {
             AppTopBar(title = "统计分析")
         },

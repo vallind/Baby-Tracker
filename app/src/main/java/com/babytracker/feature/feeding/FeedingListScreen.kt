@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,15 +16,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.navigation.NavController
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.FeedingType
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.iconbutton.AppIconButton
+import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
@@ -78,21 +91,19 @@ fun FeedingListScreen(navController: NavController) {
         }
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = "喂养记录",
                 onBack = { navController.popBackStack() },
                 actions = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(
-                            Icons.Default.DateRange,
-                            contentDescription = "选择日期",
-                            tint = c.textPrimary,
-                        )
-                    }
+                    AppIconButton(
+                        icon = Icons.Default.DateRange,
+                        onClick = { showDatePicker = true },
+                        contentDescription = "选择日期",
+                        tint = c.textPrimary,
+                    )
                 },
             )
         },
@@ -109,7 +120,7 @@ fun FeedingListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .clickable { showDatePicker = true }
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -164,27 +175,17 @@ fun FeedingListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .background(c.surface)
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Button(
+                PrimaryButton(
                     onClick = {
                         editingFeeding = null
                         showForm = true
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(DT.buttonRadius.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text("记录喂养", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
+                    label = "记录喂养",
+                    icon = Icons.Default.Add,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
@@ -217,15 +218,15 @@ fun FeedingListScreen(navController: NavController) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
+                AppTextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         selectedDate = LocalDate.ofEpochDay(millis / 86400000L)
                     }
                     showDatePicker = false
-                }) { Text("确定") }
+                }, label = "确定")
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("取消") }
+                AppTextButton(onClick = { showDatePicker = false }, label = "取消")
             },
         ) {
             DatePicker(state = datePickerState)
@@ -286,8 +287,8 @@ private fun FeedingTimeline(
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
-            start = DT.pageMargin.dp,
-            end = DT.pageMargin.dp,
+            start = 16.dp,
+            end = 16.dp,
             top = 4.dp,
             bottom = 8.dp,
         ),
@@ -327,7 +328,7 @@ private fun FeedingTimeline(
                     // 竖线填满剩余空间
                     Box(
                         Modifier
-                            .width(DT.timelineLineWidth.dp)
+                            .width(2.dp)
                             .weight(1f)
                             .background(c.divider),
                     )
@@ -347,8 +348,8 @@ private fun FeedingTimeline(
                 ) {
                     Box(
                         Modifier
-                            .size(DT.iconBgSize.dp)
-                            .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(10.dp))
                             .background(color.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center,
                     ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
@@ -449,72 +450,74 @@ fun FeedingFormDialog(
                         FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
                     }
                 }
-                OutlinedTextField(
-                    value = durationMin, onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
-                    label = { Text("时长 (分钟)") }, singleLine = true,
-                    leadingIcon = { Text("⏱", style = MaterialTheme.typography.titleMedium) },
+                AppInput(
+                    value = durationMin,
+                    onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
+                    label = "时长 (分钟)",
+                    leadingIcon = { Text("⏱", fontSize = 18.sp) },
                     isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
-                    supportingText = { if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) Text("请输入 0-600 之间的数字") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                    errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) "请输入 0-600 之间的数字" else null,
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
             "formula" -> {
-                OutlinedTextField(
-                    value = amountMl, onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = { Text("奶量 (ml)") }, singleLine = true,
-                    leadingIcon = { Text("💧", style = MaterialTheme.typography.titleMedium) },
+                AppInput(
+                    value = amountMl,
+                    onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
+                    label = "奶量 (ml)",
+                    leadingIcon = { Text("💧", fontSize = 18.sp) },
                     isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
-                    supportingText = { if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) Text("请输入 1-500 之间的数字") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = MaterialTheme.shapes.medium,
+                    errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) "请输入 1-500 之间的数字" else null,
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedTextField(
-                    value = brand, onValueChange = { brand = it },
-                    label = { Text("品牌 (可选)") }, singleLine = true,
-                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                AppInput(
+                    value = brand,
+                    onValueChange = { brand = it },
+                    label = "品牌 (可选)",
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
             "food" -> {
-                OutlinedTextField(
-                    value = foodName, onValueChange = { foodName = it },
-                    label = { Text("食物名称") }, singleLine = true,
-                    leadingIcon = { Text("🥣", style = MaterialTheme.typography.titleMedium) },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp), shape = MaterialTheme.shapes.medium,
+                AppInput(
+                    value = foodName,
+                    onValueChange = { foodName = it },
+                    label = "食物名称",
+                    leadingIcon = { Text("🥣", fontSize = 18.sp) },
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                OutlinedTextField(
-                    value = amountG, onValueChange = { amountG = it.filter { c -> c.isDigit() } },
-                    label = { Text("分量 (g)") }, singleLine = true,
+                AppInput(
+                    value = amountG,
+                    onValueChange = { amountG = it.filter { c -> c.isDigit() } },
+                    label = "分量 (g)",
                     isError = amountG.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    supportingText = { if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) Text("请输入 0-1000 之间的数字") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                    errorMessage = if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
             "water" -> {
-                OutlinedTextField(
-                    value = amountMl, onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = { Text("饮水量 (ml)") }, singleLine = true,
-                    leadingIcon = { Text("🥤", style = MaterialTheme.typography.titleMedium) },
+                AppInput(
+                    value = amountMl,
+                    onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
+                    label = "饮水量 (ml)",
+                    leadingIcon = { Text("🥤", fontSize = 18.sp) },
                     isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    supportingText = { if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) Text("请输入 0-1000 之间的数字") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+                    errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
 
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = feedingDateTime, onValueChange = {}, readOnly = true,
-            label = { Text("时间 (yyyy-MM-dd HH:mm)") },
+        AppInput(
+            value = feedingDateTime,
+            onValueChange = {},
+            label = "时间 (yyyy-MM-dd HH:mm)",
+            enabled = false,
             modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
-            singleLine = true, shape = MaterialTheme.shapes.medium, enabled = false,
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            ),
         )
     }
 

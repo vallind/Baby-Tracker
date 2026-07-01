@@ -8,7 +8,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,8 +21,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
@@ -60,8 +64,7 @@ fun MessageScreen(navController: NavController) {
         else state.messages.filter { it.type == filterType }
     }
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         topBar = {
             AppTopBar(
                 title = "消息中心",
@@ -98,7 +101,7 @@ fun MessageScreen(navController: NavController) {
                 },
             )
 
-            Spacer(Modifier.height(DT.cardGapSm.dp))
+            Spacer(Modifier.height(8.dp))
 
             // —— 消息列表 ——
             if (filteredMessages.isEmpty()) {
@@ -118,12 +121,12 @@ fun MessageScreen(navController: NavController) {
                         .weight(1f)
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        start = DT.pageMargin.dp,
-                        end = DT.pageMargin.dp,
-                        top = DT.cardGap.dp,
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 12.dp,
                         bottom = 16.dp,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(DT.cardGapSm.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(filteredMessages, key = { it.id }) { message ->
                         MessageCard(
@@ -152,7 +155,7 @@ private fun CategoryOverviewBar(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         val unreadMap = mapOf(
@@ -163,16 +166,13 @@ private fun CategoryOverviewBar(
         CATEGORY_OVERVIEWS.forEachIndexed { i, cat ->
             val unread = unreadMap[cat.type] ?: 0
             val selected = selectedType == cat.type
-            val cardShape = RoundedCornerShape(DT.cardRadius.dp)
-            Card(
-                Modifier
+            AppCard(
+                cornerRadius = 12.dp,
+                elevation = 2.dp,
+                containerColor = if (selected) cat.bgColor else c.surface,
+                modifier = Modifier
                     .weight(1f)
                     .clickable { onSelect(cat.type) },
-                shape = cardShape,
-                elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (selected) cat.bgColor else c.surface,
-                ),
             ) {
                 Row(
                     Modifier
@@ -226,14 +226,13 @@ private fun MessageCard(
     onDelete: () -> Unit,
 ) {
     val c = LocalAppColors.current
-    val cardShape = RoundedCornerShape(DT.cardRadius.dp)
-    Card(
-        Modifier
+    AppCard(
+        cornerRadius = 12.dp,
+        elevation = 2.dp,
+        containerColor = c.surface,
+        modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = cardShape,
-        elevation = CardDefaults.cardElevation(defaultElevation = DT.cardElevation.dp),
-        colors = CardDefaults.cardColors(containerColor = c.surface),
     ) {
         Row(
             Modifier
@@ -336,7 +335,7 @@ private fun MessageLeadingIcon(message: AppMessage) {
             Box(
                 Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                    .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFF2196F3).copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
@@ -353,7 +352,7 @@ private fun MessageLeadingIcon(message: AppMessage) {
             Box(
                 Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                    .clip(RoundedCornerShape(10.dp))
                     .background(Color(0xFF9C27B0).copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {

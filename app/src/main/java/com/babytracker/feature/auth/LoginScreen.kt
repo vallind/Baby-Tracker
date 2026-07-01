@@ -10,7 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +30,8 @@ import androidx.navigation.NavController
 import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.input.AppInput
 import org.koin.compose.koinInject
 
 /**
@@ -49,11 +53,10 @@ fun LoginScreen(navController: NavController) {
         if (uiState.isLoggedIn) navController.popBackStack()
     }
 
-    Scaffold(
+    AppScaffold(
         topBar = {
             AppTopBar(title = "账户", onBack = { navController.popBackStack() })
         },
-        containerColor = c.pageBackground,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -76,33 +79,23 @@ fun LoginScreen(navController: NavController) {
             )
             Spacer(Modifier.height(32.dp))
 
-            OutlinedTextField(
+            AppInput(
                 value = uiState.account, onValueChange = vm::onAccountChange,
-                label = { Text("账户名") }, placeholder = { Text("请输入账户名") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-                shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth(),
+                label = "账户名",
+                placeholder = "请输入账户名",
+                keyboardType = KeyboardType.Text,
+                modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
             )
             Spacer(Modifier.height(16.dp))
 
-            OutlinedTextField(
+            AppInput(
                 value = uiState.password, onValueChange = vm::onPasswordChange,
-                label = { Text("密码") }, placeholder = { Text("请输入密码（至少 6 位）") },
-                singleLine = true,
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                            contentDescription = if (passwordVisible) "隐藏密码" else "显示密码",
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { vm.submit() }),
-                shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth(),
+                label = "密码",
+                placeholder = "请输入密码（至少 6 位）",
+                isPassword = true,
+                keyboardType = KeyboardType.Password,
+                modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
             )
             Spacer(Modifier.height(8.dp))

@@ -10,7 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,10 +40,15 @@ import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
-import com.babytracker.designsystem.theme.DT
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.iconbutton.AppIconButton
+import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.input.AppInput
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
@@ -70,21 +79,19 @@ fun GrowthScreen(navController: NavController) {
         "44.0-49.0cm",
     )
 
-    Scaffold(
-        containerColor = c.pageBackground,
+    AppScaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = "生长记录",
                 onBack = { navController.popBackStack() },
                 actions = {
-                    IconButton(onClick = { /* 日历选择：暂时保留入口，后续可接日期筛选 */ }) {
-                        Icon(
-                            Icons.Default.DateRange,
-                            contentDescription = "日历",
-                            tint = c.textPrimary,
-                        )
-                    }
+                    AppIconButton(
+                        icon = Icons.Default.DateRange,
+                        onClick = { /* 日历选择：暂时保留入口，后续可接日期筛选 */ },
+                        contentDescription = "日历",
+                        tint = c.textPrimary,
+                    )
                 },
             )
         },
@@ -100,7 +107,7 @@ fun GrowthScreen(navController: NavController) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 SegmentedControl(
                     labels = tabs,
@@ -139,8 +146,8 @@ fun GrowthScreen(navController: NavController) {
                         .weight(1f)
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        start = DT.pageMargin.dp,
-                        end = DT.pageMargin.dp,
+                        start = 16.dp,
+                        end = 16.dp,
                         top = 4.dp,
                         bottom = 8.dp,
                     ),
@@ -158,18 +165,18 @@ fun GrowthScreen(navController: NavController) {
                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                             } catch (_: Exception) { "" }
 
-                            Card(
-                                Modifier
+                            AppCard(
+                                cornerRadius = 16.dp,
+                                containerColor = c.surface,
+                                elevation = 0.dp,
+                                modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = 16.dp),
-                                shape = RoundedCornerShape(DT.cardRadiusLg.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                                colors = CardDefaults.cardColors(containerColor = c.surface),
                             ) {
                                 Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         "当前${tabs[tab]}",
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        style = LocalAppTypography.current.bodyMedium,
                                         color = c.textSecondary,
                                     )
                                     Spacer(Modifier.height(8.dp))
@@ -194,7 +201,7 @@ fun GrowthScreen(navController: NavController) {
                                     Spacer(Modifier.height(6.dp))
                                     Text(
                                         "$measuredDate 测量",
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = LocalAppTypography.current.bodySmall,
                                         color = c.textTertiary,
                                     )
                                 }
@@ -208,7 +215,7 @@ fun GrowthScreen(navController: NavController) {
                             targetValue = if (chartData.size > 1) 1f else 0f,
                             animationSpec = tween(durationMillis = 800),
                         )
-                        val chartCardShape = RoundedCornerShape(DT.cardRadius.dp)
+                        val chartCardShape = RoundedCornerShape(12.dp)
                         val gridColor = c.divider
                         val lineColor = c.primary
                         val bgColor = c.surface
@@ -223,22 +230,21 @@ fun GrowthScreen(navController: NavController) {
                             }
                         }
 
-                        Card(
-                            Modifier
+                        AppCard(
+                            cornerRadius = 12.dp,
+                            containerColor = c.surface,
+                            elevation = 2.dp,
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                                .shadow(DT.cardElevation.dp, chartCardShape),
-                            shape = chartCardShape,
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            colors = CardDefaults.cardColors(containerColor = c.surface),
+                                .padding(bottom = 16.dp),
                         ) {
-                            Box(Modifier.fillMaxWidth().height(300.dp).padding(DT.cardInnerPadding.dp)) {
+                            Box(Modifier.fillMaxWidth().height(300.dp).padding(16.dp)) {
                                 // Y 轴标签
                                 Column(
                                     Modifier.fillMaxHeight().width(36.dp).padding(bottom = 24.dp),
                                     verticalArrangement = Arrangement.SpaceBetween,
                                 ) {
-                                    yLabels.forEach { Text(it, style = MaterialTheme.typography.labelSmall, color = c.textSecondary) }
+                                    yLabels.forEach { Text(it, style = LocalAppTypography.current.labelSmall, color = c.textSecondary) }
                                 }
 
                                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
@@ -306,7 +312,7 @@ fun GrowthScreen(navController: NavController) {
                                                         LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME)
                                                             .format(DateTimeFormatter.ofPattern("MM/dd"))
                                                     } catch (_: Exception) { "" },
-                                                    style = MaterialTheme.typography.labelSmall,
+                                                    style = LocalAppTypography.current.labelSmall,
                                                     color = c.textSecondary,
                                                 )
                                             }
@@ -319,16 +325,16 @@ fun GrowthScreen(navController: NavController) {
 
                     // —— 正常范围卡片 ——
                     item {
-                        Card(
-                            Modifier
+                        AppCard(
+                            cornerRadius = 12.dp,
+                            containerColor = c.surface,
+                            elevation = 0.dp,
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
-                            shape = RoundedCornerShape(DT.cardRadius.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                            colors = CardDefaults.cardColors(containerColor = c.surface),
                         ) {
                             Row(
-                                Modifier.padding(DT.cardInnerPadding.dp),
+                                Modifier.padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
@@ -344,13 +350,13 @@ fun GrowthScreen(navController: NavController) {
                                 Column {
                                     Text(
                                         "${tabs[tab]}正常范围",
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = LocalAppTypography.current.bodySmall,
                                         color = c.textSecondary,
                                     )
                                     Spacer(Modifier.height(2.dp))
                                     Text(
                                         normalRanges[tab],
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = LocalAppTypography.current.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = c.textPrimary,
                                     )
@@ -364,7 +370,7 @@ fun GrowthScreen(navController: NavController) {
                         stickyHeader(key = date) {
                             Text(
                                 date,
-                                style = MaterialTheme.typography.labelMedium,
+                                style = LocalAppTypography.current.labelMedium,
                                 color = c.textSecondary,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(vertical = 4.dp),
@@ -398,8 +404,8 @@ fun GrowthScreen(navController: NavController) {
                             ) {
                                 Box(
                                     Modifier
-                                        .size(DT.iconBgSize.dp)
-                                        .clip(RoundedCornerShape(DT.iconBgRadius.dp))
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(10.dp))
                                         .background(c.primary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) {
@@ -409,19 +415,19 @@ fun GrowthScreen(navController: NavController) {
                                             GrowthType.WEIGHT -> "⚖️"
                                             GrowthType.HEAD -> "📐"
                                         },
-                                        style = MaterialTheme.typography.titleLarge,
+                                        style = LocalAppTypography.current.titleLarge,
                                     )
                                 }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(
                                         "$label $valStr $unitStr",
-                                        style = MaterialTheme.typography.titleSmall,
+                                        style = LocalAppTypography.current.titleSmall,
                                         color = c.textPrimary,
                                     )
                                     Text(
                                         dateStr,
-                                        style = MaterialTheme.typography.bodySmall,
+                                        style = LocalAppTypography.current.bodySmall,
                                         color = c.textSecondary,
                                     )
                                 }
@@ -439,27 +445,19 @@ fun GrowthScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .background(c.surface)
-                    .padding(horizontal = DT.pageMargin.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Button(
+                PrimaryButton(
                     onClick = {
                         editingGrowth = null
                         showForm = true
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(DT.buttonRadius.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = c.primary),
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text("记录${tabs[tab]}", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
+                    label = "记录${tabs[tab]}",
+                    icon = Icons.Default.Add,
+                    height = 48.dp,
+                    cornerRadius = 12.dp,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
@@ -550,45 +548,32 @@ fun GrowthFormDialog(
                 FilterChip(
                     selected = type == t,
                     onClick = { type = t },
-                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                    label = { Text(label, style = LocalAppTypography.current.bodySmall) },
                 )
             }
         }
 
-        OutlinedTextField(
+        AppInput(
             value = value,
             onValueChange = { value = it },
-            label = { Text("数值") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            label = "数值",
+            keyboardType = KeyboardType.Decimal,
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-            shape = MaterialTheme.shapes.medium,
         )
 
-        OutlinedTextField(
+        AppInput(
             value = measuredAt,
             onValueChange = {},
-            readOnly = true,
-            label = { Text("测量时间") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showCascadePicker = true },
-            shape = MaterialTheme.shapes.medium,
+            label = "测量时间",
             enabled = false,
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledBorderColor = c.outline,
-                disabledTextColor = c.textPrimary,
-                disabledLabelColor = c.textSecondary,
-            ),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showCascadePicker = true },
         )
 
-        OutlinedTextField(
+        AppInput(
             value = note,
             onValueChange = { note = it },
-            label = { Text("备注 (可选)") },
-            singleLine = false,
+            label = "备注 (可选)",
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
-            minLines = 2,
         )
     }
 
