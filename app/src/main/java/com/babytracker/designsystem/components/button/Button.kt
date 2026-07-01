@@ -6,7 +6,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -19,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.ButtonDefaults as AppButtonDefaults
+import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
  * 主按钮（填充） — 对标 Palette Button 组件，消费 AppComponentTokens.button
@@ -73,6 +73,7 @@ fun SecondaryButton(
     fontSize: TextUnit = AppButtonDefaults.fontSize(),
     fontWeight: FontWeight = AppButtonDefaults.fontWeight(),
     iconSize: Dp = AppButtonDefaults.iconSize(),
+    color: Color = LocalAppColors.current.primary,
     modifier: Modifier = Modifier,
 ) {
     OutlinedButton(
@@ -82,7 +83,7 @@ fun SecondaryButton(
         modifier = modifier.height(height),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
-            contentColor = AppButtonDefaults.contentColor(),
+            contentColor = color,
             disabledContentColor = AppButtonDefaults.disabledContentColor(),
         ),
         border = ButtonDefaults.outlinedButtonBorder(enabled = enabled),
@@ -104,6 +105,7 @@ fun AppTextButton(
     enabled: Boolean = true,
     fontSize: TextUnit = AppButtonDefaults.fontSize(),
     fontWeight: FontWeight = AppButtonDefaults.fontWeight(),
+    color: Color = LocalAppColors.current.primary,
     modifier: Modifier = Modifier,
 ) {
     TextButton(
@@ -111,7 +113,7 @@ fun AppTextButton(
         enabled = enabled,
         modifier = modifier,
         colors = ButtonDefaults.textButtonColors(
-            contentColor = AppButtonDefaults.contentColor(),
+            contentColor = color,
             disabledContentColor = AppButtonDefaults.disabledContentColor(),
         ),
     ) {

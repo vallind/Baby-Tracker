@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**修复 AppTextButton / SecondaryButton 默认字体颜色在亮色主题下不可见：**
+- `AppTextButton` 和 `SecondaryButton` 原使用 `ButtonTokens.contentColor`(= `colors.onPrimary`，亮色=白色)
+- 白色文字在白色 `AppBottomSheet` 背景上不可见
+- 修复：新增 `color: Color` 参数，默认值改为 `colors.primary`（品牌蓝）
+
 **组件默认样式补齐 + Feature 层强制使用 Design System：**
 - 新增 5 个 Defaults 文件：IconButtonDefaults、ScaffoldDefaults、SheetDefaults、SectionHeaderDefaults、SegmentedControlDefaults
 - 新增 2 组组件令牌（SheetTokens、SegmentedControlTokens），已注册到 AppComponentTokens
