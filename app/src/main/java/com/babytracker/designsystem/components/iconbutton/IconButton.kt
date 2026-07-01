@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
-import com.babytracker.designsystem.theme.LocalAppComponentTokens
+import com.babytracker.designsystem.components.iconbutton.IconButtonDefaults as AppIconButtonDefaults
 
 /**
  * 主题化图标按钮 — 对标 Palette IconButton 组件
@@ -24,8 +24,8 @@ fun AppIconButton(
     icon: ImageVector,
     onClick: () -> Unit,
     contentDescription: String? = null,
-    tint: Color = LocalAppComponentTokens.current.iconButton.tintColor,
-    iconSize: Dp = LocalAppComponentTokens.current.iconButton.iconSize,
+    tint: Color = AppIconButtonDefaults.tintColor(),
+    iconSize: Dp = AppIconButtonDefaults.iconSize(),
     modifier: Modifier = Modifier,
 ) {
     IconButton(onClick = onClick, modifier = modifier) {

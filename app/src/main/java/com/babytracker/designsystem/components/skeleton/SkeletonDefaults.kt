@@ -10,4 +10,5 @@ object SkeletonDefaults {
     @Composable fun shimmerColor2(): Color = LocalAppComponentTokens.current.skeleton.shimmerColor2
     @Composable fun cornerRadius(): Dp = LocalAppComponentTokens.current.skeleton.cornerRadius
     @Composable fun avatarSize(): Dp = LocalAppComponentTokens.current.skeleton.avatarSize
+    @Composable fun shimmerDurationMs(): Int = LocalAppComponentTokens.current.skeleton.shimmerDurationMs
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.section.ListItemDefaults
+import com.babytracker.designsystem.components.section.SectionHeaderDefaults as AppSectionHeaderDefaults
 
 /**
  * 分区标题 — 对标 Palette LayoutTokens，页面中的分区标题 + 可选操作链接
@@ -39,13 +40,13 @@ fun SectionHeader(
         modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, fontSize = LocalAppTypography.current.titleMedium.fontSize, fontWeight = FontWeight.Bold, color = ListItemDefaults.titleColor())
+        Text(title, fontSize = AppSectionHeaderDefaults.titleSize(), fontWeight = FontWeight.Bold, color = AppSectionHeaderDefaults.titleColor())
         Spacer(Modifier.weight(1f))
         if (actionText != null && onAction != null) {
             Text(
                 actionText,
-                fontSize = LocalAppTypography.current.labelMedium.fontSize,
-                color = ListItemDefaults.actionColor(),
+                fontSize = AppSectionHeaderDefaults.subtitleSize(),
+                color = AppSectionHeaderDefaults.actionColor(),
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable(onClick = onAction),
             )

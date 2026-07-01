@@ -4,17 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.components.SegmentedControlDefaults as AppSegmentedControlDefaults
 
 /**
  * 分段选择器 —— 用于标签切换（全部/喂养/睡眠/...）。
@@ -37,34 +36,39 @@ fun SegmentedControl(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    containerColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.containerColor(),
+    selectedContainerColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.selectedContainerColor(),
+    selectedContentColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.selectedContentColor(),
+    unselectedContentColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.unselectedContentColor(),
+    cornerRadius: Dp = AppSegmentedControlDefaults.cornerRadius(),
+    innerCornerRadius: Dp = AppSegmentedControlDefaults.innerCornerRadius(),
+    borderWidth: Dp = AppSegmentedControlDefaults.borderWidth(),
+    fontSize: TextUnit = AppSegmentedControlDefaults.fontSize(),
+    fontWeight: FontWeight = AppSegmentedControlDefaults.fontWeight(),
+    selectedFontWeight: FontWeight = AppSegmentedControlDefaults.selectedFontWeight(),
 ) {
-    val c = LocalAppColors.current
-    val shapes = LocalAppShapes.current
-    // 容器背景色：primaryContainer + 透明度
-    // 参照：容器容器容器色 + 内容内容色的对照关系
-    val bg = c.primaryContainer.copy(alpha = 0.25f)
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(shapes.large))
-            .background(bg)
-            .padding(2.dp),
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(containerColor)
+            .padding(borderWidth),
     ) {
         labels.forEachIndexed { index, label ->
             val selected = index == selectedIndex
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(shapes.small))
-                    .then(if (selected) Modifier.background(c.surface) else Modifier)
+                    .clip(RoundedCornerShape(innerCornerRadius))
+                    .then(if (selected) Modifier.background(selectedContainerColor) else Modifier)
                     .clickable { onSelect(index) }
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = label,
-                    fontSize = 13.sp,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                    color = if (selected) c.primary else c.textSecondary,
+                    fontSize = fontSize,
+                    fontWeight = if (selected) selectedFontWeight else fontWeight,
+                    color = if (selected) selectedContentColor else unselectedContentColor,
                 )
             }
         }

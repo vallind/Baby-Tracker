@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.DT
+import com.babytracker.designsystem.components.sheet.SheetDefaults as AppSheetDefaults
 import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
@@ -38,14 +38,21 @@ fun AppFormSheet(
     saveText: String = "保存",
     saveEnabled: Boolean = true,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    containerColor: Color = AppSheetDefaults.containerColor(),
+    contentColor: Color = AppSheetDefaults.contentColor(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val c = LocalAppColors.current
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = containerColor,
+        contentColor = contentColor,
+    ) {
         Column(
             modifier
-                .padding(horizontal = DT.pageMargin.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
@@ -65,7 +72,7 @@ fun AppFormSheet(
             Button(
                 onClick = onSave,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(DT.buttonRadius.dp),
+                shape = RoundedCornerShape(12.dp),
                 enabled = saveEnabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = c.primary,

@@ -1,9 +1,14 @@
 package com.babytracker.designsystem.components.dialog
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import com.babytracker.designsystem.components.dialog.DialogDefaults as AppDialogDefaults
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 
@@ -28,11 +33,21 @@ fun AppConfirmDialog(
     cancelText: String = AppStrings.cancel,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
+    containerColor: Color = AppDialogDefaults.containerColor(),
+    contentColor: Color = AppDialogDefaults.contentColor(),
+    cornerRadius: Dp = AppDialogDefaults.cornerRadius(),
+    elevation: Dp = AppDialogDefaults.elevation(),
+    modifier: Modifier = Modifier,
 ) {
     if (!show) return
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = modifier,
+        shape = RoundedCornerShape(cornerRadius),
+        containerColor = containerColor,
+        textContentColor = contentColor,
+        tonalElevation = elevation,
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = {

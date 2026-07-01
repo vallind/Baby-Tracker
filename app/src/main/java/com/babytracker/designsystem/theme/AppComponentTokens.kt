@@ -798,6 +798,69 @@ data class DateTimeCascadeTokens(
     }
 }
 
+// —— 底部弹层 ——
+//  参照 shadcn Sheet：右上角关闭按钮 + 背景遮罩
+@Immutable
+data class SheetTokens(
+    val containerColor: Color,
+    val contentColor: Color,
+    val scrimColor: Color,
+    val cornerRadius: Dp,           // shapes.large（顶部圆角）
+    val dragHandleColor: Color,
+    val dragHandleWidth: Dp,
+    val dragHandleHeight: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+        ): SheetTokens = SheetTokens(
+            containerColor = colors.surface,
+            contentColor = colors.onSurface,
+            scrimColor = colors.scrim,
+            cornerRadius = shapes.scaled(shapes.large),
+            dragHandleColor = colors.divider,
+            dragHandleWidth = 32.dp,
+            dragHandleHeight = 4.dp,
+        )
+    }
+}
+
+// —— 分段选择器 ——
+//  参照 shadcn Toggle Group / iOS 分段控件
+@Immutable
+data class SegmentedControlTokens(
+    val containerColor: Color,
+    val selectedContainerColor: Color,
+    val selectedContentColor: Color,
+    val unselectedContentColor: Color,
+    val cornerRadius: Dp,           // shapes.large（外层）
+    val innerCornerRadius: Dp,      // shapes.small（选中项）
+    val borderWidth: Dp,
+    val fontSize: TextUnit,
+    val fontWeight: FontWeight,
+    val selectedFontWeight: FontWeight,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+        ): SegmentedControlTokens = SegmentedControlTokens(
+            containerColor = colors.primaryContainer.copy(alpha = 0.25f),
+            selectedContainerColor = colors.surface,
+            selectedContentColor = colors.primary,
+            unselectedContentColor = colors.textSecondary,
+            cornerRadius = shapes.scaled(shapes.large),
+            innerCornerRadius = shapes.scaled(shapes.small),
+            borderWidth = 2.dp,
+            fontSize = typography.label.fontSize,
+            fontWeight = FontWeight.Normal,
+            selectedFontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
 // ═══════════════════════════════════════════════════════════
 //  TT-030 顶层聚合容器
 //  参照 PaletteComponentThemes.default()：统一接收所有基础令牌，分发到各组件
@@ -831,6 +894,8 @@ data class AppComponentTokens(
     val timePicker: TimePickerTokens,
     val datePicker: DatePickerTokens,
     val dateTimeCascade: DateTimeCascadeTokens,
+    val sheet: SheetTokens,
+    val segmentedControl: SegmentedControlTokens,
 ) {
     companion object {
         fun default(
@@ -871,6 +936,8 @@ data class AppComponentTokens(
             timePicker = TimePickerTokens.default(colors, shapes),
             datePicker = DatePickerTokens.default(colors, shapes),
             dateTimeCascade = DateTimeCascadeTokens.default(colors, shapes),
+            sheet = SheetTokens.default(colors, shapes),
+            segmentedControl = SegmentedControlTokens.default(colors, shapes, typography),
         )
     }
 }
