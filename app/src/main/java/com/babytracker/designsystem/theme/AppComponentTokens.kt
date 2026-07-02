@@ -164,13 +164,14 @@ data class SelectionControlTokens(
         fun default(
             colors: AppColors,
             opacity: AppOpacity,
+            motion: AppMotion,
         ): SelectionControlTokens = SelectionControlTokens(
             size = 20.dp,
             strokeWidth = 2.dp,
             checkedColor = colors.primary,
             uncheckedColor = colors.outline,
             disabledColor = colors.textDisabled,
-            animationDurationMs = 200,
+            animationDurationMs = motion.duration.fast,
         )
     }
 }
@@ -913,7 +914,7 @@ data class AppComponentTokens(
             card = CardTokens.default(colors, shapes, spacing, elevation),
             input = InputTokens.default(colors, shapes, typography, control),
             select = SelectTokens.default(colors, spacing),
-            selectionControl = SelectionControlTokens.default(colors, opacity),
+            selectionControl = SelectionControlTokens.default(colors, opacity, motion),
             switch = SwitchTokens.default(colors, elevation),
             table = TableTokens.default(colors, spacing),
             dialog = DialogTokens.default(colors, shapes, spacing, elevation, opacity),

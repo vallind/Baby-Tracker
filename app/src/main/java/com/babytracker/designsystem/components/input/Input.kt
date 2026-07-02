@@ -36,6 +36,8 @@ fun AppInput(
     label: String,
     placeholder: String? = null,
     isPassword: Boolean = false,
+    passwordVisible: Boolean = false,
+    onPasswordToggle: (() -> Unit)? = null,
     enabled: Boolean = true,
     isError: Boolean = false,
     errorMessage: String? = null,
@@ -44,27 +46,33 @@ fun AppInput(
     height: Dp = InputDefaults.height(),
     cornerRadius: Dp = InputDefaults.cornerRadius(),
     fontSize: TextUnit = InputDefaults.fontSize(),
-    borderWidth: Dp = InputDefaults.borderWidth(),
-    borderWidthFocus: Dp = InputDefaults.borderWidthFocus(),
     iconSize: Dp = InputDefaults.iconSize(),
     modifier: Modifier = Modifier,
 ) {
+    val visualTransformation = if (isPassword && !passwordVisible) {
+        PasswordVisualTransformation()
+    } else {
+        VisualTransformation.None
+    }
+
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         enabled = enabled,
         isError = isError,
+        visualTransformation = visualTransformation,
         label = { androidx.compose.material3.Text(label) },
         placeholder = placeholder?.let { { androidx.compose.material3.Text(it) } },
         leadingIcon = leadingIcon,
         trailingIcon = if (isPassword) {
+            val icon = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility
             {
-                IconButton(onClick = { /* TODO: 密码可见切换由外层管理 */ }) {
-                    Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(iconSize))
+                IconButton(onClick = { onPasswordToggle?.invoke() }) {
+                    Icon(icon, contentDescription = if (passwordVisible) "隐藏密码" else "显示密码", modifier = Modifier.size(iconSize))
                 }
             }
         } else null,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(keyboardType = if (isPassword && !passwordVisible) KeyboardType.Password else keyboardType),
         singleLine = true,
         shape = RoundedCornerShape(cornerRadius),
         modifier = modifier.height(height),

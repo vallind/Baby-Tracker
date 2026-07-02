@@ -2,12 +2,15 @@ package com.babytracker.designsystem.components.dialog
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.dialog.DialogDefaults as AppDialogDefaults
 
 /**
  * 通用对话框组件 — 对标 Palette Dialog，消费 AppComponentTokens.dialog。
@@ -31,10 +34,10 @@ fun AppDialog(
     cancelText: String = "取消",
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    cornerRadius: Dp = DialogDefaults.cornerRadius(),
-    containerColor: Color = DialogDefaults.containerColor(),
-    contentColor: Color = DialogDefaults.contentColor(),
-    elevation: Dp = DialogDefaults.elevation(),
+    cornerRadius: Dp = AppDialogDefaults.cornerRadius(),
+    containerColor: Color = AppDialogDefaults.containerColor(),
+    contentColor: Color = AppDialogDefaults.contentColor(),
+    elevation: Dp = AppDialogDefaults.elevation(),
     modifier: Modifier = Modifier,
 ) {
     if (!show) return
@@ -49,14 +52,10 @@ fun AppDialog(
         title = { Text(title) },
         text = text?.let { { Text(it) } },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(confirmText)
-            }
+            AppTextButton(onClick = onConfirm, label = confirmText)
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(cancelText)
-            }
+            AppTextButton(onClick = onDismiss, label = cancelText)
         },
     )
 }
@@ -79,9 +78,9 @@ fun AppActionSheet(
     actions: List<Pair<String, () -> Unit>>,
     cancelText: String = "取消",
     onDismiss: () -> Unit,
-    cornerRadius: Dp = DialogDefaults.cornerRadius(),
-    containerColor: Color = DialogDefaults.containerColor(),
-    contentColor: Color = DialogDefaults.contentColor(),
+    cornerRadius: Dp = AppDialogDefaults.cornerRadius(),
+    containerColor: Color = AppDialogDefaults.containerColor(),
+    contentColor: Color = AppDialogDefaults.contentColor(),
     modifier: Modifier = Modifier,
 ) {
     if (!show) return
@@ -102,22 +101,19 @@ fun AppActionSheet(
         text = {
             Column {
                 actions.forEach { (label, onClick) ->
-                    TextButton(
+                    AppTextButton(
                         onClick = {
                             onDismiss()
                             onClick()
                         },
+                        label = label,
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(label, modifier = Modifier.fillMaxWidth())
-                    }
+                    )
                 }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(cancelText)
-            }
+            AppTextButton(onClick = onDismiss, label = cancelText)
         },
     )
 }

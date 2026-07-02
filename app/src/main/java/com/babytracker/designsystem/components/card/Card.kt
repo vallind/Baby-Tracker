@@ -2,6 +2,7 @@ package com.babytracker.designsystem.components.card
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -30,6 +31,7 @@ fun AppCard(
     containerColor: Color = AppCardDefaults.containerColor(),
     borderColor: Color = AppCardDefaults.borderColor(),
     borderWidth: Dp = AppCardDefaults.borderWidth(),
+    innerPadding: Dp = AppCardDefaults.innerPadding(),
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -41,6 +43,6 @@ fun AppCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = if (borderWidth > 0.dp) BorderStroke(borderWidth, borderColor) else null,
-        content = content,
+        content = { androidx.compose.foundation.layout.Column(Modifier.padding(innerPadding), content = content) },
     )
 }

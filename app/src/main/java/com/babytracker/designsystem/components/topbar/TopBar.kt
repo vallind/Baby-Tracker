@@ -39,8 +39,10 @@ fun AppTopBar(
     titleWeight: FontWeight = TopBarDefaults.titleWeight(),
     backIconSize: Dp = TopBarDefaults.backIconSize(),
     actions: @Composable RowScope.() -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     CenterAlignedTopAppBar(
+        modifier = modifier,
         title = {
             Text(
                 title,

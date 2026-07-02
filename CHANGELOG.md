@@ -4,6 +4,15 @@
 
 ### [Unreleased]
 
+**设计系统优化：消除 ThemeColors 双系统 + Motion 令牌落地 + 审计强化：**
+- 删除 `ThemeColors` 数据类（29 字段 + derive 工厂），6 套主题直接使用 `AppColors.derive()`
+- 消除 `BabyTrackerTheme()` 中 ThemeColors→AppColors 桥接代码（~40 行胶水代码）
+- 删除空文件 `DesignTokens.kt`
+- `BabyTrackerShapes` 改为从 `AppShapes` 派生，`radiusScale` 全局缩放对 M3 组件生效
+- `SelectionControlTokens.animationDurationMs` 从硬编码 200ms 改为 `motion.duration.fast`
+- `AppDefaults` 补齐 `TypographySnapshot`、`ColorsSnapshot` 快照，修复 ShapesSnapshot 偏差
+- 静态审计测试新增 2 条规则：动画时长从 AppMotion 派生、圆角使用 shapes.scaled()
+
 **修复 AppTextButton / SecondaryButton 默认字体颜色在亮色主题下不可见：**
 - `AppTextButton` 和 `SecondaryButton` 原使用 `ButtonTokens.contentColor`(= `colors.onPrimary`，亮色=白色)
 - 白色文字在白色 `AppBottomSheet` 背景上不可见

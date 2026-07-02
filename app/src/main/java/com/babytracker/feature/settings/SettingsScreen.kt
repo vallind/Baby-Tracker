@@ -494,7 +494,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                             .clickable { themeCtrl.switchTheme(theme.name) },
                         cornerRadius = 12.dp,
                         elevation = 1.dp,
-                        containerColor = theme.colors.card,
+                        containerColor = theme.colors.surface,
                     ) {
                         Box(Modifier.fillMaxSize().padding(12.dp)) {
                             Column {

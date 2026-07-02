@@ -15,7 +15,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.designsystem.theme.LocalAppColors
-// DT 已弃用，inline 18.dp 替代 DT.badgeSize.dp
 
 @Composable
 fun BadgeIcon(

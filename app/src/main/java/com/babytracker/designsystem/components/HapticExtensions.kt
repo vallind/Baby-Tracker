@@ -38,5 +38,3 @@ fun Modifier.longPressDeletable(
         onLongClick()
     },
 )
-
-// SwipeToDeleteContainer / SwipeToEditContainer / SwipeToEditDeleteContainer 已迁移至 SwipeContainers.kt
