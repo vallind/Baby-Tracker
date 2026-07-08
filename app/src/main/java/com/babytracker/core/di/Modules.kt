@@ -37,7 +37,7 @@ val appModule = module {
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
-    viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get()) }
     viewModel { MessageViewModel(get()) }
     viewModel { DevelopmentAssessmentViewModel(get(), get()) }
     viewModel { ReminderViewModel(get()) }

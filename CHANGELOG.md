@@ -4,6 +4,14 @@
 
 ### [Unreleased]
 
+**首页改造（P1.1-P1.3）：HomeStatusCard + QuickRecordBar + 多宝宝切换：**
+- HomeViewModel: 新增 ActiveCareState、upcomingReminder、isLoading、error 状态字段，集成 ReminderRepository 加载待办提醒，catch 异常处理
+- HomeScreen: BabyHeader 新增日期显示、多宝宝下拉切换；布局重排加入 HomeStatusCard 和 QuickRecordBar
+- 新增 HomeStatusCard：活跃护理计时卡片 + 待办提醒卡片
+- 新增 QuickRecordBar：4 项快捷记录入口（喂养/睡眠/尿布/生长）
+- 修复 TodayOverviewCard 和 RecentRecordsSection 的 autoPadding 双倍内边距问题
+- 全部 MaterialTheme.typography 替换为 LocalAppTypography.current
+
 **UI/UX/IA 统一改造设计：**
 - 新增 UI/UX/IA 统一改造设计文档，确定“温柔陪伴”视觉方向、四栏导航与中央记录入口
 - 明确首页主状态、快捷记录、2×4 功能宫格和今日时间线的层级，以及分阶段实施路线图

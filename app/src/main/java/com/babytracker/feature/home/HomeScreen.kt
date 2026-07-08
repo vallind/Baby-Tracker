@@ -4,9 +4,10 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +27,8 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.HomeStatusCard
+import com.babytracker.designsystem.components.QuickRecordBar
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
@@ -40,6 +43,7 @@ import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.domain.model.SleepType
 import com.babytracker.core.domain.model.FeedingType
 import org.koin.compose.koinInject
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -59,6 +63,20 @@ fun HomeScreen(navController: NavController) {
             if (babyCtrl.currentBabyId != baby.id) babyCtrl.selectBaby(baby.id)
             viewModel.loadData(baby.id)
         }
+    }
+
+    val todayDate = remember {
+        val now = LocalDate.now()
+        val dow = when (now.dayOfWeek) {
+            java.time.DayOfWeek.MONDAY -> "周一"
+            java.time.DayOfWeek.TUESDAY -> "周二"
+            java.time.DayOfWeek.WEDNESDAY -> "周三"
+            java.time.DayOfWeek.THURSDAY -> "周四"
+            java.time.DayOfWeek.FRIDAY -> "周五"
+            java.time.DayOfWeek.SATURDAY -> "周六"
+            java.time.DayOfWeek.SUNDAY -> "周日"
+        }
+        "${now.year}年${now.monthValue}月${now.dayOfMonth}日 $dow"
     }
 
     AppScaffold(
@@ -83,8 +101,30 @@ fun HomeScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            // —— 顶部宝宝信息区（浅蓝渐变背景 + 圆形头像）——
-            BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyProfile.route) })
+            BabyHeader(
+                baby = baby,
+                babies = babies,
+                currentDate = todayDate,
+                onSwitchBaby = { id ->
+                    babyCtrl.selectBaby(id)
+                    viewModel.loadData(id)
+                },
+                onClickProfile = { navController.navigate(Screen.BabyProfile.route) },
+            )
+
+            if (state.activeCare != null || state.upcomingReminder != null) {
+                Spacer(Modifier.height(16.dp))
+                HomeStatusCard(
+                    activeCare = state.activeCare,
+                    upcomingReminder = state.upcomingReminder,
+                    onPauseCare = { },
+                    onCompleteCare = { },
+                    onDismissReminder = { },
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+            QuickRecordBar(navController = navController)
 
             Spacer(Modifier.height(16.dp))
             FeatureGrid(navController)
@@ -106,8 +146,17 @@ fun HomeScreen(navController: NavController) {
 }
 
 @Composable
-private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
+private fun BabyHeader(
+    baby: Baby,
+    babies: List<Baby>,
+    currentDate: String,
+    onSwitchBaby: (Int) -> Unit,
+    onClickProfile: () -> Unit,
+) {
     val c = LocalAppColors.current
+    val typography = LocalAppTypography.current
+    var expanded by remember { mutableStateOf(false) }
+
     Box(
         Modifier
             .fillMaxWidth()
@@ -125,37 +174,65 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         baby.name,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = c.textPrimary,
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
                         DateUtils.monthAge(java.time.LocalDate.parse(baby.birthDate)),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = typography.bodyMedium,
                         color = c.textSecondary,
                     )
                 }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    currentDate,
+                    style = typography.bodyMedium,
+                    color = c.textSecondary,
+                )
                 Spacer(Modifier.height(6.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable(onClick = onClickProfile),
-                ) {
-                    Text(
-                        "宝宝资料",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = c.primary,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(" →", fontSize = 14.sp, color = c.primary)
+                Box {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable(onClick = { expanded = true }),
+                    ) {
+                        Text(
+                            "切换宝宝",
+                            style = typography.labelLarge,
+                            color = c.primary,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(" ▾", fontSize = 14.sp, color = c.primary)
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        babies.forEach { b ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        b.name,
+                                        color = if (b.id == baby.id) c.primary else c.textPrimary,
+                                        fontWeight = if (b.id == baby.id) FontWeight.SemiBold else FontWeight.Normal,
+                                    )
+                                },
+                                onClick = {
+                                    expanded = false
+                                    if (b.id != baby.id) onSwitchBaby(b.id)
+                                },
+                            )
+                        }
+                    }
                 }
             }
-            // 卡通宝宝插图（emoji 组合）
             Box(
                 Modifier
                     .size(82.dp)
                     .clip(CircleShape)
-                    .background(c.primaryContainer),
+                    .background(c.primaryContainer)
+                    .clickable(onClick = onClickProfile),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("👶", fontSize = 42.sp)
@@ -175,6 +252,7 @@ fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         cornerRadius = shapes.medium,
+        autoPadding = false,
     ) {
         Column(Modifier.padding(16.dp)) {
             Text("今日概览", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
@@ -296,9 +374,11 @@ private data class FeatureGridItemData(
 fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
     val c = LocalAppColors.current
     val shapes = LocalAppShapes.current
+    val typography = LocalAppTypography.current
     AppCard(
         modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
         cornerRadius = shapes.medium,
+        autoPadding = false,
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(
@@ -325,7 +405,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 if (showDates) {
                     Text(
                         date,
-                        style = MaterialTheme.typography.labelSmall,
+                        style = typography.labelSmall,
                         color = c.textSecondary,
                         modifier = Modifier.padding(top = if (isFirst) 0.dp else 12.dp, bottom = 4.dp),
                     )

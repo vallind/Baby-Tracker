@@ -12,12 +12,22 @@ import java.time.LocalDateTime
 import java.time.Duration
 import java.time.format.DateTimeFormatter
 
+data class ActiveCareState(
+    val type: com.babytracker.designsystem.theme.CareType,
+    val label: String,
+    val startedAt: Long,
+    val elapsedSeconds: Int,
+)
+
 data class HomeUiState(
     val feedCount: Int = 0,
-    val sleepHours: String = "--",
+    val sleepHours: String = "0h",
     val diaperCount: Int = 0,
     val recentItems: List<Any> = emptyList(),
-    val loading: Boolean = true,
+    val activeCare: ActiveCareState? = null,
+    val upcomingReminder: Reminder? = null,
+    val isLoading: Boolean = false,
+    val error: String? = null,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -25,6 +35,7 @@ class HomeViewModel(
     private val feedingRepo: FeedingRepository,
     private val sleepRepo: SleepRepository,
     private val diaperRepo: DiaperRepository,
+    private val reminderRepo: ReminderRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
@@ -39,7 +50,8 @@ class HomeViewModel(
                     feedingRepo.watchByBaby(babyId),
                     sleepRepo.watchByBaby(babyId),
                     diaperRepo.watchByBaby(babyId),
-                ) { feedings, sleeps, diapers ->
+                    reminderRepo.watchPending(babyId),
+                ) { feedings, sleeps, diapers, reminders ->
                     val today = LocalDate.now().toString()
                     val todayFeedings = feedings.filter { it.timestamp.startsWith(today) }
                     val todaySleeps = sleeps.filter { it.type == SleepType.NIGHT && it.startTime.startsWith(today) }
@@ -57,14 +69,22 @@ class HomeViewModel(
                         }
                     }.take(8)
 
+                    val upcomingReminder = reminders
+                        .filter { !it.isDone && it.isEnabled }
+                        .minByOrNull { it.dueDate }
+
                     HomeUiState(
                         feedCount = todayFeedings.size,
-                        sleepHours = if (nightSleepMin > 0) "${nightSleepMin / 60}时${nightSleepMin % 60}分" else "--",
+                        sleepHours = if (nightSleepMin > 0) "${nightSleepMin / 60}时${nightSleepMin % 60}分" else "0h",
                         diaperCount = todayDiapers.size,
                         recentItems = allItems,
-                        loading = false,
+                        upcomingReminder = upcomingReminder,
+                        isLoading = false,
                     )
                 }
+            }
+            .catch { e ->
+                _state.value = _state.value.copy(error = e.message, isLoading = false)
             }
             .onEach { _state.value = it }
             .launchIn(viewModelScope)
