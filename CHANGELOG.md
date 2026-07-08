@@ -4,6 +4,10 @@
 
 ### [Unreleased]
 
+**UI/UX/IA 统一改造设计：**
+- 新增 UI/UX/IA 统一改造设计文档，确定“温柔陪伴”视觉方向、四栏导航与中央记录入口
+- 明确首页主状态、快捷记录、2×4 功能宫格和今日时间线的层级，以及分阶段实施路线图
+
 **设计系统优化：消除 ThemeColors 双系统 + Motion 令牌落地 + 审计强化：**
 - 删除 `ThemeColors` 数据类（29 字段 + derive 工厂），6 套主题直接使用 `AppColors.derive()`
 - 消除 `BabyTrackerTheme()` 中 ThemeColors→AppColors 桥接代码（~40 行胶水代码）
