@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.AlertDialog
@@ -24,8 +23,8 @@ import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
@@ -86,8 +85,13 @@ fun ReminderScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            // —— 顶部渐变 header + 返回按钮 + 标题 ——
-            ReminderHeader(onBack = { navController.popBackStack() })
+            // —— 顶部渐变导航栏 ——
+            AppTopBar(
+                title = "提醒中心",
+                onBack = { navController.popBackStack() },
+                gradient = Gradients.pageHeader(c),
+                windowInsets = WindowInsets(0, 0, 0, 0),
+            )
 
             // —— Tab 切换 ——
             ReminderTabBar(tab = state.tab, onSwitch = viewModel::switchTab)
@@ -141,47 +145,6 @@ fun ReminderScreen(navController: NavController) {
             },
             onDismiss = { deletingReminder = null },
         )
-    }
-}
-
-// —— 顶部 header ——
-
-@Composable
-private fun ReminderHeader(onBack: () -> Unit) {
-    val c = LocalAppColors.current
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .background(Gradients.pageHeader(c)),
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(50))
-                    .clickable(onClick = onBack),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "返回",
-                    tint = c.textPrimary,
-                )
-            }
-            Spacer(Modifier.width(4.dp))
-            Text(
-                "提醒中心",
-                style = LocalAppTypography.current.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = c.textPrimary,
-            )
-        }
     }
 }
 

@@ -33,4 +33,9 @@ class AppSnackbar(private val hostState: SnackbarHostState) {
             onUndo()
         }
     }
+
+    suspend fun showSuccess(message: String) {
+        hostState.currentSnackbarData?.dismiss()
+        hostState.showSnackbar(message, duration = SnackbarDuration.Short)
+    }
 }

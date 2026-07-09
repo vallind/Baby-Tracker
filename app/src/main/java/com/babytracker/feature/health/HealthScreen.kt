@@ -7,12 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -28,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.designsystem.theme.Gradients
+import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -43,9 +41,12 @@ import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.RequireBaby
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import com.babytracker.designsystem.components.datetimecascade.CascadeMode
+import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -58,14 +59,14 @@ private data class HealthCategoryMeta(
     val bgColor: Color,
 )
 
-private val HEALTH_CATEGORIES = listOf(
-    HealthCategoryMeta("birth_info", "出生信息", "🍼", Color(0xFF9C27B0)),
-    HealthCategoryMeta("allergy", "过敏史", "🤧", Color(0xFFFFC107)),
-    HealthCategoryMeta("medicalHistory", "既往病史", "📋", Color(0xFF4CAF50)),
-    HealthCategoryMeta("visit", "就诊记录", "🏥", Color(0xFFF44336)),
-    HealthCategoryMeta("medication", "用药记录", "💊", Color(0xFF2196F3)),
-    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", Color(0xFFFF9800)),
-    HealthCategoryMeta("doctor_note", "医生备注", "📋", Color(0xFFFF5722)),
+private fun healthCategories(c: AppColors) = listOf(
+    HealthCategoryMeta("birth_info", "出生信息", "🍼", c.warning),
+    HealthCategoryMeta("allergy", "过敏史", "🤧", c.success),
+    HealthCategoryMeta("medicalHistory", "既往病史", "📋", c.danger),
+    HealthCategoryMeta("visit", "就诊记录", "🏥", c.info),
+    HealthCategoryMeta("medication", "用药记录", "💊", c.primary),
+    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", c.warning),
+    HealthCategoryMeta("doctor_note", "医生备注", "📋", c.danger),
 )
 
 /** 根据分类和已有记录生成摘要副标题。 */
@@ -88,7 +89,7 @@ fun HealthScreen(navController: NavController) {
     val vacRepo: VaccinationRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
+    RequireBaby(babyId = babyId.toLong(), navController = navController) {
     val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
@@ -128,7 +129,7 @@ fun HealthScreen(navController: NavController) {
                 Modifier.fillMaxSize().padding(padding).background(c.pageBackground),
                 contentPadding = PaddingValues(top = 12.dp, bottom = 80.dp),
             ) {
-                HEALTH_CATEGORIES.forEach { meta ->
+                healthCategories(c).forEach { meta ->
                     item(key = meta.key) {
                         if (meta.key == "vaccination") {
                             // 疫苗接种卡片：读取 Vaccination 数据
@@ -195,11 +196,13 @@ fun HealthScreen(navController: NavController) {
                     } else {
                         healthRepo.insert(record)
                     }
+                    appSnackbar.showSuccess("已保存")
                     showForm = false
                     editingRecord = null
                 }
             },
         )
+    }
     }
 }
 
@@ -453,19 +456,13 @@ fun HealthFormDialog(
         )
     }
 
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
-            AppTextButton(onClick = {
-                showDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    recordDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                }
-            }, label = "确定")
-        }, dismissButton = { AppTextButton(onClick = { showDatePicker = false }, label = "取消") }) {
-            DatePicker(state = datePickerState)
-        }
-    }
+    DateTimeCascadeDialog(
+        show = showDatePicker,
+        initialDateTime = recordDate,
+        mode = CascadeMode.DATE_ONLY,
+        onConfirm = { dateStr ->
+            recordDate = dateStr
+        },
+        onDismiss = { showDatePicker = false },
+    )
 }

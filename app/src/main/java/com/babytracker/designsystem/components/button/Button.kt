@@ -31,6 +31,7 @@ import com.babytracker.designsystem.theme.LocalAppColors
 fun PrimaryButton(
     onClick: () -> Unit,
     label: String,
+    modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     enabled: Boolean = true,
     height: Dp = AppButtonDefaults.height(),
@@ -38,7 +39,6 @@ fun PrimaryButton(
     fontSize: TextUnit = AppButtonDefaults.fontSize(),
     fontWeight: FontWeight = AppButtonDefaults.fontWeight(),
     iconSize: Dp = AppButtonDefaults.iconSize(),
-    modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onClick,

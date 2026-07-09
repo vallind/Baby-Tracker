@@ -12,7 +12,7 @@ import com.babytracker.core.data.FamilyService
 import com.babytracker.core.sync.RealtimeManager
 import com.babytracker.core.sync.RealtimeState
 import com.babytracker.core.sync.SyncEngine
-import com.babytracker.core.sync.SyncState
+import com.babytracker.core.sync.EngineSyncState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -34,7 +34,7 @@ class SettingsViewModel(
     private val context: Context,
 ) : ViewModel() {
 
-    val syncState: StateFlow<SyncState> = syncEngine.syncState
+    val syncState: StateFlow<EngineSyncState> = syncEngine.syncState
     val connectionState: StateFlow<RealtimeState> = realtimeManager.connectionState
 
     val isLoggedIn: StateFlow<Boolean> = authService.observeAuthState()
@@ -52,7 +52,7 @@ class SettingsViewModel(
     val syncStatusText: StateFlow<String> = combine(syncState, connectionState, isLoggedIn, isOnline) { sync, conn, loggedIn, online ->
         when {
             !loggedIn -> "未登录"
-            sync == SyncState.SYNCING || sync == SyncState.PUSHING || sync == SyncState.PULLING -> "同步中..."
+            sync == EngineSyncState.SYNCING || sync == EngineSyncState.PUSHING || sync == EngineSyncState.PULLING -> "同步中..."
             !online -> "离线"
             conn == RealtimeState.CONNECTED -> "已连接"
             conn == RealtimeState.CONNECTING -> "连接中..."

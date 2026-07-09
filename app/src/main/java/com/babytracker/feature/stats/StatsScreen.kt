@@ -29,12 +29,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.core.util.BabyController
+import com.babytracker.designsystem.components.ErrorState
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.skeleton.SkeletonLoader
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.RequireBaby
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import org.koin.compose.koinInject
 
@@ -52,10 +56,20 @@ fun StatsScreen(navController: NavController) {
 
     val babyCtrl: BabyController = koinInject()
     val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
+    RequireBaby(babyId = babyId.toLong(), navController = navController) {
 
     LaunchedEffect(babyId) {
         viewModel.loadData(babyId)
+    }
+
+    if (state.isLoading) {
+        SkeletonLoader(itemCount = 3)
+        return@RequireBaby
+    }
+
+    if (state.error != null) {
+        ErrorState(message = state.error!!, onRetry = { viewModel.loadData(babyId) })
+        return@RequireBaby
     }
 
     AppScaffold(
@@ -83,7 +97,7 @@ fun StatsScreen(navController: NavController) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 12.dp),
+                    .padding(start = LocalAppSpacing.current.pageMargin, end = LocalAppSpacing.current.pageMargin, top = 16.dp, bottom = 12.dp),
             ) {
                 SegmentedControl(
                     labels = periodLabels,
@@ -145,6 +159,7 @@ fun StatsScreen(navController: NavController) {
             Spacer(Modifier.height(80.dp))
         }
     }
+    }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -167,15 +182,20 @@ private fun DateRangeNav(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            Icons.Filled.ChevronLeft,
-            contentDescription = "上一周期",
-            tint = if (canGoBack) c.textSecondary else c.textDisabled,
+        Box(
             modifier = Modifier
-                .size(28.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .clickable(enabled = canGoBack) { onBack() },
-        )
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Filled.ChevronLeft,
+                contentDescription = "上一周期",
+                tint = if (canGoBack) c.textSecondary else c.textDisabled,
+                modifier = Modifier.size(24.dp),
+            )
+        }
         Text(
             dateRangeText,
             fontSize = 14.sp,
@@ -183,15 +203,20 @@ private fun DateRangeNav(
             modifier = Modifier.padding(horizontal = 16.dp),
             textAlign = TextAlign.Center,
         )
-        Icon(
-            Icons.Filled.ChevronRight,
-            contentDescription = "下一周期",
-            tint = if (canGoForward) c.textSecondary else c.textDisabled,
+        Box(
             modifier = Modifier
-                .size(28.dp)
+                .size(48.dp)
                 .clip(CircleShape)
                 .clickable(enabled = canGoForward) { onForward() },
-        )
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Filled.ChevronRight,
+                contentDescription = "下一周期",
+                tint = if (canGoForward) c.textSecondary else c.textDisabled,
+                modifier = Modifier.size(24.dp),
+            )
+        }
     }
 }
 
@@ -368,7 +393,9 @@ private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifi
 @Composable
 private fun StatCompareLabel(compare: String) {
     val c = LocalAppColors.current
-    val isPositive = compare.startsWith("+")
+    val numStr = compare.removePrefix("+").removePrefix("-").takeWhile { it.isDigit() || it == '.' }
+    val numericValue = numStr.toFloatOrNull()
+    val isPositive = numericValue != null && numericValue > 0f
     Text(
         compare,
         fontSize = 11.sp,
@@ -457,38 +484,36 @@ fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
         colors = listOf(c.primary.copy(alpha = 0.25f), Color.Transparent),
     )
     Canvas(modifier) {
-        if (points.size < 2) {
-            if (points.size == 1) {
+        when {
+            points.size == 1 -> {
                 drawCircle(color = lineColor, radius = 3.dp.toPx(), center = Offset(size.width / 2, size.height / 2))
             }
-            return@Canvas
+            points.size >= 2 -> {
+                val max = points.max()
+                val min = points.min()
+                val range = (max - min).coerceAtLeast(1f)
+                val stepX = size.width / (points.size - 1)
+                val coords = points.mapIndexed { i, v ->
+                    Offset(i * stepX, size.height - ((v - min) / range) * size.height)
+                }
+                val areaPath = Path().apply {
+                    moveTo(coords.first().x, size.height)
+                    coords.forEach { lineTo(it.x, it.y) }
+                    lineTo(coords.last().x, size.height)
+                    close()
+                }
+                drawPath(areaPath, areaBrush)
+                for (i in 0 until coords.size - 1) {
+                    drawLine(
+                        color = lineColor,
+                        start = coords[i],
+                        end = coords[i + 1],
+                        strokeWidth = 2.dp.toPx(),
+                        cap = StrokeCap.Round,
+                    )
+                }
+                drawCircle(lineColor, 3.dp.toPx(), coords.last())
+            }
         }
-        val max = points.max()
-        val min = points.min()
-        val range = (max - min).coerceAtLeast(1f)
-        val stepX = size.width / (points.size - 1)
-        val coords = points.mapIndexed { i, v ->
-            Offset(i * stepX, size.height - ((v - min) / range) * size.height)
-        }
-        // 渐变填充区域
-        val areaPath = Path().apply {
-            moveTo(coords.first().x, size.height)
-            coords.forEach { lineTo(it.x, it.y) }
-            lineTo(coords.last().x, size.height)
-            close()
-        }
-        drawPath(areaPath, areaBrush)
-        // 折线
-        for (i in 0 until coords.size - 1) {
-            drawLine(
-                color = lineColor,
-                start = coords[i],
-                end = coords[i + 1],
-                strokeWidth = 2.dp.toPx(),
-                cap = StrokeCap.Round,
-            )
-        }
-        // 末端数据点
-        drawCircle(lineColor, 3.dp.toPx(), coords.last())
     }
 }

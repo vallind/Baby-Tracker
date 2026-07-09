@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -43,10 +44,10 @@ private data class CategoryOverview(
     val bgColor: Color,
 )
 
-private val CATEGORY_OVERVIEWS = listOf(
-    CategoryOverview(MessageType.INTERACTION, "互动消息", "💬", Color(0xFF2196F3)),
-    CategoryOverview(MessageType.SYSTEM, "系统通知", "🔔", Color(0xFF2196F3)),
-    CategoryOverview(MessageType.SERVICE, "服务通知", "⭐", Color(0xFF9C27B0)),
+private fun categoryOverviews(c: AppColors) = listOf(
+    CategoryOverview(MessageType.INTERACTION, "互动消息", "💬", c.primary),
+    CategoryOverview(MessageType.SYSTEM, "系统通知", "🔔", c.primary),
+    CategoryOverview(MessageType.SERVICE, "服务通知", "⭐", c.secondary),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -163,7 +164,7 @@ private fun CategoryOverviewBar(
             MessageType.SYSTEM to systemUnread,
             MessageType.SERVICE to serviceUnread,
         )
-        CATEGORY_OVERVIEWS.forEachIndexed { i, cat ->
+        categoryOverviews(c).forEachIndexed { i, cat ->
             val unread = unreadMap[cat.type] ?: 0
             val selected = selectedType == cat.type
             AppCard(
@@ -311,8 +312,8 @@ private fun MessageLeadingIcon(message: AppMessage) {
             // 互动：圆形彩色头像（首字母）
             val initial = message.title.take(1)
             val avatarColors = listOf(
-                Color(0xFFF44336), Color(0xFFFF9800), Color(0xFF2196F3),
-                Color(0xFF4CAF50), Color(0xFF9C27B0), Color(0xFFFF5722),
+                c.danger, c.warning, c.primary,
+                c.success, c.secondary, c.danger,
             )
             val pickColor = avatarColors[initial.hashCode().let { ((it % avatarColors.size) + avatarColors.size) % avatarColors.size }]
             Box(
@@ -336,13 +337,13 @@ private fun MessageLeadingIcon(message: AppMessage) {
                 Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF2196F3).copy(alpha = 0.12f)),
+                    .background(c.primary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.Notifications,
                     contentDescription = null,
-                    tint = Color(0xFF2196F3),
+                    tint = c.primary,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -353,13 +354,13 @@ private fun MessageLeadingIcon(message: AppMessage) {
                 Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF9C27B0).copy(alpha = 0.12f)),
+                    .background(c.secondary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = Color(0xFF9C27B0),
+                    tint = c.secondary,
                     modifier = Modifier.size(20.dp),
                 )
             }

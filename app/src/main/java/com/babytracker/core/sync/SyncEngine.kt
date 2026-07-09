@@ -39,8 +39,8 @@ class SyncEngine(
 ) {
     private val syncMeta: SyncMetadataDao get() = db.syncMetadataDao()
 
-    private val _syncState = MutableStateFlow(SyncState.IDLE)
-    val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+    private val _syncState = MutableStateFlow(EngineSyncState.IDLE)
+    val syncState: StateFlow<EngineSyncState> = _syncState.asStateFlow()
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -172,16 +172,16 @@ class SyncEngine(
      */
     /** 上行同步，返回实际推送的记录数 */
     suspend fun push(): Int {
-        if (_syncState.value == SyncState.SYNCING) return 0
-        _syncState.value = SyncState.SYNCING
+        if (_syncState.value == EngineSyncState.SYNCING) return 0
+        _syncState.value = EngineSyncState.SYNCING
         var pushed = 0
         try {
             val pendingChanges = syncMeta.getPendingChanges()
             if (pendingChanges.isEmpty()) {
-                _syncState.value = SyncState.IDLE
+                _syncState.value = EngineSyncState.IDLE
                 return 0
             }
-            _syncState.value = SyncState.PUSHING
+            _syncState.value = EngineSyncState.PUSHING
 
             for (meta in pendingChanges) {
                 try {
@@ -207,19 +207,19 @@ class SyncEngine(
             }
             syncMeta.updateLastSyncAt(System.currentTimeMillis())
         } finally {
-            _syncState.value = SyncState.IDLE
+            _syncState.value = EngineSyncState.IDLE
         }
         return pushed
     }
 
     /** 下行同步，返回实际拉取的记录数 */
     suspend fun pull(): Int {
-        if (_syncState.value == SyncState.SYNCING) return 0
+        if (_syncState.value == EngineSyncState.SYNCING) return 0
         val fid = currentFamilyId ?: return 0  // 无家庭上下文，不拉取
-        _syncState.value = SyncState.SYNCING
+        _syncState.value = EngineSyncState.SYNCING
         var pulled = 0
         try {
-            _syncState.value = SyncState.PULLING
+            _syncState.value = EngineSyncState.PULLING
             val lastSyncAt = syncMeta.getLastSyncAt()
             val tables = listOf(
                 "babies", "feedings", "sleeps", "growths", "vaccinations",
@@ -240,7 +240,7 @@ class SyncEngine(
             }
             syncMeta.updateLastSyncAt(System.currentTimeMillis())
         } finally {
-            _syncState.value = SyncState.IDLE
+            _syncState.value = EngineSyncState.IDLE
         }
         return pulled
     }
@@ -675,4 +675,4 @@ private class EntityDao<T>(
 )
 
 /** 同步状态枚举 */
-enum class SyncState { IDLE, SYNCING, PUSHING, PULLING }
+enum class EngineSyncState { IDLE, SYNCING, PUSHING, PULLING }

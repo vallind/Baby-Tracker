@@ -15,6 +15,8 @@ import java.time.temporal.ChronoUnit
 enum class StatsPeriod { DAY, WEEK, MONTH, YEAR }
 
 data class StatsUiState(
+    val isLoading: Boolean = true,
+    val error: String? = null,
     val period: StatsPeriod = StatsPeriod.WEEK,
     /** 当前展示周期的偏移量（0 = 本周/今日, -1 = 上一期, 1 = 下一期），由导航箭头控制 */
     val periodOffset: Int = 0,
@@ -58,12 +60,17 @@ class StatsViewModel(
         _trigger
             .filterNotNull()
             .flatMapLatest { (babyId, period, offset) ->
+                _state.value = _state.value.copy(isLoading = true, error = null)
                 combine(
                     feedingRepo.watchByBaby(babyId),
                     sleepRepo.watchByBaby(babyId),
                     growthRepo.watchByBaby(babyId),
                 ) { feedings, sleeps, growths ->
-                    aggregate(period, offset, feedings, sleeps, growths)
+                    try {
+                        aggregate(period, offset, feedings, sleeps, growths).copy(isLoading = false, error = null)
+                    } catch (e: Exception) {
+                        _state.value.copy(isLoading = false, error = e.message ?: "加载失败")
+                    }
                 }
             }
             .distinctUntilChanged()

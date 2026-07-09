@@ -9,10 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -29,6 +31,7 @@ import androidx.navigation.NavController
 import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilyMember
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.dialog.AppDialog
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -94,56 +97,41 @@ fun FamilyPage(navController: NavController) {
     }
 
     // ── 创建家庭对话框 ──
-    if (uiState.showCreateDialog) {
-        AlertDialog(
-            onDismissRequest = { vm.hideCreateDialog() },
-            title = { Text("创建家庭") },
-            text = {
-                AppInput(
-                    value = uiState.newFamilyName,
-                    onValueChange = { vm.onFamilyNameChange(it) },
-                    label = "家庭名称",
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = {
-                AppTextButton(onClick = { vm.createFamily() }, label = "创建")
-            },
-            dismissButton = {
-                AppTextButton(onClick = { vm.hideCreateDialog() }, label = "取消")
-            },
-        )
-    }
+    AppDialog(
+        show = uiState.showCreateDialog,
+        title = "创建家庭",
+        confirmText = "创建",
+        onConfirm = { vm.createFamily() },
+        onDismiss = { vm.hideCreateDialog() },
+        content = {
+            AppInput(
+                value = uiState.newFamilyName,
+                onValueChange = { vm.onFamilyNameChange(it) },
+                label = "家庭名称",
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+    )
 
     // ── 加入家庭对话框 ──
-    if (uiState.showJoinDialog) {
-        AlertDialog(
-            onDismissRequest = { vm.hideJoinDialog() },
-            title = { Text("加入家庭") },
-            text = {
-                Column {
-                    Text("输入家庭邀请码（6 位）", color = c.textSecondary, fontSize = 14.sp)
-                    Spacer(Modifier.height(12.dp))
-                    AppInput(
-                        value = uiState.inviteCode,
-                        onValueChange = { vm.onInviteCodeChange(it.take(6)) },
-                        label = "邀请码",
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            },
-            confirmButton = {
-                AppTextButton(
-                    onClick = { vm.joinFamily() },
-                    label = "加入",
-                    enabled = uiState.inviteCode.length == 6,
+    AppDialog(
+        show = uiState.showJoinDialog,
+        title = "加入家庭",
+        onConfirm = { if (uiState.inviteCode.length == 6) vm.joinFamily() },
+        onDismiss = { vm.hideJoinDialog() },
+        content = {
+            Column {
+                Text("输入家庭邀请码（6 位）", color = c.textSecondary, fontSize = 14.sp)
+                Spacer(Modifier.height(12.dp))
+                AppInput(
+                    value = uiState.inviteCode,
+                    onValueChange = { vm.onInviteCodeChange(it.take(6)) },
+                    label = "邀请码",
+                    modifier = Modifier.fillMaxWidth(),
                 )
-            },
-            dismissButton = {
-                AppTextButton(onClick = { vm.hideJoinDialog() }, label = "取消")
-            },
-        )
-    }
+            }
+        },
+    )
 }
 
 /** 空态：未加入任何家庭 */
@@ -164,7 +152,7 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
             Spacer(Modifier.height(24.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SecondaryButton(onClick = onJoinClick, label = "加入家庭", icon = Icons.Default.GroupAdd)
-                PrimaryButton(onClick = onCreateClick, label = "创建家庭", icon = Icons.Default.Add)
+                PrimaryButton(onClick = onCreateClick, label = "创建家庭", icon = Icons.Default.Add, modifier = Modifier.fillMaxWidth())
             }
         }
     }
@@ -185,22 +173,40 @@ private fun FamilyDetailView(
 
     // 家庭切换（多家庭时显示）
     if (families.size > 1) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            families.forEach { f ->
-                val selected = f.id == family.id
-                FilterChip(
-                    selected = selected,
-                    onClick = { onSelectFamily(f) },
-                    label = {
-                        Text(
-                            if (selected) "${f.name} · 当前" else f.name,
-                            fontSize = 12.sp,
+        if (families.size >= 3) {
+            var expanded by remember { mutableStateOf(false) }
+            Box {
+                OutlinedButton(onClick = { expanded = true }) {
+                    Text(family.name)
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                }
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    families.forEach { f ->
+                        DropdownMenuItem(
+                            text = { Text(f.name + if (f.id == family.id) " · 当前" else "") },
+                            onClick = { onSelectFamily(f); expanded = false },
                         )
-                    },
-                )
+                    }
+                }
+            }
+        } else {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                families.forEach { f ->
+                    val selected = f.id == family.id
+                    FilterChip(
+                        selected = selected,
+                        onClick = { onSelectFamily(f) },
+                        label = {
+                            Text(
+                                if (selected) "${f.name} · 当前" else f.name,
+                                fontSize = 12.sp,
+                            )
+                        },
+                    )
+                }
             }
         }
         Spacer(Modifier.height(16.dp))

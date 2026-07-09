@@ -41,6 +41,14 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 /**
+ * 级联选择器模式。
+ * - DATE_TIME：先选日期再选时间（默认），返回 "yyyy-MM-dd HH:mm"
+ * - DATE_ONLY：只选日期，返回 "yyyy-MM-dd"
+ * - TIME_ONLY：只选时间，返回 "HH:mm"
+ */
+enum class CascadeMode { DATE_TIME, DATE_ONLY, TIME_ONLY }
+
+/**
  * TDesign 风格级联日期时间选择器 — 底部面板，先选日期再选时间。
  *
  * 替代原 M3 DatePickerDialog + AlertDialog 组合。
@@ -52,14 +60,19 @@ import java.time.format.DateTimeFormatter
  * - 两步流程：日历 → 点击"下一步" → 时间滚轮 → 确认
  *
  * @param show 是否显示
- * @param initialDateTime 初始日期时间字符串，格式 "yyyy-MM-dd HH:mm"
- * @param onConfirm 确认回调，返回完整的 "yyyy-MM-dd HH:mm" 字符串
+ * @param initialDateTime 初始日期时间字符串格式取决于 mode
+ *   — DATE_TIME: "yyyy-MM-dd HH:mm"
+ *   — DATE_ONLY: "yyyy-MM-dd"
+ *   — TIME_ONLY: "HH:mm"
+ * @param mode 选择模式，默认 DATE_TIME
+ * @param onConfirm 确认回调，格式取决于 mode
  * @param onDismiss 取消回调
  */
 @Composable
 fun DateTimeCascadeDialog(
     show: Boolean,
     initialDateTime: String,
+    mode: CascadeMode = CascadeMode.DATE_TIME,
     onConfirm: (dateTimeStr: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -69,28 +82,46 @@ fun DateTimeCascadeDialog(
     val dpTokens = tokens.datePickerTokens()
     val tpTokens = tokens.timePickerTokens()
 
-    // 阶段 0=日期选择，1=时间选择
-    var stage by remember { mutableIntStateOf(0) }
+    // 阶段 0=日期选择，1=时间选择；TIME_ONLY 模式直接跳到时间
+    var stage by remember { mutableIntStateOf(if (mode == CascadeMode.TIME_ONLY) 1 else 0) }
     // 选中的日期
     var selectedDate by remember {
-        mutableStateOf(initialDateTime.take(10))
+        mutableStateOf(
+            when (mode) {
+                CascadeMode.TIME_ONLY -> LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                else -> initialDateTime.take(10)
+            }
+        )
     }
     // 当前显示的月份
     var currentMonth by remember {
-        val parsed = initialDateTime.take(10)
+        val dateStr = when (mode) {
+            CascadeMode.TIME_ONLY -> LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+            else -> initialDateTime.take(10)
+        }
         mutableStateOf(
             YearMonth.of(
-                parsed.substring(0, 4).toIntOrNull() ?: LocalDate.now().year,
-                parsed.substring(5, 7).toIntOrNull() ?: LocalDate.now().monthValue,
+                dateStr.substring(0, 4).toIntOrNull() ?: LocalDate.now().year,
+                dateStr.substring(5, 7).toIntOrNull() ?: LocalDate.now().monthValue,
             )
         )
     }
     // 时间
     var selectedHour by remember {
-        mutableIntStateOf(initialDateTime.substring(11, 13).toIntOrNull() ?: 12)
+        mutableIntStateOf(
+            when (mode) {
+                CascadeMode.TIME_ONLY -> initialDateTime.substring(0, 2).toIntOrNull() ?: 12
+                else -> initialDateTime.substring(11, 13).toIntOrNull() ?: 12
+            }
+        )
     }
     var selectedMinute by remember {
-        mutableIntStateOf(initialDateTime.substring(14, 16).toIntOrNull() ?: 0)
+        mutableIntStateOf(
+            when (mode) {
+                CascadeMode.TIME_ONLY -> initialDateTime.substring(3, 5).toIntOrNull() ?: 0
+                else -> initialDateTime.substring(14, 16).toIntOrNull() ?: 0
+            }
+        )
     }
 
     // 全屏 Dialog 确保覆盖在所有内容之上（包括 ModalBottomSheet）
@@ -121,24 +152,44 @@ fun DateTimeCascadeDialog(
             ) {
                 // 顶部工具栏
                 CascadeToolbar(
-                    title = if (stage == 0) "选择日期" else "选择时间",
+                    title = when {
+                        mode == CascadeMode.TIME_ONLY -> "选择时间"
+                        mode == CascadeMode.DATE_ONLY -> "选择日期"
+                        stage == 0 -> "选择日期"
+                        else -> "选择时间"
+                    },
                     textColor = dpTokens.toolbarTextColor,
                     dividerColor = dpTokens.toolbarDividerColor,
                     toolbarHeight = dpTokens.toolbarHeight,
                     onCancel = onDismiss,
                     onConfirm = {
-                        when (stage) {
-                            0 -> stage = 1  // 日期确认 → 进入时间选择
-                            1 -> {
-                                // 时间确认 → 完成
-                                onConfirm(
-                                    "$selectedDate %02d:%02d".format(selectedHour, selectedMinute)
-                                )
+                        when (mode) {
+                            CascadeMode.DATE_ONLY -> {
+                                onConfirm(selectedDate)
                                 onDismiss()
+                            }
+                            CascadeMode.TIME_ONLY -> {
+                                onConfirm("%02d:%02d".format(selectedHour, selectedMinute))
+                                onDismiss()
+                            }
+                            CascadeMode.DATE_TIME -> {
+                                when (stage) {
+                                    0 -> stage = 1
+                                    1 -> {
+                                        onConfirm(
+                                            "$selectedDate %02d:%02d".format(selectedHour, selectedMinute)
+                                        )
+                                        onDismiss()
+                                    }
+                                }
                             }
                         }
                     },
-                    confirmLabel = if (stage == 0) "下一步" else "确认",
+                    confirmLabel = when {
+                        mode != CascadeMode.DATE_TIME -> "确认"
+                        stage == 0 -> "下一步"
+                        else -> "确认"
+                    },
                 )
 
                 when (stage) {

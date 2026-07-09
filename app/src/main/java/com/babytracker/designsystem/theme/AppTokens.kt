@@ -123,7 +123,10 @@ data class AppSpacing(
     val lg: Dp = 24.dp,
     val xl: Dp = 32.dp,
     val xxl: Dp = 48.dp,
-)
+) {
+    /** 页面水平边距语义别名 */
+    val pageMargin: Dp get() = md
+}
 
 // —— 阴影令牌（6 级） ——
 @Immutable

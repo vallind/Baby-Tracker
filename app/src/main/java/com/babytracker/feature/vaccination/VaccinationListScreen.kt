@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -43,8 +40,11 @@ import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.designsystem.components.RequireBaby
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import com.babytracker.designsystem.components.datetimecascade.CascadeMode
+import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -91,7 +91,7 @@ fun VaccinationListScreen(navController: NavController) {
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
+    RequireBaby(babyId = babyId.toLong(), navController = navController) {
     val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyId }
@@ -191,8 +191,8 @@ fun VaccinationListScreen(navController: NavController) {
                 FILTER_PILLS.forEach { pill ->
                     val active = statusFilter == pill.key
                     val pillColor = when (pill.key) {
-                        "done" -> Color(0xFF4CAF50)
-                        "expired" -> Color(0xFFF44336)
+                        "done" -> c.success
+                        "expired" -> c.danger
                         else -> c.primary
                     }
                     Box(
@@ -285,6 +285,7 @@ fun VaccinationListScreen(navController: NavController) {
             onSave = { vac ->
                 scope.launch {
                     if (editingVac != null) vacRepo.update(vac) else vacRepo.insert(vac)
+                    appSnackbar.showSuccess("已保存")
                     showForm = false
                     editingVac = null
                 }
@@ -311,6 +312,7 @@ fun VaccinationListScreen(navController: NavController) {
             },
             dismissButton = { AppTextButton(onClick = { showGenerateConfirm = false }, label = "取消") },
         )
+    }
     }
 }
 
@@ -342,7 +344,7 @@ private fun VaccinationCard(
     val (tagColor, tagLabel) = when {
         vaccination.status == VaccinationStatus.DONE -> c.success to "已接种"
         vaccination.status == VaccinationStatus.SKIPPED -> c.textTertiary to "已跳过"
-        isExpired -> Color(0xFFF44336) to "已过期"
+        isExpired -> c.danger to "已过期"
         else -> c.warning to "未接种"
     }
 
@@ -496,35 +498,23 @@ fun VaccinationFormDialog(
         }
     }
 
-    if (showScheduledDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showScheduledDatePicker = false }, confirmButton = {
-            AppTextButton(onClick = {
-                showScheduledDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    scheduledDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
-                        .toLocalDate().toString()
-                }
-            }, label = "确定")
-            }, dismissButton = { AppTextButton(onClick = { showScheduledDatePicker = false }, label = "取消") }) {
-            DatePicker(state = datePickerState)
-        }
-    }
+    DateTimeCascadeDialog(
+        show = showScheduledDatePicker,
+        initialDateTime = scheduledDate,
+        mode = CascadeMode.DATE_ONLY,
+        onConfirm = { dateStr ->
+            scheduledDate = dateStr
+        },
+        onDismiss = { showScheduledDatePicker = false },
+    )
 
-    if (showAdministeredDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showAdministeredDatePicker = false }, confirmButton = {
-            AppTextButton(onClick = {
-                showAdministeredDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    administeredDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
-                        .toLocalDate().toString()
-                }
-            }, label = "确定")
-            }, dismissButton = { AppTextButton(onClick = { showAdministeredDatePicker = false }, label = "取消") }) {
-            DatePicker(state = datePickerState)
-        }
-    }
+    DateTimeCascadeDialog(
+        show = showAdministeredDatePicker,
+        initialDateTime = administeredDate.ifBlank { LocalDate.now().toString() },
+        mode = CascadeMode.DATE_ONLY,
+        onConfirm = { dateStr ->
+            administeredDate = dateStr
+        },
+        onDismiss = { showAdministeredDatePicker = false },
+    )
 }

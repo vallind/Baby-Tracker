@@ -5,8 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -21,9 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalCareTypePalette
+import com.babytracker.designsystem.theme.CareType
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
@@ -31,10 +37,14 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.designsystem.components.iconbutton.AppIconButton
+import com.babytracker.designsystem.components.RequireBaby
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import com.babytracker.designsystem.components.datetimecascade.CascadeMode
+import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.*
@@ -46,6 +56,8 @@ import com.babytracker.feature.sleep.SleepFormDialog
 import com.babytracker.navigation.Screen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +68,7 @@ fun TimelineScreen(navController: NavController) {
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
+    RequireBaby(babyId = babyId.toLong(), navController = navController) {
     val state by viewModel.state.collectAsState()
 
     var showTypePicker by remember { mutableStateOf(false) }
@@ -69,6 +81,18 @@ fun TimelineScreen(navController: NavController) {
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
     var editingHealth by remember { mutableStateOf<HealthRecord?>(null) }
     var typeFilter by remember { mutableStateOf("") }
+    val today = LocalDate.now()
+    var selectedDate by remember { mutableStateOf(today) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val dateLabel = remember(selectedDate, today) {
+        when {
+            selectedDate == today -> "今天"
+            selectedDate == today.minusDays(1) -> "昨天"
+            selectedDate == today.plusDays(1) -> "明天"
+            else -> selectedDate.format(DateTimeFormatter.ofPattern("MM月dd日"))
+        }
+    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
@@ -88,13 +112,14 @@ fun TimelineScreen(navController: NavController) {
     }
 
     // 类型 → emoji 映射
+    val paletteEmoji = LocalCareTypePalette.current
     val typeEmoji: (String) -> String = {
         when (it) {
-            "feeding" -> "🤱"
-            "sleep" -> "🌙"
-            "diaper" -> "🧷"
-            "growth" -> "📏"
-            "health" -> "❤️"
+            "feeding" -> paletteEmoji.of(CareType.FEEDING).emoji
+            "sleep" -> paletteEmoji.of(CareType.SLEEP).emoji
+            "diaper" -> paletteEmoji.of(CareType.DIAPER).emoji
+            "growth" -> paletteEmoji.of(CareType.GROWTH).emoji
+            "health" -> paletteEmoji.of(CareType.HEALTH).emoji
             else -> "📝"
         }
     }
@@ -127,6 +152,47 @@ fun TimelineScreen(navController: NavController) {
             )
             HorizontalDivider(color = c.divider, thickness = 0.5.dp)
 
+            // —— 日期导航栏 ——
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                AppIconButton(
+                    icon = Icons.Default.KeyboardArrowLeft,
+                    onClick = { selectedDate = selectedDate.minusDays(1) },
+                    contentDescription = "前一天",
+                    tint = c.textPrimary,
+                )
+                Row(
+                    Modifier.clickable { showDatePicker = true },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
+                        style = LocalAppTypography.current.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = c.textPrimary,
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Icon(
+                        Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = c.textTertiary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                AppIconButton(
+                    icon = Icons.Default.KeyboardArrowRight,
+                    onClick = { selectedDate = selectedDate.plusDays(1) },
+                    contentDescription = "后一天",
+                    tint = c.textPrimary,
+                )
+            }
+            HorizontalDivider(color = c.divider, thickness = 0.5.dp)
+
             if (state.loading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     AppCircularProgress(indicatorColor = c.primary)
@@ -142,9 +208,11 @@ fun TimelineScreen(navController: NavController) {
                     )
                 }
             } else {
-                val filtered = remember(state.items, typeFilter) {
-                    if (typeFilter.isEmpty()) state.items
+                val filtered = remember(state.items, typeFilter, selectedDate) {
+                    val dateStr = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    val typeFiltered = if (typeFilter.isEmpty()) state.items
                     else state.items.filter { it.recordType == typeFilter }
+                    typeFiltered.filter { it.date == dateStr }
                 }
 
                 if (filtered.isEmpty()) {
@@ -210,6 +278,15 @@ fun TimelineScreen(navController: NavController) {
                             // —— 记录卡片列表 ——
                             items(items = records, key = { "${it.recordType}-${it.id}" }) { record ->
                                 val accent = typeColor(record.recordType)
+                                val editRecord: () -> Unit = {
+                                    when (record.recordType) {
+                                        "feeding" -> editingFeeding = viewModel.findFeeding(record.id)
+                                        "sleep" -> editingSleep = viewModel.findSleep(record.id)
+                                        "diaper" -> editingDiaper = viewModel.findDiaper(record.id)
+                                        "growth" -> editingGrowth = viewModel.findGrowth(record.id)
+                                        "health" -> editingHealth = viewModel.findHealth(record.id)
+                                    }
+                                }
                                 RecordCard(
                                     modifier = Modifier.padding(bottom = 8.dp),
                                     accentColor = accent,
@@ -219,16 +296,8 @@ fun TimelineScreen(navController: NavController) {
                                             appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
                                         }
                                     },
-                                    onClick = {},
-                                    onLongClick = {
-                                        when (record.recordType) {
-                                            "feeding" -> editingFeeding = viewModel.findFeeding(record.id)
-                                            "sleep" -> editingSleep = viewModel.findSleep(record.id)
-                                            "diaper" -> editingDiaper = viewModel.findDiaper(record.id)
-                                            "growth" -> editingGrowth = viewModel.findGrowth(record.id)
-                                            "health" -> editingHealth = viewModel.findHealth(record.id)
-                                        }
-                                    },
+                                    onClick = editRecord,
+                                    onLongClick = editRecord,
                                 ) {
                                     Box(
                                         Modifier
@@ -425,5 +494,17 @@ fun TimelineScreen(navController: NavController) {
                 }
             },
         )
+    }
+
+    // 日期选择对话框
+    DateTimeCascadeDialog(
+        show = showDatePicker,
+        initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+        mode = CascadeMode.DATE_ONLY,
+        onConfirm = { dateStr ->
+            selectedDate = LocalDate.parse(dateStr)
+        },
+        onDismiss = { showDatePicker = false },
+    )
     }
 }

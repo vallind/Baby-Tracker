@@ -5,11 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -42,10 +39,12 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.datetimecascade.CascadeMode
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.RequireBaby
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import org.koin.compose.koinInject
@@ -61,7 +60,7 @@ fun DiaperListScreen(navController: NavController) {
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
+    RequireBaby(babyId = babyId.toLong(), navController = navController) {
     val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
@@ -371,6 +370,7 @@ fun DiaperListScreen(navController: NavController) {
                     } else {
                         diaperRepo.insert(d)
                     }
+                    appSnackbar.showSuccess("已保存")
                     showForm = false
                     editingDiaper = null
                 }
@@ -379,24 +379,15 @@ fun DiaperListScreen(navController: NavController) {
     }
 
     // 日期选择对话框
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.toEpochDay() * 86400000L)
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                AppTextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        selectedDate = LocalDate.ofEpochDay(millis / 86400000L)
-                    }
-                    showDatePicker = false
-                }, label = "确定")
-            },
-            dismissButton = {
-                AppTextButton(onClick = { showDatePicker = false }, label = "取消")
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
+    DateTimeCascadeDialog(
+        show = showDatePicker,
+        initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+        mode = CascadeMode.DATE_ONLY,
+        onConfirm = { dateStr ->
+            selectedDate = LocalDate.parse(dateStr)
+        },
+        onDismiss = { showDatePicker = false },
+    )
     }
 }
 

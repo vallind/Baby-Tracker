@@ -29,16 +29,17 @@ import com.babytracker.designsystem.components.dialog.DialogDefaults as AppDialo
 fun AppDialog(
     show: Boolean,
     title: String,
-    text: String? = null,
+    modifier: Modifier = Modifier,
     confirmText: String = "确认",
-    cancelText: String = "取消",
-    onConfirm: () -> Unit,
+    onConfirm: (() -> Unit)? = null,
+    dismissText: String = "取消",
     onDismiss: () -> Unit,
+    content: @Composable (() -> Unit)? = null,
+    message: String? = null,
     cornerRadius: Dp = AppDialogDefaults.cornerRadius(),
     containerColor: Color = AppDialogDefaults.containerColor(),
     contentColor: Color = AppDialogDefaults.contentColor(),
     elevation: Dp = AppDialogDefaults.elevation(),
-    modifier: Modifier = Modifier,
 ) {
     if (!show) return
 
@@ -50,12 +51,12 @@ fun AppDialog(
         textContentColor = contentColor,
         tonalElevation = elevation,
         title = { Text(title) },
-        text = text?.let { { Text(it) } },
+        text = content ?: (message?.let { { Text(it) } }),
         confirmButton = {
-            AppTextButton(onClick = onConfirm, label = confirmText)
+            if (onConfirm != null) AppTextButton(onClick = onConfirm, label = confirmText)
         },
         dismissButton = {
-            AppTextButton(onClick = onDismiss, label = cancelText)
+            AppTextButton(onClick = onDismiss, label = dismissText)
         },
     )
 }

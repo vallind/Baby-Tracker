@@ -55,7 +55,7 @@ fun EmptyState(
         )
         if (actionText != null && onAction != null) {
             Spacer(Modifier.height(20.dp))
-            PrimaryButton(onClick = onAction, label = actionText)
+            PrimaryButton(onClick = onAction, label = actionText, modifier = Modifier.fillMaxWidth())
         }
     }
 }

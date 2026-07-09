@@ -64,6 +64,8 @@ class TimelineViewModel(
         _trigger
             .filterNotNull()
             .flatMapLatest { babyId ->
+                lastDeletedEntity = null
+                lastDeletedType = null
                 combine(
                     feedingRepo.watchByBaby(babyId),
                     sleepRepo.watchByBaby(babyId),

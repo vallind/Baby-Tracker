@@ -36,6 +36,7 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.RequireBaby
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -62,7 +63,7 @@ fun GrowthScreen(navController: NavController) {
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
+    RequireBaby(babyId = babyId.toLong(), navController = navController) {
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
@@ -238,16 +239,17 @@ fun GrowthScreen(navController: NavController) {
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                         ) {
-                            Box(Modifier.fillMaxWidth().height(300.dp).padding(16.dp)) {
+                            BoxWithConstraints(Modifier.fillMaxWidth().padding(16.dp)) {
+                                val chartHeight = maxHeight * 0.7f
                                 // Y 轴标签
                                 Column(
-                                    Modifier.fillMaxHeight().width(36.dp).padding(bottom = 24.dp),
+                                    Modifier.height(chartHeight).width(36.dp).padding(bottom = 24.dp),
                                     verticalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     yLabels.forEach { Text(it, style = LocalAppTypography.current.labelSmall, color = c.textSecondary) }
                                 }
 
-                                Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
+                                Canvas(Modifier.fillMaxWidth().height(chartHeight).padding(start = 36.dp, bottom = 24.dp)) {
                                     val w = size.width
                                     val h = size.height
                                     // 网格线
@@ -302,7 +304,7 @@ fun GrowthScreen(navController: NavController) {
                                     Row(
                                         Modifier
                                             .fillMaxWidth()
-                                            .padding(start = 36.dp, top = 300.dp - 20.dp),
+                                            .padding(start = 36.dp, top = chartHeight - 20.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                     ) {
                                         chartData.forEachIndexed { i, g ->
@@ -477,11 +479,13 @@ fun GrowthScreen(navController: NavController) {
                     } else {
                         growthRepo.insert(growth)
                     }
+                    appSnackbar.showSuccess("已保存")
                     showForm = false
                     editingGrowth = null
                 }
             },
         )
+    }
     }
 }
 

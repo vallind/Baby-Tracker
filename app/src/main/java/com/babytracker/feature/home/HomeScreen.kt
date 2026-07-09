@@ -25,6 +25,8 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalCareTypePalette
+import com.babytracker.designsystem.theme.CareType
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.HomeStatusCard
@@ -255,7 +257,7 @@ fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
         autoPadding = false,
     ) {
         Column(Modifier.padding(16.dp)) {
-            Text("今日概览", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+            Text("今日概览", style = LocalAppTypography.current.titleSmall, color = c.textPrimary)
             Spacer(Modifier.height(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TextStatCell(animatedFeed.toString(), "次", "喂养次数")
@@ -298,28 +300,28 @@ fun RowScope.StatDivider() {
 fun FeatureGrid(navController: NavController) {
     // 8 个功能项 = 4 列 × 2 行（对齐设计图）
     val items = listOf(
-        FeatureGridItemData(Screen.Feeding, "🍼", "喂养记录"),
-        FeatureGridItemData(Screen.Sleep, "🌙", "睡眠记录"),
-        FeatureGridItemData(Screen.Diaper, "🧷", "尿布更换"),
-        FeatureGridItemData(Screen.Growth, "📏", "生长记录"),
-        FeatureGridItemData(Screen.DevelopmentAssessment, "🧠", "发育评估"),
-        FeatureGridItemData(Screen.Vaccination, "💉", "疫苗接种"),
-        FeatureGridItemData(Screen.Health, "❤️", "健康档案"),
-        FeatureGridItemData(Screen.Stats, "📊", "统计分析"),
+        FeatureGridItemData(Screen.Feeding, "🍼", "喂养记录", CareType.FEEDING),
+        FeatureGridItemData(Screen.Sleep, "🌙", "睡眠记录", CareType.SLEEP),
+        FeatureGridItemData(Screen.Diaper, "🧷", "尿布更换", CareType.DIAPER),
+        FeatureGridItemData(Screen.Growth, "📏", "生长记录", CareType.GROWTH),
+        FeatureGridItemData(Screen.DevelopmentAssessment, "🧠", "发育评估", CareType.GROWTH),
+        FeatureGridItemData(Screen.Vaccination, "💉", "疫苗接种", CareType.VACCINATION),
+        FeatureGridItemData(Screen.Health, "❤️", "健康档案", CareType.HEALTH),
+        FeatureGridItemData(Screen.Stats, "📊", "统计分析", CareType.HEALTH),
     )
     Column(Modifier.padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(14.dp))
         // 第一行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items.subList(0, 4).forEachIndexed { i, item ->
-                FeatureGridItem(item, useAccent = i % 2 == 1, navController, Modifier.weight(1f))
+            items.subList(0, 4).forEach { item ->
+                FeatureGridItem(item, navController, Modifier.weight(1f))
             }
         }
         Spacer(Modifier.height(8.dp))
         // 第二行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items.subList(4, 8).forEachIndexed { i, item ->
-                FeatureGridItem(item, useAccent = i % 2 == 1, navController, Modifier.weight(1f))
+            items.subList(4, 8).forEach { item ->
+                FeatureGridItem(item, navController, Modifier.weight(1f))
             }
         }
     }
@@ -328,12 +330,12 @@ fun FeatureGrid(navController: NavController) {
 @Composable
 private fun FeatureGridItem(
     item: FeatureGridItemData,
-    useAccent: Boolean,
     navController: NavController,
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
-    val tint = if (useAccent) c.warning else c.primary
+    val palette = LocalCareTypePalette.current
+    val visuals = palette.of(item.careType)
     Column(
         modifier
             .clip(RoundedCornerShape(16.dp))
@@ -354,7 +356,7 @@ private fun FeatureGridItem(
             Modifier
                 .size(56.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(tint.copy(alpha = 0.14f)),
+                .background(visuals.container.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
             Text(item.emoji, fontSize = 24.sp)
@@ -368,6 +370,7 @@ private data class FeatureGridItemData(
     val screen: com.babytracker.navigation.Screen,
     val emoji: String,
     val label: String,
+    val careType: CareType,
 )
 
 @Composable
@@ -386,7 +389,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("最近记录", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Text("最近记录", style = LocalAppTypography.current.titleSmall, color = c.textPrimary)
                 AppTextButton(onClick = onSeeAll, label = "查看全部")
             }
             Spacer(Modifier.height(8.dp))

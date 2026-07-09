@@ -32,6 +32,7 @@ fun AppCard(
     borderColor: Color = AppCardDefaults.borderColor(),
     borderWidth: Dp = AppCardDefaults.borderWidth(),
     innerPadding: Dp = AppCardDefaults.innerPadding(),
+    autoPadding: Boolean = true,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -43,6 +44,6 @@ fun AppCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = if (borderWidth > 0.dp) BorderStroke(borderWidth, borderColor) else null,
-        content = { androidx.compose.foundation.layout.Column(Modifier.padding(innerPadding), content = content) },
+        content = { androidx.compose.foundation.layout.Column(if (autoPadding) Modifier.padding(innerPadding) else Modifier, content = content) },
     )
 }

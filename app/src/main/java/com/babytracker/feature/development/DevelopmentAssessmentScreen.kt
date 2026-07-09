@@ -52,12 +52,12 @@ private data class AbilityMeta(
     val score: (DevelopmentAssessment) -> Int,
 )
 
-private val ABILITIES: List<AbilityMeta> = listOf(
-    AbilityMeta("大运动", "🏃", Color(0xFFFF8C00), Icons.AutoMirrored.Filled.DirectionsRun) { it.grossMotor },
-    AbilityMeta("精细动作", "✋", Color(0xFFE91E63), Icons.Default.PanTool) { it.fineMotor },
-    AbilityMeta("语言能力", "💬", Color(0xFF2196F3), Icons.Default.RecordVoiceOver) { it.language },
-    AbilityMeta("社交能力", "🤝", Color(0xFF4CAF50), Icons.Default.Group) { it.social },
-    AbilityMeta("认知能力", "🧠", Color(0xFF9C27B0), Icons.Default.Psychology) { it.cognitive },
+private fun abilities(c: AppColors) = listOf(
+    AbilityMeta("大运动", "🏃", c.warning, Icons.AutoMirrored.Filled.DirectionsRun) { it.grossMotor },
+    AbilityMeta("精细动作", "✋", c.danger, Icons.Default.PanTool) { it.fineMotor },
+    AbilityMeta("语言能力", "💬", c.primary, Icons.Default.RecordVoiceOver) { it.language },
+    AbilityMeta("社交能力", "🤝", c.success, Icons.Default.Group) { it.social },
+    AbilityMeta("认知能力", "🧠", c.secondary, Icons.Default.Psychology) { it.cognitive },
 )
 
 // 评分 → UI 文案
@@ -70,12 +70,12 @@ private fun scoreLabel(score: Int): String = when (score) {
 }
 
 // 评分 → 颜色
-private fun scoreColor(score: Int): Color = when (score) {
-    0 -> Color(0xFF9E9E9E)
-    1 -> Color(0xFFFF9800)
-    2 -> Color(0xFF4CAF50)
-    3 -> Color(0xFF5B7CFF)
-    else -> Color(0xFF9E9E9E)
+private fun scoreColor(score: Int, c: AppColors): Color = when (score) {
+    0 -> c.textDisabled
+    1 -> c.warning
+    2 -> c.success
+    3 -> c.primary
+    else -> c.textDisabled
 }
 
 /** 各能力在不同评分下的描述（仿自然语言）。 */
@@ -276,8 +276,9 @@ private fun BabyHeader(baby: Baby) {
 // —— 5 项能力评估卡片（彩色圆形 emoji + 标题行 + 描述）——
 @Composable
 private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
+    val c = LocalAppColors.current
     Column(Modifier.padding(horizontal = 16.dp)) {
-        ABILITIES.forEachIndexed { index, meta ->
+        abilities(c).forEachIndexed { index, meta ->
             AssessmentItemCard(
                 emoji = meta.emoji,
                 bgColor = meta.bgColor,
@@ -285,7 +286,7 @@ private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
                 score = meta.score(latest),
                 description = abilityDescription(meta.title, meta.score(latest)),
             )
-            if (index != ABILITIES.lastIndex) Spacer(Modifier.height(8.dp))
+            if (index != abilities(c).lastIndex) Spacer(Modifier.height(8.dp))
         }
     }
 }
@@ -299,7 +300,7 @@ private fun AssessmentItemCard(
     description: String,
 ) {
     val c = LocalAppColors.current
-    val statusColor = scoreColor(score)
+    val statusColor = scoreColor(score, c)
     AppCard(
         cornerRadius = 12.dp,
         elevation = 2.dp,
@@ -418,7 +419,7 @@ private fun AssessmentFormDialog(
             Text("为宝宝 5 项能力打分（未观察/落后/正常/超前）", fontSize = 13.sp, color = c.textSecondary)
             Spacer(Modifier.height(16.dp))
 
-            ABILITIES.forEachIndexed { index, meta ->
+            abilities(c).forEachIndexed { index, meta ->
                 ScoreSelector(
                     title = meta.title,
                     icon = meta.icon,
@@ -426,7 +427,7 @@ private fun AssessmentFormDialog(
                     onSelect = { scores[index] = it },
                     useAccent = index % 2 == 1,
                 )
-                if (index != ABILITIES.lastIndex) Spacer(Modifier.height(12.dp))
+                if (index != abilities(c).lastIndex) Spacer(Modifier.height(12.dp))
             }
 
             Spacer(Modifier.height(16.dp))
@@ -505,7 +506,7 @@ private fun ScoreSelector(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             options.forEach { (value, label) ->
                 val isSelected = selected == value
-                val chipColor = scoreColor(value)
+                val chipColor = scoreColor(value, c)
                 Box(
                     Modifier
                         .weight(1f)

@@ -20,7 +20,6 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -45,6 +44,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
@@ -70,7 +70,7 @@ import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.navigation.Screen
 import com.babytracker.core.auth.AuthService
-import com.babytracker.core.sync.SyncState
+import com.babytracker.core.sync.EngineSyncState
 import com.babytracker.core.sync.RealtimeState
 import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.launch
@@ -237,7 +237,7 @@ fun SettingsScreen(navController: NavController) {
                             .clip(CircleShape)
                             .background(
                                 when {
-                                    syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING -> c.primary
+                                    syncState == EngineSyncState.SYNCING || syncState == EngineSyncState.PUSHING || syncState == EngineSyncState.PULLING -> c.primary
                                     settingsVM.connectionState.collectAsState().value == RealtimeState.CONNECTED -> c.success
                                     settingsVM.connectionState.collectAsState().value == RealtimeState.ERROR -> c.error
                                     else -> c.textTertiary
@@ -473,6 +473,8 @@ private fun SettingsSectionTitle(title: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
+    val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
     val names = mapOf("pure" to "纯净蓝", "aurora" to "极光紫", "warm" to "暖阳粉", "sunny" to "阳光黄", "night" to "暗夜深", "morandi" to "莫兰迪")
     AppBottomSheet(
         show = true,
@@ -488,7 +490,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                             .width(120.dp)
                             .height(96.dp)
                             .border(
-                                if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                                if (selected) BorderStroke(2.dp, c.primary) else BorderStroke(1.dp, c.outline.copy(alpha = 0.5f)),
                                 RoundedCornerShape(12.dp),
                             )
                             .clickable { themeCtrl.switchTheme(theme.name) },
@@ -503,7 +505,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                                 Text(names[theme.name] ?: theme.name, style = LocalAppTypography.current.bodySmall, color = theme.colors.textPrimary)
                             }
                             if (selected) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))
+                                Icon(Icons.Default.Check, contentDescription = null, tint = c.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))
                             }
                         }
                     }
@@ -624,7 +626,7 @@ fun BabyManagementScreen(navController: NavController) {
     ) { padding ->
         if (activeBabies.isEmpty() && deletedBabies.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("还没有添加宝宝", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("还没有添加宝宝", color = c.textSecondary)
             }
         } else {
             Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -635,7 +637,7 @@ fun BabyManagementScreen(navController: NavController) {
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .border(
-                                BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                                BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) c.primary else c.outline.copy(alpha = 0.5f)),
                                 RoundedCornerShape(12.dp),
                             )
                             .clickable { editingBaby = b; showForm = true },
@@ -643,8 +645,8 @@ fun BabyManagementScreen(navController: NavController) {
                         elevation = 1.dp,
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                                Text(b.name.take(1), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, style = LocalAppTypography.current.titleMedium)
+                            Box(Modifier.size(44.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {
+                                Text(b.name.take(1), color = c.primary, fontWeight = FontWeight.SemiBold, style = LocalAppTypography.current.titleMedium)
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
@@ -652,24 +654,24 @@ fun BabyManagementScreen(navController: NavController) {
                                     Text(b.name, style = LocalAppTypography.current.titleSmall)
                                     if (isCurrent) {
                                         Spacer(Modifier.width(8.dp))
-                                        Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(8.dp)) {
-                                            Text("当前", style = LocalAppTypography.current.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                                        Surface(color = c.primaryContainer, shape = RoundedCornerShape(8.dp)) {
+                                            Text("当前", style = LocalAppTypography.current.labelSmall, color = c.primary, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
                                         }
                                     }
                                 }
-                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                                 if (b.uuid != null) {
                                     Text(
                                         "UUID: ${b.uuid.take(8)}…",
                                         style = LocalAppTypography.current.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                        color = c.textSecondary.copy(alpha = 0.5f),
                                         fontSize = 10.sp,
                                     )
                                 }
                             }
                             if (!isCurrent) {
                                 TextButton(onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() }) {
-                                    Text("切换", style = LocalAppTypography.current.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                    Text("切换", style = LocalAppTypography.current.labelMedium, color = c.primary)
                                 }
                             }
                             AppIconButton(icon = Icons.Default.Delete, onClick = { showDeleteConfirm = b }, contentDescription = "删除", tint = c.textSecondary)
@@ -916,6 +918,7 @@ fun BackupScreen(navController: NavController) {
     }
 
     val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
     AppScaffold(topBar = {
         AppTopBar(
             title = "备份管理",
@@ -930,13 +933,13 @@ fun BackupScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(c.primaryContainer), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Folder, contentDescription = null, tint = c.primary)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text("本地备份", style = LocalAppTypography.current.titleSmall)
-                            Text("选择备份保存位置", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("选择备份保存位置", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -948,7 +951,7 @@ fun BackupScreen(navController: NavController) {
                     )
                     if (selectedDirName.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(c.divider).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("📁", style = LocalAppTypography.current.bodyMedium)
                             Spacer(Modifier.width(8.dp))
                             Text(selectedDirName, style = LocalAppTypography.current.bodySmall, modifier = Modifier.weight(1f), maxLines = 1)
@@ -968,12 +971,12 @@ fun BackupScreen(navController: NavController) {
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(shapes.medium),
                     ) { Text("开始备份") }
                 }
             }
             if (backupPath.isNotEmpty()) {
-                Text("上次备份: $backupPath", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                Text("上次备份: $backupPath", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(top = 8.dp))
             }
             Spacer(Modifier.height(12.dp))
 
@@ -984,13 +987,13 @@ fun BackupScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.tertiaryContainer), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(c.tertiary.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
                             Text("☁️", style = LocalAppTypography.current.titleMedium)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text("WebDAV 云备份", style = LocalAppTypography.current.titleSmall)
-                            Text(webdavStatus, style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(webdavStatus, style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -1035,22 +1038,22 @@ fun BackupScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.errorContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Restore, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(c.danger.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Restore, contentDescription = null, tint = c.error)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text("恢复备份", style = LocalAppTypography.current.titleSmall)
-                            Text("从 zip 文件导入数据", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("从 zip 文件导入数据", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
                     Button(
                         onClick = { restorePicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(shapes.medium),
                         enabled = !restoring,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        colors = ButtonDefaults.buttonColors(containerColor = c.error),
                     ) { Text(if (restoring) "恢复中..." else "选择备份文件", style = LocalAppTypography.current.bodyMedium) }
                 }
             }
