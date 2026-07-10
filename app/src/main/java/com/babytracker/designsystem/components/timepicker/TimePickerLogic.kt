@@ -141,8 +141,8 @@ fun TimePickerLogic(
                     }
                 }
                 val t = (distance / maxDistPx).coerceIn(0f, 1f)
-                val itemScale = 1.3f - 0.3f * t
-                val itemAlpha = 1f - 0.4f * t
+                val itemScale = 1.3f - 0.8f * t
+                val itemAlpha = 1f - 0.6f * t
 
                 val isSelected = v == value
                 Box(
