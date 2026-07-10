@@ -75,8 +75,9 @@ fun SleepListScreen(navController: NavController) {
     }
     var elapsedSeconds by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(timerRunning) {
-        if (timerRunning) {
+    // 恢复：进入页面时若计时器仍在运行，自动继续计时
+    LaunchedEffect(Unit) {
+        if (timerRunning && timerStartMillis > 0) {
             while (true) {
                 elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
                 delay(1000L)
@@ -92,6 +93,12 @@ fun SleepListScreen(navController: NavController) {
             .putBoolean("sleep_timer_running", true)
             .putLong("sleep_timer_start_millis", timerStartMillis)
             .apply()
+        scope.launch {
+            while (timerRunning) {
+                elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
+                delay(1000L)
+            }
+        }
         return timerStartMillis
     }
 
