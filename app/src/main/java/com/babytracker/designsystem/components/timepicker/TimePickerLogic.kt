@@ -35,10 +35,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * TDesign 风格滚轮选择器 — LazyColumn + 自动吸附。
- *
- * 初始化时渲染全部数字，滑动由 LazyColumn 原生滚动驱动，
- * 松手后自动吸附到最近项，无自定义手势处理，流畅不卡顿。
+ * 滚轮选择器 — LazyColumn 原生滚动。
  */
 @Composable
 fun TimePickerLogic(
@@ -57,11 +54,14 @@ fun TimePickerLogic(
     val itemHeightPx = with(density) { itemHeight.toPx() }
     val allValues = remember(range) { range.toList() }
     val initialIndex = (value - range.first).coerceIn(0, allValues.lastIndex)
-
-    val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = initialIndex,
-    )
     val centerPadding = itemHeight * halfVisible
+
+    val listState = rememberLazyListState()
+
+    // 初次定位：item(initialIndex) 在 contentPadding.top 之后，自然对齐高亮区
+    LaunchedEffect(Unit) {
+        listState.scrollToItem(initialIndex)
+    }
 
     // 滑动停止后通知选中值
     LaunchedEffect(listState) {
@@ -75,12 +75,11 @@ fun TimePickerLogic(
                         val itemCenter = info.offset + info.size / 2
                         abs(itemCenter - viewportCenter)
                     }?.let { info ->
-                        if (info.index in allValues.indices) allValues[info.index]
-                        else null
+                        range.first + info.index
                     }
                 }
                 .distinctUntilChanged()
-                .drop(1) // 跳过初始值
+                .drop(1)
                 .collect { centered ->
                     if (centered != null && centered in range) {
                         onValueChanged(centered)
