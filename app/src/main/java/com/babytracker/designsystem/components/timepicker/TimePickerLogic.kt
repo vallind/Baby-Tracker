@@ -66,17 +66,10 @@ fun TimePickerLogic(
         currentValue = value
     }
 
-    val visibleValues = remember(currentValue, dragOffset, range) {
-        val half = visibleItems / 2
-        val shift = -(dragOffset / itemHeightPx).roundToInt()
-        val start = currentValue - half + shift
-        val end = currentValue + half + shift
-        (start..end).map { v ->
-            if (v in range) v else null
-        }
-    }
-
-    val visualOffset = dragOffset + snapAnim.value
+    // 全部数字初始化渲染，offset 定位
+    val allValues = remember(range) { range.toList() }
+    val baseOffset = -(currentValue - range.first - halfVisible) * itemHeightPx
+    val visualOffset = baseOffset + dragOffset + snapAnim.value
 
     Box(
         modifier = Modifier
@@ -146,24 +139,22 @@ fun TimePickerLogic(
                 },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            visibleValues.forEach { v ->
+            allValues.forEach { v ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(itemHeight),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (v != null) {
-                        val isSelected = v == currentValue
-                        Text(
-                            text = "%02d".format(v),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            ),
-                            color = if (isSelected) selectedTextColor else unselectedTextColor,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                    val isSelected = v == currentValue
+                    Text(
+                        text = "%02d".format(v),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        ),
+                        color = if (isSelected) selectedTextColor else unselectedTextColor,
+                        textAlign = TextAlign.Center,
+                    )
                 }
             }
         }
