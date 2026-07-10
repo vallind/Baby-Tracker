@@ -1,5 +1,7 @@
 package com.babytracker.designsystem.components.timepicker
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +23,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +37,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * 滚轮选择器 — LazyColumn + 滑动停止自动吸附居中。
+ * 滚轮选择器 — LazyColumn + 自动吸附 + 弹性动画。
  */
 @Composable
 fun TimePickerLogic(
@@ -57,12 +60,19 @@ fun TimePickerLogic(
     val listState = rememberLazyListState()
     var snapping by remember { mutableStateOf(false) }
 
+    // 选中文字放大动画
+    val selectedScale by animateFloatAsState(
+        targetValue = 1.15f,
+        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
+        label = "selectedScale",
+    )
+
     // 初次定位
     LaunchedEffect(Unit) {
         listState.scrollToItem(maxOf(0, initialIndex - halfVisible))
     }
 
-    // 滑动停止 → 吸附居中
+    // 滑动停止 → 弹簧吸附居中
     LaunchedEffect(listState) {
         launch {
             snapshotFlow { listState.isScrollInProgress }
@@ -92,6 +102,7 @@ fun TimePickerLogic(
             .height(itemHeight * visibleItems)
             .clipToBounds(),
     ) {
+        // 选中行高亮背景
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -99,6 +110,7 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(selectedBgColor, RoundedCornerShape(4.dp)),
         )
+        // 上分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -106,6 +118,7 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(dividerColor),
         )
+        // 下分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -128,11 +141,11 @@ fun TimePickerLogic(
                 ) {
                     Text(
                         text = "%02d".format(v),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        ),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         color = if (isSelected) selectedTextColor else unselectedTextColor,
                         textAlign = TextAlign.Center,
+                        modifier = if (isSelected) Modifier.scale(selectedScale) else Modifier,
                     )
                 }
             }
