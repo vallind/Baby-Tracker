@@ -1,5 +1,7 @@
 package com.babytracker.designsystem.components.timepicker
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
@@ -53,17 +57,15 @@ fun TimePickerLogic(
     val density = LocalDensity.current
     val itemHeightPx = with(density) { itemHeight.toPx() }
 
-    // 内部状态：当前显示的值（拖拽过程中实时更新）
     var currentValue by remember { mutableIntStateOf(value) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
+    val snapAnim = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
 
-    // 外部 value 变化时同步
     LaunchedEffect(value) {
         currentValue = value
     }
 
-    // 生成可见项的值列表（围绕 currentValue，始终 visibleItems 个）
-    // 边界处不 coerceIn（避免重复），超出范围用 null 占位
     val visibleValues = remember(currentValue, range) {
         val half = visibleItems / 2
         val start = currentValue - half
@@ -73,8 +75,7 @@ fun TimePickerLogic(
         }
     }
 
-    // Column 零偏移：visibleValues[halfVisible] 即 currentValue，自然对齐高亮背景
-    val contentOffsetY = dragOffset
+    val visualOffset = dragOffset + snapAnim.value
 
     Box(
         modifier = Modifier
@@ -82,7 +83,6 @@ fun TimePickerLogic(
             .height(itemHeight * visibleItems)
             .clipToBounds(),
     ) {
-        // 选中行高亮背景（固定在中间行）
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -90,7 +90,6 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(selectedBgColor, RoundedCornerShape(4.dp)),
         )
-        // 上分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,7 +97,6 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(dividerColor),
         )
-        // 下分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -107,24 +105,38 @@ fun TimePickerLogic(
                 .background(dividerColor),
         )
 
-        // 可见项内容
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .offset { IntOffset(0, contentOffsetY.roundToInt()) }
+                .offset { IntOffset(0, visualOffset.roundToInt()) }
                 .pointerInput(range) {
                     detectVerticalDragGestures(
                         onDragEnd = {
-                            // 根据拖拽距离计算新值
                             val dragItems = (dragOffset / itemHeightPx).roundToInt()
                             val newValue = (currentValue - dragItems)
                                 .coerceIn(range.first, range.last)
-                            dragOffset = 0f
                             currentValue = newValue
                             onValueChanged(newValue)
+                            val remaining = dragOffset
+                            dragOffset = 0f
+                            scope.launch {
+                                snapAnim.snapTo(remaining)
+                                snapAnim.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = spring(dampingRatio = 0.6f),
+                                )
+                            }
                         },
                         onDragCancel = {
+                            val remaining = dragOffset
                             dragOffset = 0f
+                            scope.launch {
+                                snapAnim.snapTo(remaining)
+                                snapAnim.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = spring(dampingRatio = 0.6f),
+                                )
+                            }
                         },
                         onVerticalDrag = { _, dragAmount ->
                             dragOffset += dragAmount
