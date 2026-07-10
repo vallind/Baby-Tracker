@@ -107,7 +107,7 @@ data class InputTokens(
             typography: AppTypography,
             control: AppControlTokens,
         ): InputTokens = InputTokens(
-            height = control.medium.height,
+            height = 56.dp,
             cornerRadius = shapes.scaled(shapes.medium),
             fontSize = typography.bodyLarge.fontSize,
             borderWidth = 1.dp,

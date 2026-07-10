@@ -1,6 +1,6 @@
 package com.babytracker.designsystem.components.input
 
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -67,7 +67,7 @@ fun AppInput(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = true,
         shape = RoundedCornerShape(cornerRadius),
-        modifier = modifier.height(height),
+        modifier = modifier.defaultMinSize(minHeight = height),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = InputDefaults.focusedBorderColor(),
             unfocusedBorderColor = InputDefaults.unfocusedBorderColor(),

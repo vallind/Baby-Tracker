@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**修复 AppInput 文字显示不全：**
+- `AppInput` 使用 `.height(height)` 强制固定高度，导致文字内容被裁剪
+- 改为 `.defaultMinSize(minHeight = height)`，保持最小高度的同时允许自适应内容
+- `InputTokens.height` 从 `control.medium.height`(48dp) 调整为 56dp（Material 3 标准输入框高度）
+
 **修复 AppTextButton / SecondaryButton 默认字体颜色在亮色主题下不可见：**
 - `AppTextButton` 和 `SecondaryButton` 原使用 `ButtonTokens.contentColor`(= `colors.onPrimary`，亮色=白色)
 - 白色文字在白色 `AppBottomSheet` 背景上不可见
