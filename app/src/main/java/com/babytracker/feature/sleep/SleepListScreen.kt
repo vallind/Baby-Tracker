@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -36,6 +37,7 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.SecondaryButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
@@ -504,7 +506,7 @@ fun SleepFormDialog(
                 modifier = Modifier.weight(1f),
             )
             if (timerRunning) {
-                AppTextButton(
+                SecondaryButton(
                     onClick = {
                         timerRunning = false
                         prefs.edit().putBoolean("sleep_timer_running", false).apply()
@@ -517,6 +519,8 @@ fun SleepFormDialog(
                     },
                     label = "结束计时",
                     color = LocalAppColors.current.error,
+                    height = 40.dp,
+                    fontSize = 14.sp,
                 )
             } else {
                 PrimaryButton(

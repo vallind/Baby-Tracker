@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +40,7 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.SecondaryButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
@@ -493,7 +495,7 @@ fun FeedingFormDialog(
                         modifier = Modifier.weight(1f),
                     )
                     if (timerRunning) {
-                        AppTextButton(
+                        SecondaryButton(
                             onClick = {
                                 timerRunning = false
                                 prefs.edit().putBoolean("feeding_timer_running", false).apply()
@@ -501,6 +503,8 @@ fun FeedingFormDialog(
                             },
                             label = "结束计时",
                             color = c.error,
+                            height = 40.dp,
+                            fontSize = 14.sp,
                         )
                     } else {
                         PrimaryButton(
@@ -515,7 +519,7 @@ fun FeedingFormDialog(
                             },
                             label = "开始计时",
                             height = 40.dp,
-                            fontSize = LocalAppTypography.current.bodyLarge.fontSize,
+                            fontSize = 14.sp,
                         )
                     }
                 }
