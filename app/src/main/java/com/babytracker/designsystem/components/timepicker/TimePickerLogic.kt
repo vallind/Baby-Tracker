@@ -2,7 +2,6 @@ package com.babytracker.designsystem.components.timepicker
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -54,13 +53,12 @@ fun TimePickerLogic(
     val itemHeightPx = with(density) { itemHeight.toPx() }
     val allValues = remember(range) { range.toList() }
     val initialIndex = (value - range.first).coerceIn(0, allValues.lastIndex)
-    val centerPadding = itemHeight * halfVisible
 
     val listState = rememberLazyListState()
 
-    // 初次定位：item(initialIndex) 在 contentPadding.top 之后，自然对齐高亮区
+    // 初次定位：选中项上方 halfVisible 项在视口顶部 → 选中项自然对齐高亮区
     LaunchedEffect(Unit) {
-        listState.scrollToItem(initialIndex)
+        listState.scrollToItem(maxOf(0, initialIndex - halfVisible))
     }
 
     // 滑动停止后通知选中值
@@ -122,10 +120,6 @@ fun TimePickerLogic(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(
-                top = centerPadding,
-                bottom = centerPadding,
-            ),
         ) {
             items(allValues, key = { it }) { v ->
                 val isSelected = v == value
