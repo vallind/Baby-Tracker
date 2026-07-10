@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -503,8 +502,6 @@ fun FeedingFormDialog(
                             },
                             label = "结束计时",
                             color = c.error,
-                            height = 40.dp,
-                            fontSize = 14.sp,
                         )
                     } else {
                         PrimaryButton(
@@ -518,8 +515,6 @@ fun FeedingFormDialog(
                                     .apply()
                             },
                             label = "开始计时",
-                            height = 40.dp,
-                            fontSize = 14.sp,
                         )
                     }
                 }

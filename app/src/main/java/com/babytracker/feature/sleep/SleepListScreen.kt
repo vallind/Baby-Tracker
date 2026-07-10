@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -519,8 +518,6 @@ fun SleepFormDialog(
                     },
                     label = "结束计时",
                     color = LocalAppColors.current.error,
-                    height = 40.dp,
-                    fontSize = 14.sp,
                 )
             } else {
                 PrimaryButton(
@@ -535,8 +532,6 @@ fun SleepFormDialog(
                         startTime = LocalDateTime.now().format(timeFormatter)
                     },
                     label = "开始计时",
-                    height = 40.dp,
-                    fontSize = LocalAppTypography.current.bodyLarge.fontSize,
                 )
             }
         }
