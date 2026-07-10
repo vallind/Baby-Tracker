@@ -52,6 +52,7 @@ import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.button.SecondaryButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.components.dialog.DialogDefaults
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -762,6 +763,7 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = DialogDefaults.containerColor(),
         title = { Text(if (isEdit) "编辑宝宝" else "添加宝宝") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
