@@ -25,6 +25,9 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
@@ -43,15 +46,6 @@ import java.time.temporal.ChronoUnit
 
 /**
  * 提醒中心 —— 待办提醒 + 历史提醒。
- *
- * 视觉规范：
- * - 页面背景 `c.pageBackground` 浅蓝；顶部 `Gradients.pageHeader(c)` 渐变 header + 返回按钮 + 标题"提醒中心"。
- * - Tab 切换：待办提醒 / 历史提醒（选中 `c.primary` + 下方 3dp 圆角指示器）。
- * - 待办卡片：`DT.cardRadius`(16dp) 白卡 + `DT.cardElevation` 阴影；左侧 `DT.iconBgSize`(40dp) 圆角图标背景，按 type 着色；
- *   右侧倒计时（未到期 `c.primary` / 已逾期 `c.danger`）或用药类 `Switch`。
- * - 历史卡片：灰色调，显示完成日期 + ✅。
- * - 长按卡片 → 删除确认对话框。
- * - 无 + FAB（提醒由系统/其他模块生成）。
  */
 @Composable
 fun ReminderScreen(navController: NavController) {
@@ -71,7 +65,7 @@ fun ReminderScreen(navController: NavController) {
     AppScaffold { padding ->
         if (babyId == 0) {
             EmptyState(
-                emoji = "🍼",
+                emoji = "\uD83C\uDF7C",
                 title = "还没有添加宝宝",
                 subtitle = "添加宝宝后即可查看提醒",
                 modifier = Modifier.padding(padding),
@@ -86,17 +80,14 @@ fun ReminderScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            // —— 顶部渐变 header + 返回按钮 + 标题 ——
             ReminderHeader(onBack = { navController.popBackStack() })
 
-            // —— Tab 切换 ——
             ReminderTabBar(tab = state.tab, onSwitch = viewModel::switchTab)
 
-            // —— 列表 ——
             val list = if (state.tab == ReminderTab.PENDING) state.pending else state.history
             if (list.isEmpty()) {
                 EmptyState(
-                    emoji = if (state.tab == ReminderTab.PENDING) "🔔" else "📜",
+                    emoji = if (state.tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
                     title = if (state.tab == ReminderTab.PENDING) "暂无待办提醒" else "暂无历史提醒",
                     subtitle = if (state.tab == ReminderTab.PENDING)
                         "疫苗 / 体检 / 用药 / 发育评估到期后会出现在这里"
@@ -127,12 +118,11 @@ fun ReminderScreen(navController: NavController) {
         }
     }
 
-    // —— 删除确认对话框 ——
     deletingReminder?.let { r ->
         AppConfirmDialog(
             show = true,
             title = "删除提醒",
-            message = "确定要删除「${r.title}」吗？",
+            message = "确定要删除\u300C${r.title}\u300D吗？",
             confirmText = "删除",
             cancelText = "取消",
             onConfirm = {
@@ -144,11 +134,11 @@ fun ReminderScreen(navController: NavController) {
     }
 }
 
-// —— 顶部 header ——
-
 @Composable
 private fun ReminderHeader(onBack: () -> Unit) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     Box(
         Modifier
             .fillMaxWidth()
@@ -164,7 +154,7 @@ private fun ReminderHeader(onBack: () -> Unit) {
             Box(
                 Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(50))
+                    .clip(RoundedCornerShape(shapes.full))
                     .clickable(onClick = onBack),
                 contentAlignment = Alignment.Center,
             ) {
@@ -174,7 +164,7 @@ private fun ReminderHeader(onBack: () -> Unit) {
                     tint = c.textPrimary,
                 )
             }
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(spacing.xs))
             Text(
                 "提醒中心",
                 style = LocalAppTypography.current.titleLarge,
@@ -185,35 +175,35 @@ private fun ReminderHeader(onBack: () -> Unit) {
     }
 }
 
-// —— Tab 切换 ——
-
 @Composable
 private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = spacing.md, vertical = 12.dp),
     ) {
         ReminderTab.entries.forEach { t ->
             Column(
                 Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(shapes.large))
                     .clickable { onSwitch(t) }
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = spacing.sm),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     if (t == ReminderTab.PENDING) "待办提醒" else "历史提醒",
-                    fontSize = 15.sp,
+                    style = LocalAppTypographyStyle.current.bodyLarge,
                     fontWeight = if (tab == t) FontWeight.Bold else FontWeight.Normal,
                     color = if (tab == t) c.primary else c.textSecondary,
                 )
                 Spacer(Modifier.height(6.dp))
                 Box(
                     Modifier
-                        .width(24.dp)
+                        .width(spacing.lg)
                         .height(3.dp)
                         .clip(RoundedCornerShape(2.dp))
                         .background(if (tab == t) c.primary else Color.Transparent),
@@ -222,8 +212,6 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
         }
     }
 }
-
-// —— 待办卡片 ——
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -235,37 +223,37 @@ private fun PendingReminderCard(
     onLongPress: () -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
 
     AppCard(
-        cornerRadius = 12.dp,
+        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = spacing.md, vertical = 6.dp)
             .fillMaxWidth()
             .longPressDeletable(haptic, onLongClick = onLongPress),
     ) {
         Row(
-            Modifier.padding(16.dp),
+            Modifier.padding(spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // 左侧：类型图标圆角背景
             Box(
                 Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(shapes.large))
                     .background(typeColor.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, fontSize = 20.sp)
+                Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
             }
             Spacer(Modifier.width(12.dp))
-            // 中间：标题 + 描述（+ 用药类重复规则）
             Column(Modifier.weight(1f)) {
                 Text(
                     reminder.title,
-                    fontSize = 15.sp,
+                    style = LocalAppTypographyStyle.current.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = c.textPrimary,
                     maxLines = 1,
@@ -275,7 +263,7 @@ private fun PendingReminderCard(
                     Spacer(Modifier.height(2.dp))
                     Text(
                         reminder.description,
-                        fontSize = 12.sp,
+                        style = LocalAppTypographyStyle.current.label,
                         color = c.textSecondary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -285,13 +273,12 @@ private fun PendingReminderCard(
                     Spacer(Modifier.height(2.dp))
                     Text(
                         reminder.repeatRule,
-                        fontSize = 11.sp,
+                        style = LocalAppTypographyStyle.current.label,
                         color = c.textTertiary,
                     )
                 }
             }
-            Spacer(Modifier.width(8.dp))
-            // 右侧：用药类 → Switch；其它 → 倒计时 + 完成按钮
+            Spacer(Modifier.width(spacing.sm))
             if (reminder.type == ReminderType.MEDICATION) {
                 AppSwitch(
                     checked = reminder.isEnabled,
@@ -305,22 +292,22 @@ private fun PendingReminderCard(
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
                             countdown,
-                            fontSize = 13.sp,
+                            style = LocalAppTypographyStyle.current.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = if (overdue) c.danger else c.primary,
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
                             DateUtils.formatDate(reminder.dueDate),
-                            fontSize = 11.sp,
+                            style = LocalAppTypographyStyle.current.label,
                             color = c.textTertiary,
                         )
                     }
-                    Spacer(Modifier.width(4.dp))
+                    Spacer(Modifier.width(spacing.xs))
                     Box(
                         Modifier
                             .size(32.dp)
-                            .clip(RoundedCornerShape(50))
+                            .clip(RoundedCornerShape(shapes.full))
                             .clickable(onClick = onMarkDone),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -337,8 +324,6 @@ private fun PendingReminderCard(
     }
 }
 
-// —— 历史卡片 ——
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HistoryReminderCard(
@@ -347,60 +332,58 @@ private fun HistoryReminderCard(
     onLongPress: () -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
     val doneText = reminder.doneDate?.let { "完成于 ${DateUtils.formatDate(it)}" } ?: "已完成"
 
     AppCard(
-        cornerRadius = 12.dp,
+        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface.copy(alpha = 0.7f),
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = spacing.md, vertical = 6.dp)
             .fillMaxWidth()
             .longPressDeletable(haptic, onLongClick = onLongPress),
     ) {
         Row(
-            Modifier.padding(16.dp),
+            Modifier.padding(spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(shapes.large))
                     .background(typeColor.copy(alpha = 0.10f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, fontSize = 20.sp)
+                Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     reminder.title,
-                    fontSize = 15.sp,
+                    style = LocalAppTypographyStyle.current.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = c.textSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(2.dp))
-                Text(doneText, fontSize = 12.sp, color = c.textTertiary)
+                Text(doneText, style = LocalAppTypographyStyle.current.label, color = c.textTertiary)
             }
-            Text("✅", fontSize = 18.sp)
+            Text("\u2705", style = LocalAppTypographyStyle.current.titleLarge)
         }
     }
 }
 
-// —— 辅助：类型 → emoji + 主题色（跟随 LocalThemeColors）——
-
 private fun ReminderType.toVisual(c: AppColors): Pair<String, Color> = when (this) {
-    ReminderType.VACCINE    -> "💉" to c.warning    // 橙
-    ReminderType.CHECKUP    -> "🏥" to c.primary    // 蓝
-    ReminderType.MEDICATION -> "💊" to c.success    // 绿
-    ReminderType.ASSESSMENT -> "📋" to c.secondary     // 紫
-    ReminderType.OTHER      -> "📌" to c.textTertiary   // 灰
+    ReminderType.VACCINE    -> "\uD83D\uDC89" to c.warning
+    ReminderType.CHECKUP    -> "\uD83C\uDFE5" to c.primary
+    ReminderType.MEDICATION -> "\uD83D\uDC8A" to c.success
+    ReminderType.ASSESSMENT -> "\uD83D\uDCCB" to c.secondary
+    ReminderType.OTHER      -> "\uD83D\uDCCC" to c.textTertiary
 }
-
-// —— 辅助：倒计时文案 ——
 
 private fun Reminder.isOverdue(): Boolean {
     val today = LocalDate.now()

@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.core.domain.model.Growth
 import com.babytracker.core.domain.model.GrowthType
@@ -43,7 +42,10 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.PrimaryButton
@@ -58,6 +60,9 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun GrowthScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    val shapes = LocalAppShapes.current
     val growthRepo: GrowthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -103,11 +108,10 @@ fun GrowthScreen(navController: NavController) {
                 .padding(padding)
                 .background(c.pageBackground),
         ) {
-            // —— Tab 切换区 ——
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = spacing.md, vertical = spacing.sm),
             ) {
                 SegmentedControl(
                     labels = tabs,
@@ -146,13 +150,12 @@ fun GrowthScreen(navController: NavController) {
                         .weight(1f)
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 4.dp,
-                        bottom = 8.dp,
+                        start = spacing.md,
+                        end = spacing.md,
+                        top = spacing.xs,
+                        bottom = spacing.sm,
                     ),
                 ) {
-                    // —— Hero 大数值卡 ——
                     if (latest != null) {
                         item {
                             val valText = when {
@@ -166,33 +169,33 @@ fun GrowthScreen(navController: NavController) {
                             } catch (_: Exception) { "" }
 
                             AppCard(
-                                cornerRadius = 16.dp,
+                                cornerRadius = shapes.large,
                                 containerColor = c.surface,
                                 elevation = 0.dp,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(bottom = 16.dp),
+                                    .padding(bottom = spacing.md),
                             ) {
-                                Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Column(Modifier.fillMaxWidth().padding(spacing.lg), horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         "当前${tabs[tab]}",
                                         style = LocalAppTypography.current.bodyMedium,
                                         color = c.textSecondary,
                                     )
-                                    Spacer(Modifier.height(8.dp))
+                                    Spacer(Modifier.height(spacing.sm))
                                     Row(
                                         verticalAlignment = Alignment.Bottom,
                                     ) {
                                         Text(
                                             valText,
-                                            fontSize = 48.sp,
+                                            style = typography.display,
                                             fontWeight = FontWeight.Bold,
                                             color = c.textPrimary,
                                         )
                                         Spacer(Modifier.width(6.dp))
                                         Text(
                                             units[tab],
-                                            fontSize = 18.sp,
+                                            style = typography.titleLarge,
                                             fontWeight = FontWeight.Medium,
                                             color = c.textSecondary,
                                             modifier = Modifier.padding(bottom = 10.dp),
@@ -209,7 +212,6 @@ fun GrowthScreen(navController: NavController) {
                         }
                     }
 
-                    // —— 生长曲线图 ——
                     item {
                         val chartProgress by animateFloatAsState(
                             targetValue = if (chartData.size > 1) 1f else 0f,
@@ -231,17 +233,16 @@ fun GrowthScreen(navController: NavController) {
                         }
 
                         AppCard(
-                            cornerRadius = 12.dp,
+                            cornerRadius = shapes.large,
                             containerColor = c.surface,
                             elevation = 2.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp),
+                                .padding(bottom = spacing.md),
                         ) {
-                            Box(Modifier.fillMaxWidth().height(300.dp).padding(16.dp)) {
-                                // Y 轴标签
+                            Box(Modifier.fillMaxWidth().height(300.dp).padding(spacing.md)) {
                                 Column(
-                                    Modifier.fillMaxHeight().width(36.dp).padding(bottom = 24.dp),
+                                    Modifier.fillMaxHeight().width(36.dp).padding(bottom = spacing.lg),
                                     verticalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     yLabels.forEach { Text(it, style = LocalAppTypography.current.labelSmall, color = c.textSecondary) }
@@ -250,11 +251,9 @@ fun GrowthScreen(navController: NavController) {
                                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
                                     val w = size.width
                                     val h = size.height
-                                    // 网格线
                                     for (i in 0..3) {
                                         drawLine(gridColor, Offset(0f, h * i / 4), Offset(w, h * i / 4), strokeWidth = 1f)
                                     }
-                                    // WHO 参考虚线
                                     val whoLines = whoReferenceLines(GrowthType.raw(types[tab]), minVal, maxVal, range)
                                     whoLines.forEach { percentile ->
                                         val y = h * (1f - ((percentile - minVal) / range).toFloat()).coerceIn(0f, h)
@@ -274,7 +273,6 @@ fun GrowthScreen(navController: NavController) {
                                             Offset(w * i / (chartData.size - 1), h * (1f - ((g.value - minVal) / range).toFloat()))
                                         }
                                         val visibleCount = ((points.size - 1) * chartProgress).toInt().coerceIn(0, points.size - 1)
-                                        // 面积填充
                                         val areaPath = androidx.compose.ui.graphics.Path().apply {
                                             moveTo(points[0].x, h)
                                             for (i in 0..visibleCount) { lineTo(points[i].x, points[i].y) }
@@ -282,11 +280,9 @@ fun GrowthScreen(navController: NavController) {
                                             close()
                                         }
                                         drawPath(areaPath, brush = areaBrush)
-                                        // 连线
                                         for (i in 0 until visibleCount) {
                                             drawLine(lineColor, points[i], points[i + 1], strokeWidth = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
                                         }
-                                        // 数据点
                                         for (i in 0..visibleCount) {
                                             drawCircle(lineColor, 5.dp.toPx(), points[i])
                                             drawCircle(bgColor, 2.5.dp.toPx(), points[i])
@@ -297,7 +293,6 @@ fun GrowthScreen(navController: NavController) {
                                     }
                                 }
 
-                                // X 轴标签
                                 if (chartData.size > 1) {
                                     Row(
                                         Modifier
@@ -323,28 +318,27 @@ fun GrowthScreen(navController: NavController) {
                         }
                     }
 
-                    // —— 正常范围卡片 ——
                     item {
                         AppCard(
-                            cornerRadius = 12.dp,
+                            cornerRadius = shapes.large,
                             containerColor = c.surface,
                             elevation = 0.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 16.dp),
+                                .padding(bottom = spacing.md),
                         ) {
                             Row(
-                                Modifier.padding(16.dp),
+                                Modifier.padding(spacing.md),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(
                                     Modifier
                                         .size(36.dp)
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(shapes.medium))
                                         .background(c.primary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text("📊", fontSize = 16.sp)
+                                    Text("📊", style = typography.titleMedium)
                                 }
                                 Spacer(Modifier.width(12.dp))
                                 Column {
@@ -353,7 +347,7 @@ fun GrowthScreen(navController: NavController) {
                                         style = LocalAppTypography.current.bodySmall,
                                         color = c.textSecondary,
                                     )
-                                    Spacer(Modifier.height(2.dp))
+                                    Spacer(Modifier.height(spacing.xxs))
                                     Text(
                                         normalRanges[tab],
                                         style = LocalAppTypography.current.titleMedium,
@@ -365,7 +359,6 @@ fun GrowthScreen(navController: NavController) {
                         }
                     }
 
-                    // —— 历史记录列表 ——
                     grouped.forEach { (date, items) ->
                         stickyHeader(key = date) {
                             Text(
@@ -373,7 +366,7 @@ fun GrowthScreen(navController: NavController) {
                                 style = LocalAppTypography.current.labelMedium,
                                 color = c.textSecondary,
                                 fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(vertical = 4.dp),
+                                modifier = Modifier.padding(vertical = spacing.xs),
                             )
                         }
                         items(items = items, key = { it.id }) { g ->
@@ -400,12 +393,12 @@ fun GrowthScreen(navController: NavController) {
                                     editingGrowth = g
                                     showForm = true
                                 },
-                                modifier = Modifier.padding(bottom = 8.dp),
+                                modifier = Modifier.padding(bottom = spacing.sm),
                             ) {
                                 Box(
                                     Modifier
                                         .size(40.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(shapes.large))
                                         .background(c.primary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) {
@@ -435,17 +428,15 @@ fun GrowthScreen(navController: NavController) {
                         }
                     }
 
-                    // 底部留白给按钮
-                    item { Spacer(Modifier.height(8.dp)) }
+                    item { Spacer(Modifier.height(spacing.sm)) }
                 }
             }
 
-            // —— 底部固定按钮 ——
             Box(
                 Modifier
                     .fillMaxWidth()
                     .background(c.surface)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
             ) {
                 PrimaryButton(
                     onClick = {
@@ -455,7 +446,7 @@ fun GrowthScreen(navController: NavController) {
                     label = "记录${tabs[tab]}",
                     icon = Icons.Default.Add,
                     height = 48.dp,
-                    cornerRadius = 12.dp,
+                    cornerRadius = shapes.large,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -494,6 +485,7 @@ fun GrowthFormDialog(
     onSave: (Growth) -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     val isEdit = editEntity != null
     var type by remember { mutableStateOf(editEntity?.let { GrowthType.raw(it.type) } ?: "height") }
     var value by remember {
@@ -543,7 +535,7 @@ fun GrowthFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = spacing.md)) {
             listOf("height" to "📏 身高", "weight" to "⚖️ 体重", "head" to "📐 头围").forEach { (t, label) ->
                 FilterChip(
                     selected = type == t,
@@ -585,9 +577,6 @@ fun GrowthFormDialog(
     )
 }
 
-/**
- * WHO 0-2 岁参考百分位（简化版，仅作图表参考虚线使用）。
- */
 private fun whoReferenceLines(type: String, minVal: Double, maxVal: Double, range: Double): List<Double> {
     val median = when (type) {
         "height" -> 67.0

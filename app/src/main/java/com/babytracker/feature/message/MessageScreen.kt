@@ -22,7 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.core.domain.model.AppMessage
@@ -35,7 +37,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
-// —— 分类概览元数据 ——
 private data class CategoryOverview(
     val type: MessageType,
     val label: String,
@@ -43,20 +44,24 @@ private data class CategoryOverview(
     val bgColor: Color,
 )
 
-private val CATEGORY_OVERVIEWS = listOf(
-    CategoryOverview(MessageType.INTERACTION, "互动消息", "💬", Color(0xFF2196F3)),
-    CategoryOverview(MessageType.SYSTEM, "系统通知", "🔔", Color(0xFF2196F3)),
-    CategoryOverview(MessageType.SERVICE, "服务通知", "⭐", Color(0xFF9C27B0)),
-)
+@Composable
+private fun categoryOverviews(): List<CategoryOverview> {
+    val c = LocalAppColors.current
+    return listOf(
+        CategoryOverview(MessageType.INTERACTION, "互动消息", "\uD83D\uDCAC", c.primary),
+        CategoryOverview(MessageType.SYSTEM, "系统通知", "\uD83D\uDD14", c.primary),
+        CategoryOverview(MessageType.SERVICE, "服务通知", "\u2B50", c.secondary),
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessageScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     val viewModel: MessageViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
 
-    // 分类筛选：null = 显示全部，否则只显示指定类型
     var filterType by remember { mutableStateOf<MessageType?>(null) }
 
     val filteredMessages = remember(state.messages, filterType) {
@@ -72,12 +77,12 @@ fun MessageScreen(navController: NavController) {
                     val canMarkAll = state.totalUnread > 0
                     Text(
                         "全部已读",
-                        fontSize = 14.sp,
+                        style = LocalAppTypographyStyle.current.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = if (canMarkAll) c.primary else c.textTertiary,
                         modifier = Modifier
                             .clickable(enabled = canMarkAll, onClick = { viewModel.markAllRead() })
-                            .padding(horizontal = 4.dp),
+                            .padding(horizontal = spacing.xs),
                     )
                 },
             )
@@ -90,7 +95,6 @@ fun MessageScreen(navController: NavController) {
                 .padding(padding)
                 .background(c.pageBackground),
         ) {
-            // —— 分类概览卡片区 ——
             CategoryOverviewBar(
                 interactionUnread = state.interactionUnread,
                 systemUnread = state.systemUnread,
@@ -101,16 +105,15 @@ fun MessageScreen(navController: NavController) {
                 },
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(spacing.sm))
 
-            // —— 消息列表 ——
             if (filteredMessages.isEmpty()) {
                 Box(
                     Modifier.weight(1f).fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
                     EmptyState(
-                        emoji = "📭",
+                        emoji = "\uD83D\uDCED",
                         title = "暂无消息",
                         subtitle = if (filterType != null) "该分类暂无消息" else "新的消息会在这里显示",
                     )
@@ -121,12 +124,12 @@ fun MessageScreen(navController: NavController) {
                         .weight(1f)
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
+                        start = spacing.md,
+                        end = spacing.md,
                         top = 12.dp,
-                        bottom = 16.dp,
+                        bottom = spacing.md,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(spacing.sm),
                 ) {
                     items(filteredMessages, key = { it.id }) { message ->
                         MessageCard(
@@ -135,14 +138,13 @@ fun MessageScreen(navController: NavController) {
                             onDelete = { viewModel.delete(message) },
                         )
                     }
-                    item { Spacer(Modifier.height(16.dp)) }
+                    item { Spacer(Modifier.height(spacing.md)) }
                 }
             }
         }
     }
 }
 
-// —— 分类概览卡片栏（3列宫格）——
 @Composable
 private fun CategoryOverviewBar(
     interactionUnread: Int,
@@ -152,10 +154,12 @@ private fun CategoryOverviewBar(
     onSelect: (MessageType) -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = spacing.md, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         val unreadMap = mapOf(
@@ -163,11 +167,11 @@ private fun CategoryOverviewBar(
             MessageType.SYSTEM to systemUnread,
             MessageType.SERVICE to serviceUnread,
         )
-        CATEGORY_OVERVIEWS.forEachIndexed { i, cat ->
+        categoryOverviews().forEachIndexed { i, cat ->
             val unread = unreadMap[cat.type] ?: 0
             val selected = selectedType == cat.type
             AppCard(
-                cornerRadius = 12.dp,
+                cornerRadius = shapes.large,
                 elevation = 2.dp,
                 containerColor = if (selected) cat.bgColor else c.surface,
                 modifier = Modifier
@@ -183,17 +187,16 @@ private fun CategoryOverviewBar(
                     Column {
                         Text(
                             cat.emoji,
-                            fontSize = 22.sp,
+                            style = LocalAppTypographyStyle.current.titleLarge,
                         )
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(spacing.xs))
                         Text(
                             cat.label,
-                            fontSize = 13.sp,
+                            style = LocalAppTypographyStyle.current.bodyMedium,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                             color = if (selected) Color.White else c.textPrimary,
                         )
                     }
-                    // 未读角标
                     if (unread > 0) {
                         Box(
                             Modifier
@@ -206,7 +209,7 @@ private fun CategoryOverviewBar(
                         ) {
                             Text(
                                 if (unread > 99) "99+" else unread.toString(),
-                                fontSize = 10.sp,
+                                style = LocalAppTypographyStyle.current.label,
                                 fontWeight = FontWeight.Bold,
                                 color = if (selected) Color.White else Color.White,
                             )
@@ -218,7 +221,6 @@ private fun CategoryOverviewBar(
     }
 }
 
-// —— 消息卡片：互动=圆形头像+未读角标，系统=蓝色铃铛，服务=紫色星标 ——
 @Composable
 private fun MessageCard(
     message: AppMessage,
@@ -226,8 +228,10 @@ private fun MessageCard(
     onDelete: () -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     AppCard(
-        cornerRadius = 12.dp,
+        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
@@ -236,48 +240,44 @@ private fun MessageCard(
     ) {
         Row(
             Modifier
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = spacing.md, vertical = 14.dp),
             verticalAlignment = Alignment.Top,
         ) {
-            // 左侧头像/图标
             MessageLeadingIcon(message)
             Spacer(Modifier.width(12.dp))
-            // 中间：标题 + 内容 + 时间
             Column(Modifier.weight(1f)) {
-                // 标题行：名称/标题 + 时间
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
                         message.title,
-                        fontSize = 15.sp,
+                        style = LocalAppTypographyStyle.current.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = c.textPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(spacing.sm))
                     Text(
                         relativeTime(message.createTime),
-                        fontSize = 11.sp,
+                        style = LocalAppTypographyStyle.current.label,
                         color = c.textTertiary,
                     )
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(spacing.xs))
                 Text(
                     message.content,
-                    fontSize = 13.sp,
+                    style = LocalAppTypographyStyle.current.bodyMedium,
                     color = c.textSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.width(8.dp))
-            // 右侧：未读红点 + 删除按钮
+            Spacer(Modifier.width(spacing.sm))
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(spacing.sm),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (!message.isRead) {
@@ -288,7 +288,7 @@ private fun MessageCard(
                             .background(c.danger),
                     )
                 } else {
-                    Text("已读", fontSize = 11.sp, color = c.textTertiary)
+                    Text("已读", style = LocalAppTypographyStyle.current.label, color = c.textTertiary)
                 }
                 Icon(
                     Icons.Default.Close,
@@ -306,13 +306,13 @@ private fun MessageCard(
 @Composable
 private fun MessageLeadingIcon(message: AppMessage) {
     val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
     when (message.type) {
         MessageType.INTERACTION -> {
-            // 互动：圆形彩色头像（首字母）
             val initial = message.title.take(1)
             val avatarColors = listOf(
-                Color(0xFFF44336), Color(0xFFFF9800), Color(0xFF2196F3),
-                Color(0xFF4CAF50), Color(0xFF9C27B0), Color(0xFFFF5722),
+                c.error, c.warning, c.primary,
+                c.success, c.secondary, c.danger,
             )
             val pickColor = avatarColors[initial.hashCode().let { ((it % avatarColors.size) + avatarColors.size) % avatarColors.size }]
             Box(
@@ -324,42 +324,40 @@ private fun MessageLeadingIcon(message: AppMessage) {
             ) {
                 Text(
                     initial,
-                    fontSize = 20.sp,
+                    style = LocalAppTypographyStyle.current.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                 )
             }
         }
         MessageType.SYSTEM -> {
-            // 系统：蓝色铃铛圆角图标
             Box(
                 Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF2196F3).copy(alpha = 0.12f)),
+                    .clip(RoundedCornerShape(shapes.large))
+                    .background(c.primary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.Notifications,
                     contentDescription = null,
-                    tint = Color(0xFF2196F3),
+                    tint = c.primary,
                     modifier = Modifier.size(22.dp),
                 )
             }
         }
         MessageType.SERVICE -> {
-            // 服务：紫色星标圆角图标
             Box(
                 Modifier
                     .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFF9C27B0).copy(alpha = 0.12f)),
+                    .clip(RoundedCornerShape(shapes.large))
+                    .background(c.secondary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = Color(0xFF9C27B0),
+                    tint = c.secondary,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -367,13 +365,6 @@ private fun MessageLeadingIcon(message: AppMessage) {
     }
 }
 
-/**
- * 相对时间格式化：
- * - 1 小时内 → "刚刚" / "N分钟前"
- * - 今天内 → "HH:mm"
- * - 今年内 → "MM-dd"
- * - 跨年 → "yyyy-MM-dd"
- */
 private fun relativeTime(dt: LocalDateTime): String {
     val now = LocalDateTime.now()
     val mins = ChronoUnit.MINUTES.between(dt, now)

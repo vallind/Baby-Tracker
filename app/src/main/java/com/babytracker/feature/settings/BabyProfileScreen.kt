@@ -9,26 +9,26 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.core.domain.model.*
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.GrowthRepository
+import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.navigation.Screen
 import org.koin.compose.koinInject
@@ -37,16 +37,13 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-/**
- * 宝宝信息页面 — 头像 + 基本信息 + 出生数据 + 当前生长数据。
- *
- * 从 SettingsScreen "宝宝信息"入口进入，展示当前宝宝的完整档案。
- * 右上角编辑按钮打开 BabyFormDialog 修改基本资料。
- */
 @Composable
 fun BabyProfileScreen(navController: NavController) {
     val c = LocalAppColors.current
     val shapes = LocalAppShapes.current
+    val typography = LocalAppTypography.current
+    val spacing = LocalAppSpacing.current
+    val elev = LocalAppElevation.current
 
     val babyCtrl: BabyController = koinInject()
     val babyRepo: BabyRepository = koinInject()
@@ -55,16 +52,13 @@ fun BabyProfileScreen(navController: NavController) {
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
 
-    // 生长记录
     val growths by growthRepo.watchByBaby(baby?.id ?: 0).collectAsState(initial = emptyList())
     val activeGrowths = growths.filter { it.deletedAt == null }
 
-    // 各类最新记录
     val latestHeight = activeGrowths.filter { it.type == GrowthType.HEIGHT }.maxByOrNull { it.measuredAt }
     val latestWeight = activeGrowths.filter { it.type == GrowthType.WEIGHT }.maxByOrNull { it.measuredAt }
     val latestHead = activeGrowths.filter { it.type == GrowthType.HEAD }.maxByOrNull { it.measuredAt }
 
-    // 编辑弹窗
     var showEdit by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
@@ -89,18 +83,14 @@ fun BabyProfileScreen(navController: NavController) {
                 .padding(padding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // ═══════════════════════════════════════════
-            //  头像 + 姓名 + 性别 · 年龄
-            // ═══════════════════════════════════════════
             Box(
                 Modifier
                     .fillMaxWidth()
                     .background(c.pageBackground)
-                    .padding(vertical = 32.dp),
+                    .padding(vertical = spacing.xl),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // 头像
                     Box(
                         Modifier.size(88.dp),
                         contentAlignment = Alignment.BottomEnd,
@@ -114,12 +104,10 @@ fun BabyProfileScreen(navController: NavController) {
                         ) {
                             Text(
                                 baby.name.take(1),
-                                fontSize = 32.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = typography.displayLarge,
                                 color = c.primary,
                             )
                         }
-                        // 相机图标
                         Box(
                             Modifier
                                 .size(28.dp)
@@ -128,23 +116,20 @@ fun BabyProfileScreen(navController: NavController) {
                                 .border(2.dp, c.surface, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("📷", fontSize = 13.sp)
+                            Text("📷", style = typography.bodyMedium)
                         }
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(spacing.md))
 
-                    // 姓名
                     Text(
                         baby.name,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = typography.headlineLarge,
                         color = c.textPrimary,
                     )
 
                     Spacer(Modifier.height(6.dp))
 
-                    // 性别 · 年龄
                     val birthDate = try {
                         LocalDate.parse(baby.birthDate)
                     } catch (_: Exception) { null }
@@ -156,25 +141,22 @@ fun BabyProfileScreen(navController: NavController) {
                     ) {
                         Text(
                             if (baby.gender == "男") "👦" else "👧",
-                            fontSize = 16.sp,
+                            style = typography.titleMedium,
                         )
-                        Spacer(Modifier.width(4.dp))
+                        Spacer(Modifier.width(spacing.xs))
                         Text(
                             "${if (baby.gender == "男") "男宝" else "女宝"}",
-                            fontSize = 14.sp,
+                            style = typography.bodyLarge,
                             color = c.textSecondary,
                         )
                         if (ageText.isNotEmpty()) {
-                            Text(" · ", fontSize = 14.sp, color = c.textTertiary)
-                            Text(ageText, fontSize = 14.sp, color = c.textSecondary)
+                            Text(" · ", style = typography.bodyLarge, color = c.textTertiary)
+                            Text(ageText, style = typography.bodyLarge, color = c.textSecondary)
                         }
                     }
                 }
             }
 
-            // ═══════════════════════════════════════════
-            //  出生信息卡片
-            // ═══════════════════════════════════════════
             SectionHeader("出生信息")
 
             AppCard(
@@ -182,9 +164,10 @@ fun BabyProfileScreen(navController: NavController) {
                 containerColor = c.surface,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = spacing.md),
+                elevation = elev.level2,
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(spacing.md)) {
                     InfoRow("出生日期", baby.birthDate)
                     BirthInfoDivider()
                     InfoRow("出生身高", baby.birthHeight?.let { "${it}cm" } ?: "未记录")
@@ -193,11 +176,8 @@ fun BabyProfileScreen(navController: NavController) {
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(spacing.lg))
 
-            // ═══════════════════════════════════════════
-            //  当前生长数据卡片
-            // ═══════════════════════════════════════════
             SectionHeader("当前生长数据")
 
             AppCard(
@@ -205,9 +185,10 @@ fun BabyProfileScreen(navController: NavController) {
                 containerColor = c.surface,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = spacing.md),
+                elevation = elev.level2,
             ) {
-                Column(Modifier.padding(16.dp)) {
+                Column(Modifier.padding(spacing.md)) {
                     GrowthValueRow(
                         label = "当前身高",
                         value = latestHeight?.let { "${it.value}cm" } ?: "未记录",
@@ -228,30 +209,29 @@ fun BabyProfileScreen(navController: NavController) {
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(spacing.lg))
 
-            // ═══════════════════════════════════════════
-            //  操作入口
-            // ═══════════════════════════════════════════
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TextButton(onClick = { navController.navigate(Screen.BabyManagement.route) }) {
-                    Text("管理全部宝宝", color = c.textSecondary, fontSize = 13.sp)
-                }
-                Text("·", color = c.textTertiary, fontSize = 13.sp)
-                TextButton(onClick = { showEdit = true }) {
-                    Text("编辑资料", color = c.primary, fontSize = 13.sp)
-                }
+                AppTextButton(
+                    onClick = { navController.navigate(Screen.BabyManagement.route) },
+                    label = "管理全部宝宝",
+                    color = c.textSecondary,
+                )
+                Text("·", color = c.textTertiary, style = typography.bodyMedium)
+                AppTextButton(
+                    onClick = { showEdit = true },
+                    label = "编辑资料",
+                )
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(spacing.xl))
         }
     }
 
-    // ── 编辑弹窗 ──
     if (showEdit) {
         BabyFormDialog(
             baby = baby,
@@ -266,24 +246,18 @@ fun BabyProfileScreen(navController: NavController) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  子组件
-// ═══════════════════════════════════════════════════════════
-
-/** 区块标题 */
 @Composable
 private fun SectionHeader(title: String) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     Text(
         title,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Medium,
+        style = LocalAppTypography.current.bodyMedium,
         color = c.textSecondary,
-        modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
+        modifier = Modifier.padding(start = spacing.md, bottom = spacing.sm),
     )
 }
 
-/** 信息行：标签（左）+ 值（右），用于出生信息 */
 @Composable
 private fun InfoRow(label: String, value: String) {
     val c = LocalAppColors.current
@@ -294,17 +268,16 @@ private fun InfoRow(label: String, value: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, fontSize = 14.sp, color = c.textPrimary)
+        Text(label, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
         Text(
             value,
-            fontSize = 14.sp,
+            style = LocalAppTypography.current.bodyLarge,
             color = c.textSecondary,
             textAlign = TextAlign.End,
         )
     }
 }
 
-/** 生长数据行：标签（左）+ 值 + 日期（右，两行） */
 @Composable
 private fun GrowthValueRow(label: String, value: String, date: String?) {
     val c = LocalAppColors.current
@@ -315,17 +288,16 @@ private fun GrowthValueRow(label: String, value: String, date: String?) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, fontSize = 14.sp, color = c.textPrimary)
+        Text(label, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
         Column(horizontalAlignment = Alignment.End) {
-            Text(value, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+            Text(value, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
             if (date != null) {
-                Text(date, fontSize = 11.sp, color = c.textTertiary)
+                Text(date, style = LocalAppTypography.current.labelSmall, color = c.textTertiary)
             }
         }
     }
 }
 
-/** 分割线 */
 @Composable
 private fun BirthInfoDivider() {
     val c = LocalAppColors.current
@@ -335,7 +307,6 @@ private fun BirthInfoDivider() {
     )
 }
 
-/** 格式化测量日期为简短显示 */
 private fun formatMeasuredAt(isoString: String): String {
     return try {
         val dt = LocalDateTime.parse(isoString, DateTimeFormatter.ISO_DATE_TIME)

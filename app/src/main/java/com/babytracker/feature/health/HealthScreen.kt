@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,13 +22,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.card.AppCard
@@ -50,7 +52,6 @@ import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-// —— 分类元数据：emoji + 标签 + 配色 ——
 private data class HealthCategoryMeta(
     val key: String,
     val label: String,
@@ -58,17 +59,16 @@ private data class HealthCategoryMeta(
     val bgColor: Color,
 )
 
-private val HEALTH_CATEGORIES = listOf(
-    HealthCategoryMeta("birth_info", "出生信息", "🍼", Color(0xFF9C27B0)),
-    HealthCategoryMeta("allergy", "过敏史", "🤧", Color(0xFFFFC107)),
-    HealthCategoryMeta("medicalHistory", "既往病史", "📋", Color(0xFF4CAF50)),
-    HealthCategoryMeta("visit", "就诊记录", "🏥", Color(0xFFF44336)),
-    HealthCategoryMeta("medication", "用药记录", "💊", Color(0xFF2196F3)),
-    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", Color(0xFFFF9800)),
-    HealthCategoryMeta("doctor_note", "医生备注", "📋", Color(0xFFFF5722)),
+private fun healthCategories(c: AppColors) = listOf(
+    HealthCategoryMeta("birth_info", "出生信息", "🍼", c.secondary),
+    HealthCategoryMeta("allergy", "过敏史", "🤧", c.tertiary),
+    HealthCategoryMeta("medicalHistory", "既往病史", "📋", c.success),
+    HealthCategoryMeta("visit", "就诊记录", "🏥", c.error),
+    HealthCategoryMeta("medication", "用药记录", "💊", c.primary),
+    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", c.warning),
+    HealthCategoryMeta("doctor_note", "医生备注", "📋", c.danger),
 )
 
-/** 根据分类和已有记录生成摘要副标题。 */
 private fun categorySummary(category: String, items: List<HealthRecord>): String {
     if (items.isEmpty()) return "暂无记录"
     val latest = items.maxByOrNull { it.recordDate } ?: return items.first().description
@@ -84,6 +84,9 @@ private fun categorySummary(category: String, items: List<HealthRecord>): String
 @Composable
 fun HealthScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    val shapes = LocalAppShapes.current
     val healthRepo: HealthRepository = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -93,14 +96,12 @@ fun HealthScreen(navController: NavController) {
     val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<HealthRecord?>(null) }
-    // 展开/收起某个分类
     var expandedCategory by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     val grouped = remember(records) { records.groupBy { it.category } }
-    // 已接种疫苗数
     val vaccinatedCount = remember(vaccinations) {
         vaccinations.count { it.status.name == "COMPLETED" || it.status.name == "ADMINISTERED" }
     }
@@ -128,10 +129,9 @@ fun HealthScreen(navController: NavController) {
                 Modifier.fillMaxSize().padding(padding).background(c.pageBackground),
                 contentPadding = PaddingValues(top = 12.dp, bottom = 80.dp),
             ) {
-                HEALTH_CATEGORIES.forEach { meta ->
+                healthCategories(c).forEach { meta ->
                     item(key = meta.key) {
                         if (meta.key == "vaccination") {
-                            // 疫苗接种卡片：读取 Vaccination 数据
                             VaccinationSummaryCard(
                                 emoji = meta.emoji,
                                 bgColor = meta.bgColor,
@@ -156,7 +156,6 @@ fun HealthScreen(navController: NavController) {
                                     }
                                 },
                             )
-                            // 展开后的记录列表（内嵌在同一卡片下方）
                             AnimatedVisibility(visible = isExpanded && items.isNotEmpty()) {
                                 ExpandedCategoryItems(
                                     items = items,
@@ -174,7 +173,7 @@ fun HealthScreen(navController: NavController) {
                             }
                         }
                     }
-                    item { Spacer(Modifier.height(8.dp)) }
+                    item { Spacer(Modifier.height(spacing.sm)) }
                 }
             }
         }
@@ -203,7 +202,6 @@ fun HealthScreen(navController: NavController) {
     }
 }
 
-// —— 通用分类摘要卡片（紧凑行）——
 @Composable
 private fun HealthCategorySummaryCard(
     emoji: String,
@@ -215,20 +213,22 @@ private fun HealthCategorySummaryCard(
     onClick: () -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    val shapes = LocalAppShapes.current
     AppCard(
-        cornerRadius = 12.dp,
+        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = spacing.md)
             .fillMaxWidth()
             .clickable(enabled = hasItems, onClick = onClick),
     ) {
         Row(
-            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            Modifier.padding(horizontal = spacing.md, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // 左侧：彩色圆形 emoji
             Box(
                 Modifier
                     .size(40.dp)
@@ -236,28 +236,25 @@ private fun HealthCategorySummaryCard(
                     .background(bgColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, fontSize = 20.sp)
+                Text(emoji, style = typography.titleLarge)
             }
             Spacer(Modifier.width(12.dp))
-            // 中间：标题 + 副标题
             Column(Modifier.weight(1f)) {
-                Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Spacer(Modifier.height(2.dp))
+                Text(label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Spacer(Modifier.height(spacing.xxs))
                 Text(
                     summary,
-                    fontSize = 13.sp,
+                    style = typography.bodyMedium,
                     color = if (hasItems) c.textSecondary else c.textTertiary,
                     maxLines = 1,
                 )
             }
-            Spacer(Modifier.width(8.dp))
-            // 右侧箭头
-            Text("›", fontSize = 22.sp, color = c.textTertiary)
+            Spacer(Modifier.width(spacing.sm))
+            Text("›", style = typography.titleLarge, color = c.textTertiary)
         }
     }
 }
 
-// —— 疫苗接种专用卡片（点击跳转疫苗接种页）——
 @Composable
 private fun VaccinationSummaryCard(
     emoji: String,
@@ -267,18 +264,21 @@ private fun VaccinationSummaryCard(
     onClick: () -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    val shapes = LocalAppShapes.current
     val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
     AppCard(
-        cornerRadius = 12.dp,
+        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = spacing.md)
             .fillMaxWidth()
             .clickable(onClick = onClick),
     ) {
         Row(
-            Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            Modifier.padding(horizontal = spacing.md, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -288,25 +288,24 @@ private fun VaccinationSummaryCard(
                     .background(bgColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, fontSize = 20.sp)
+                Text(emoji, style = typography.titleLarge)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(label, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Spacer(Modifier.height(2.dp))
+                Text(label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Spacer(Modifier.height(spacing.xxs))
                 Text(
                     summary,
-                    fontSize = 13.sp,
+                    style = typography.bodyMedium,
                     color = if (count > 0) c.textSecondary else c.textTertiary,
                 )
             }
-            Spacer(Modifier.width(8.dp))
-            Text("›", fontSize = 22.sp, color = c.textTertiary)
+            Spacer(Modifier.width(spacing.sm))
+            Text("›", style = typography.titleLarge, color = c.textTertiary)
         }
     }
 }
 
-// —— 展开后的记录列表 ——
 @Composable
 private fun ExpandedCategoryItems(
     items: List<HealthRecord>,
@@ -314,8 +313,10 @@ private fun ExpandedCategoryItems(
     onDelete: (HealthRecord) -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     val sorted = remember(items) { items.sortedByDescending { it.recordDate } }
-    Column(Modifier.padding(horizontal = 16.dp)) {
+    Column(Modifier.padding(horizontal = spacing.md)) {
         sorted.forEachIndexed { i, r ->
             RecordCard(
                 modifier = Modifier.padding(bottom = 12.dp),
@@ -326,20 +327,20 @@ private fun ExpandedCategoryItems(
             ) {
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(r.description, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                        Text(r.description, style = typography.bodyLarge, fontWeight = FontWeight.Medium, color = c.textPrimary)
                         Spacer(Modifier.weight(1f))
                         val dateText = try {
                             DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
                         } catch (_: Exception) { r.recordDate.take(10) }
-                        Text(dateText, fontSize = 12.sp, color = c.textSecondary)
+                        Text(dateText, style = typography.label, color = c.textSecondary)
                     }
                     if (!r.doctorName.isNullOrBlank()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text("👨‍⚕️ ${r.doctorName}", fontSize = 12.sp, color = c.textSecondary)
+                        Spacer(Modifier.height(spacing.xs))
+                        Text("👨‍⚕️ ${r.doctorName}", style = typography.label, color = c.textSecondary)
                     }
                     if (!r.note.isNullOrBlank()) {
-                        Spacer(Modifier.height(2.dp))
-                        Text(r.note, fontSize = 12.sp, color = c.textSecondary, maxLines = 2)
+                        Spacer(Modifier.height(spacing.xxs))
+                        Text(r.note, style = typography.label, color = c.textSecondary, maxLines = 2)
                     }
                 }
             }
@@ -356,6 +357,7 @@ fun HealthFormDialog(
     onSave: (HealthRecord) -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     val isEdit = editEntity != null
     var category by remember { mutableStateOf(editEntity?.category ?: "birth_info") }
     var description by remember { mutableStateOf(editEntity?.description ?: "") }
@@ -416,11 +418,11 @@ fun HealthFormDialog(
                         selectedContainerColor = c.primary.copy(alpha = 0.12f),
                         selectedLabelColor = c.primary,
                     ),
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = spacing.sm)
                 )
             }
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(spacing.md))
         AppInput(
             value = description,
             onValueChange = { description = it },

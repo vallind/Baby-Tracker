@@ -26,6 +26,9 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -43,24 +46,26 @@ import java.time.LocalDateTime
 import java.time.Period
 import java.time.format.DateTimeFormatter
 
-// —— 5 项能力元数据（emoji + 配色）——
 private data class AbilityMeta(
     val title: String,
     val emoji: String,
     val bgColor: Color,
-    val icon: ImageVector, // 用于评估表单
+    val icon: ImageVector,
     val score: (DevelopmentAssessment) -> Int,
 )
 
-private val ABILITIES: List<AbilityMeta> = listOf(
-    AbilityMeta("大运动", "🏃", Color(0xFFFF8C00), Icons.AutoMirrored.Filled.DirectionsRun) { it.grossMotor },
-    AbilityMeta("精细动作", "✋", Color(0xFFE91E63), Icons.Default.PanTool) { it.fineMotor },
-    AbilityMeta("语言能力", "💬", Color(0xFF2196F3), Icons.Default.RecordVoiceOver) { it.language },
-    AbilityMeta("社交能力", "🤝", Color(0xFF4CAF50), Icons.Default.Group) { it.social },
-    AbilityMeta("认知能力", "🧠", Color(0xFF9C27B0), Icons.Default.Psychology) { it.cognitive },
-)
+@Composable
+private fun abilities(): List<AbilityMeta> {
+    val c = LocalAppColors.current
+    return listOf(
+        AbilityMeta("大运动", "\uD83C\uDFC3", c.warning, Icons.AutoMirrored.Filled.DirectionsRun) { it.grossMotor },
+        AbilityMeta("精细动作", "\u270B", c.danger, Icons.Default.PanTool) { it.fineMotor },
+        AbilityMeta("语言能力", "\uD83D\uDCAC", c.primary, Icons.Default.RecordVoiceOver) { it.language },
+        AbilityMeta("社交能力", "\uD83E\uDD1D", c.success, Icons.Default.Group) { it.social },
+        AbilityMeta("认知能力", "\uD83E\uDDE0", c.secondary, Icons.Default.Psychology) { it.cognitive },
+    )
+}
 
-// 评分 → UI 文案
 private fun scoreLabel(score: Int): String = when (score) {
     0 -> "未观察"
     1 -> "落后"
@@ -69,16 +74,18 @@ private fun scoreLabel(score: Int): String = when (score) {
     else -> "--"
 }
 
-// 评分 → 颜色
-private fun scoreColor(score: Int): Color = when (score) {
-    0 -> Color(0xFF9E9E9E)
-    1 -> Color(0xFFFF9800)
-    2 -> Color(0xFF4CAF50)
-    3 -> Color(0xFF5B7CFF)
-    else -> Color(0xFF9E9E9E)
+@Composable
+private fun scoreColor(score: Int): Color {
+    val c = LocalAppColors.current
+    return when (score) {
+        0 -> c.textDisabled
+        1 -> c.warning
+        2 -> c.success
+        3 -> c.primary
+        else -> c.textDisabled
+    }
 }
 
-/** 各能力在不同评分下的描述（仿自然语言）。 */
 private fun abilityDescription(title: String, score: Int): String = when (title) {
     "大运动" -> when (score) {
         0 -> "尚未观察大运动表现"
@@ -124,7 +131,6 @@ private fun abilityDescription(title: String, score: Int): String = when (title)
     }
 }
 
-/** 由 [Baby.birthDate] 计算详细年龄 "X岁X个月X天"。 */
 private fun babyAgeDetail(birthDate: String): String {
     return try {
         val birth = LocalDate.parse(birthDate.take(10))
@@ -139,7 +145,6 @@ private fun babyAgeDetail(birthDate: String): String {
     }
 }
 
-/** 由 [Baby.birthDate] 计算当前月龄（Int 月份）。 */
 private fun babyAgeMonths(birthDate: String): Int {
     return try {
         val birth = LocalDate.parse(birthDate.take(10))
@@ -154,6 +159,8 @@ private fun babyAgeMonths(birthDate: String): Int {
 @Composable
 fun DevelopmentAssessmentScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val viewModel: DevelopmentAssessmentViewModel = koinViewModel()
@@ -173,7 +180,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
     ) { padding ->
         if (baby == null) {
             EmptyState(
-                emoji = "👶",
+                emoji = "\uD83D\uDC76",
                 title = "还没有添加宝宝",
                 subtitle = "请先在设置中添加宝宝信息",
                 modifier = Modifier.padding(padding),
@@ -188,28 +195,25 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            // —— 顶部宝宝信息区（与首页一致的卡通风格）——
             BabyHeader(baby)
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(spacing.md))
 
             val latest = state.latest
 
             if (latest == null) {
                 EmptyState(
-                    emoji = "📝",
+                    emoji = "\uD83D\uDCDD",
                     title = "还没有发育评估记录",
                     subtitle = "评估宝宝 5 项能力发展，了解成长进度",
                     actionText = "开始评估",
                     onAction = { showForm = true },
                 )
             } else {
-                // 5 项能力卡片
                 AssessmentItemsSection(latest)
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(spacing.md))
 
-                // 底部：下次评估时间 + 重新评估按钮
                 BottomActionRow(latest = latest, onReassess = { showForm = true })
             }
 
@@ -230,21 +234,20 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
     }
 }
 
-// —— 顶部宝宝信息区（与首页一致：卡通 👶 头像 + 渐变背景）——
 @Composable
 private fun BabyHeader(baby: Baby) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     Box(
         Modifier
             .fillMaxWidth()
             .background(Gradients.pageHeader(c))
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = spacing.md),
     ) {
         Row(
             Modifier.padding(vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // 卡通宝宝头像
             Box(
                 Modifier
                     .size(72.dp)
@@ -252,9 +255,9 @@ private fun BabyHeader(baby: Baby) {
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("👶", fontSize = 36.sp)
+                Text("\uD83D\uDC76", style = LocalAppTypographyStyle.current.display)
             }
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(spacing.md))
             Column {
                 Text(
                     baby.name,
@@ -262,7 +265,7 @@ private fun BabyHeader(baby: Baby) {
                     fontWeight = FontWeight.Bold,
                     color = c.textPrimary,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(spacing.xs))
                 Text(
                     babyAgeDetail(baby.birthDate),
                     style = LocalAppTypography.current.bodyMedium,
@@ -273,11 +276,11 @@ private fun BabyHeader(baby: Baby) {
     }
 }
 
-// —— 5 项能力评估卡片（彩色圆形 emoji + 标题行 + 描述）——
 @Composable
 private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
-    Column(Modifier.padding(horizontal = 16.dp)) {
-        ABILITIES.forEachIndexed { index, meta ->
+    val spacing = LocalAppSpacing.current
+    Column(Modifier.padding(horizontal = spacing.md)) {
+        abilities().forEachIndexed { index, meta ->
             AssessmentItemCard(
                 emoji = meta.emoji,
                 bgColor = meta.bgColor,
@@ -285,7 +288,7 @@ private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
                 score = meta.score(latest),
                 description = abilityDescription(meta.title, meta.score(latest)),
             )
-            if (index != ABILITIES.lastIndex) Spacer(Modifier.height(8.dp))
+            if (index != abilities().lastIndex) Spacer(Modifier.height(spacing.sm))
         }
     }
 }
@@ -299,16 +302,17 @@ private fun AssessmentItemCard(
     description: String,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val statusColor = scoreColor(score)
     AppCard(
-        cornerRadius = 12.dp,
+        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Column(Modifier.padding(horizontal = spacing.md, vertical = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // 左侧：彩色圆形 emoji
                 Box(
                     Modifier
                         .size(40.dp)
@@ -316,77 +320,72 @@ private fun AssessmentItemCard(
                         .background(bgColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(emoji, fontSize = 20.sp)
+                    Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
                 }
                 Spacer(Modifier.width(12.dp))
-                // 中间：标题 + 状态标签
                 Row(
                     Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                    Text(title, style = LocalAppTypographyStyle.current.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
                     Spacer(Modifier.width(10.dp))
                     Box(
                         Modifier
-                            .clip(RoundedCornerShape(999.dp))
+                            .clip(RoundedCornerShape(shapes.full))
                             .background(statusColor.copy(alpha = 0.12f))
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
-                        Text(scoreLabel(score), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = statusColor)
+                        Text(scoreLabel(score), style = LocalAppTypographyStyle.current.label, fontWeight = FontWeight.SemiBold, color = statusColor)
                     }
                 }
-                Spacer(Modifier.width(4.dp))
-                // 右侧箭头
-                Text("›", fontSize = 20.sp, color = c.textTertiary)
+                Spacer(Modifier.width(spacing.xs))
+                Text("\u203A", style = LocalAppTypographyStyle.current.titleLarge, color = c.textTertiary)
             }
-            Spacer(Modifier.height(8.dp))
-            // 描述文字
-            Text(description, fontSize = 13.sp, color = c.textSecondary, lineHeight = 20.sp)
+            Spacer(Modifier.height(spacing.sm))
+            Text(description, style = LocalAppTypographyStyle.current.bodyMedium.copy(lineHeight = 20.sp), color = c.textSecondary)
         }
     }
 }
 
-// —— 底部操作栏：下次评估时间（左）+ 重新评估按钮（右）——
 @Composable
 private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Unit) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val nextDateText = remember(latest.assessDate) {
         latest.assessDate.plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
     Row(
         Modifier
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = spacing.md)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 左侧提示
         Column(Modifier.weight(1f)) {
-            Text("下次评估时间", fontSize = 13.sp, color = c.textSecondary)
-            Spacer(Modifier.height(2.dp))
-            Text("1个月后（$nextDateText）", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = c.textPrimary)
+            Text("下次评估时间", style = LocalAppTypographyStyle.current.bodyMedium, color = c.textSecondary)
+            Spacer(Modifier.height(spacing.xxs))
+            Text("1个月后（$nextDateText）", style = LocalAppTypographyStyle.current.bodyLarge.copy(fontWeight = FontWeight.Medium), color = c.textPrimary)
         }
-        Spacer(Modifier.width(16.dp))
-        // 右侧重新评估按钮
+        Spacer(Modifier.width(spacing.md))
         Box(
             Modifier
                 .height(44.dp)
-                .clip(RoundedCornerShape(999.dp))
+                .clip(RoundedCornerShape(shapes.full))
                 .background(Gradients.primary(c))
                 .clickable(onClick = onReassess)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = spacing.lg),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 "重新评估",
-                color = Color.White,
-                fontSize = 15.sp,
+                color = c.onPrimary,
+                style = LocalAppTypographyStyle.current.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
             )
         }
     }
 }
 
-// —— 评估表单（ModalBottomSheet：5 项打分 + 备注）——
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AssessmentFormDialog(
@@ -396,7 +395,8 @@ private fun AssessmentFormDialog(
     onSubmit: (DevelopmentAssessment) -> Unit,
 ) {
     val c = LocalAppColors.current
-    // 5 项评分初始值（默认 2=正常）
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val scores = remember {
         mutableStateListOf(2, 2, 2, 2, 2)
     }
@@ -409,16 +409,16 @@ private fun AssessmentFormDialog(
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 24.dp)
+                .padding(horizontal = spacing.md)
+                .padding(bottom = spacing.lg)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text("发育评估", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
-            Spacer(Modifier.height(4.dp))
-            Text("为宝宝 5 项能力打分（未观察/落后/正常/超前）", fontSize = 13.sp, color = c.textSecondary)
-            Spacer(Modifier.height(16.dp))
+            Text("发育评估", style = LocalAppTypographyStyle.current.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            Spacer(Modifier.height(spacing.xs))
+            Text("为宝宝 5 项能力打分（未观察/落后/正常/超前）", style = LocalAppTypographyStyle.current.bodyMedium, color = c.textSecondary)
+            Spacer(Modifier.height(spacing.md))
 
-            ABILITIES.forEachIndexed { index, meta ->
+            abilities().forEachIndexed { index, meta ->
                 ScoreSelector(
                     title = meta.title,
                     icon = meta.icon,
@@ -426,10 +426,10 @@ private fun AssessmentFormDialog(
                     onSelect = { scores[index] = it },
                     useAccent = index % 2 == 1,
                 )
-                if (index != ABILITIES.lastIndex) Spacer(Modifier.height(12.dp))
+                if (index != abilities().lastIndex) Spacer(Modifier.height(12.dp))
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(spacing.md))
             AppInput(
                 value = note,
                 onValueChange = { note = it },
@@ -438,7 +438,7 @@ private fun AssessmentFormDialog(
             )
 
             Spacer(Modifier.height(20.dp))
-            val shapeBtn = RoundedCornerShape(12.dp)
+            val shapeBtn = RoundedCornerShape(shapes.large)
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -462,7 +462,7 @@ private fun AssessmentFormDialog(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("保存评估", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text("保存评估", color = c.onPrimary, style = LocalAppTypographyStyle.current.titleMedium, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -477,6 +477,8 @@ private fun ScoreSelector(
     useAccent: Boolean,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val tint = if (useAccent) c.warning else c.primary
     val options = listOf(
         0 to "未观察",
@@ -489,7 +491,7 @@ private fun ScoreSelector(
             Box(
                 Modifier
                     .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(shapes.large))
                     .background(tint.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
@@ -497,27 +499,27 @@ private fun ScoreSelector(
             }
             Spacer(Modifier.width(10.dp))
             Column {
-                Text(title, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Text(abilityDescription(title, selected), fontSize = 11.sp, color = c.textSecondary)
+                Text(title, style = LocalAppTypographyStyle.current.bodyLarge, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Text(abilityDescription(title, selected), style = LocalAppTypographyStyle.current.label, color = c.textSecondary)
             }
         }
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Spacer(Modifier.height(spacing.sm))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             options.forEach { (value, label) ->
                 val isSelected = selected == value
                 val chipColor = scoreColor(value)
                 Box(
                     Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(shapes.medium))
                         .background(if (isSelected) chipColor else chipColor.copy(alpha = 0.2f))
                         .clickable { onSelect(value) }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = spacing.sm),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         label,
-                        fontSize = 12.sp,
+                        style = LocalAppTypographyStyle.current.label,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                         color = if (isSelected) Color.White else c.textSecondary,
                     )

@@ -35,18 +35,16 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import org.koin.compose.koinInject
 
-/**
- * 统计分析页 — 日/周/月/年维度切换，带日期导航箭头和四张统计卡。
- *
- * 使用 SegmentedControl 做周期切换，左/右箭头翻页，
- * 四张卡分别展示：喂养次数（柱状图）、睡眠时长（柱状图）、身高增长（折线图）、体重增长（折线图）。
- */
 @Composable
 fun StatsScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     val viewModel: StatsViewModel = org.koin.androidx.compose.koinViewModel()
     val state by viewModel.state.collectAsState()
 
@@ -71,7 +69,6 @@ fun StatsScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            // ── 周期选择器（SegmentedControl） ──
             val periodLabels = listOf("日", "周", "月", "年")
             val selectedIndex = when (state.period) {
                 StatsPeriod.DAY -> 0
@@ -83,7 +80,8 @@ fun StatsScreen(navController: NavController) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 12.dp),
+                    .padding(horizontal = spacing.lg)
+                    .padding(top = spacing.md, bottom = 12.dp),
             ) {
                 SegmentedControl(
                     labels = periodLabels,
@@ -102,7 +100,6 @@ fun StatsScreen(navController: NavController) {
                 )
             }
 
-            // ── 日期范围导航 ──
             DateRangeNav(
                 dateRangeText = state.dateRangeText,
                 canGoBack = true,
@@ -111,13 +108,12 @@ fun StatsScreen(navController: NavController) {
                 onForward = { viewModel.goForward(babyId) },
             )
 
-            // ── 统计卡片（纵向列表） ──
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(spacing.md))
 
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = spacing.md),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 FeedingCard(
@@ -147,10 +143,6 @@ fun StatsScreen(navController: NavController) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  日期范围导航
-// ═══════════════════════════════════════════════════════════
-
 @Composable
 private fun DateRangeNav(
     dateRangeText: String,
@@ -160,10 +152,12 @@ private fun DateRangeNav(
     onForward: () -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = spacing.lg),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -178,9 +172,9 @@ private fun DateRangeNav(
         )
         Text(
             dateRangeText,
-            fontSize = 14.sp,
+            style = typography.bodyLarge,
             color = c.textSecondary,
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier.padding(horizontal = spacing.md),
             textAlign = TextAlign.Center,
         )
         Icon(
@@ -195,11 +189,6 @@ private fun DateRangeNav(
     }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  四张统计卡
-// ═══════════════════════════════════════════════════════════
-
-/** 喂养次数卡 — 图标 + 次数在顶部行，柱状图在下方 */
 @Composable
 private fun FeedingCard(
     count: Int,
@@ -208,6 +197,8 @@ private fun FeedingCard(
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -216,11 +207,11 @@ private fun FeedingCard(
         ) {
             Column {
                 StatCardIcon("🍼", c.warning)
-                Spacer(Modifier.height(8.dp))
-                Text("喂养次数", fontSize = 12.sp, color = c.textTertiary)
+                Spacer(Modifier.height(spacing.sm))
+                Text("喂养次数", style = typography.label, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("${count}次", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text("${count}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }
@@ -231,7 +222,6 @@ private fun FeedingCard(
     }
 }
 
-/** 睡眠时长卡 — 图标 + 时长在顶部行，柱状图在下方 */
 @Composable
 private fun SleepCard(
     minutes: Long,
@@ -240,6 +230,8 @@ private fun SleepCard(
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     val hours = minutes / 60
     val mins = minutes % 60
     StatCardFrame(modifier) {
@@ -250,11 +242,11 @@ private fun SleepCard(
         ) {
             Column {
                 StatCardIcon("🌙", c.secondary)
-                Spacer(Modifier.height(8.dp))
-                Text("睡眠时长", fontSize = 12.sp, color = c.textTertiary)
+                Spacer(Modifier.height(spacing.sm))
+                Text("睡眠时长", style = typography.label, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("${hours}时${mins}分", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text("${hours}时${mins}分", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }
@@ -265,7 +257,6 @@ private fun SleepCard(
     }
 }
 
-/** 身高卡 — 图标 + 数值在顶部行，折线图在下方 */
 @Composable
 private fun HeightCard(
     value: String,
@@ -274,6 +265,8 @@ private fun HeightCard(
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -282,11 +275,11 @@ private fun HeightCard(
         ) {
             Column {
                 StatCardIcon("📏", c.primary)
-                Spacer(Modifier.height(8.dp))
-                Text("身高增长", fontSize = 12.sp, color = c.textTertiary)
+                Spacer(Modifier.height(spacing.sm))
+                Text("身高增长", style = typography.label, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(value, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }
@@ -297,7 +290,6 @@ private fun HeightCard(
     }
 }
 
-/** 体重卡 — 图标 + 数值在顶部行，折线图在下方 */
 @Composable
 private fun WeightCard(
     value: String,
@@ -306,6 +298,8 @@ private fun WeightCard(
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -314,11 +308,11 @@ private fun WeightCard(
         ) {
             Column {
                 StatCardIcon("⚖️", c.success)
-                Spacer(Modifier.height(8.dp))
-                Text("体重增长", fontSize = 12.sp, color = c.textTertiary)
+                Spacer(Modifier.height(spacing.sm))
+                Text("体重增长", style = typography.label, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(value, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }
@@ -329,11 +323,6 @@ private fun WeightCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  卡片骨架 + 通用子组件
-// ═══════════════════════════════════════════════════════════
-
-/** 统计卡外框 — 使用 AppCard 统一圆角 */
 @Composable
 private fun StatCardFrame(
     modifier: Modifier = Modifier,
@@ -341,51 +330,45 @@ private fun StatCardFrame(
 ) {
     val shapes = LocalAppShapes.current
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     AppCard(
         cornerRadius = shapes.medium,
         containerColor = c.surface,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.padding(16.dp), content = content)
+        Column(Modifier.padding(spacing.md), content = content)
     }
 }
 
-/** 图标圆底 */
 @Composable
 private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifier) {
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     Box(
         modifier
-            .size(32.dp)
+            .size(spacing.xl)
             .clip(CircleShape)
             .background(tint.copy(alpha = 0.12f)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(emoji, fontSize = 16.sp)
+        Text(emoji, style = typography.titleMedium)
     }
 }
 
-/** 对比标签（如 "+6次"、"-2时"） */
 @Composable
 private fun StatCompareLabel(compare: String) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
     val isPositive = compare.startsWith("+")
     Text(
         compare,
-        fontSize = 11.sp,
+        style = typography.label,
         color = if (isPositive) c.success else c.textSecondary,
-        modifier = Modifier.padding(top = 4.dp),
+        modifier = Modifier.padding(top = spacing.xs),
     )
 }
 
-// ═══════════════════════════════════════════════════════════
-//  图表组件
-// ═══════════════════════════════════════════════════════════
-
-/**
- * 迷你柱状图 — 喂养/睡眠卡片使用。
- *
- * 圆角：柱顶使用 shapes.extraSmall（4dp），与 AppShapes 体系对齐。
- */
 @Composable
 fun MiniBarChart(
     points: List<Float>,
@@ -402,26 +385,22 @@ fun MiniBarChart(
         val totalBars = barCount + (barCount - 1) * gapRatio
         val barWidth = size.width / totalBars
         val gapWidth = barWidth * gapRatio
-        val barCornerRadius = shapes.extraSmall.toPx() // 4dp 柱顶圆角
+        val barCornerRadius = shapes.extraSmall.toPx()
 
         points.forEachIndexed { i, v ->
             val barHeight = (v / maxVal) * size.height
             val x = i * (barWidth + gapWidth)
             val y = size.height - barHeight
 
-            // 绘制柱子（顶部带圆角，底部平直）
             val barPath = Path().apply {
-                // 左下 → 左上（左侧） → 顶部圆角 → 右上 → 右下
                 moveTo(x, size.height)
                 lineTo(x, y + barCornerRadius)
-                // 左上角圆角
                 arcTo(
                     rect = androidx.compose.ui.geometry.Rect(x, y, x + barCornerRadius * 2, y + barCornerRadius * 2),
                     startAngleDegrees = 180f,
                     sweepAngleDegrees = 90f,
                     forceMoveTo = false,
                 )
-                // 顶部 → 右上角
                 lineTo(x + barWidth - barCornerRadius, y)
                 arcTo(
                     rect = androidx.compose.ui.geometry.Rect(
@@ -432,7 +411,6 @@ fun MiniBarChart(
                     sweepAngleDegrees = 90f,
                     forceMoveTo = false,
                 )
-                // 右下
                 lineTo(x + barWidth, size.height)
                 close()
             }
@@ -444,11 +422,6 @@ fun MiniBarChart(
     }
 }
 
-/**
- * 迷你折线图 — 身高/体重卡片使用。
- *
- * 绘制渐变填充区域 + 折线 + 末端数据点强调。
- */
 @Composable
 fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
     val c = LocalAppColors.current
@@ -470,7 +443,6 @@ fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
         val coords = points.mapIndexed { i, v ->
             Offset(i * stepX, size.height - ((v - min) / range) * size.height)
         }
-        // 渐变填充区域
         val areaPath = Path().apply {
             moveTo(coords.first().x, size.height)
             coords.forEach { lineTo(it.x, it.y) }
@@ -478,7 +450,6 @@ fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
             close()
         }
         drawPath(areaPath, areaBrush)
-        // 折线
         for (i in 0 until coords.size - 1) {
             drawLine(
                 color = lineColor,
@@ -488,7 +459,6 @@ fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
                 cap = StrokeCap.Round,
             )
         }
-        // 末端数据点
         drawCircle(lineColor, 3.dp.toPx(), coords.last())
     }
 }

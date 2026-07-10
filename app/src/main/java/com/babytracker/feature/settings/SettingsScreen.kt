@@ -20,12 +20,10 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.rememberDatePickerState
@@ -39,12 +37,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppElevation
+import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
@@ -80,6 +80,8 @@ import org.koin.compose.koinInject
 @Composable
 fun SettingsScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypography.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val themeCtrl: ThemeController = koinInject()
@@ -100,14 +102,12 @@ fun SettingsScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    // 获取版本号
     val versionName = remember {
         try {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
         } catch (_: Exception) { "1.0.0" }
     }
 
-    // 同步结果 Toast 弹窗提醒
     LaunchedEffect(syncResult) {
         syncResult?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -129,11 +129,10 @@ fun SettingsScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = spacing.md),
         ) {
             Spacer(Modifier.height(12.dp))
 
-            // —— 1. 用户信息卡片 ——
             UserInfoCard(
                 babyName = baby?.name ?: "未设置",
                 displayAccount = displayAccount,
@@ -153,7 +152,6 @@ fun SettingsScreen(navController: NavController) {
 
             Spacer(Modifier.height(12.dp))
 
-            // —— 2. 常用功能宫格 ——
             FunctionGrid(
                 items = listOf(
                     FunctionGridItem("👶", "宝宝管理", onClick = { navController.navigate(Screen.BabyManagement.route) }),
@@ -165,7 +163,6 @@ fun SettingsScreen(navController: NavController) {
 
             Spacer(Modifier.height(12.dp))
 
-            // —— 3. 设置列表 ——
             SettingsSectionTitle("设置")
             SettingsCard {
                 SettingsRow(
@@ -203,31 +200,27 @@ fun SettingsScreen(navController: NavController) {
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(spacing.lg))
 
-            // —— 4. 退出登录 ——
             if (isLoggedIn) {
                 Box(
-                    Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    Modifier.fillMaxWidth().padding(vertical = spacing.sm),
                     contentAlignment = Alignment.Center,
                 ) {
-                    TextButton(onClick = { showLogoutConfirm = true }) {
-                        Text(
-                            "退出登录",
-                            color = c.danger,
-                            fontSize = 15.sp,
-                        )
-                    }
+                    AppTextButton(
+                        onClick = { showLogoutConfirm = true },
+                        label = "退出登录",
+                        color = c.danger,
+                    )
                 }
             }
 
-            // 同步状态提示（仅登录时显示）
             if (isLoggedIn) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 24.dp),
+                        .padding(horizontal = spacing.md)
+                        .padding(bottom = spacing.lg),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -248,19 +241,19 @@ fun SettingsScreen(navController: NavController) {
                     Text(
                         syncStatusText,
                         color = c.textTertiary,
-                        fontSize = 12.sp,
+                        style = typography.labelSmall,
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(
                         "立即同步",
                         color = c.primary,
-                        fontSize = 12.sp,
+                        style = typography.labelSmall,
                         modifier = Modifier.clickable { settingsVM.manualSync() },
                     )
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(spacing.md))
         }
     }
 
@@ -268,7 +261,6 @@ fun SettingsScreen(navController: NavController) {
         ThemePickerSheet(themeCtrl = themeCtrl, onDismiss = { showPicker = false })
     }
 
-    // 退出登录确认弹窗
     AppConfirmDialog(
         show = showLogoutConfirm,
         title = "退出登录",
@@ -281,7 +273,6 @@ fun SettingsScreen(navController: NavController) {
         onDismiss = { showLogoutConfirm = false },
     )
 
-    // 昵称编辑弹窗
     if (showNicknameDialog) {
         NicknameEditDialog(
             currentNickname = nickname ?: "",
@@ -300,7 +291,7 @@ fun SettingsScreen(navController: NavController) {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  用户信息卡片（头像 + 名称 + ID + 箭头）
+//  用户信息卡片
 // ═══════════════════════════════════════════════════════════
 
 @Composable
@@ -313,23 +304,25 @@ private fun UserInfoCard(
     onEditNickname: (() -> Unit)? = null,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+    val elev = LocalAppElevation.current
     val displayName = nickname ?: displayAccount ?: babyName
 
     AppCard(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        cornerRadius = 12.dp,
-        elevation = 2.dp,
+        cornerRadius = shapes.large,
+        elevation = elev.level2,
         containerColor = c.surface,
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // 头像
             Box(
                 Modifier
                     .size(56.dp)
@@ -345,13 +338,12 @@ private fun UserInfoCard(
                     displayName.take(1).ifEmpty { "?" },
                     style = LocalAppTypography.current.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = c.onPrimary,
                 )
             }
 
             Spacer(Modifier.width(14.dp))
 
-            // 名称 + ID
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -360,7 +352,6 @@ private fun UserInfoCard(
                         fontWeight = FontWeight.SemiBold,
                         color = c.textPrimary,
                     )
-                    // 已登录时显示编辑昵称图标
                     if (isLoggedIn && onEditNickname != null) {
                         Spacer(Modifier.width(6.dp))
                         Icon(
@@ -373,7 +364,7 @@ private fun UserInfoCard(
                         )
                     }
                 }
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(spacing.xs))
                 Text(
                     text = if (isLoggedIn && displayAccount != null) {
                         if (nickname != null) "账号: ${displayAccount.take(8)}…" else "ID: ${displayAccount.take(8)}…"
@@ -384,7 +375,6 @@ private fun UserInfoCard(
                 )
             }
 
-            // 右箭头（仅可点击时显示）
             if (onClick != null) {
                 Icon(
                     Icons.Default.ChevronRight,
@@ -398,7 +388,7 @@ private fun UserInfoCard(
 }
 
 // ═══════════════════════════════════════════════════════════
-//  常用功能宫格（4 列等宽）
+//  常用功能宫格
 // ═══════════════════════════════════════════════════════════
 
 private data class FunctionGridItem(
@@ -410,17 +400,20 @@ private data class FunctionGridItem(
 @Composable
 private fun FunctionGrid(items: List<FunctionGridItem>) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+    val elev = LocalAppElevation.current
 
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        cornerRadius = 12.dp,
-        elevation = 2.dp,
+        cornerRadius = shapes.large,
+        elevation = elev.level2,
         containerColor = c.surface,
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 16.dp),
+                .padding(horizontal = spacing.sm, vertical = spacing.md),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             items.forEach { item ->
@@ -428,13 +421,13 @@ private fun FunctionGrid(items: List<FunctionGridItem>) {
                     modifier = Modifier
                         .weight(1f)
                         .clickable(onClick = item.onClick)
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = spacing.xs),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
                         Modifier
                             .size(48.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(shapes.large))
                             .background(c.primaryContainer),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -443,7 +436,7 @@ private fun FunctionGrid(items: List<FunctionGridItem>) {
                             style = LocalAppTypography.current.titleLarge,
                         )
                     }
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(spacing.sm))
                     Text(
                         item.label,
                         style = LocalAppTypography.current.labelSmall,
@@ -462,23 +455,28 @@ private fun FunctionGrid(items: List<FunctionGridItem>) {
 @Composable
 private fun SettingsSectionTitle(title: String) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     Text(
         title,
         style = LocalAppTypography.current.labelMedium,
         color = c.textSecondary,
-        modifier = Modifier.padding(bottom = 8.dp),
+        modifier = Modifier.padding(bottom = spacing.sm),
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
+    val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+    val elev = LocalAppElevation.current
     val names = mapOf("pure" to "纯净蓝", "aurora" to "极光紫", "warm" to "暖阳粉", "sunny" to "阳光黄", "night" to "暗夜深", "morandi" to "莫兰迪")
     AppBottomSheet(
         show = true,
         onDismiss = onDismiss,
     ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+        Column(Modifier.padding(spacing.md)) {
             Text("选择主题", style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppTheme.all.forEach { theme ->
@@ -488,67 +486,70 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                             .width(120.dp)
                             .height(96.dp)
                             .border(
-                                if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                                RoundedCornerShape(12.dp),
+                                if (selected) BorderStroke(2.dp, c.primary) else BorderStroke(1.dp, c.outline),
+                                RoundedCornerShape(shapes.large),
                             )
                             .clickable { themeCtrl.switchTheme(theme.name) },
-                        cornerRadius = 12.dp,
-                        elevation = 1.dp,
+                        cornerRadius = shapes.large,
+                        elevation = elev.level1,
                         containerColor = theme.colors.card,
                     ) {
                         Box(Modifier.fillMaxSize().padding(12.dp)) {
                             Column {
-                                Box(Modifier.size(36.dp).clip(RoundedCornerShape(12.dp)).background(theme.colors.primary))
+                                Box(Modifier.size(36.dp).clip(RoundedCornerShape(shapes.large)).background(theme.colors.primary))
                                 Spacer(Modifier.height(6.dp))
                                 Text(names[theme.name] ?: theme.name, style = LocalAppTypography.current.bodySmall, color = theme.colors.textPrimary)
                             }
                             if (selected) {
-                                Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))
+                                Icon(Icons.Default.Check, contentDescription = null, tint = c.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))
                             }
                         }
                     }
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(spacing.lg))
         }
     }
 }
 
-/** 统一白色设置卡片（圆角 DT.cardRadius / 阴影 DT.cardElevation）。 */
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
     val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
+    val elev = LocalAppElevation.current
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        cornerRadius = 12.dp,
-        elevation = 2.dp,
+        cornerRadius = shapes.large,
+        elevation = elev.level2,
         containerColor = c.surface,
         content = content,
     )
 }
 
-/** 设置项分割线（c.divider）。 */
 @Composable
 fun SettingsDivider() {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     HorizontalDivider(
         color = c.divider,
         thickness = 0.5.dp,
-        modifier = Modifier.padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = spacing.md),
     )
 }
 
 @Composable
 fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     Row(
-        Modifier.fillMaxWidth().height(if (subtitle != null) 64.dp else 56.dp).padding(horizontal = 16.dp).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().height(if (subtitle != null) 64.dp else 56.dp).padding(horizontal = spacing.md).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             Modifier
                 .size(40.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .clip(RoundedCornerShape(shapes.large))
                 .background(c.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
@@ -595,6 +596,9 @@ fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
 @Composable
 fun BabyManagementScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+    val elev = LocalAppElevation.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
@@ -624,77 +628,74 @@ fun BabyManagementScreen(navController: NavController) {
     ) { padding ->
         if (activeBabies.isEmpty() && deletedBabies.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("还没有添加宝宝", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("还没有添加宝宝", color = c.textSecondary)
             }
         } else {
-            Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md, vertical = spacing.sm)) {
                 activeBabies.forEach { b ->
                     val isCurrent = b.id == babyCtrl.currentBabyId
                     AppCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp)
+                            .padding(vertical = spacing.xs)
                             .border(
-                                BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
-                                RoundedCornerShape(12.dp),
+                                BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) c.primary else c.outline),
+                                RoundedCornerShape(shapes.large),
                             )
                             .clickable { editingBaby = b; showForm = true },
-                        cornerRadius = 12.dp,
-                        elevation = 1.dp,
+                        cornerRadius = shapes.large,
+                        elevation = elev.level1,
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                                Text(b.name.take(1), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold, style = LocalAppTypography.current.titleMedium)
+                            Box(Modifier.size(44.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {
+                                Text(b.name.take(1), color = c.primary, fontWeight = FontWeight.SemiBold, style = LocalAppTypography.current.titleMedium)
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(b.name, style = LocalAppTypography.current.titleSmall)
                                     if (isCurrent) {
-                                        Spacer(Modifier.width(8.dp))
-                                        Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(8.dp)) {
-                                            Text("当前", style = LocalAppTypography.current.labelSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                                        Spacer(Modifier.width(spacing.sm))
+                                        Surface(color = c.primaryContainer, shape = RoundedCornerShape(shapes.medium)) {
+                                            Text("当前", style = LocalAppTypography.current.labelSmall, color = c.primary, modifier = Modifier.padding(horizontal = spacing.sm, vertical = spacing.xxs))
                                         }
                                     }
                                 }
-                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                                 if (b.uuid != null) {
                                     Text(
                                         "UUID: ${b.uuid.take(8)}…",
                                         style = LocalAppTypography.current.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                                        fontSize = 10.sp,
+                                        color = c.textSecondary.copy(alpha = 0.5f),
                                     )
                                 }
                             }
                             if (!isCurrent) {
-                                TextButton(onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() }) {
-                                    Text("切换", style = LocalAppTypography.current.labelMedium, color = MaterialTheme.colorScheme.primary)
-                                }
+                                AppTextButton(
+                                    onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() },
+                                    label = "切换",
+                                )
                             }
                             AppIconButton(icon = Icons.Default.Delete, onClick = { showDeleteConfirm = b }, contentDescription = "删除", tint = c.textSecondary)
                         }
                     }
                 }
 
-                // 已删除宝宝
                 if (deletedBabies.isNotEmpty()) {
-                    Spacer(Modifier.height(16.dp))
-                    TextButton(onClick = { showDeleted = !showDeleted }) {
-                        Text(
-                            "已删除的宝宝 (${deletedBabies.size}) ${if (showDeleted) "▲" else "▼"}",
-                            color = c.textSecondary,
-                            fontSize = 13.sp,
-                        )
-                    }
+                    Spacer(Modifier.height(spacing.md))
+                    AppTextButton(
+                        onClick = { showDeleted = !showDeleted },
+                        label = "已删除的宝宝 (${deletedBabies.size}) ${if (showDeleted) "▲" else "▼"}",
+                        color = c.textSecondary,
+                    )
                     if (showDeleted) {
                         deletedBabies.forEach { b ->
                             AppCard(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                                cornerRadius = 12.dp,
-                                elevation = 1.dp,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs),
+                                cornerRadius = shapes.large,
+                                elevation = elev.level1,
                             ) {
-                                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Row(Modifier.padding(spacing.md), verticalAlignment = Alignment.CenterVertically) {
                                     Box(Modifier.size(36.dp).clip(CircleShape).background(c.textTertiary), contentAlignment = Alignment.Center) {
                                         Text(b.name.take(1), color = Color.White, fontWeight = FontWeight.SemiBold)
                                     }
@@ -703,11 +704,10 @@ fun BabyManagementScreen(navController: NavController) {
                                         Text(b.name, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
                                         Text("已删除", style = LocalAppTypography.current.labelSmall, color = c.textTertiary)
                                     }
-                                    TextButton(onClick = {
-                                        scope.launch { babyRepo.restore(b) }
-                                    }) {
-                                        Text("恢复", color = c.primary, fontSize = 13.sp)
-                                    }
+                                    AppTextButton(
+                                        onClick = { scope.launch { babyRepo.restore(b) } },
+                                        label = "恢复",
+                                    )
                                 }
                             }
                         }
@@ -752,6 +752,7 @@ fun BabyManagementScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
+    val spacing = LocalAppSpacing.current
     val isEdit = baby != null
     var name by remember { mutableStateOf(baby?.name ?: "") }
     var gender by remember { mutableStateOf(baby?.gender ?: "男") }
@@ -771,7 +772,7 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                     listOf("男", "女").forEach { g ->
                         FilterChip(
                             selected = gender == g,
@@ -806,7 +807,7 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(
+            AppTextButton(
                 onClick = {
                     onSave(Baby(
                         id = baby?.id ?: 0,
@@ -819,10 +820,11 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                     ))
                 },
                 enabled = name.isNotBlank(),
-            ) { Text(if (isEdit) "保存" else "添加") }
+                label = if (isEdit) "保存" else "添加",
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            AppTextButton(onClick = onDismiss, label = "取消")
         },
     )
 }
@@ -850,19 +852,18 @@ private fun NicknameEditDialog(
             )
         },
         confirmButton = {
-            TextButton(
+            AppTextButton(
                 onClick = { onSave(input.trim()) },
                 enabled = input.isNotBlank(),
-            ) { Text(AppStrings.save) }
+                label = AppStrings.save,
+            )
         },
         dismissButton = {
             Row {
                 if (currentNickname.isNotEmpty()) {
-                    TextButton(onClick = onClear) {
-                        Text("清除", color = c.textTertiary, fontSize = 14.sp)
-                    }
+                    AppTextButton(onClick = onClear, label = "清除", color = c.textTertiary)
                 }
-                TextButton(onClick = onDismiss) { Text(AppStrings.cancel) }
+                AppTextButton(onClick = onDismiss, label = AppStrings.cancel)
             }
         },
     )
@@ -916,27 +917,30 @@ fun BackupScreen(navController: NavController) {
     }
 
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+    val elev = LocalAppElevation.current
     AppScaffold(topBar = {
         AppTopBar(
             title = "备份管理",
             onBack = { navController.popBackStack() },
         )
     }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp, vertical = 16.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md, vertical = spacing.md)) {
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                cornerRadius = 12.dp,
-                elevation = 1.dp,
+                cornerRadius = shapes.large,
+                elevation = elev.level1,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.primaryContainer), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Folder, contentDescription = null, tint = c.primary)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text("本地备份", style = LocalAppTypography.current.titleSmall)
-                            Text("选择备份保存位置", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("选择备份保存位置", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -947,15 +951,15 @@ fun BackupScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                     )
                     if (selectedDirName.isNotEmpty()) {
-                        Spacer(Modifier.height(8.dp))
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.height(spacing.sm))
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(shapes.medium)).background(c.surfaceElevated).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text("📁", style = LocalAppTypography.current.bodyMedium)
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(spacing.sm))
                             Text(selectedDirName, style = LocalAppTypography.current.bodySmall, modifier = Modifier.weight(1f), maxLines = 1)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    Button(
+                    PrimaryButton(
                         onClick = {
                             scope.launch {
                                 val path = if (selectedDirUri != null) {
@@ -967,30 +971,30 @@ fun BackupScreen(navController: NavController) {
                                 Toast.makeText(context, if (path != null) "备份完成" else "备份失败", Toast.LENGTH_SHORT).show()
                             }
                         },
+                        label = "开始备份",
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
-                    ) { Text("开始备份") }
+                    )
                 }
             }
             if (backupPath.isNotEmpty()) {
-                Text("上次备份: $backupPath", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                Text("上次备份: $backupPath", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(top = spacing.sm))
             }
             Spacer(Modifier.height(12.dp))
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                cornerRadius = 12.dp,
-                elevation = 1.dp,
+                cornerRadius = shapes.large,
+                elevation = elev.level1,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.tertiaryContainer), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.tertiary.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
                             Text("☁️", style = LocalAppTypography.current.titleMedium)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text("WebDAV 云备份", style = LocalAppTypography.current.titleSmall)
-                            Text(webdavStatus, style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(webdavStatus, style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -998,12 +1002,12 @@ fun BackupScreen(navController: NavController) {
                         SecondaryButton(onClick = { showWebDAV = true }, label = "配置 WebDAV", modifier = Modifier.fillMaxWidth())
                     } else {
                         AppInput(value = webdavUrl, onValueChange = { webdavUrl = it }, label = "服务器地址", modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(spacing.sm))
                         AppInput(value = webdavUser, onValueChange = { webdavUser = it }, label = "用户名", modifier = Modifier.fillMaxWidth())
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(spacing.sm))
                         AppInput(value = webdavPass, onValueChange = { webdavPass = it }, label = "密码", modifier = Modifier.fillMaxWidth(), isPassword = true)
                         Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                             SecondaryButton(onClick = {
                                 scope.launch {
                                     backupManager.saveConfig(webdavUrl, webdavUser, webdavPass)
@@ -1030,27 +1034,27 @@ fun BackupScreen(navController: NavController) {
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                cornerRadius = 12.dp,
-                elevation = 1.dp,
+                cornerRadius = shapes.large,
+                elevation = elev.level1,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.errorContainer), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.Restore, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.error.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.Restore, contentDescription = null, tint = c.error)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text("恢复备份", style = LocalAppTypography.current.titleSmall)
-                            Text("从 zip 文件导入数据", style = LocalAppTypography.current.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("从 zip 文件导入数据", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
                     Button(
                         onClick = { restorePicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(shapes.medium),
                         enabled = !restoring,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        colors = ButtonDefaults.buttonColors(containerColor = c.error),
                     ) { Text(if (restoring) "恢复中..." else "选择备份文件", style = LocalAppTypography.current.bodyMedium) }
                 }
             }

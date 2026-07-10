@@ -16,13 +16,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -35,6 +33,8 @@ import com.babytracker.core.domain.model.FeedingType
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppTextButton
@@ -61,6 +61,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun FeedingListScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val feedingRepo: FeedingRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -122,16 +124,16 @@ fun FeedingListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .clickable { showDatePicker = true }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = MaterialTheme.typography.titleSmall,
+                    style = LocalAppTypography.current.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = c.textPrimary,
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(spacing.xs))
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
@@ -177,7 +179,7 @@ fun FeedingListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .background(c.surface)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
             ) {
                 PrimaryButton(
                     onClick = {
@@ -285,14 +287,16 @@ private fun FeedingTimeline(
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 4.dp,
-            bottom = 8.dp,
+            start = spacing.md,
+            end = spacing.md,
+            top = spacing.xs,
+            bottom = spacing.sm,
         ),
     ) {
         items(items = feedings, key = { it.id }) { f ->
@@ -312,13 +316,12 @@ private fun FeedingTimeline(
                 // —— 左侧时间轴（时间 + 圆点 + 竖线）——
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(48.dp),
+                    modifier = Modifier.width(spacing.xxl),
                 ) {
                     Text(
                         time,
-                        style = MaterialTheme.typography.labelSmall,
+                        style = LocalAppTypography.current.labelSmall,
                         color = c.textTertiary,
-                        fontSize = 11.sp,
                     )
                     Spacer(Modifier.height(6.dp))
                     Box(
@@ -330,7 +333,7 @@ private fun FeedingTimeline(
                     // 竖线填满剩余空间
                     Box(
                         Modifier
-                            .width(2.dp)
+                            .width(spacing.xxs)
                             .weight(1f)
                             .background(c.divider),
                     )
@@ -351,21 +354,21 @@ private fun FeedingTimeline(
                     Box(
                         Modifier
                             .size(40.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(shapes.large))
                             .background(color.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center,
-                    ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
+                    ) { Text(emoji, style = LocalAppTypography.current.titleLarge) }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
                             typeLabel,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = LocalAppTypography.current.titleSmall,
                             color = c.textPrimary,
                             fontWeight = FontWeight.Medium,
                         )
                         Text(
                             feedingSummary(f),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = LocalAppTypography.current.bodySmall,
                             color = c.textSecondary,
                         )
                     }
@@ -384,6 +387,7 @@ fun FeedingFormDialog(
     onSave: (Feeding) -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     val isEdit = editEntity != null
     var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
     var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
@@ -458,19 +462,19 @@ fun FeedingFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = spacing.md)) {
             listOf("breast" to "🤱 母乳", "formula" to "💧 配方", "food" to "🥣 辅食", "water" to "🥤 饮水").forEach { (t, label) ->
                 FilterChip(
                     selected = type == t,
                     onClick = { type = t },
-                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                    label = { Text(label, style = LocalAppTypography.current.bodySmall) },
                 )
             }
         }
 
         when (type) {
             "breast" -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = 12.dp)) {
                     listOf("左侧", "右侧", "双侧").forEach { s ->
                         FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
                     }
@@ -511,7 +515,7 @@ fun FeedingFormDialog(
                             },
                             label = "开始计时",
                             height = 40.dp,
-                            fontSize = 14.sp,
+                            fontSize = LocalAppTypography.current.bodyLarge.fontSize,
                         )
                     }
                 }
@@ -519,7 +523,7 @@ fun FeedingFormDialog(
                     value = durationMin,
                     onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
                     label = "时长 (分钟)",
-                    leadingIcon = { Text("⏱", fontSize = 18.sp) },
+                    leadingIcon = { Text("⏱", style = LocalAppTypography.current.titleLarge) },
                     isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
                     errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) "请输入 0-600 之间的数字" else null,
                     keyboardType = KeyboardType.Number,
@@ -531,7 +535,7 @@ fun FeedingFormDialog(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
                     label = "奶量 (ml)",
-                    leadingIcon = { Text("💧", fontSize = 18.sp) },
+                    leadingIcon = { Text("💧", style = LocalAppTypography.current.titleLarge) },
                     isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
                     errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) "请输入 1-500 之间的数字" else null,
                     keyboardType = KeyboardType.Number,
@@ -549,7 +553,7 @@ fun FeedingFormDialog(
                     value = foodName,
                     onValueChange = { foodName = it },
                     label = "食物名称",
-                    leadingIcon = { Text("🥣", fontSize = 18.sp) },
+                    leadingIcon = { Text("🥣", style = LocalAppTypography.current.titleLarge) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AppInput(
@@ -567,7 +571,7 @@ fun FeedingFormDialog(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
                     label = "饮水量 (ml)",
-                    leadingIcon = { Text("🥤", fontSize = 18.sp) },
+                    leadingIcon = { Text("🥤", style = LocalAppTypography.current.titleLarge) },
                     isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
                     errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
                     keyboardType = KeyboardType.Number,

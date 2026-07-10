@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -31,6 +30,8 @@ import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.PrimaryButton
@@ -57,6 +58,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DiaperListScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val diaperRepo: DiaperRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -128,7 +131,7 @@ fun DiaperListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .clickable { showDatePicker = true }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -137,7 +140,7 @@ fun DiaperListScreen(navController: NavController) {
                     fontWeight = FontWeight.Medium,
                     color = c.textPrimary,
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(spacing.xs))
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
@@ -161,16 +164,16 @@ fun DiaperListScreen(navController: NavController) {
                 }
             } else {
                 // —— 今日汇总大卡：移出 LazyColumn，正常布局消除负 padding ——
-                val cardShape = RoundedCornerShape(16.dp)
+                val cardShape = RoundedCornerShape(shapes.large)
 
                 AppCard(
-                    cornerRadius = 16.dp,
+                    cornerRadius = shapes.large,
                     containerColor = Color.Transparent,
                     elevation = 0.dp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 16.dp),
+                        .padding(horizontal = spacing.md)
+                        .padding(bottom = spacing.md),
                 ) {
                     Box(
                         Modifier
@@ -181,12 +184,12 @@ fun DiaperListScreen(navController: NavController) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     Modifier
-                                        .size(32.dp)
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .size(spacing.xl)
+                                        .clip(RoundedCornerShape(shapes.medium))
                                         .background(Color.White.copy(alpha = 0.25f)),
                                     contentAlignment = Alignment.Center,
-                                ) { Text("🧷", fontSize = 16.sp) }
-                                Spacer(Modifier.width(8.dp))
+                                ) { Text("🧷", style = LocalAppTypography.current.titleMedium) }
+                                Spacer(Modifier.width(spacing.sm))
                                 Text(
                                     "今日尿布",
                                     style = LocalAppTypography.current.titleMedium,
@@ -197,11 +200,11 @@ fun DiaperListScreen(navController: NavController) {
                             Spacer(Modifier.height(20.dp))
                             Text(
                                 "${filtered.size} 次",
-                                fontSize = 28.sp,
+                                style = LocalAppTypography.current.headlineMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
                             )
-                            Spacer(Modifier.height(4.dp))
+                            Spacer(Modifier.height(spacing.xs))
                             Text(
                                 "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
                                 style = LocalAppTypography.current.bodyMedium,
@@ -213,22 +216,22 @@ fun DiaperListScreen(navController: NavController) {
 
                 // —— 换尿布详情 ——
                 AppCard(
-                    cornerRadius = 12.dp,
+                    cornerRadius = shapes.large,
                     containerColor = c.surface,
                     elevation = 0.dp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 16.dp),
+                        .padding(horizontal = spacing.md)
+                        .padding(bottom = spacing.md),
                 ) {
-                    Column(Modifier.padding(16.dp)) {
+                    Column(Modifier.padding(spacing.md)) {
                         Text(
                             "换尿布详情",
                             style = LocalAppTypography.current.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = c.textPrimary,
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Spacer(Modifier.height(spacing.md))
                         Row(Modifier.fillMaxWidth()) {
                             DiaperStatCell(
                                 emoji = "💧",
@@ -261,9 +264,9 @@ fun DiaperListScreen(navController: NavController) {
                         .weight(1f)
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 8.dp,
+                        start = spacing.md,
+                        end = spacing.md,
+                        bottom = spacing.sm,
                     ),
                 ) {
                     items(items = sortedRecords, key = { it.id }) { d ->
@@ -295,12 +298,12 @@ fun DiaperListScreen(navController: NavController) {
                                 editingDiaper = d
                                 showForm = true
                             },
-                            modifier = Modifier.padding(bottom = 8.dp),
+                            modifier = Modifier.padding(bottom = spacing.sm),
                         ) {
                             Box(
                                 Modifier
                                     .size(40.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .clip(RoundedCornerShape(shapes.large))
                                     .background(accentColor.copy(alpha = 0.12f)),
                                 contentAlignment = Alignment.Center,
                             ) { Text(typeEmoji, style = LocalAppTypography.current.titleLarge) }
@@ -323,14 +326,14 @@ fun DiaperListScreen(navController: NavController) {
                                     d.note.take(8),
                                     style = LocalAppTypography.current.labelSmall,
                                     color = c.textTertiary,
-                                    modifier = Modifier.padding(start = 8.dp),
+                                    modifier = Modifier.padding(start = spacing.sm),
                                 )
                             }
                         }
                     }
 
                     // 底部留白给按钮
-                    item { Spacer(Modifier.height(8.dp)) }
+                    item { Spacer(Modifier.height(spacing.sm)) }
                 }
             }
 
@@ -339,7 +342,7 @@ fun DiaperListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .background(c.surface)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
             ) {
                 PrimaryButton(
                     onClick = {
@@ -348,8 +351,6 @@ fun DiaperListScreen(navController: NavController) {
                     },
                     label = "记录尿布",
                     icon = Icons.Default.Add,
-                    height = 48.dp,
-                    cornerRadius = 12.dp,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -408,6 +409,7 @@ fun DiaperFormDialog(
     onDismiss: () -> Unit,
     onSave: (Diaper) -> Unit,
 ) {
+    val spacing = LocalAppSpacing.current
     val isEdit = editEntity != null
     var selectedType by remember { mutableStateOf(editEntity?.let { DiaperType.raw(it.type) } ?: "wet") }
     val now = LocalDateTime.now()
@@ -446,7 +448,7 @@ fun DiaperFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = spacing.md)) {
             listOf("wet" to "💧 小便", "poop" to "💩 大便", "both" to "🔄 混合").forEach { (t, label) ->
                 FilterChip(
                     selected = selectedType == t,
@@ -489,20 +491,21 @@ private fun DiaperStatCell(
     modifier: Modifier = Modifier,
     c: AppColors,
 ) {
+    val spacing = LocalAppSpacing.current
     Column(
         modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(emoji, fontSize = 22.sp)
-        Spacer(Modifier.height(4.dp))
+        Text(emoji, style = LocalAppTypography.current.titleLarge)
+        Spacer(Modifier.height(spacing.xs))
         Text(
             value,
             style = LocalAppTypography.current.titleMedium,
             fontWeight = FontWeight.Bold,
             color = c.textPrimary,
         )
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(spacing.xxs))
         Text(
             label,
             style = LocalAppTypography.current.bodySmall,

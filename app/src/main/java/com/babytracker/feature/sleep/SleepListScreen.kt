@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -32,6 +31,8 @@ import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.PrimaryButton
@@ -59,6 +60,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun SleepListScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val sleepRepo: SleepRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -130,7 +133,7 @@ fun SleepListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .clickable { showDatePicker = true }
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -139,7 +142,7 @@ fun SleepListScreen(navController: NavController) {
                     fontWeight = FontWeight.Medium,
                     color = c.textPrimary,
                 )
-                Spacer(Modifier.width(4.dp))
+                Spacer(Modifier.width(spacing.xs))
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
@@ -168,16 +171,16 @@ fun SleepListScreen(navController: NavController) {
                     val nightEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
                     val durSec = DateUtils.durationToTotalSeconds(nightStart, nightEnd)
                     val timeRange = "${nightStart.format(DateTimeFormatter.ofPattern("HH:mm"))}-${nightEnd.format(DateTimeFormatter.ofPattern("HH:mm"))}"
-                    val cardShape = RoundedCornerShape(16.dp)
+                    val cardShape = RoundedCornerShape(shapes.large)
 
                     AppCard(
-                        cornerRadius = 16.dp,
+                        cornerRadius = shapes.large,
                         containerColor = Color.Transparent,
                         elevation = 0.dp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 16.dp),
+                            .padding(horizontal = spacing.md)
+                            .padding(bottom = spacing.md),
                     ) {
                         Box(
                             Modifier
@@ -188,12 +191,12 @@ fun SleepListScreen(navController: NavController) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Box(
                                         Modifier
-                                            .size(32.dp)
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .size(spacing.xl)
+                                            .clip(RoundedCornerShape(shapes.medium))
                                             .background(Color.White.copy(alpha = 0.25f)),
                                         contentAlignment = Alignment.Center,
-                                    ) { Text("\uD83C\uDF19", fontSize = 16.sp) }
-                                    Spacer(Modifier.width(8.dp))
+                                    ) { Text("\uD83C\uDF19", style = LocalAppTypography.current.titleMedium) }
+                                    Spacer(Modifier.width(spacing.sm))
                                     Text(
                                         "夜间睡眠",
                                         style = LocalAppTypography.current.titleMedium,
@@ -204,11 +207,11 @@ fun SleepListScreen(navController: NavController) {
                                 Spacer(Modifier.height(20.dp))
                                 Text(
                                     DateUtils.durationFullText(durSec),
-                                    fontSize = 28.sp,
+                                    style = LocalAppTypography.current.headlineMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
                                 )
-                                Spacer(Modifier.height(4.dp))
+                                Spacer(Modifier.height(spacing.xs))
                                 Text(
                                     timeRange,
                                     style = LocalAppTypography.current.bodyMedium,
@@ -220,22 +223,22 @@ fun SleepListScreen(navController: NavController) {
 
                     // —— 睡眠详情 ——
                     AppCard(
-                        cornerRadius = 12.dp,
+                        cornerRadius = shapes.large,
                         containerColor = c.surface,
                         elevation = 0.dp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(bottom = 16.dp),
+                            .padding(horizontal = spacing.md)
+                            .padding(bottom = spacing.md),
                     ) {
-                        Column(Modifier.padding(16.dp)) {
+                        Column(Modifier.padding(spacing.md)) {
                             Text(
                                 "睡眠详情",
                                 style = LocalAppTypography.current.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = c.textPrimary,
                             )
-                            Spacer(Modifier.height(16.dp))
+                            Spacer(Modifier.height(spacing.md))
                             Row(Modifier.fillMaxWidth()) {
                                 val sleepStart = LocalDateTime.parse(nightSleep.startTime, DateTimeFormatter.ISO_DATE_TIME)
                                 val sleepEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
@@ -269,7 +272,7 @@ fun SleepListScreen(navController: NavController) {
                         style = LocalAppTypography.current.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = c.textPrimary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp)
+                        modifier = Modifier.padding(horizontal = spacing.md, vertical = 0.dp)
                             .padding(bottom = 12.dp),
                     )
                 }
@@ -279,9 +282,9 @@ fun SleepListScreen(navController: NavController) {
                         .weight(1f)
                         .fillMaxWidth(),
                     contentPadding = PaddingValues(
-                        start = 16.dp,
-                        end = 16.dp,
-                        bottom = 8.dp,
+                        start = spacing.md,
+                        end = spacing.md,
+                        bottom = spacing.sm,
                     ),
                 ) {
                     if (naps.isNotEmpty()) {
@@ -303,13 +306,13 @@ fun SleepListScreen(navController: NavController) {
                                     editingSleep = nap
                                     showForm = true
                                 },
-                                modifier = Modifier.padding(bottom = 8.dp),
+                                modifier = Modifier.padding(bottom = spacing.sm),
                                 accentColor = c.warning,
                             ) {
                                 Box(
                                     Modifier
                                         .size(40.dp)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(RoundedCornerShape(shapes.large))
                                         .background(c.warning.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) { Text("\u2600\uFE0F", style = LocalAppTypography.current.titleLarge) }
@@ -332,7 +335,7 @@ fun SleepListScreen(navController: NavController) {
                     }
 
                     // 底部留白给按钮
-                    item { Spacer(Modifier.height(8.dp)) }
+                    item { Spacer(Modifier.height(spacing.sm)) }
                 }
             }
 
@@ -341,7 +344,7 @@ fun SleepListScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .background(c.surface)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
             ) {
                 PrimaryButton(
                     onClick = {
@@ -350,8 +353,6 @@ fun SleepListScreen(navController: NavController) {
                     },
                     label = "记录睡眠",
                     icon = Icons.Default.Add,
-                    height = 48.dp,
-                    cornerRadius = 12.dp,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -410,6 +411,7 @@ fun SleepFormDialog(
     onDismiss: () -> Unit,
     onSave: (Sleep) -> Unit,
 ) {
+    val spacing = LocalAppSpacing.current
     val isEdit = editEntity != null
     var selectedType by remember { mutableStateOf(editEntity?.let { SleepType.raw(it.type) } ?: "night") }
     val now = LocalDateTime.now()
@@ -483,11 +485,11 @@ fun SleepFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             FilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = { Text("\uD83C\uDF19 夜间睡眠") })
             FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("\u2600\uFE0F 小睡") })
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(spacing.md))
         // 计时器 UI
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -530,7 +532,7 @@ fun SleepFormDialog(
                     },
                     label = "开始计时",
                     height = 40.dp,
-                    fontSize = 14.sp,
+                    fontSize = LocalAppTypography.current.bodyLarge.fontSize,
                 )
             }
         }
@@ -559,6 +561,7 @@ private fun SleepStatCell(
     modifier: Modifier = Modifier,
     c: AppColors,
 ) {
+    val spacing = LocalAppSpacing.current
     Column(
         modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -570,7 +573,7 @@ private fun SleepStatCell(
             fontWeight = FontWeight.Bold,
             color = c.textPrimary,
         )
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(spacing.xxs))
         Text(
             label,
             style = LocalAppTypography.current.bodySmall,

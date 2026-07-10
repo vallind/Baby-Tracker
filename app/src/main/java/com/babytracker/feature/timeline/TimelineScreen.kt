@@ -16,14 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
@@ -52,6 +52,9 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun TimelineScreen(navController: NavController) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    val shapes = LocalAppShapes.current
     val viewModel: TimelineViewModel = koinViewModel()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -123,7 +126,7 @@ fun TimelineScreen(navController: NavController) {
                 onSelect = { typeFilter = filterKeys[it] },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = spacing.md, vertical = 6.dp),
             )
             HorizontalDivider(color = c.divider, thickness = 0.5.dp)
 
@@ -170,9 +173,9 @@ fun TimelineScreen(navController: NavController) {
                             .weight(1f)
                             .fillMaxWidth(),
                         contentPadding = PaddingValues(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 8.dp,
+                            start = spacing.md,
+                            end = spacing.md,
+                            top = spacing.sm,
                             bottom = 80.dp,
                         ),
                     ) {
@@ -182,25 +185,24 @@ fun TimelineScreen(navController: NavController) {
                                 Row(
                                     Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 8.dp, bottom = 4.dp),
+                                        .padding(top = spacing.sm, bottom = spacing.xs),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
                                         text = DateUtils.relativeDate(date),
-                                        style = LocalAppTypography.current.labelSmall,
-                                        fontWeight = FontWeight.SemiBold,
+                                        style = typography.label,
                                         color = c.textSecondary,
                                     )
                                     Spacer(Modifier.width(6.dp))
                                     Box(
                                         Modifier
-                                            .clip(RoundedCornerShape(999.dp))
+                                            .clip(RoundedCornerShape(shapes.full))
                                             .background(c.divider)
                                             .padding(horizontal = 6.dp, vertical = 1.dp),
                                     ) {
                                         Text(
                                             "${records.size}次",
-                                            fontSize = 10.sp,
+                                            style = typography.label,
                                             color = c.textTertiary,
                                         )
                                     }
@@ -211,7 +213,7 @@ fun TimelineScreen(navController: NavController) {
                             items(items = records, key = { "${it.recordType}-${it.id}" }) { record ->
                                 val accent = typeColor(record.recordType)
                                 RecordCard(
-                                    modifier = Modifier.padding(bottom = 8.dp),
+                                    modifier = Modifier.padding(bottom = spacing.sm),
                                     accentColor = accent,
                                     onDelete = {
                                         scope.launch {
@@ -233,33 +235,32 @@ fun TimelineScreen(navController: NavController) {
                                     Box(
                                         Modifier
                                             .size(40.dp)
-                                            .clip(RoundedCornerShape(10.dp))
+                                            .clip(RoundedCornerShape(shapes.large))
                                             .background(accent.copy(alpha = 0.12f)),
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Text(
                                             record.emoji,
-                                            style = LocalAppTypography.current.titleLarge,
+                                            style = typography.titleLarge,
                                         )
                                     }
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(
                                             record.title,
-                                            style = LocalAppTypography.current.titleSmall,
+                                            style = typography.titleMedium,
                                             color = c.textPrimary,
-                                            fontWeight = FontWeight.Medium,
                                         )
                                         Text(
                                             record.subtitle,
-                                            style = LocalAppTypography.current.bodySmall,
+                                            style = typography.label,
                                             color = c.textSecondary,
                                         )
                                     }
                                     if (record.time.isNotEmpty()) {
                                         Text(
                                             record.time,
-                                            style = LocalAppTypography.current.labelMedium,
+                                            style = typography.label,
                                             color = c.textTertiary,
                                         )
                                     }
@@ -278,12 +279,11 @@ fun TimelineScreen(navController: NavController) {
             show = true,
             onDismiss = { showTypePicker = false },
         ) {
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.sm)) {
                 Text(
                     "选择记录类型",
-                    style = LocalAppTypography.current.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp),
+                    style = typography.headline,
+                    modifier = Modifier.padding(bottom = spacing.md),
                 )
                 val types = listOf(
                     Screen.Feeding to "🤱 喂养",
@@ -308,7 +308,7 @@ fun TimelineScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                     )
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(spacing.lg))
             }
         }
     }
