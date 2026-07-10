@@ -1,5 +1,6 @@
 package com.babytracker.feature.sleep
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -434,9 +435,15 @@ fun SleepFormDialog(
     var showCascadePicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableIntStateOf(0) }
 
-    // 计时器
-    var timerRunning by remember { mutableStateOf(false) }
-    var timerStartMs by remember { mutableLongStateOf(0L) }
+    val prefs: SharedPreferences = koinInject()
+
+    // 计时器（持久化：关闭表单再打开继续计时）
+    var timerRunning by remember {
+        mutableStateOf(prefs.getBoolean("sleep_timer_running", false))
+    }
+    var timerStartMs by remember {
+        mutableLongStateOf(prefs.getLong("sleep_timer_start_millis", 0L))
+    }
     var elapsed by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(timerRunning) {
@@ -498,6 +505,7 @@ fun SleepFormDialog(
                 AppTextButton(
                     onClick = {
                         timerRunning = false
+                        prefs.edit().putBoolean("sleep_timer_running", false).apply()
                         val endNow = LocalDateTime.now()
                         startTime = LocalDateTime.ofInstant(
                             java.time.Instant.ofEpochMilli(timerStartMs),
@@ -514,6 +522,10 @@ fun SleepFormDialog(
                         timerStartMs = System.currentTimeMillis()
                         elapsed = 0
                         timerRunning = true
+                        prefs.edit()
+                            .putBoolean("sleep_timer_running", true)
+                            .putLong("sleep_timer_start_millis", timerStartMs)
+                            .apply()
                         startTime = LocalDateTime.now().format(timeFormatter)
                     },
                     label = "开始计时",

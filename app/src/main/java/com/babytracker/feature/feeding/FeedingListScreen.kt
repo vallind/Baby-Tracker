@@ -1,5 +1,6 @@
 package com.babytracker.feature.feeding
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -403,9 +404,15 @@ fun FeedingFormDialog(
     }
     var showCascadePicker by remember { mutableStateOf(false) }
 
-    // 计时器
-    var timerRunning by remember { mutableStateOf(false) }
-    var timerStartMs by remember { mutableLongStateOf(0L) }
+    val prefs: SharedPreferences = koinInject()
+
+    // 计时器（持久化：关闭表单再打开继续计时）
+    var timerRunning by remember {
+        mutableStateOf(prefs.getBoolean("feeding_timer_running", false))
+    }
+    var timerStartMs by remember {
+        mutableLongStateOf(prefs.getLong("feeding_timer_start_millis", 0L))
+    }
     var elapsed by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(timerRunning) {
@@ -485,6 +492,7 @@ fun FeedingFormDialog(
                         AppTextButton(
                             onClick = {
                                 timerRunning = false
+                                prefs.edit().putBoolean("feeding_timer_running", false).apply()
                                 durationMin = (elapsed / 60).toString()
                             },
                             label = "结束计时",
@@ -496,6 +504,10 @@ fun FeedingFormDialog(
                                 timerStartMs = System.currentTimeMillis()
                                 elapsed = 0
                                 timerRunning = true
+                                prefs.edit()
+                                    .putBoolean("feeding_timer_running", true)
+                                    .putLong("feeding_timer_start_millis", timerStartMs)
+                                    .apply()
                             },
                             label = "开始计时",
                             height = 40.dp,
