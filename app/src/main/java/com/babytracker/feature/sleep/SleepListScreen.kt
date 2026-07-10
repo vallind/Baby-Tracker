@@ -36,7 +36,6 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.PrimaryButton
-import com.babytracker.designsystem.components.button.SecondaryButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
@@ -505,7 +504,7 @@ fun SleepFormDialog(
                 modifier = Modifier.weight(1f),
             )
             if (timerRunning) {
-                SecondaryButton(
+                PrimaryButton(
                     onClick = {
                         timerRunning = false
                         prefs.edit().putBoolean("sleep_timer_running", false).apply()
@@ -517,7 +516,6 @@ fun SleepFormDialog(
                         endTime = endNow.format(timeFormatter)
                     },
                     label = "结束计时",
-                    color = LocalAppColors.current.error,
                 )
             } else {
                 PrimaryButton(

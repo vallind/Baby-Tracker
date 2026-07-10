@@ -39,7 +39,6 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.button.PrimaryButton
-import com.babytracker.designsystem.components.button.SecondaryButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
@@ -494,14 +493,13 @@ fun FeedingFormDialog(
                         modifier = Modifier.weight(1f),
                     )
                     if (timerRunning) {
-                        SecondaryButton(
+                        PrimaryButton(
                             onClick = {
                                 timerRunning = false
                                 prefs.edit().putBoolean("feeding_timer_running", false).apply()
                                 durationMin = (elapsed / 60).toString()
                             },
                             label = "结束计时",
-                            color = c.error,
                         )
                     } else {
                         PrimaryButton(
