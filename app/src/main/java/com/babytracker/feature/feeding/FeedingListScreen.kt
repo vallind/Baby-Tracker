@@ -1,6 +1,5 @@
 package com.babytracker.feature.feeding
 
-import android.content.SharedPreferences
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,50 +62,9 @@ fun FeedingListScreen(navController: NavController) {
     val c = LocalAppColors.current
     val feedingRepo: FeedingRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val prefs: SharedPreferences = koinInject()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
-
-    // 母乳计时器状态（持久化）
-    var timerRunning by remember {
-        mutableStateOf(prefs.getBoolean("feeding_timer_running", false))
-    }
-    var timerStartMillis by remember {
-        mutableLongStateOf(prefs.getLong("feeding_timer_start_millis", 0L))
-    }
-    var elapsedSeconds by remember { mutableIntStateOf(0) }
-
-    // 恢复：进入页面时若计时器仍在运行，自动继续计时
-    LaunchedEffect(Unit) {
-        if (timerRunning && timerStartMillis > 0) {
-            while (true) {
-                elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
-                delay(1000L)
-            }
-        }
-    }
-
-    fun startTimer() {
-        timerStartMillis = System.currentTimeMillis()
-        elapsedSeconds = 0
-        timerRunning = true
-        prefs.edit()
-            .putBoolean("feeding_timer_running", true)
-            .putLong("feeding_timer_start_millis", timerStartMillis)
-            .apply()
-        scope.launch {
-            while (timerRunning) {
-                elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
-                delay(1000L)
-            }
-        }
-    }
-
-    fun stopTimer() {
-        timerRunning = false
-        prefs.edit().putBoolean("feeding_timer_running", false).apply()
-    }
     val feedings by feedingRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
@@ -237,12 +195,6 @@ fun FeedingListScreen(navController: NavController) {
         FeedingFormDialog(
             babyId = babyId,
             editEntity = editingFeeding,
-            timerRunning = timerRunning,
-            elapsedSeconds = elapsedSeconds,
-            onStartTimer = { startTimer() },
-            onStopTimer = {
-                stopTimer()
-            },
             onDismiss = {
                 showForm = false
                 editingFeeding = null
@@ -427,10 +379,6 @@ private fun FeedingTimeline(
 fun FeedingFormDialog(
     babyId: Int,
     editEntity: Feeding? = null,
-    timerRunning: Boolean,
-    elapsedSeconds: Int,
-    onStartTimer: () -> Unit,
-    onStopTimer: () -> Unit,
     onDismiss: () -> Unit,
     onSave: (Feeding) -> Unit,
 ) {
@@ -455,7 +403,21 @@ fun FeedingFormDialog(
     }
     var showCascadePicker by remember { mutableStateOf(false) }
 
-    val timerDisplay = String.format("%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
+    // 计时器
+    var timerRunning by remember { mutableStateOf(false) }
+    var timerStartMs by remember { mutableLongStateOf(0L) }
+    var elapsed by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(timerRunning) {
+        if (timerRunning) {
+            while (true) {
+                elapsed = ((System.currentTimeMillis() - timerStartMs) / 1000).toInt()
+                delay(1000L)
+            }
+        }
+    }
+
+    val timerDisplay = String.format("%02d:%02d", elapsed / 60, elapsed % 60)
 
     val buildEntity = {
         if (isEdit) {
@@ -506,7 +468,7 @@ fun FeedingFormDialog(
                         FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
                     }
                 }
-                // 计时器 UI
+                // 计时器
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -522,15 +484,19 @@ fun FeedingFormDialog(
                     if (timerRunning) {
                         AppTextButton(
                             onClick = {
-                                onStopTimer()
-                                durationMin = (elapsedSeconds / 60).toString()
+                                timerRunning = false
+                                durationMin = (elapsed / 60).toString()
                             },
                             label = "结束计时",
                             color = c.error,
                         )
                     } else {
                         PrimaryButton(
-                            onClick = { onStartTimer() },
+                            onClick = {
+                                timerStartMs = System.currentTimeMillis()
+                                elapsed = 0
+                                timerRunning = true
+                            },
                             label = "开始计时",
                             height = 40.dp,
                             fontSize = 14.sp,
