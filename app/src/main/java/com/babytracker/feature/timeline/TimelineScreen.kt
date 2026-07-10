@@ -318,6 +318,10 @@ fun TimelineScreen(navController: NavController) {
         FeedingFormDialog(
             babyId = babyId,
             editEntity = f,
+            timerRunning = false,
+            elapsedSeconds = 0,
+            onStartTimer = { 0L },
+            onStopTimer = {},
             onDismiss = { editingFeeding = null },
             onSave = { updated ->
                 scope.launch {
@@ -332,6 +336,11 @@ fun TimelineScreen(navController: NavController) {
         SleepFormDialog(
             babyId = babyId,
             editEntity = s,
+            timerRunning = false,
+            timerStartMillis = 0L,
+            elapsedSeconds = 0,
+            onStartTimer = { 0L },
+            onStopTimer = { Pair(0L, 0L) },
             onDismiss = { editingSleep = null },
             onSave = { updated ->
                 scope.launch {
@@ -389,6 +398,10 @@ fun TimelineScreen(navController: NavController) {
         FeedingFormDialog(
             babyId = babyId,
             editEntity = null,
+            timerRunning = false,
+            elapsedSeconds = 0,
+            onStartTimer = { 0L },
+            onStopTimer = {},
             onDismiss = { showAddFeeding = false },
             onSave = { feeding ->
                 scope.launch {
@@ -403,6 +416,11 @@ fun TimelineScreen(navController: NavController) {
         SleepFormDialog(
             babyId = babyId,
             editEntity = null,
+            timerRunning = false,
+            timerStartMillis = 0L,
+            elapsedSeconds = 0,
+            onStartTimer = { 0L },
+            onStopTimer = { Pair(0L, 0L) },
             onDismiss = { showAddSleep = false },
             onSave = { sleep ->
                 scope.launch {

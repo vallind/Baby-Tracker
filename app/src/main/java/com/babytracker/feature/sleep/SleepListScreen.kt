@@ -1,5 +1,6 @@
 package com.babytracker.feature.sleep
 
+import android.content.SharedPreferences
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -60,9 +61,46 @@ fun SleepListScreen(navController: NavController) {
     val c = LocalAppColors.current
     val sleepRepo: SleepRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
+    val prefs: SharedPreferences = koinInject()
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
+
+    // 睡眠计时器状态（持久化）
+    var timerRunning by remember {
+        mutableStateOf(prefs.getBoolean("sleep_timer_running", false))
+    }
+    var timerStartMillis by remember {
+        mutableLongStateOf(prefs.getLong("sleep_timer_start_millis", 0L))
+    }
+    var elapsedSeconds by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(timerRunning) {
+        if (timerRunning) {
+            while (true) {
+                elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
+                delay(1000L)
+            }
+        }
+    }
+
+    fun startTimer(): Long {
+        timerStartMillis = System.currentTimeMillis()
+        elapsedSeconds = 0
+        timerRunning = true
+        prefs.edit()
+            .putBoolean("sleep_timer_running", true)
+            .putLong("sleep_timer_start_millis", timerStartMillis)
+            .apply()
+        return timerStartMillis
+    }
+
+    fun stopTimer(): Pair<Long, Long> {
+        val startMillis = timerStartMillis
+        timerRunning = false
+        prefs.edit().putBoolean("sleep_timer_running", false).apply()
+        return Pair(startMillis, System.currentTimeMillis())
+    }
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingSleep by remember { mutableStateOf<Sleep?>(null) }
@@ -361,6 +399,11 @@ fun SleepListScreen(navController: NavController) {
         SleepFormDialog(
             babyId = babyId,
             editEntity = editingSleep,
+            timerRunning = timerRunning,
+            timerStartMillis = timerStartMillis,
+            elapsedSeconds = elapsedSeconds,
+            onStartTimer = { startTimer() },
+            onStopTimer = { stopTimer() },
             onDismiss = {
                 showForm = false
                 editingSleep = null
@@ -406,6 +449,11 @@ fun SleepListScreen(navController: NavController) {
 fun SleepFormDialog(
     babyId: Int,
     editEntity: Sleep? = null,
+    timerRunning: Boolean,
+    timerStartMillis: Long,
+    elapsedSeconds: Int,
+    onStartTimer: () -> Long,
+    onStopTimer: () -> Pair<Long, Long>,
     onDismiss: () -> Unit,
     onSave: (Sleep) -> Unit,
 ) {
@@ -433,20 +481,6 @@ fun SleepFormDialog(
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
     var showCascadePicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableIntStateOf(0) }
-
-    // 睡眠计时器状态
-    var timerRunning by remember { mutableStateOf(false) }
-    var timerStartMillis by remember { mutableLongStateOf(0L) }
-    var elapsedSeconds by remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(timerRunning) {
-        if (timerRunning) {
-            while (true) {
-                elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
-                delay(1000L)
-            }
-        }
-    }
 
     val timerDisplay = String.format("%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
     val timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
@@ -497,13 +531,15 @@ fun SleepFormDialog(
             if (timerRunning) {
                 AppTextButton(
                     onClick = {
-                        timerRunning = false
-                        val endNow = LocalDateTime.now()
+                        val (startMillis, endMillis) = onStopTimer()
                         startTime = LocalDateTime.ofInstant(
-                            java.time.Instant.ofEpochMilli(timerStartMillis),
+                            java.time.Instant.ofEpochMilli(startMillis),
                             java.time.ZoneId.systemDefault()
                         ).format(timeFormatter)
-                        endTime = endNow.format(timeFormatter)
+                        endTime = LocalDateTime.ofInstant(
+                            java.time.Instant.ofEpochMilli(endMillis),
+                            java.time.ZoneId.systemDefault()
+                        ).format(timeFormatter)
                     },
                     label = "结束计时",
                     color = LocalAppColors.current.error,
@@ -511,10 +547,11 @@ fun SleepFormDialog(
             } else {
                 PrimaryButton(
                     onClick = {
-                        timerStartMillis = System.currentTimeMillis()
-                        elapsedSeconds = 0
-                        timerRunning = true
-                        startTime = LocalDateTime.now().format(timeFormatter)
+                        val startMillis = onStartTimer()
+                        startTime = LocalDateTime.ofInstant(
+                            java.time.Instant.ofEpochMilli(startMillis),
+                            java.time.ZoneId.systemDefault()
+                        ).format(timeFormatter)
                     },
                     label = "开始计时",
                     height = 40.dp,
