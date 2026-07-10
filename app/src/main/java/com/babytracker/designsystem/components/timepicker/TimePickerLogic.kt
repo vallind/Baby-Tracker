@@ -1,7 +1,5 @@
 package com.babytracker.designsystem.components.timepicker
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +36,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * 滚轮选择器 — LazyColumn + 自动吸附 + 弹性动画。
+ * 滚轮选择器 — LazyColumn + 实时缩放 + 自动吸附。
  */
 @Composable
 fun TimePickerLogic(
@@ -60,19 +59,12 @@ fun TimePickerLogic(
     val listState = rememberLazyListState()
     var snapping by remember { mutableStateOf(false) }
 
-    // 选中文字放大动画
-    val selectedScale by animateFloatAsState(
-        targetValue = 1.15f,
-        animationSpec = spring(dampingRatio = 0.5f, stiffness = 300f),
-        label = "selectedScale",
-    )
-
     // 初次定位
     LaunchedEffect(Unit) {
         listState.scrollToItem(maxOf(0, initialIndex - halfVisible))
     }
 
-    // 滑动停止 → 弹簧吸附居中
+    // 滑动停止 → 吸附居中
     LaunchedEffect(listState) {
         launch {
             snapshotFlow { listState.isScrollInProgress }
@@ -96,13 +88,15 @@ fun TimePickerLogic(
         }
     }
 
+    // 最大缩放距离：halfVisible 项之外不再缩放
+    val maxDistPx = remember(itemHeightPx, halfVisible) { itemHeightPx * halfVisible }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(itemHeight * visibleItems)
             .clipToBounds(),
     ) {
-        // 选中行高亮背景
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -110,7 +104,6 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(selectedBgColor, RoundedCornerShape(4.dp)),
         )
-        // 上分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -118,7 +111,6 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(dividerColor),
         )
-        // 下分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -132,6 +124,24 @@ fun TimePickerLogic(
             modifier = Modifier.fillMaxWidth(),
         ) {
             items(allValues, key = { it }) { v ->
+                val itemIndex = v - range.first
+                // 实时计算该项距视口中心的距离 → 缩放比
+                        val distance by remember {
+                    derivedStateOf {
+                        val layout = listState.layoutInfo
+                        val viewportCenter = layout.viewportEndOffset / 2f
+                        val item = layout.visibleItemsInfo.find { it.index == itemIndex }
+                        if (item != null) {
+                            val itemCenter = item.offset + item.size / 2f
+                            abs(itemCenter - viewportCenter)
+                        } else {
+                            Float.MAX_VALUE
+                        }
+                    }
+                }
+                val t = (distance / maxDistPx).coerceIn(0f, 1f)
+                val itemScale = 1.15f - 0.15f * t
+
                 val isSelected = v == value
                 Box(
                     modifier = Modifier
@@ -145,7 +155,7 @@ fun TimePickerLogic(
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         color = if (isSelected) selectedTextColor else unselectedTextColor,
                         textAlign = TextAlign.Center,
-                        modifier = if (isSelected) Modifier.scale(selectedScale) else Modifier,
+                        modifier = Modifier.scale(itemScale),
                     )
                 }
             }
