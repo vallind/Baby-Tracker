@@ -66,10 +66,11 @@ fun TimePickerLogic(
         currentValue = value
     }
 
-    val visibleValues = remember(currentValue, range) {
+    val visibleValues = remember(currentValue, dragOffset, range) {
         val half = visibleItems / 2
-        val start = currentValue - half
-        val end = currentValue + half
+        val shift = -(dragOffset / itemHeightPx).roundToInt()
+        val start = currentValue - half + shift
+        val end = currentValue + half + shift
         (start..end).map { v ->
             if (v in range) v else null
         }
