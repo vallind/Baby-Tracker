@@ -47,6 +47,7 @@ import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -433,6 +434,23 @@ fun SleepFormDialog(
     var showCascadePicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableIntStateOf(0) }
 
+    // 睡眠计时器状态
+    var timerRunning by remember { mutableStateOf(false) }
+    var timerStartMillis by remember { mutableLongStateOf(0L) }
+    var elapsedSeconds by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(timerRunning) {
+        if (timerRunning) {
+            while (true) {
+                elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
+                delay(1000L)
+            }
+        }
+    }
+
+    val timerDisplay = String.format("%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
+    val timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
     val buildEntity = {
         if (isEdit) {
             editEntity.copy(
@@ -463,6 +481,47 @@ fun SleepFormDialog(
             FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("\u2600\uFE0F 小睡") })
         }
         Spacer(Modifier.height(16.dp))
+        // 计时器 UI
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+        ) {
+            Text(
+                text = timerDisplay,
+                style = LocalAppTypography.current.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (timerRunning) LocalAppColors.current.primary else LocalAppColors.current.textSecondary,
+                modifier = Modifier.weight(1f),
+            )
+            if (timerRunning) {
+                AppTextButton(
+                    onClick = {
+                        timerRunning = false
+                        val endNow = LocalDateTime.now()
+                        startTime = LocalDateTime.ofInstant(
+                            java.time.Instant.ofEpochMilli(timerStartMillis),
+                            java.time.ZoneId.systemDefault()
+                        ).format(timeFormatter)
+                        endTime = endNow.format(timeFormatter)
+                    },
+                    label = "结束计时",
+                    color = LocalAppColors.current.error,
+                )
+            } else {
+                PrimaryButton(
+                    onClick = {
+                        timerStartMillis = System.currentTimeMillis()
+                        elapsedSeconds = 0
+                        timerRunning = true
+                        startTime = LocalDateTime.now().format(timeFormatter)
+                    },
+                    label = "开始计时",
+                    height = 40.dp,
+                    fontSize = 14.sp,
+                )
+            }
+        }
         AppInput(value = startTime, onValueChange = {}, label = "开始时间", enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showCascadePicker = true })
         Spacer(Modifier.height(12.dp))
         AppInput(value = endTime, onValueChange = {}, label = "结束时间", enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showCascadePicker = true })

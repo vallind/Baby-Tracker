@@ -49,6 +49,7 @@ import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDate
@@ -381,6 +382,7 @@ fun FeedingFormDialog(
     onDismiss: () -> Unit,
     onSave: (Feeding) -> Unit,
 ) {
+    val c = LocalAppColors.current
     val isEdit = editEntity != null
     var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
     var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
@@ -400,6 +402,22 @@ fun FeedingFormDialog(
         )
     }
     var showCascadePicker by remember { mutableStateOf(false) }
+
+    // 母乳计时器状态
+    var timerRunning by remember { mutableStateOf(false) }
+    var timerStartMillis by remember { mutableLongStateOf(0L) }
+    var elapsedSeconds by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(timerRunning) {
+        if (timerRunning) {
+            while (true) {
+                elapsedSeconds = ((System.currentTimeMillis() - timerStartMillis) / 1000).toInt()
+                delay(1000L)
+            }
+        }
+    }
+
+    val timerDisplay = String.format("%02d:%02d", elapsedSeconds / 60, elapsedSeconds % 60)
 
     val buildEntity = {
         if (isEdit) {
@@ -448,6 +466,41 @@ fun FeedingFormDialog(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 12.dp)) {
                     listOf("左侧", "右侧", "双侧").forEach { s ->
                         FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
+                    }
+                }
+                // 计时器 UI
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                ) {
+                    Text(
+                        text = timerDisplay,
+                        style = LocalAppTypography.current.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (timerRunning) c.primary else c.textSecondary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (timerRunning) {
+                        AppTextButton(
+                            onClick = {
+                                timerRunning = false
+                                durationMin = (elapsedSeconds / 60).toString()
+                            },
+                            label = "结束计时",
+                            color = c.error,
+                        )
+                    } else {
+                        PrimaryButton(
+                            onClick = {
+                                timerStartMillis = System.currentTimeMillis()
+                                elapsedSeconds = 0
+                                timerRunning = true
+                            },
+                            label = "开始计时",
+                            height = 40.dp,
+                            fontSize = 14.sp,
+                        )
                     }
                 }
                 AppInput(
