@@ -13,7 +13,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,16 +28,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * 滚轮选择器 — LazyColumn 原生滚动。
+ * 滚轮选择器 — LazyColumn + 滑动停止自动吸附居中。
  */
 @Composable
 fun TimePickerLogic(
@@ -55,32 +55,32 @@ fun TimePickerLogic(
     val initialIndex = (value - range.first).coerceIn(0, allValues.lastIndex)
 
     val listState = rememberLazyListState()
+    var snapping by remember { mutableStateOf(false) }
 
-    // 初次定位：选中项上方 halfVisible 项在视口顶部 → 选中项自然对齐高亮区
+    // 初次定位
     LaunchedEffect(Unit) {
         listState.scrollToItem(maxOf(0, initialIndex - halfVisible))
     }
 
-    // 滑动停止后通知选中值
+    // 滑动停止 → 吸附居中
     LaunchedEffect(listState) {
         launch {
             snapshotFlow { listState.isScrollInProgress }
-                .filter { !it }
-                .map {
+                .filter { !it && !snapping }
+                .collect {
                     val layout = listState.layoutInfo
                     val viewportCenter = layout.viewportEndOffset / 2
-                    layout.visibleItemsInfo.minByOrNull { info ->
+                    val closest = layout.visibleItemsInfo.minByOrNull { info ->
                         val itemCenter = info.offset + info.size / 2
                         abs(itemCenter - viewportCenter)
-                    }?.let { info ->
-                        range.first + info.index
                     }
-                }
-                .distinctUntilChanged()
-                .drop(1)
-                .collect { centered ->
-                    if (centered != null && centered in range) {
-                        onValueChanged(centered)
+                    if (closest != null) {
+                        val centeredValue = range.first + closest.index
+                        onValueChanged(centeredValue)
+                        snapping = true
+                        val snapIndex = maxOf(0, closest.index - halfVisible)
+                        listState.animateScrollToItem(snapIndex)
+                        snapping = false
                     }
                 }
         }
@@ -92,7 +92,6 @@ fun TimePickerLogic(
             .height(itemHeight * visibleItems)
             .clipToBounds(),
     ) {
-        // 选中行高亮背景
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -100,7 +99,6 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(selectedBgColor, RoundedCornerShape(4.dp)),
         )
-        // 上分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,7 +106,6 @@ fun TimePickerLogic(
                 .offset { IntOffset(0, (itemHeightPx * halfVisible).roundToInt()) }
                 .background(dividerColor),
         )
-        // 下分隔线
         Box(
             modifier = Modifier
                 .fillMaxWidth()
