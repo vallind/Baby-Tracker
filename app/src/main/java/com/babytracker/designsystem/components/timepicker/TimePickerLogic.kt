@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -140,7 +141,8 @@ fun TimePickerLogic(
                     }
                 }
                 val t = (distance / maxDistPx).coerceIn(0f, 1f)
-                val itemScale = 1.15f - 0.15f * t
+                val itemScale = 1.3f - 0.3f * t
+                val itemAlpha = 1f - 0.4f * t
 
                 val isSelected = v == value
                 Box(
@@ -155,7 +157,9 @@ fun TimePickerLogic(
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         color = if (isSelected) selectedTextColor else unselectedTextColor,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.scale(itemScale),
+                        modifier = Modifier
+                            .scale(itemScale)
+                            .graphicsLayer { alpha = itemAlpha },
                     )
                 }
             }
