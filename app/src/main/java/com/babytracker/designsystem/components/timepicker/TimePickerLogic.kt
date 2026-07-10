@@ -66,10 +66,19 @@ fun TimePickerLogic(
         currentValue = value
     }
 
-    // 全部数字初始化渲染，offset 定位
-    val allValues = remember(range) { range.toList() }
-    val baseOffset = -(currentValue - range.first - halfVisible) * itemHeightPx
-    val visualOffset = baseOffset + dragOffset + snapAnim.value
+    // 渲染 visibleItems * 3 的数字，确保拖拽时仍覆盖可见范围
+    val visibleValues = remember(currentValue, dragOffset, range) {
+        val extra = visibleItems // 额外缓冲区
+        val shift = -(dragOffset / itemHeightPx).roundToInt()
+        val half = visibleItems / 2 + extra
+        val start = currentValue - half + shift
+        val end = currentValue + half + shift
+        (start..end).map { v ->
+            if (v in range) v else null
+        }
+    }
+
+    val visualOffset = dragOffset + snapAnim.value
 
     Box(
         modifier = Modifier
@@ -139,22 +148,24 @@ fun TimePickerLogic(
                 },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            allValues.forEach { v ->
+            visibleValues.forEach { v ->
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(itemHeight),
                     contentAlignment = Alignment.Center,
                 ) {
-                    val isSelected = v == currentValue
-                    Text(
-                        text = "%02d".format(v),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        ),
-                        color = if (isSelected) selectedTextColor else unselectedTextColor,
-                        textAlign = TextAlign.Center,
-                    )
+                    if (v != null) {
+                        val isSelected = v == currentValue
+                        Text(
+                            text = "%02d".format(v),
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            ),
+                            color = if (isSelected) selectedTextColor else unselectedTextColor,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
         }
