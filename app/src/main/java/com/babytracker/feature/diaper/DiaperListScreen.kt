@@ -5,11 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -378,25 +375,16 @@ fun DiaperListScreen(navController: NavController) {
     }
 
     // 日期选择对话框
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = selectedDate.toEpochDay() * 86400000L)
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                AppTextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        selectedDate = LocalDate.ofEpochDay(millis / 86400000L)
-                    }
-                    showDatePicker = false
-                }, label = "确定")
-            },
-            dismissButton = {
-                AppTextButton(onClick = { showDatePicker = false }, label = "取消")
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
+    DateTimeCascadeDialog(
+        show = showDatePicker,
+        initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00",
+        dateOnly = true,
+        onConfirm = { dt ->
+            selectedDate = LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE)
+            showDatePicker = false
+        },
+        onDismiss = { showDatePicker = false },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

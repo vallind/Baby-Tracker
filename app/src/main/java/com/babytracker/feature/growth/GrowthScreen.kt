@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -53,6 +54,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -74,6 +76,9 @@ fun GrowthScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
+    val today = LocalDate.now()
+    var selectedDate by remember { mutableStateOf(today) }
+    var showDatePicker by remember { mutableStateOf(false) }
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf("身高", "体重", "头围")
     val types = listOf(GrowthType.HEIGHT, GrowthType.WEIGHT, GrowthType.HEAD)
@@ -93,7 +98,7 @@ fun GrowthScreen(navController: NavController) {
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
-                        onClick = { /* 日历选择：暂时保留入口，后续可接日期筛选 */ },
+                        onClick = { showDatePicker = true },
                         contentDescription = "日历",
                         tint = c.textPrimary,
                     )
@@ -121,12 +126,45 @@ fun GrowthScreen(navController: NavController) {
                 )
             }
 
+            val dateLabel = remember(selectedDate, today) {
+                when (selectedDate) {
+                    today -> "今天"
+                    today.minusDays(1) -> "昨天"
+                    else -> "选择日期"
+                }
+            }
+
+            // 日期选择行
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { showDatePicker = true }
+                    .padding(horizontal = spacing.md, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
+                    style = LocalAppTypography.current.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = c.textPrimary,
+                )
+                Spacer(Modifier.width(spacing.xs))
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = c.textTertiary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+
             val chartData = remember(growths, tab) {
                 growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt }
             }
             val latest = chartData.lastOrNull()
-            val grouped = remember(growths, tab) {
+            val dateStr = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+            val grouped = remember(growths, tab, selectedDate) {
                 growths.filter { it.type == types[tab] }
+                    .filter { it.measuredAt.take(10) == dateStr }
                     .sortedByDescending { it.measuredAt }
                     .groupBy { it.measuredAt.take(10) }
             }
@@ -470,6 +508,17 @@ fun GrowthScreen(navController: NavController) {
             },
         )
     }
+
+    DateTimeCascadeDialog(
+        show = showDatePicker,
+        initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00",
+        dateOnly = true,
+        onConfirm = { dt ->
+            selectedDate = LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE)
+            showDatePicker = false
+        },
+        onDismiss = { showDatePicker = false },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

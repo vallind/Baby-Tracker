@@ -4,6 +4,13 @@
 
 ### [Unreleased]
 
+**日期选择器统一 + RecordCard 迁移：**
+- Feeding/Sleep/Diaper/Health 列表日期筛选从 M3 DatePickerDialog 替换为 DateTimeCascadeDialog（dateOnly 模式）
+- GrowthScreen 日历按钮接入日期筛选（之前是空实现）
+- DateTimeCascadeDialog 新增 dateOnly 参数，跳过时间选择步骤
+- ReminderScreen: AppCard + longPressDeletable → RecordCard（左滑删除 + Snackbar 撤销）
+- VaccinationListScreen: AppCard + combinedClickable → RecordCard（左滑删除，点击/长按编辑）
+
 **计时器重构：开始时间不再被覆盖：**
 - 睡眠/母乳喂养"开始计时"不再重置表单的开始时间字段
 - 退出重进时恢复用户手动填写的开始时间（不再显示当前时间）

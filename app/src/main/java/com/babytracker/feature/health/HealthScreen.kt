@@ -47,6 +47,7 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -449,19 +450,14 @@ fun HealthFormDialog(
         )
     }
 
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
-            AppTextButton(onClick = {
-                showDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    recordDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                }
-            }, label = "确定")
-        }, dismissButton = { AppTextButton(onClick = { showDatePicker = false }, label = "取消") }) {
-            DatePicker(state = datePickerState)
-        }
-    }
+    DateTimeCascadeDialog(
+        show = showDatePicker,
+        initialDateTime = "$recordDate 00:00",
+        dateOnly = true,
+        onConfirm = { dt ->
+            recordDate = dt.take(10)
+            showDatePicker = false
+        },
+        onDismiss = { showDatePicker = false },
+    )
 }

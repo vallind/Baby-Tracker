@@ -35,6 +35,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
@@ -311,7 +312,6 @@ fun VaccinationListScreen(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VaccinationCard(
     vaccination: Vaccination,
@@ -343,15 +343,12 @@ private fun VaccinationCard(
         else -> c.warning to "未接种"
     }
 
-    AppCard(
-        elevation = 2.dp,
-        containerColor = c.surface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = spacing.xs)
-            .combinedClickable(onClick = onClick, onLongClick = onDelete),
+    RecordCard(
+        onDelete = onDelete,
+        onClick = onClick,
+        onLongClick = onClick,
     ) {
-        Column(Modifier.padding(horizontal = spacing.md, vertical = 12.dp)) {
+        Column(Modifier.padding(start = spacing.sm)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     vaccination.name,

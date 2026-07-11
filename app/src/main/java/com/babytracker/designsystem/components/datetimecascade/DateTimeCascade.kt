@@ -62,6 +62,7 @@ fun DateTimeCascadeDialog(
     initialDateTime: String,
     onConfirm: (dateTimeStr: String) -> Unit,
     onDismiss: () -> Unit,
+    dateOnly: Boolean = false,
 ) {
     if (!show) return
 
@@ -121,16 +122,22 @@ fun DateTimeCascadeDialog(
             ) {
                 // 顶部工具栏
                 CascadeToolbar(
-                    title = if (stage == 0) "选择日期" else "选择时间",
+                    title = if (dateOnly) "选择日期" else if (stage == 0) "选择日期" else "选择时间",
                     textColor = dpTokens.toolbarTextColor,
                     dividerColor = dpTokens.toolbarDividerColor,
                     toolbarHeight = dpTokens.toolbarHeight,
                     onCancel = onDismiss,
                     onConfirm = {
                         when (stage) {
-                            0 -> stage = 1  // 日期确认 → 进入时间选择
+                            0 -> {
+                                if (dateOnly) {
+                                    onConfirm("$selectedDate 00:00")
+                                    onDismiss()
+                                } else {
+                                    stage = 1
+                                }
+                            }
                             1 -> {
-                                // 时间确认 → 完成
                                 onConfirm(
                                     "$selectedDate %02d:%02d".format(selectedHour, selectedMinute)
                                 )
@@ -138,7 +145,7 @@ fun DateTimeCascadeDialog(
                             }
                         }
                     },
-                    confirmLabel = if (stage == 0) "下一步" else "确认",
+                    confirmLabel = if (stage == 0 && !dateOnly) "下一步" else "确认",
                 )
 
                 when (stage) {

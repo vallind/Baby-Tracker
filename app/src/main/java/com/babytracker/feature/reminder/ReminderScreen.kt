@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,14 +35,16 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.Reminder
 import com.babytracker.core.domain.model.ReminderType
+import com.babytracker.core.data.repository.ReminderRepository
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.longPressDeletable
-import com.babytracker.designsystem.components.rememberHaptic
 import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -52,17 +56,20 @@ fun ReminderScreen(navController: NavController) {
     val c = LocalAppColors.current
     val viewModel: ReminderViewModel = org.koin.androidx.compose.koinViewModel()
     val babyCtrl: BabyController = koinInject()
-    val haptic = rememberHaptic()
+    val reminderRepo: ReminderRepository = koinInject()
     val state by viewModel.state.collectAsState()
     val babyId = babyCtrl.currentBabyId
-
-    var deletingReminder by remember { mutableStateOf<Reminder?>(null) }
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     LaunchedEffect(babyId) {
         if (babyId != 0) viewModel.load(babyId)
     }
 
-    AppScaffold { padding ->
+    AppScaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+    ) { padding ->
         if (babyId == 0) {
             EmptyState(
                 emoji = "\uD83C\uDF7C",
@@ -99,16 +106,24 @@ fun ReminderScreen(navController: NavController) {
                     if (state.tab == ReminderTab.PENDING) {
                         PendingReminderCard(
                             reminder = reminder,
-                            haptic = haptic,
                             onMarkDone = { viewModel.markDone(reminder.id) },
                             onToggleEnabled = { viewModel.setEnabled(reminder.id, it) },
-                            onLongPress = { deletingReminder = reminder },
+                            onDelete = {
+                                scope.launch {
+                                    reminderRepo.delete(reminder)
+                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.insert(reminder) }
+                                }
+                            },
                         )
                     } else {
                         HistoryReminderCard(
                             reminder = reminder,
-                            haptic = haptic,
-                            onLongPress = { deletingReminder = reminder },
+                            onDelete = {
+                                scope.launch {
+                                    reminderRepo.delete(reminder)
+                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.insert(reminder) }
+                                }
+                            },
                         )
                     }
                 }
@@ -116,21 +131,6 @@ fun ReminderScreen(navController: NavController) {
 
             Spacer(Modifier.height(80.dp))
         }
-    }
-
-    deletingReminder?.let { r ->
-        AppConfirmDialog(
-            show = true,
-            title = "删除提醒",
-            message = "确定要删除\u300C${r.title}\u300D吗？",
-            confirmText = "删除",
-            cancelText = "取消",
-            onConfirm = {
-                viewModel.delete(r)
-                deletingReminder = null
-            },
-            onDismiss = { deletingReminder = null },
-        )
     }
 }
 
@@ -213,122 +213,109 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PendingReminderCard(
     reminder: Reminder,
-    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     onMarkDone: () -> Unit,
     onToggleEnabled: (Boolean) -> Unit,
-    onLongPress: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
 
-    AppCard(
-        elevation = 2.dp,
-        containerColor = c.surface,
-        modifier = Modifier
-            .padding(horizontal = spacing.md, vertical = 6.dp)
-            .fillMaxWidth()
-            .longPressDeletable(haptic, onLongClick = onLongPress),
+    RecordCard(
+        onDelete = onDelete,
+        modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
     ) {
-        Row(
-            Modifier.padding(spacing.md),
-            verticalAlignment = Alignment.CenterVertically,
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(shapes.large))
+                .background(typeColor.copy(alpha = 0.14f)),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(shapes.large))
-                    .background(typeColor.copy(alpha = 0.14f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
+            Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                reminder.title,
+                style = LocalAppTypographyStyle.current.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = c.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (reminder.description.isNotBlank()) {
+                Spacer(Modifier.height(2.dp))
                 Text(
-                    reminder.title,
-                    style = LocalAppTypographyStyle.current.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = c.textPrimary,
-                    maxLines = 1,
+                    reminder.description,
+                    style = LocalAppTypographyStyle.current.label,
+                    color = c.textSecondary,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (reminder.description.isNotBlank()) {
-                    Spacer(Modifier.height(2.dp))
+            }
+            if (reminder.type == ReminderType.MEDICATION && reminder.repeatRule.isNotBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    reminder.repeatRule,
+                    style = LocalAppTypographyStyle.current.label,
+                    color = c.textTertiary,
+                )
+            }
+        }
+        Spacer(Modifier.width(spacing.sm))
+        if (reminder.type == ReminderType.MEDICATION) {
+            AppSwitch(
+                checked = reminder.isEnabled,
+                onCheckedChange = onToggleEnabled,
+                checkedColor = c.primary,
+            )
+        } else {
+            val countdown = reminder.countdownText()
+            val overdue = reminder.isOverdue()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        reminder.description,
-                        style = LocalAppTypographyStyle.current.label,
-                        color = c.textSecondary,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                        countdown,
+                        style = LocalAppTypographyStyle.current.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (overdue) c.danger else c.primary,
                     )
-                }
-                if (reminder.type == ReminderType.MEDICATION && reminder.repeatRule.isNotBlank()) {
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        reminder.repeatRule,
+                        DateUtils.formatDate(reminder.dueDate),
                         style = LocalAppTypographyStyle.current.label,
                         color = c.textTertiary,
                     )
                 }
-            }
-            Spacer(Modifier.width(spacing.sm))
-            if (reminder.type == ReminderType.MEDICATION) {
-                AppSwitch(
-                    checked = reminder.isEnabled,
-                    onCheckedChange = onToggleEnabled,
-                    checkedColor = c.primary,
-                )
-            } else {
-                val countdown = reminder.countdownText()
-                val overdue = reminder.isOverdue()
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            countdown,
-                            style = LocalAppTypographyStyle.current.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (overdue) c.danger else c.primary,
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            DateUtils.formatDate(reminder.dueDate),
-                            style = LocalAppTypographyStyle.current.label,
-                            color = c.textTertiary,
-                        )
-                    }
-                    Spacer(Modifier.width(spacing.xs))
-                    Box(
-                        Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(shapes.full))
-                            .clickable(onClick = onMarkDone),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = "标记完成",
-                            tint = c.success,
-                            modifier = Modifier.size(18.dp),
-                        )
-                    }
+                Spacer(Modifier.width(spacing.xs))
+                Box(
+                    Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(shapes.full))
+                        .clickable(onClick = onMarkDone),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = "标记完成",
+                        tint = c.success,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HistoryReminderCard(
     reminder: Reminder,
-    haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
-    onLongPress: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
@@ -336,42 +323,34 @@ private fun HistoryReminderCard(
     val (emoji, typeColor) = reminder.type.toVisual(c)
     val doneText = reminder.doneDate?.let { "完成于 ${DateUtils.formatDate(it)}" } ?: "已完成"
 
-    AppCard(
-        elevation = 2.dp,
+    RecordCard(
+        onDelete = onDelete,
         containerColor = c.surface.copy(alpha = 0.7f),
-        modifier = Modifier
-            .padding(horizontal = spacing.md, vertical = 6.dp)
-            .fillMaxWidth()
-            .longPressDeletable(haptic, onLongClick = onLongPress),
+        modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
     ) {
-        Row(
-            Modifier.padding(spacing.md),
-            verticalAlignment = Alignment.CenterVertically,
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(shapes.large))
+                .background(typeColor.copy(alpha = 0.10f)),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(shapes.large))
-                    .background(typeColor.copy(alpha = 0.10f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
-            }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(
-                    reminder.title,
-                    style = LocalAppTypographyStyle.current.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = c.textSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.height(2.dp))
-                Text(doneText, style = LocalAppTypographyStyle.current.label, color = c.textTertiary)
-            }
-            Text("\u2705", style = LocalAppTypographyStyle.current.titleLarge)
+            Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
         }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                reminder.title,
+                style = LocalAppTypographyStyle.current.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = c.textSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(doneText, style = LocalAppTypographyStyle.current.label, color = c.textTertiary)
+        }
+        Text("\u2705", style = LocalAppTypographyStyle.current.titleLarge)
     }
 }
 
