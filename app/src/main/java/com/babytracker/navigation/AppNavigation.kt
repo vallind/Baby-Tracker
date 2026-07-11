@@ -1,6 +1,9 @@
 package com.babytracker.navigation
 
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.*
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -50,24 +53,42 @@ sealed class Screen(val route: String) {
 fun AppNavigation() {
     val navController = rememberNavController()
     NavHost(navController, startDestination = Screen.Home.route) {
-        composable(Screen.Home.route) { HomeScreen(navController) }
-        composable(Screen.Timeline.route) { TimelineScreen(navController) }
-        composable(Screen.Feeding.route) { FeedingListScreen(navController) }
-        composable(Screen.Sleep.route) { SleepListScreen(navController) }
-        composable(Screen.Growth.route) { GrowthScreen(navController) }
-        composable(Screen.Vaccination.route) { VaccinationListScreen(navController) }
-        composable(Screen.Health.route) { HealthScreen(navController) }
-        composable(Screen.Diaper.route) { DiaperListScreen(navController) }
-        composable(Screen.Stats.route) { StatsScreen(navController) }
-        composable(Screen.Settings.route) { SettingsScreen(navController) }
-        composable(Screen.BabyManagement.route) { BabyManagementScreen(navController) }
-        composable(Screen.BabyProfile.route) { BabyProfileScreen(navController) }
-        composable(Screen.Backup.route) { BackupScreen(navController) }
-        composable(Screen.LogViewer.route) { LogViewerScreen(navController) }
-        composable(Screen.Family.route) { FamilyPage(navController) }
-        composable(Screen.Message.route) { MessageScreen(navController) }
-        composable(Screen.DevelopmentAssessment.route) { DevelopmentAssessmentScreen(navController) }
-        composable(Screen.Reminder.route) { ReminderScreen(navController) }
-        composable(Screen.Login.route) { LoginScreen(navController) }
+        instantComposable(Screen.Home.route) { HomeScreen(navController) }
+        instantComposable(Screen.Timeline.route) { TimelineScreen(navController) }
+        instantComposable(Screen.Feeding.route) { FeedingListScreen(navController) }
+        instantComposable(Screen.Sleep.route) { SleepListScreen(navController) }
+        instantComposable(Screen.Growth.route) { GrowthScreen(navController) }
+        instantComposable(Screen.Vaccination.route) { VaccinationListScreen(navController) }
+        instantComposable(Screen.Health.route) { HealthScreen(navController) }
+        instantComposable(Screen.Diaper.route) { DiaperListScreen(navController) }
+        instantComposable(Screen.Stats.route) { StatsScreen(navController) }
+        instantComposable(Screen.Settings.route) { SettingsScreen(navController) }
+        instantComposable(Screen.BabyManagement.route) { BabyManagementScreen(navController) }
+        instantComposable(Screen.BabyProfile.route) { BabyProfileScreen(navController) }
+        instantComposable(Screen.Backup.route) { BackupScreen(navController) }
+        instantComposable(Screen.LogViewer.route) { LogViewerScreen(navController) }
+        instantComposable(Screen.Family.route) { FamilyPage(navController) }
+        instantComposable(Screen.Message.route) { MessageScreen(navController) }
+        instantComposable(Screen.DevelopmentAssessment.route) { DevelopmentAssessmentScreen(navController) }
+        instantComposable(Screen.Reminder.route) { ReminderScreen(navController) }
+        instantComposable(Screen.Login.route) { LoginScreen(navController) }
     }
+}
+
+/**
+ * 无动画 composable 封装：切页面立即显示，不等待过渡动画。
+ * 解决默认 fade 动画在低端设备或复杂页面上的卡顿问题。
+ */
+private fun NavGraphBuilder.instantComposable(
+    route: String,
+    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
+) {
+    composable(
+        route = route,
+        enterTransition = { null },
+        exitTransition = { null },
+        popEnterTransition = { null },
+        popExitTransition = { null },
+        content = content,
+    )
 }
