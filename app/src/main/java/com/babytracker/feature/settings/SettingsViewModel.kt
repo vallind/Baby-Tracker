@@ -143,8 +143,8 @@ class SettingsViewModel(
     private suspend fun ensureFamily(): String? = ensureFamilyMutex.withLock {
         try {
             familyService.currentFamily.value?.let { return@withLock it.id }
-            val families = familyService.loadMyFamilies()
-            families.firstOrNull()?.id
+            familyService.loadMyFamilies()
+            familyService.currentFamily.value?.id
         } catch (_: Exception) {
             // 离线回退：App 重启后内存/Supabase 都为空时，从本地持久化恢复
             val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)

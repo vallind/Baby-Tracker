@@ -15,6 +15,10 @@
 - 新增 markExistingPending 中清理孤立 pending 记录的机制（DELETE orphaned sync_metadata）
 - 日志页复制按钮，方便分享日志分析
 
+**修复：ensureFamily() 多家庭场景返回错误家庭 ID：**
+- 原来取 `families.firstOrNull()?.id`（列表第一个），改为 `familyService.currentFamily.value?.id`（实际当前家庭）
+- 新增 lessons.md 第 5 条教训记录
+
 **日期选择器统一 + RecordCard 迁移：**
 - Feeding/Sleep/Diaper/Health 列表日期筛选从 M3 DatePickerDialog 替换为 DateTimeCascadeDialog（dateOnly 模式）
 - GrowthScreen 日历按钮接入日期筛选（之前是空实现）

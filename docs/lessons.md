@@ -54,3 +54,25 @@ UPDATE sync_metadata SET syncStatus='pending' WHERE tableName='$table' AND syncS
 在 App 设置页内置日志查看器（`LogViewerScreen`），支持过滤、级别着色、复制到剪贴板。
 
 **新增埋点时：** 用 `Timber.tag("模块名").d/e(...)`，Tag 命名规范：`Sync` / `Family` / `SyncVM` / `Auth` / `Backup`。
+
+---
+
+## 5. ensureFamily() 返回了错误的家庭 ID
+
+`SettingsViewModel.ensureFamily()` 原实现：
+
+```kotlin
+val families = familyService.loadMyFamilies()
+families.firstOrNull()?.id  // ❌ 取了列表第一个，不是"当前家庭"
+```
+
+`loadMyFamilies()` 内部会根据 SharedPreferences 的 savedId 设置 `_currentFamily.value`，但 `ensureFamily()` 却无视它，返回了 `families.firstOrNull()`。如果用户有多个家庭，实际使用非第一个家庭时，同步会错误地连接到第一个家庭的数据。
+
+**修复：** 改用 `familyService.currentFamily.value?.id` 代替 `families.firstOrNull()?.id`：
+
+```kotlin
+familyService.loadMyFamilies()
+familyService.currentFamily.value?.id  // ✅ loadMyFamilies 已设好 currentFamily
+```
+
+**排查方法：** 在日志中对比 `familyChanged id=...` 和 `tryAutoSync: fid=...` 的值，不一致则触发此 bug。
