@@ -19,6 +19,11 @@
 - 原来取 `families.firstOrNull()?.id`（列表第一个），改为 `familyService.currentFamily.value?.id`（实际当前家庭）
 - 新增 lessons.md 第 5 条教训记录
 
+**修复：JSON null 字段被解析为字符串"null"的全局问题：**
+- `JsonNull.toString()` 返回字符串 `"null"`，导致所有可空字段（如 brand/note 等）拉到空值时变成字符串 "null"
+- 新增 `jsonStr()` 安全辅助函数，通过 `(json[key] as? JsonPrimitive)?.content` 规避此问题
+- 替换所有 parse* 函数中的 100+ 处字段解析调用
+
 **日期选择器统一 + RecordCard 迁移：**
 - Feeding/Sleep/Diaper/Health 列表日期筛选从 M3 DatePickerDialog 替换为 DateTimeCascadeDialog（dateOnly 模式）
 - GrowthScreen 日历按钮接入日期筛选（之前是空实现）

@@ -76,3 +76,24 @@ familyService.currentFamily.value?.id  // ✅ loadMyFamilies 已设好 currentFa
 ```
 
 **排查方法：** 在日志中对比 `familyChanged id=...` 和 `tryAutoSync: fid=...` 的值，不一致则触发此 bug。
+
+---
+
+## 6. JsonNull.toString() 返回字符串"null"而非 Kotlin null
+
+`JsonNull.toString()` 返回字符串 `"null"`，而不是 Kotlin 的 `null`。所有 parse 函数中 `json["field"]?.toString()?.removeSurrounding("\"")` 模式在 JSON null 时会把字段值设成 `"null"` 字符串。
+
+**影响范围：** 所有 String? 字段（brand、note、foodName、doctorName 等）。用户没填的字段，其他账户拉取后显示为字符串 `"null"` 而非空白。
+
+**修复：**
+```kotlin
+// ❌ 有 bug
+brand = json["brand"]?.toString()?.removeSurrounding("\"")
+
+// ✅ 正确
+private fun jsonStr(json: JsonObject, key: String): String? =
+    (json[key] as? JsonPrimitive)?.content
+brand = jsonStr(json, "brand")
+```
+
+**规则：** 所有从 JSON 解析字段的地方**禁止**使用 `json["x"]?.toString()?.removeSurrounding("\"")`，必须用 `(json[x] as? JsonPrimitive)?.content` 或封装辅助函数。`JsonNull` 不是 `JsonPrimitive` 的子类，`as?` 会自动返回 null。
