@@ -5,6 +5,7 @@ import com.babytracker.core.database.entity.*
 import com.babytracker.core.database.dao.SyncMetadataDao
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
+import timber.log.Timber
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -178,9 +179,11 @@ class SyncEngine(
         try {
             val pendingChanges = syncMeta.getPendingChanges()
             if (pendingChanges.isEmpty()) {
+                Timber.tag("Sync").d("push: nothing pending")
                 _syncState.value = SyncState.IDLE
                 return 0
             }
+            Timber.tag("Sync").d("push: %d pending", pendingChanges.size)
             _syncState.value = SyncState.PUSHING
 
             for (meta in pendingChanges) {
@@ -196,15 +199,19 @@ class SyncEngine(
                         supabase.postgrest.from(meta.tableName)
                             .upsert(payload) { onConflict = "uuid" }
                         syncMeta.markSynced(meta.id, remoteUuid, System.currentTimeMillis())
+                        Timber.tag("Sync").d("push %s id=%d uuid=%s ok", meta.tableName, meta.localId, remoteUuid)
                     } else {
                         supabase.postgrest.from(meta.tableName).insert(payload)
                         syncMeta.markSynced(meta.id, payload["uuid"]?.toString()?.removeSurrounding("\""), System.currentTimeMillis())
+                        Timber.tag("Sync").d("push %s id=%d insert ok", meta.tableName, meta.localId)
                     }
                     pushed++
                 } catch (e: Exception) {
+                    Timber.tag("Sync").e(e, "push failed %s id=%d", meta.tableName, meta.localId)
                     syncMeta.markConflict(meta.id, System.currentTimeMillis())
                 }
             }
+            Timber.tag("Sync").d("push done: %d pushed", pushed)
             syncMeta.updateLastSyncAt(System.currentTimeMillis())
         } finally {
             _syncState.value = SyncState.IDLE
@@ -215,12 +222,16 @@ class SyncEngine(
     /** 下行同步，返回实际拉取的记录数 */
     suspend fun pull(): Int {
         if (_syncState.value == SyncState.SYNCING) return 0
-        val fid = currentFamilyId ?: return 0  // 无家庭上下文，不拉取
+        val fid = currentFamilyId ?: run {
+            Timber.tag("Sync").d("pull: no familyId, skip")
+            return 0
+        }
         _syncState.value = SyncState.SYNCING
         var pulled = 0
         try {
             _syncState.value = SyncState.PULLING
             val lastSyncAt = syncMeta.getLastSyncAt()
+            Timber.tag("Sync").d("pull start: family=%s lastSync=%s", fid, lastSyncAt ?: "full")
             val tables = listOf(
                 "babies", "feedings", "sleeps", "growths", "vaccinations",
                 "health_records", "diapers", "messages", "development_assessments", "reminders",
@@ -235,9 +246,15 @@ class SyncEngine(
                             }
                         }
                         .decodeList<JsonObject>()
+                    if (result.isNotEmpty()) {
+                        Timber.tag("Sync").d("pull %s: %d rows", tableName, result.size)
+                    }
                     for (row in result) { applyRemoteChange(tableName, row); pulled++ }
-                } catch (_: Exception) { }
+                } catch (e: Exception) {
+                    Timber.tag("Sync").e(e, "pull failed table=%s", tableName)
+                }
             }
+            Timber.tag("Sync").d("pull done: %d pulled", pulled)
             syncMeta.updateLastSyncAt(System.currentTimeMillis())
         } finally {
             _syncState.value = SyncState.IDLE

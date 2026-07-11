@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
+import timber.log.Timber
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,6 +106,7 @@ class FamilyService(
             function = "join_family",
             parameters = mapOf("invite_code" to inviteCode.uppercase())
         )
+        Timber.tag("Family").d("joinFamily rpc done code=%s", inviteCode)
 
         // 刷新当前用户的家庭列表（加入后 is_family_member 已生效，RLS 放行）
         loadMyFamilies()
@@ -155,6 +157,7 @@ class FamilyService(
             _currentFamily.value = savedId?.let { id -> allFamilies.find { it.id == id } }
                 ?: allFamilies.firstOrNull()
         }
+        Timber.tag("Family").d("loadMyFamilies count=%d current=%s", allFamilies.size, _currentFamily.value?.id)
         return allFamilies
     }
 

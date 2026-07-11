@@ -13,6 +13,7 @@ import com.babytracker.core.sync.RealtimeManager
 import com.babytracker.core.sync.RealtimeState
 import com.babytracker.core.sync.SyncEngine
 import com.babytracker.core.sync.SyncState
+import timber.log.Timber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -73,6 +74,7 @@ class SettingsViewModel(
         registerNetworkCallback()
         viewModelScope.launch {
             authService.observeAuthState().collect { user ->
+                Timber.tag("SyncVM").d("authState user=%s online=%b", user?.id, _isOnline.value)
                 if (user != null && _isOnline.value) {
                     tryAutoSync()
                 } else if (user == null) {
@@ -98,6 +100,7 @@ class SettingsViewModel(
 
                 // 加入/切换到新家庭时，触发全量同步（拉取该家庭的历史数据）
                 val isNewFamily = newId != null && newId != lastSyncedFamilyId
+                Timber.tag("SyncVM").d("familyChanged id=%s isNew=%b", newId, isNewFamily)
                 if (isNewFamily && _isOnline.value) {
                     viewModelScope.launch {
                         syncEngine.resetLastSync()  // 清除增量锚点，执行全量拉取
@@ -119,11 +122,17 @@ class SettingsViewModel(
     private suspend fun tryAutoSync() {
         try {
             syncEngine.currentFamilyId = ensureFamily()
-            if (syncEngine.currentFamilyId == null) return
+            if (syncEngine.currentFamilyId == null) {
+                Timber.tag("SyncVM").d("tryAutoSync: no familyId, skip")
+                return
+            }
+            Timber.tag("SyncVM").d("tryAutoSync: fid=%s online=%b", syncEngine.currentFamilyId, _isOnline.value)
             syncEngine.markExistingPending()  // 首次同步标记存量
             realtimeManager.subscribeAll()
             syncEngine.fullSync()
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            Timber.tag("SyncVM").e(e, "tryAutoSync failed")
+        }
     }
 
     /**

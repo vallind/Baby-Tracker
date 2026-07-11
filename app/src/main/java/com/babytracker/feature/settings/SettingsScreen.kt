@@ -159,6 +159,7 @@ fun SettingsScreen(navController: NavController) {
                     FunctionGridItem("⭐", "我的收藏", onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() }),
                     FunctionGridItem("📤", "数据导出", onClick = { navController.navigate(Screen.Backup.route) }),
                     FunctionGridItem("🔔", "提醒设置", onClick = { navController.navigate(Screen.Reminder.route) }),
+                    FunctionGridItem("📋", "日志查看", onClick = { navController.navigate(Screen.LogViewer.route) }),
                 ),
             )
 

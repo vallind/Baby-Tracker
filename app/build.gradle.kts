@@ -86,10 +86,13 @@ dependencies {
     // Vico
     implementation(libs.vico.compose.m3)
 
-    // DocumentFile
-    implementation(libs.documentfile)
+// DocumentFile
+implementation(libs.documentfile)
 
-    // Coroutines
+// Logging
+implementation(libs.timber)
+
+// Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
 

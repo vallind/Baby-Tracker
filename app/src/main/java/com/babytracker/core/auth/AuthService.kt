@@ -3,6 +3,7 @@ package com.babytracker.core.auth
 import android.content.SharedPreferences
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
+import timber.log.Timber
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
@@ -100,6 +101,7 @@ class AuthService(
         prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_DISPLAY_ACCOUNT, account).apply()
         _displayAccount.value = account
         // 登录时不清空已有昵称（可能从 SharedPreferences 已恢复）
+        Timber.tag("Auth").d("signUp ok account=%s userId=%s", account, user.id)
         user
     }
 
@@ -115,6 +117,7 @@ class AuthService(
         _currentUser.value = user
         prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_DISPLAY_ACCOUNT, account).apply()
         _displayAccount.value = account
+        Timber.tag("Auth").d("signIn ok account=%s userId=%s", account, user.id)
         user
     }
 

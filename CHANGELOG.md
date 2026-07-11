@@ -4,6 +4,12 @@
 
 ### [Unreleased]
 
+**设置页新增日志查看器 + Timber 日志系统：**
+- 接入 Timber 日志库，自定义 AppLogTree 将日志写入内存环形缓冲区（1000 条）和文件（自动轮转）
+- 设置页功能网格新增"日志查看"入口，进入后实时显示应用日志
+- 日志查看页支持过滤、清除、自动滚动、级别着色（V/D/I/W/E）
+- SyncEngine / FamilyService / SettingsViewModel / AuthService 关键路径埋点，便于排查同步问题
+
 **日期选择器统一 + RecordCard 迁移：**
 - Feeding/Sleep/Diaper/Health 列表日期筛选从 M3 DatePickerDialog 替换为 DateTimeCascadeDialog（dateOnly 模式）
 - GrowthScreen 日历按钮接入日期筛选（之前是空实现）
