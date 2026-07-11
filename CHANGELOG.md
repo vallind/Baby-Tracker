@@ -4,6 +4,12 @@
 
 ### [Unreleased]
 
+**家庭共享：当前家庭持久化：**
+- FamilyService 通过 SharedPreferences 持久化当前选中家庭 ID
+- 切换家庭、创建/加入家庭时自动保存选中状态
+- 重启 App 后自动恢复上次选中的家庭
+- 退出所有家庭时自动清理持久化记录
+
 **全局圆角令牌升级 + 卡片大圆角风格：**
 - AppShapes 按 M3 规范扩展为 10 级（新增 largeIncreased/extraLarge/extraLargeIncreased/extraExtraLarge）
 - 卡片圆角从 8dp → 20dp（largeIncreased），边框去除（borderWidth = 0dp）

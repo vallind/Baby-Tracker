@@ -69,5 +69,5 @@ val syncModule = module {
     single { com.babytracker.core.auth.AuthService(get(), get()) }
     single { com.babytracker.core.sync.SyncEngine(get(), get()) }
     single { com.babytracker.core.sync.RealtimeManager(get(), get(), get()) }
-    single { FamilyService(get()) }
+    single { FamilyService(get(), get()) }
 }

@@ -1,5 +1,6 @@
 package com.babytracker.core.data
 
+import android.content.SharedPreferences
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
@@ -34,7 +35,12 @@ data class FamilyMember(
  */
 class FamilyService(
     private val client: SupabaseClient,
+    private val prefs: SharedPreferences,
 ) {
+
+    companion object {
+        private const val PREF_CURRENT_FAMILY_ID = "current_family_id"
+    }
 
     // ── 状态 ──
 
@@ -85,6 +91,7 @@ class FamilyService(
 
         _myFamilies.value = _myFamilies.value + family
         _currentFamily.value = family
+        prefs.edit().putString(PREF_CURRENT_FAMILY_ID, family.id).apply()
         family
     }
 
@@ -103,7 +110,10 @@ class FamilyService(
         loadMyFamilies()
         // 自动切换到刚加入的家庭（按邀请码匹配）
         val joined = _myFamilies.value.find { it.inviteCode == inviteCode.uppercase() }
-        if (joined != null) _currentFamily.value = joined
+        if (joined != null) {
+            _currentFamily.value = joined
+            prefs.edit().putString(PREF_CURRENT_FAMILY_ID, joined.id).apply()
+        }
         _currentFamily.value ?: throw Exception("加入家庭失败")
     }
 
@@ -112,6 +122,7 @@ class FamilyService(
         val userId = client.auth.currentUserOrNull()?.id ?: run {
             _myFamilies.value = emptyList()
             _currentFamily.value = null
+            prefs.edit().remove(PREF_CURRENT_FAMILY_ID).apply()
             return emptyList()
         }
 
@@ -124,6 +135,7 @@ class FamilyService(
         if (members.isEmpty()) {
             _myFamilies.value = emptyList()
             _currentFamily.value = null
+            prefs.edit().remove(PREF_CURRENT_FAMILY_ID).apply()
             return emptyList()
         }
 
@@ -138,13 +150,18 @@ class FamilyService(
         }
 
         _myFamilies.value = allFamilies
-        if (_currentFamily.value == null) _currentFamily.value = allFamilies.firstOrNull()
+        if (_currentFamily.value == null) {
+            val savedId = prefs.getString(PREF_CURRENT_FAMILY_ID, null)
+            _currentFamily.value = savedId?.let { id -> allFamilies.find { it.id == id } }
+                ?: allFamilies.firstOrNull()
+        }
         return allFamilies
     }
 
     /** 手动切换当前家庭（供 FamilyPage 的 FilterChip 使用） */
     fun selectFamily(family: Family) {
         _currentFamily.value = family
+        prefs.edit().putString(PREF_CURRENT_FAMILY_ID, family.id).apply()
     }
 
     /** 获取家庭成员列表 */
