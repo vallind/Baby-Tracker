@@ -9,7 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.FilterChip
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -197,15 +197,11 @@ private fun FamilyDetailView(
         ) {
             families.forEach { f ->
                 val selected = f.id == family.id
-                FilterChip(
+                AppFilterChip(
                     selected = selected,
                     onClick = { onSelectFamily(f) },
-                    label = {
-                        Text(
-                            if (selected) "${f.name} · 当前" else f.name,
-                            style = typography.label,
-                        )
-                    },
+                    label = if (selected) "${f.name} · 当前" else f.name,
+                    modifier = Modifier.weight(1f),
                 )
             }
         }

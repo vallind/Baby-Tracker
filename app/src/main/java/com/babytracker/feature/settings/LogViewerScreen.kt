@@ -1,17 +1,13 @@
 package com.babytracker.feature.settings
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -20,9 +16,8 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -197,30 +192,28 @@ fun LogViewerScreen(navController: NavController) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = spacing.sm),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 LEVELS.forEach { opt ->
                     val selected = opt.level in selectedLevels
-                    FilterChip(
+                    AppFilterChip(
                         selected = selected,
                         onClick = {
                             selectedLevels = if (selected) selectedLevels - opt.level
                             else selectedLevels + opt.level
                         },
-                        label = { Text(opt.label, style = MaterialTheme.typography.labelSmall) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = when (opt.level) {
-                                'V' -> c.textTertiary.copy(alpha = 0.2f)
-                                'D' -> c.info.copy(alpha = 0.2f)
-                                'I' -> c.success.copy(alpha = 0.2f)
-                                'W' -> c.warning.copy(alpha = 0.2f)
-                                'E' -> c.danger.copy(alpha = 0.2f)
-                                else -> c.primaryContainer
-                            },
-                        ),
+                        label = opt.label,
+                        selectedColor = when (opt.level) {
+                            'V' -> c.textTertiary
+                            'D' -> c.info
+                            'I' -> c.success
+                            'W' -> c.warning
+                            'E' -> c.danger
+                            else -> c.primary
+                        },
                         shape = RoundedCornerShape(shapes.extraSmall),
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }

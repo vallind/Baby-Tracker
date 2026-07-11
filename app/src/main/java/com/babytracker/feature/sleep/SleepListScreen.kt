@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -475,9 +475,9 @@ fun SleepFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            FilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = { Text("\uD83C\uDF19 夜间睡眠") })
-            FilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = { Text("\u2600\uFE0F 小睡") })
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+            AppFilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = "\uD83C\uDF19 夜间睡眠", modifier = Modifier.weight(1f))
+            AppFilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = "\u2600\uFE0F 小睡", modifier = Modifier.weight(1f))
         }
         Spacer(Modifier.height(spacing.md))
         // 计时器 UI

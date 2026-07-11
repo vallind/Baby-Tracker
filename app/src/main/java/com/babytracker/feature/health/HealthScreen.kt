@@ -8,9 +8,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -403,17 +402,13 @@ fun HealthFormDialog(
         saveText = if (isEdit) "更新" else "保存",
         saveEnabled = description.isNotBlank(),
     ) {
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             categories.forEach { (key, label) ->
-                FilterChip(
+                AppFilterChip(
                     selected = category == key,
                     onClick = { category = key },
-                    label = { Text(label, style = LocalAppTypography.current.bodySmall) },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = c.primary.copy(alpha = 0.12f),
-                        selectedLabelColor = c.primary,
-                    ),
-                    modifier = Modifier.padding(end = spacing.sm)
+                    label = label,
+                    modifier = Modifier.weight(1f),
                 )
             }
         }

@@ -18,8 +18,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -788,13 +788,14 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                     listOf("男", "女").forEach { g ->
-                        FilterChip(
-                            selected = gender == g,
-                            onClick = { gender = g },
-                            label = { Text(g) },
-                        )
+                    AppFilterChip(
+                        selected = gender == g,
+                        onClick = { gender = g },
+                        label = g,
+                        modifier = Modifier.weight(1f),
+                    )
                     }
                 }
 

@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -434,12 +434,13 @@ fun DiaperFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = spacing.md)) {
+        Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             listOf("wet" to "💧 小便", "poop" to "💩 大便", "both" to "🔄 混合").forEach { (t, label) ->
-                FilterChip(
+                AppFilterChip(
                     selected = selectedType == t,
                     onClick = { selectedType = t },
-                    label = { Text(label) },
+                    label = label,
+                    modifier = Modifier.weight(1f),
                 )
             }
         }

@@ -7,9 +7,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -438,11 +437,11 @@ fun VaccinationFormDialog(
             Text("状态", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
             Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                 listOf("pending" to "未接种", "done" to "已接种", "skipped" to "已跳过").forEach { (s, l) ->
-                    FilterChip(
+                    AppFilterChip(
                         selected = status == s,
                         onClick = { status = s },
-                        label = { Text(l, style = LocalAppTypography.current.bodySmall) },
-                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = c.primary.copy(alpha = 0.12f), selectedLabelColor = c.primary)
+                        label = l,
+                        modifier = Modifier.weight(1f),
                     )
                 }
             }

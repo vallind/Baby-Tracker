@@ -10,8 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -580,12 +580,13 @@ fun GrowthFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = spacing.md)) {
+        Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             listOf("height" to "📏 身高", "weight" to "⚖️ 体重", "head" to "📐 头围").forEach { (t, label) ->
-                FilterChip(
+                AppFilterChip(
                     selected = type == t,
                     onClick = { type = t },
-                    label = { Text(label, style = LocalAppTypography.current.bodySmall) },
+                    label = label,
+                    modifier = Modifier.weight(1f),
                 )
             }
         }

@@ -16,8 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -454,21 +454,22 @@ fun FeedingFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) "更新" else "保存",
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = spacing.md)) {
+        Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             listOf("breast" to "🤱 母乳", "formula" to "💧 配方", "food" to "🥣 辅食", "water" to "🥤 饮水").forEach { (t, label) ->
-                FilterChip(
+                AppFilterChip(
                     selected = type == t,
                     onClick = { type = t },
-                    label = { Text(label, style = LocalAppTypography.current.bodySmall) },
+                    label = label,
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
 
         when (type) {
             "breast" -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm), modifier = Modifier.padding(bottom = 12.dp)) {
+                Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                     listOf("左侧", "右侧", "双侧").forEach { s ->
-                        FilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = { Text(s) })
+                        AppFilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = s, modifier = Modifier.weight(1f))
                     }
                 }
                 // 计时器
