@@ -490,6 +490,10 @@ fun FeedingFormDialog(
                     onClick = {
                         timerRunning = false
                         durationMin = (elapsed / 60).toString()
+                        feedingDateTime = java.time.Instant.ofEpochMilli(timerStartMs)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDateTime()
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
                         prefs.edit()
                             .putBoolean("feeding_timer_running", false)
                             .remove("feeding_timer_form_start_time")
@@ -500,14 +504,13 @@ fun FeedingFormDialog(
                     } else {
                         PrimaryButton(
                             onClick = {
-                        val currentFormStartTime = feedingDateTime
                         timerStartMs = System.currentTimeMillis()
                         elapsed = 0
                         timerRunning = true
                         prefs.edit()
                             .putBoolean("feeding_timer_running", true)
                             .putLong("feeding_timer_start_millis", timerStartMs)
-                            .putString("feeding_timer_form_start_time", currentFormStartTime)
+                            .putString("feeding_timer_form_start_time", feedingDateTime)
                             .apply()
                             },
                             label = "开始计时",

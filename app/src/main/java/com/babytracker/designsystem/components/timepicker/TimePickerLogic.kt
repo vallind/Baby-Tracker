@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,9 +37,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-/**
- * 滚轮选择器 — LazyColumn + 实时缩放 + 自动吸附。
- */
 @Composable
 fun TimePickerLogic(
     value: Int,
@@ -55,17 +53,20 @@ fun TimePickerLogic(
     val density = LocalDensity.current
     val itemHeightPx = with(density) { itemHeight.toPx() }
     val allValues = remember(range) { range.toList() }
-    val initialIndex = (value - range.first).coerceIn(0, allValues.lastIndex)
+    val startValue = range.first
+    val count = allValues.size
+    val totalItems = halfVisible + count + halfVisible
 
     val listState = rememberLazyListState()
     var snapping by remember { mutableStateOf(false) }
+    var lastSnappedValue by remember { mutableIntStateOf(-1) }
 
     // 初次定位
     LaunchedEffect(Unit) {
-        listState.scrollToItem(maxOf(0, initialIndex - halfVisible))
+        listState.scrollToItem(maxOf(0, value - startValue))
     }
 
-    // 滑动停止 → 吸附居中
+    // 滑动停止 → 吸附到最近的真实值（跳过 Spacer）
     LaunchedEffect(listState) {
         launch {
             snapshotFlow { listState.isScrollInProgress }
@@ -73,15 +74,21 @@ fun TimePickerLogic(
                 .collect {
                     val layout = listState.layoutInfo
                     val viewportCenter = layout.viewportEndOffset / 2
-                    val closest = layout.visibleItemsInfo.minByOrNull { info ->
-                        val itemCenter = info.offset + info.size / 2
-                        abs(itemCenter - viewportCenter)
-                    }
+                    val closest = layout.visibleItemsInfo
+                        .filter { it.index in halfVisible until (halfVisible + count) }
+                        .minByOrNull { info ->
+                            val itemCenter = info.offset + info.size / 2
+                            abs(itemCenter - viewportCenter)
+                        }
                     if (closest != null) {
-                        val centeredValue = range.first + closest.index
+                        val centeredValue = startValue + closest.index - halfVisible
+                        if (centeredValue == lastSnappedValue) return@collect
+                        lastSnappedValue = centeredValue
+
                         onValueChanged(centeredValue)
                         snapping = true
-                        val snapIndex = maxOf(0, closest.index - halfVisible)
+                        val maxSnap = (totalItems - visibleItems).coerceAtLeast(0)
+                        val snapIndex = (closest.index - halfVisible).coerceIn(0, maxSnap)
                         listState.animateScrollToItem(snapIndex)
                         snapping = false
                     }
@@ -124,10 +131,11 @@ fun TimePickerLogic(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
         ) {
+            // Spacer padding — key 用负数避免与值 key 冲突
+            items(halfVisible, key = { -it - 1 }) { Spacer(itemHeight) }
             items(allValues, key = { it }) { v ->
-                val itemIndex = v - range.first
-                // 实时计算该项距视口中心的距离 → 缩放比
-                        val distance by remember {
+                val itemIndex = halfVisible + (v - startValue)
+                val distance by remember {
                     derivedStateOf {
                         val layout = listState.layoutInfo
                         val viewportCenter = layout.viewportEndOffset / 2f
@@ -163,6 +171,13 @@ fun TimePickerLogic(
                     )
                 }
             }
+            // 底部 Spacer — key 用大正数避开值 range
+            items(halfVisible, key = { it + 100 }) { Spacer(itemHeight) }
         }
     }
+}
+
+@Composable
+private fun Spacer(height: Dp) {
+    Box(modifier = Modifier.fillMaxWidth().height(height))
 }
