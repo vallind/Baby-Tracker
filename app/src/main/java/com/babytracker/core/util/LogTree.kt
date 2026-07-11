@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.Executors
 
 data class LogEntry(
     val timestamp: Long,
@@ -40,6 +41,7 @@ class AppLogTree(private val context: Context) : Timber.Tree() {
     private val logFile: File = File(logDir, "app.log")
     private val fileDateFormat = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault())
     private val maxFileSize = 512 * 1024
+    private val writer = Executors.newSingleThreadExecutor { r -> Thread(r, "log-writer") }
 
     init { logDir.mkdirs() }
 
@@ -64,16 +66,14 @@ class AppLogTree(private val context: Context) : Timber.Tree() {
             message = message,
         )
         LogBuffer.push(entry)
-        writeToFile(entry)
+        writer.execute { writeToFile(entry) }
     }
 
     private fun writeToFile(entry: LogEntry) {
         try {
-            if (logFile.exists() && logFile.length() > maxFileSize) {
-                rotateLogs()
-            }
             val line = "[${fileDateFormat.format(Date(entry.timestamp))}] ${entry.level}/${entry.tag}: ${entry.message}\n"
             logFile.appendText(line)
+            if (logFile.length() > maxFileSize) rotateLogs()
         } catch (_: Exception) { }
     }
 

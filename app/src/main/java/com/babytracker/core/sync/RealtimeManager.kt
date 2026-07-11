@@ -54,7 +54,7 @@ class RealtimeManager(
                 // 为每张表订阅变更（监听所有事件类型：INSERT/UPDATE/DELETE）
                 val tables = listOf(
                     "babies", "feedings", "sleeps", "growths", "vaccinations",
-                    "health_records", "diapers", "messages", "development_assessments", "reminders",
+                    "health_records", "diapers", "development_assessments", "reminders",
                     "family_members",
                 )
 
@@ -134,7 +134,6 @@ class RealtimeManager(
             "vaccinations" -> db.vaccinationDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
             "health_records" -> db.healthRecordDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
             "diapers" -> db.diaperDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
-            "messages" -> db.messageDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
             "development_assessments" -> db.developmentAssessmentDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
             "reminders" -> db.reminderDao().softDeleteByUuid(uuid, deletedAt, deletedAt)
         }

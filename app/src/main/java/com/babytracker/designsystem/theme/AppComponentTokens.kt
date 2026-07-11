@@ -498,12 +498,13 @@ data class AppBarTokens(
             colors: AppColors,
             typography: AppTypography,
             control: AppControlTokens,
+            darkTheme: Boolean = false,
         ): AppBarTokens = AppBarTokens(
             height = 56.dp,
             titleSize = typography.titleLarge.fontSize,
             titleWeight = FontWeight.SemiBold,
             backIconSize = 22.dp,
-            containerColor = colors.primaryContainer,
+            containerColor = if (darkTheme) colors.pageBackground else colors.primaryContainer,
             titleColor = colors.textPrimary,
             iconColor = colors.primary,
         )
@@ -925,7 +926,7 @@ data class AppComponentTokens(
             pagination = PaginationTokens.default(colors, shapes),
             slider = SliderTokens.default(colors),
             rate = RateTokens.default(colors),
-            appBar = AppBarTokens.default(colors, typography, control),
+            appBar = AppBarTokens.default(colors, typography, control, darkTheme),
             chip = ChipTokens.default(colors, shapes, typography),
             fab = FabTokens.default(colors, control, elevation),
             bottomBar = BottomBarTokens.default(colors, typography),
