@@ -169,16 +169,19 @@ data class AppMotion(
     val easing: AppMotionEasing = AppMotionEasing(),
 )
 
-// —— 圆角令牌（6 级 + 全局缩放，参照 shadcn --radius=0.5rem） ——
-//  shadcn 默认 0.5rem≈8dp，整体更克制。当前对标：extraSmall=4, small=6, medium=8, large=12
+// —— 圆角令牌（10 级 + 全局缩放，参照 M3 shape scale） ——
 @Immutable
 data class AppShapes(
     val none: Dp = 0.dp,
-    val extraSmall: Dp = 4.dp,   // 小元素：标签/徽章/骨架屏
-    val small: Dp = 6.dp,        // 标准：输入框/菜单项
-    val medium: Dp = 8.dp,       // 中等：卡片/对话框（= shadcn --radius 默认）
-    val large: Dp = 12.dp,       // 大圆角：底部弹层/大卡片
-    val full: Dp = 9999.dp,      // 胶囊：按钮/标签
+    val extraSmall: Dp = 4.dp,               // 极小：标签/徽章/骨架屏
+    val small: Dp = 8.dp,                    // 小：输入框/菜单项
+    val medium: Dp = 12.dp,                  // 中等：按钮/对话框
+    val large: Dp = 16.dp,                   // 大：底部弹层/大卡片
+    val largeIncreased: Dp = 20.dp,          // 增大：大圆角卡片
+    val extraLarge: Dp = 28.dp,              // 超大：底部弹层/大容器
+    val extraLargeIncreased: Dp = 32.dp,     // 增大超大
+    val extraExtraLarge: Dp = 48.dp,         // 特大
+    val full: Dp = 9999.dp,                  // 胶囊：按钮/标签
     /** 全局圆角缩放倍率，影响所有组件 cornerRadius。1.0 = 默认，0.8 = 更方，1.2 = 更圆 */
     val radiusScale: Float = 1.0f,
 ) {

@@ -26,7 +26,6 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppElevation
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -40,7 +39,6 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun BabyProfileScreen(navController: NavController) {
     val c = LocalAppColors.current
-    val shapes = LocalAppShapes.current
     val typography = LocalAppTypography.current
     val spacing = LocalAppSpacing.current
     val elev = LocalAppElevation.current
@@ -160,7 +158,6 @@ fun BabyProfileScreen(navController: NavController) {
             SectionHeader("出生信息")
 
             AppCard(
-                cornerRadius = shapes.medium,
                 containerColor = c.surface,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -181,7 +178,6 @@ fun BabyProfileScreen(navController: NavController) {
             SectionHeader("当前生长数据")
 
             AppCard(
-                cornerRadius = shapes.medium,
                 containerColor = c.surface,
                 modifier = Modifier
                     .fillMaxWidth()

@@ -169,7 +169,6 @@ fun GrowthScreen(navController: NavController) {
                             } catch (_: Exception) { "" }
 
                             AppCard(
-                                cornerRadius = shapes.large,
                                 containerColor = c.surface,
                                 elevation = 0.dp,
                                 modifier = Modifier
@@ -233,7 +232,6 @@ fun GrowthScreen(navController: NavController) {
                         }
 
                         AppCard(
-                            cornerRadius = shapes.large,
                             containerColor = c.surface,
                             elevation = 2.dp,
                             modifier = Modifier
@@ -320,7 +318,6 @@ fun GrowthScreen(navController: NavController) {
 
                     item {
                         AppCard(
-                            cornerRadius = shapes.large,
                             containerColor = c.surface,
                             elevation = 0.dp,
                             modifier = Modifier
@@ -446,7 +443,6 @@ fun GrowthScreen(navController: NavController) {
                     label = "记录${tabs[tab]}",
                     icon = Icons.Default.Add,
                     height = 48.dp,
-                    cornerRadius = shapes.large,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

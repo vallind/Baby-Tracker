@@ -4,6 +4,14 @@
 
 ### [Unreleased]
 
+**全局圆角令牌升级 + 卡片大圆角风格：**
+- AppShapes 按 M3 规范扩展为 10 级（新增 largeIncreased/extraLarge/extraLargeIncreased/extraExtraLarge）
+- 卡片圆角从 8dp → 20dp（largeIncreased），边框去除（borderWidth = 0dp）
+- BorderContainer 同步改为 20dp 圆角、无边框
+- 所有 29 处 AppCard 调用移除显式 cornerRadius 覆盖，统一继承令牌默认值
+- TimePicker/DatePicker/DateTimeCascade 圆角从 medium*2 改用 large（保持 16dp 不变）
+- 同步清理各页面因 cornerRadius 移除变成未使用的 shapes 变量和 import
+
 **计时器状态持久化：**
 - 母乳/睡眠计时器状态通过 SharedPreferences 持久化
 - 退出页面再进入时自动恢复计时器状态（运行中/已停止）

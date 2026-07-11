@@ -76,8 +76,8 @@ data class CardTokens(
             containerColor = colors.surface,
             contentColor = colors.onSurface,
             borderColor = colors.outline,
-            borderWidth = 1.dp,                          // shadcn 风格：卡片带描边
-            cornerRadius = shapes.scaled(shapes.medium), // shadcn 风格：卡片 = --radius
+            borderWidth = 0.dp,                          // 无边框风格
+            cornerRadius = shapes.scaled(shapes.largeIncreased), // 大圆角卡片
             innerPadding = spacing.md,
             elevation = elevation.level2,
         )
@@ -676,8 +676,8 @@ data class BorderContainerTokens(
             spacing: AppSpacing,
         ): BorderContainerTokens = BorderContainerTokens(
             borderColor = colors.outline,
-            cornerRadius = shapes.scaled(shapes.medium),
-            borderWidth = 1.dp,
+            cornerRadius = shapes.scaled(shapes.largeIncreased),
+            borderWidth = 0.dp,
             padding = spacing.md,
         )
     }
@@ -693,7 +693,7 @@ data class TimePickerTokens(
     val labelColor: Color,
     val arrowColor: Color,
     val backgroundColor: Color,
-    val cornerRadius: Dp,           // shapes.medium * 2
+    val cornerRadius: Dp,           // shapes.large（16dp）
     // TDesign 新增：滚轮选中态
     val selectedBackgroundColor: Color,     // primary.copy(alpha=0.12)
     val selectedTextColor: Color,           // primary
@@ -716,7 +716,7 @@ data class TimePickerTokens(
             labelColor = colors.textSecondary,
             arrowColor = colors.primary,
             backgroundColor = colors.surface,
-            cornerRadius = shapes.scaled(shapes.medium * 2),
+            cornerRadius = shapes.scaled(shapes.large),
             selectedBackgroundColor = colors.primary.copy(alpha = 0.12f),
             selectedTextColor = colors.primary,
             unselectedTextColor = colors.textTertiary,
@@ -739,7 +739,7 @@ data class DatePickerTokens(
     val todayColor: Color,
     val headlineColor: Color,
     val backgroundColor: Color,
-    val cornerRadius: Dp,               // shapes.medium * 2
+    val cornerRadius: Dp,               // shapes.large（16dp）
     // TDesign 新增：日历面板
     val toolbarHeight: Dp,              // 顶部工具栏高度
     val toolbarTextColor: Color,        // 工具栏文字色
@@ -762,7 +762,7 @@ data class DatePickerTokens(
             todayColor = colors.primary,
             headlineColor = colors.textPrimary,
             backgroundColor = colors.surface,
-            cornerRadius = shapes.scaled(shapes.medium * 2),
+            cornerRadius = shapes.scaled(shapes.large),
             toolbarHeight = 48.dp,
             toolbarTextColor = colors.primary,
             toolbarDividerColor = colors.divider,
@@ -781,7 +781,7 @@ data class DatePickerTokens(
 @Immutable
 data class DateTimeCascadeTokens(
     val backgroundColor: Color,
-    val cornerRadius: Dp,       // shapes.medium * 2
+    val cornerRadius: Dp,       // shapes.large（16dp）
     val datePicker: DatePickerTokens,
     val timePicker: TimePickerTokens,
 ) {
@@ -791,7 +791,7 @@ data class DateTimeCascadeTokens(
             shapes: AppShapes,
         ): DateTimeCascadeTokens = DateTimeCascadeTokens(
             backgroundColor = colors.surface,
-            cornerRadius = shapes.scaled(shapes.medium * 2),
+            cornerRadius = shapes.scaled(shapes.large),
             datePicker = DatePickerTokens.default(colors, shapes),
             timePicker = TimePickerTokens.default(colors, shapes),
         )

@@ -306,7 +306,6 @@ private fun UserInfoCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     val elev = LocalAppElevation.current
     val displayName = nickname ?: displayAccount ?: babyName
 
@@ -314,7 +313,6 @@ private fun UserInfoCard(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        cornerRadius = shapes.large,
         elevation = elev.level2,
         containerColor = c.surface,
     ) {
@@ -407,7 +405,6 @@ private fun FunctionGrid(items: List<FunctionGridItem>) {
 
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        cornerRadius = shapes.large,
         elevation = elev.level2,
         containerColor = c.surface,
     ) {
@@ -491,7 +488,6 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                                 RoundedCornerShape(shapes.large),
                             )
                             .clickable { themeCtrl.switchTheme(theme.name) },
-                        cornerRadius = shapes.large,
                         elevation = elev.level1,
                         containerColor = theme.colors.card,
                     ) {
@@ -516,11 +512,9 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
     val c = LocalAppColors.current
-    val shapes = LocalAppShapes.current
     val elev = LocalAppElevation.current
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        cornerRadius = shapes.large,
         elevation = elev.level2,
         containerColor = c.surface,
         content = content,
@@ -644,7 +638,6 @@ fun BabyManagementScreen(navController: NavController) {
                                 RoundedCornerShape(shapes.large),
                             )
                             .clickable { editingBaby = b; showForm = true },
-                        cornerRadius = shapes.large,
                         elevation = elev.level1,
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -693,7 +686,6 @@ fun BabyManagementScreen(navController: NavController) {
                         deletedBabies.forEach { b ->
                             AppCard(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs),
-                                cornerRadius = shapes.large,
                                 elevation = elev.level1,
                             ) {
                                 Row(Modifier.padding(spacing.md), verticalAlignment = Alignment.CenterVertically) {
@@ -931,7 +923,6 @@ fun BackupScreen(navController: NavController) {
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md, vertical = spacing.md)) {
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                cornerRadius = shapes.large,
                 elevation = elev.level1,
             ) {
                 Column(Modifier.padding(20.dp)) {
@@ -985,7 +976,6 @@ fun BackupScreen(navController: NavController) {
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                cornerRadius = shapes.large,
                 elevation = elev.level1,
             ) {
                 Column(Modifier.padding(20.dp)) {
@@ -1036,7 +1026,6 @@ fun BackupScreen(navController: NavController) {
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                cornerRadius = shapes.large,
                 elevation = elev.level1,
             ) {
                 Column(Modifier.padding(20.dp)) {

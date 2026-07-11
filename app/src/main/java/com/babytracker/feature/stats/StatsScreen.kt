@@ -328,11 +328,9 @@ private fun StatCardFrame(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val shapes = LocalAppShapes.current
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     AppCard(
-        cornerRadius = shapes.medium,
         containerColor = c.surface,
         modifier = modifier.fillMaxWidth(),
     ) {

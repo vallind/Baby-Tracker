@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.*
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppTypographyStyle
@@ -86,7 +85,6 @@ fun HealthScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypographyStyle.current
-    val shapes = LocalAppShapes.current
     val healthRepo: HealthRepository = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -215,9 +213,7 @@ private fun HealthCategorySummaryCard(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypographyStyle.current
-    val shapes = LocalAppShapes.current
     AppCard(
-        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
@@ -266,10 +262,8 @@ private fun VaccinationSummaryCard(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypographyStyle.current
-    val shapes = LocalAppShapes.current
     val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
     AppCard(
-        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier

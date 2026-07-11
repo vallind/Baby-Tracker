@@ -306,7 +306,6 @@ private fun AssessmentItemCard(
     val shapes = LocalAppShapes.current
     val statusColor = scoreColor(score)
     AppCard(
-        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier.fillMaxWidth(),

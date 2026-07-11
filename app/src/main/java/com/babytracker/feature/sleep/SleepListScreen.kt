@@ -174,7 +174,6 @@ fun SleepListScreen(navController: NavController) {
                     val cardShape = RoundedCornerShape(shapes.large)
 
                     AppCard(
-                        cornerRadius = shapes.large,
                         containerColor = Color.Transparent,
                         elevation = 0.dp,
                         modifier = Modifier
@@ -223,7 +222,6 @@ fun SleepListScreen(navController: NavController) {
 
                     // —— 睡眠详情 ——
                     AppCard(
-                        cornerRadius = shapes.large,
                         containerColor = c.surface,
                         elevation = 0.dp,
                         modifier = Modifier

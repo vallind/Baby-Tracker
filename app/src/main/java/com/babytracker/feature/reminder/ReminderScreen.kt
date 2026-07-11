@@ -228,7 +228,6 @@ private fun PendingReminderCard(
     val (emoji, typeColor) = reminder.type.toVisual(c)
 
     AppCard(
-        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
@@ -338,7 +337,6 @@ private fun HistoryReminderCard(
     val doneText = reminder.doneDate?.let { "完成于 ${DateUtils.formatDate(it)}" } ?: "已完成"
 
     AppCard(
-        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface.copy(alpha = 0.7f),
         modifier = Modifier

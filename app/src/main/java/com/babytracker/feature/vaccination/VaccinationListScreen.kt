@@ -344,7 +344,6 @@ private fun VaccinationCard(
     }
 
     AppCard(
-        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier

@@ -215,7 +215,6 @@ private fun FamilyDetailView(
     // 家庭名称卡片
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        cornerRadius = shapes.large,
         elevation = 1.dp,
     ) {
         Column(Modifier.padding(20.dp)) {
@@ -271,7 +270,6 @@ private fun FamilyDetailView(
         Text("家庭成员", style = typography.label, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
         AppCard(
             modifier = Modifier.fillMaxWidth(),
-            cornerRadius = shapes.large,
             elevation = 1.dp,
         ) {
             Column(Modifier.padding(horizontal = 12.dp)) {

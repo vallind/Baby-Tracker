@@ -155,7 +155,6 @@ private fun CategoryOverviewBar(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     Row(
         Modifier
             .fillMaxWidth()
@@ -171,7 +170,6 @@ private fun CategoryOverviewBar(
             val unread = unreadMap[cat.type] ?: 0
             val selected = selectedType == cat.type
             AppCard(
-                cornerRadius = shapes.large,
                 elevation = 2.dp,
                 containerColor = if (selected) cat.bgColor else c.surface,
                 modifier = Modifier
@@ -229,9 +227,7 @@ private fun MessageCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     AppCard(
-        cornerRadius = shapes.large,
         elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier

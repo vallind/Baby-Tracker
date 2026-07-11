@@ -167,14 +167,12 @@ fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypographyStyle.current
-    val shapes = LocalAppShapes.current
     val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
     val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
     AppCard(
         modifier = Modifier
             .padding(horizontal = spacing.md)
             .fillMaxWidth(),
-        cornerRadius = shapes.medium,
     ) {
         Column(Modifier.padding(spacing.md)) {
             Text("今日概览", style = typography.titleMedium, color = c.textPrimary)
@@ -305,7 +303,6 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
     val shapes = LocalAppShapes.current
     AppCard(
         modifier = Modifier.padding(horizontal = spacing.md).fillMaxWidth(),
-        cornerRadius = shapes.medium,
     ) {
         Column(Modifier.padding(spacing.md)) {
             Row(
