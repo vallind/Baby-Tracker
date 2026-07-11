@@ -413,13 +413,19 @@ fun SleepFormDialog(
     val isEdit = editEntity != null
     var selectedType by remember { mutableStateOf(editEntity?.let { SleepType.raw(it.type) } ?: "night") }
     val now = LocalDateTime.now()
+    val prefs: SharedPreferences = koinInject()
+
     var startTime by remember {
         mutableStateOf(
             editEntity?.startTime?.let { ts ->
                 try {
                     LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
                 } catch (_: Exception) { now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
-            } ?: now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+            } ?: if (prefs.getBoolean("sleep_timer_running", false)) {
+                prefs.getString("sleep_timer_form_start_time", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))!!
+            } else {
+                now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+            }
         )
     }
     var endTime by remember {
@@ -434,8 +440,6 @@ fun SleepFormDialog(
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
     var showCascadePicker by remember { mutableStateOf(false) }
     var pickerTarget by remember { mutableIntStateOf(0) }
-
-    val prefs: SharedPreferences = koinInject()
 
     // 计时器（持久化：关闭表单再打开继续计时）
     var timerRunning by remember {
@@ -505,27 +509,27 @@ fun SleepFormDialog(
                 PrimaryButton(
                     onClick = {
                         timerRunning = false
-                        prefs.edit().putBoolean("sleep_timer_running", false).apply()
                         val endNow = LocalDateTime.now()
-                        startTime = LocalDateTime.ofInstant(
-                            java.time.Instant.ofEpochMilli(timerStartMs),
-                            java.time.ZoneId.systemDefault()
-                        ).format(timeFormatter)
                         endTime = endNow.format(timeFormatter)
+                        prefs.edit()
+                            .putBoolean("sleep_timer_running", false)
+                            .remove("sleep_timer_form_start_time")
+                            .apply()
                     },
                     label = "结束计时",
                 )
             } else {
                 PrimaryButton(
                     onClick = {
+                        val currentStartTime = startTime
                         timerStartMs = System.currentTimeMillis()
                         elapsed = 0
                         timerRunning = true
                         prefs.edit()
                             .putBoolean("sleep_timer_running", true)
                             .putLong("sleep_timer_start_millis", timerStartMs)
+                            .putString("sleep_timer_form_start_time", currentStartTime)
                             .apply()
-                        startTime = LocalDateTime.now().format(timeFormatter)
                     },
                     label = "开始计时",
                 )

@@ -397,18 +397,22 @@ fun FeedingFormDialog(
     var amountG by remember { mutableStateOf(editEntity?.amountG?.toString() ?: "") }
     var brand by remember { mutableStateOf(editEntity?.brand ?: "") }
     val now = LocalDateTime.now()
+    val prefs: SharedPreferences = koinInject()
+
     var feedingDateTime by remember {
         mutableStateOf(
             editEntity?.timestamp?.let { ts ->
                 try {
                     LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
                 } catch (_: Exception) { now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
-            } ?: now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+            } ?: if (prefs.getBoolean("feeding_timer_running", false)) {
+                prefs.getString("feeding_timer_form_start_time", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))!!
+            } else {
+                now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+            }
         )
     }
     var showCascadePicker by remember { mutableStateOf(false) }
-
-    val prefs: SharedPreferences = koinInject()
 
     // 计时器（持久化：关闭表单再打开继续计时）
     var timerRunning by remember {
@@ -494,23 +498,28 @@ fun FeedingFormDialog(
                     )
                     if (timerRunning) {
                         PrimaryButton(
-                            onClick = {
-                                timerRunning = false
-                                prefs.edit().putBoolean("feeding_timer_running", false).apply()
-                                durationMin = (elapsed / 60).toString()
-                            },
+                    onClick = {
+                        timerRunning = false
+                        durationMin = (elapsed / 60).toString()
+                        prefs.edit()
+                            .putBoolean("feeding_timer_running", false)
+                            .remove("feeding_timer_form_start_time")
+                            .apply()
+                    },
                             label = "结束计时",
                         )
                     } else {
                         PrimaryButton(
                             onClick = {
-                                timerStartMs = System.currentTimeMillis()
-                                elapsed = 0
-                                timerRunning = true
-                                prefs.edit()
-                                    .putBoolean("feeding_timer_running", true)
-                                    .putLong("feeding_timer_start_millis", timerStartMs)
-                                    .apply()
+                        val currentFormStartTime = feedingDateTime
+                        timerStartMs = System.currentTimeMillis()
+                        elapsed = 0
+                        timerRunning = true
+                        prefs.edit()
+                            .putBoolean("feeding_timer_running", true)
+                            .putLong("feeding_timer_start_millis", timerStartMs)
+                            .putString("feeding_timer_form_start_time", currentFormStartTime)
+                            .apply()
                             },
                             label = "开始计时",
                         )
