@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.HorizontalDivider
@@ -20,6 +21,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.navigation.NavController
 import com.babytracker.BabyTrackerApp
 import com.babytracker.core.util.LogBuffer
@@ -107,6 +112,19 @@ fun LogViewerScreen(navController: NavController) {
                     icon = if (autoScroll) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
                     onClick = { autoScroll = !autoScroll },
                     contentDescription = if (autoScroll) "关闭自动滚动" else "开启自动滚动",
+                )
+                AppIconButton(
+                    icon = Icons.Default.ContentCopy,
+                    onClick = {
+                        val text = filteredLogs.joinToString("\n") { e ->
+                            val ts = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(e.timestamp))
+                            "[${e.level}] $ts ${e.tag}: ${e.message}"
+                        }
+                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        cm.setPrimaryClip(ClipData.newPlainText("app_logs", text))
+                        Toast.makeText(context, "已复制 ${filteredLogs.size} 条日志", Toast.LENGTH_SHORT).show()
+                    },
+                    contentDescription = "复制日志",
                 )
             }
 

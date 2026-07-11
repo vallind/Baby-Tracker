@@ -127,17 +127,6 @@ class SyncEngine(
             },
             updateLocal = { entity -> db.diaperDao().update(entity as DiaperEntity) },
         )
-        "messages" -> EntityDao(
-            getById = { id -> db.messageDao().getById(id.toLong())?.let { it } },
-            getByUuid = { uuid -> db.messageDao().getByUuid(uuid)?.let { it } },
-            upsert = { json ->
-                val parsed = parseMessage(json)
-                val existing = db.messageDao().getByUuid(parsed.uuid ?: "")
-                if (existing != null) { db.messageDao().update(parsed.copy(id = existing.id)); existing.id }
-                else db.messageDao().insert(parsed)
-            },
-            updateLocal = { entity -> db.messageDao().update(entity as MessageEntity) },
-        )
         "development_assessments" -> EntityDao(
             getById = { id -> db.developmentAssessmentDao().getById(id) },
             getByUuid = { uuid -> db.developmentAssessmentDao().getByUuid(uuid) },
@@ -234,7 +223,7 @@ class SyncEngine(
             Timber.tag("Sync").d("pull start: family=%s lastSync=%s", fid, lastSyncAt ?: "full")
             val tables = listOf(
                 "babies", "feedings", "sleeps", "growths", "vaccinations",
-                "health_records", "diapers", "messages", "development_assessments", "reminders",
+                "health_records", "diapers", "development_assessments", "reminders",
             )
             for (tableName in tables) {
                 try {
@@ -288,10 +277,12 @@ class SyncEngine(
         val db = db.openHelper.writableDatabase
         val tables = listOf(
             "babies", "feedings", "sleeps", "growths", "vaccinations",
-            "health_records", "diapers", "messages", "development_assessments", "reminders",
+            "health_records", "diapers", "development_assessments", "reminders",
         )
         db.beginTransaction()
         try {
+            // 清理已摘除同步的表
+            db.execSQL("DELETE FROM sync_metadata WHERE tableName='messages'")
             for (table in tables) {
                 try {
                     db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
@@ -629,20 +620,6 @@ class SyncEngine(
         type = json["type"]?.toString()?.removeSurrounding("\"") ?: "",
         timestamp = json["timestamp"]?.toString()?.removeSurrounding("\"") ?: "",
         note = json["note"]?.toString()?.removeSurrounding("\""),
-        uuid = json["uuid"]?.toString()?.removeSurrounding("\""),
-        updatedAt = json["updatedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0L,
-        deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),
-    )
-
-    private fun parseMessage(json: JsonObject): MessageEntity = MessageEntity(
-        id = 0,
-        type = json["type"]?.toString()?.removeSurrounding("\"") ?: "",
-        title = json["title"]?.toString()?.removeSurrounding("\"") ?: "",
-        content = json["content"]?.toString()?.removeSurrounding("\"") ?: "",
-        senderAvatar = json["senderAvatar"]?.toString()?.removeSurrounding("\""),
-        createTime = json["createTime"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0L,
-        isRead = json["isRead"]?.toString()?.removeSurrounding("\"")?.toBooleanStrictOrNull() ?: false,
-        extraData = json["extraData"]?.toString()?.removeSurrounding("\"") ?: "",
         uuid = json["uuid"]?.toString()?.removeSurrounding("\""),
         updatedAt = json["updatedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0L,
         deletedAt = json["deletedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull(),

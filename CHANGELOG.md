@@ -7,8 +7,13 @@
 **设置页新增日志查看器 + Timber 日志系统：**
 - 接入 Timber 日志库，自定义 AppLogTree 将日志写入内存环形缓冲区（1000 条）和文件（自动轮转）
 - 设置页功能网格新增"日志查看"入口，进入后实时显示应用日志
-- 日志查看页支持过滤、清除、自动滚动、级别着色（V/D/I/W/E）
+- 日志查看页支持过滤、清除、自动滚动、级别着色、一键复制到剪贴板
 - SyncEngine / FamilyService / SettingsViewModel / AuthService 关键路径埋点，便于排查同步问题
+
+**修复：messages 表被错误加入同步流程导致 RLS 42501 错误：**
+- messages 是用户私有数据，不从 SyncEngine push/pull/markExistingPending 中同步
+- 新增 markExistingPending 中清理孤立 pending 记录的机制（DELETE orphaned sync_metadata）
+- 日志页复制按钮，方便分享日志分析
 
 **日期选择器统一 + RecordCard 迁移：**
 - Feeding/Sleep/Diaper/Health 列表日期筛选从 M3 DatePickerDialog 替换为 DateTimeCascadeDialog（dateOnly 模式）
