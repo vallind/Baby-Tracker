@@ -2,6 +2,7 @@ package com.babytracker.feature.family
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -192,7 +193,7 @@ private fun FamilyDetailView(
     // 家庭切换（多家庭时显示）
     if (families.size > 1) {
         Row(
-            Modifier.fillMaxWidth(),
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(spacing.sm),
         ) {
             families.forEach { f ->
@@ -201,7 +202,6 @@ private fun FamilyDetailView(
                     selected = selected,
                     onClick = { onSelectFamily(f) },
                     label = if (selected) "${f.name} · 当前" else f.name,
-                    modifier = Modifier.weight(1f),
                 )
             }
         }
