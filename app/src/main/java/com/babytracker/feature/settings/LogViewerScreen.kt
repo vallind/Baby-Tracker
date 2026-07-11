@@ -1,15 +1,28 @@
 package com.babytracker.feature.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -17,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,22 +50,38 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private val LEVELS = listOf(
+    LevelOption('V', "详细"),
+    LevelOption('D', "调试"),
+    LevelOption('I', "信息"),
+    LevelOption('W', "警告"),
+    LevelOption('E', "错误"),
+)
+
+private data class LevelOption(val level: Char, val label: String)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogViewerScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
     val context = LocalContext.current
 
     var filter by remember { mutableStateOf("") }
     var autoScroll by remember { mutableStateOf(true) }
     var logs by remember { mutableStateOf(LogBuffer.getEntries()) }
     var showClearConfirm by remember { mutableStateOf(false) }
+    var selectedLevels by remember { mutableStateOf(LEVELS.map { it.level }.toSet()) }
+    var selectMode by remember { mutableStateOf(false) }
+    var selectedIds by remember { mutableStateOf(setOf<String>()) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
@@ -64,12 +94,26 @@ fun LogViewerScreen(navController: NavController) {
         }
     }
 
-    val filteredLogs = remember(logs, filter) {
-        if (filter.isBlank()) logs
-        else logs.filter {
-            it.tag.contains(filter, ignoreCase = true) ||
-                it.message.contains(filter, ignoreCase = true)
-        }
+    val filteredLogs = remember(logs, filter, selectedLevels) {
+        logs.filter { it.level in selectedLevels }
+            .filter {
+                filter.isBlank() ||
+                    it.tag.contains(filter, ignoreCase = true) ||
+                    it.message.contains(filter, ignoreCase = true)
+            }
+    }
+
+    fun entryKey(e: LogEntry) = "${e.timestamp}-${e.level}-${e.tag}-${e.message}"
+
+    fun copyText(text: String, label: String) {
+        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText("app_logs", text))
+        Toast.makeText(context, label, Toast.LENGTH_SHORT).show()
+    }
+
+    fun exitSelectMode() {
+        selectMode = false
+        selectedIds = emptySet()
     }
 
     AppScaffold(
@@ -85,6 +129,7 @@ fun LogViewerScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(padding),
         ) {
+            // 搜索 + 操作栏
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -114,44 +159,117 @@ fun LogViewerScreen(navController: NavController) {
                     contentDescription = if (autoScroll) "关闭自动滚动" else "开启自动滚动",
                 )
                 AppIconButton(
-                    icon = Icons.Default.ContentCopy,
+                    icon = if (selectMode) Icons.Default.ContentCopy else Icons.Default.Checklist,
                     onClick = {
-                        val text = filteredLogs.joinToString("\n") { e ->
-                            val ts = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(e.timestamp))
-                            "[${e.level}] $ts ${e.tag}: ${e.message}"
+                        if (selectMode) {
+                            val text = filteredLogs
+                                .filter { entryKey(it) in selectedIds }
+                                .joinToString("\n") { e ->
+                                    val ts = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()).format(Date(e.timestamp))
+                                    "[${e.level}] $ts ${e.tag}: ${e.message}"
+                                }
+                            copyText(text, "已复制 ${selectedIds.size} 条")
+                            exitSelectMode()
+                        } else {
+                            selectMode = true
+                            selectedIds = emptySet()
                         }
-                        val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        cm.setPrimaryClip(ClipData.newPlainText("app_logs", text))
-                        Toast.makeText(context, "已复制 ${filteredLogs.size} 条日志", Toast.LENGTH_SHORT).show()
                     },
-                    contentDescription = "复制日志",
+                    contentDescription = if (selectMode) "复制选中" else "选择",
                 )
             }
+            if (selectMode && selectedIds.isNotEmpty()) {
+                // 选择模式操作提示
+                Surface(
+                    color = c.primaryContainer,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = "已选 ${selectedIds.size} 条，点击图标复制",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = c.onPrimary,
+                        modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
+                    )
+                }
+            }
 
+            // 日志等级过滤
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                LEVELS.forEach { opt ->
+                    val selected = opt.level in selectedLevels
+                    FilterChip(
+                        selected = selected,
+                        onClick = {
+                            selectedLevels = if (selected) selectedLevels - opt.level
+                            else selectedLevels + opt.level
+                        },
+                        label = { Text(opt.label, style = MaterialTheme.typography.labelSmall) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = when (opt.level) {
+                                'V' -> c.textTertiary.copy(alpha = 0.2f)
+                                'D' -> c.info.copy(alpha = 0.2f)
+                                'I' -> c.success.copy(alpha = 0.2f)
+                                'W' -> c.warning.copy(alpha = 0.2f)
+                                'E' -> c.danger.copy(alpha = 0.2f)
+                                else -> c.primaryContainer
+                            },
+                        ),
+                        shape = RoundedCornerShape(shapes.extraSmall),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+
+            // 日志列表
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = spacing.sm),
             ) {
-                items(filteredLogs, key = {
-                    "${it.timestamp}-${it.level}-${it.tag}-${it.message.hashCode()}"
-                }) { entry ->
-                    LogEntryRow(entry = entry, c = c)
+                items(filteredLogs, key = { entryKey(it) }) { entry ->
+                    val key = entryKey(entry)
+                    val isSelected = key in selectedIds
+                    LogEntryRow(
+                        entry = entry,
+                        c = c,
+                        selectMode = selectMode,
+                        isSelected = isSelected,
+                        onClick = {
+                            if (selectMode) {
+                                selectedIds = if (isSelected) selectedIds - key
+                                else selectedIds + key
+                            }
+                        },
+                        onLongClick = {
+                            if (!selectMode) {
+                                selectMode = true
+                                selectedIds = setOf(key)
+                            }
+                        },
+                    )
                     HorizontalDivider(
-                        color = c.divider,
+                        color = c.divider.copy(alpha = 0.4f),
                         thickness = 0.5.dp,
-                        modifier = Modifier.padding(vertical = 1.dp),
+                        modifier = Modifier.padding(start = if (isSelected) 0.dp else 4.dp, end = 4.dp),
                     )
                 }
             }
 
+            // 底部统计
             Surface(
                 color = c.surface,
                 tonalElevation = 1.dp,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    text = "共 ${filteredLogs.size} 条${if (filter.isNotBlank()) "（已过滤）" else ""}",
+                    text = "共 ${filteredLogs.size} 条${if (filter.isNotBlank() || selectedLevels.size < 5) "（已过滤）" else ""}",
                     style = MaterialTheme.typography.labelSmall,
                     color = c.textSecondary,
                     modifier = Modifier.padding(
@@ -180,8 +298,16 @@ fun LogViewerScreen(navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LogEntryRow(entry: LogEntry, c: AppColors) {
+private fun LogEntryRow(
+    entry: LogEntry,
+    c: AppColors,
+    selectMode: Boolean,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
     val levelColor = when (entry.level) {
         'V' -> c.textTertiary
         'D' -> c.info
@@ -195,14 +321,29 @@ private fun LogEntryRow(entry: LogEntry, c: AppColors) {
         sdf.format(Date(entry.timestamp))
     }
 
+    val bgColor = when {
+        isSelected -> levelColor.copy(alpha = 0.12f)
+        selectMode -> c.surface
+        else -> c.surface
+    }
+
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .clip(RoundedCornerShape(4.dp))
+            .background(bgColor)
+            .then(
+                if (selectMode) Modifier.clickable { onClick() }
+                else Modifier.combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick,
+                )
+            )
+            .padding(vertical = 2.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "[${entry.level}]",
+            text = if (isSelected) "✓" else "[${entry.level}]",
             color = levelColor,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelSmall,
