@@ -24,6 +24,12 @@
 - 新增 `jsonStr()` 安全辅助函数，通过 `(json[key] as? JsonPrimitive)?.content` 规避此问题
 - 替换所有 parse* 函数中的 100+ 处字段解析调用
 
+**日志系统改进：开关控制 + 移入设置区域：**
+- 设置页新增"日志记录"行，带 Switch 开关，关闭时不写入内存/文件（仅输出 logcat）
+- 默认关闭，开启后才抓取日志，减少性能开销
+- 从顶部功能网格移入设置区域，与主题/隐私等设置项平级
+- 开关状态通过 SharedPreferences 持久化，App 重启后保持
+
 **日期选择器统一 + RecordCard 迁移：**
 - Feeding/Sleep/Diaper/Health 列表日期筛选从 M3 DatePickerDialog 替换为 DateTimeCascadeDialog（dateOnly 模式）
 - GrowthScreen 日历按钮接入日期筛选（之前是空实现）

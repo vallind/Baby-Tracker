@@ -1,5 +1,6 @@
 package com.babytracker.feature.settings
 
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
@@ -102,6 +104,8 @@ fun SettingsScreen(navController: NavController) {
     var showNicknameDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    var logCaptureEnabled by remember { mutableStateOf(prefs.getBoolean("log_capture_enabled", false)) }
 
     val versionName = remember {
         try {
@@ -159,7 +163,6 @@ fun SettingsScreen(navController: NavController) {
                     FunctionGridItem("⭐", "我的收藏", onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() }),
                     FunctionGridItem("📤", "数据导出", onClick = { navController.navigate(Screen.Backup.route) }),
                     FunctionGridItem("🔔", "提醒设置", onClick = { navController.navigate(Screen.Reminder.route) }),
-                    FunctionGridItem("📋", "日志查看", onClick = { navController.navigate(Screen.LogViewer.route) }),
                 ),
             )
 
@@ -192,6 +195,24 @@ fun SettingsScreen(navController: NavController) {
                     emoji = "❓",
                     label = "帮助与反馈",
                     onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    emoji = "📋",
+                    label = "日志记录",
+                    subtitle = if (logCaptureEnabled) "抓取中" else "已关闭",
+                    trailing = {
+                        Switch(
+                            checked = logCaptureEnabled,
+                            onCheckedChange = { enabled ->
+                                logCaptureEnabled = enabled
+                                prefs.edit().putBoolean("log_capture_enabled", enabled).apply()
+                                val app = context.applicationContext as com.babytracker.BabyTrackerApp
+                                app.appLogTree.enabled = enabled
+                            },
+                        )
+                    },
+                    onClick = { navController.navigate(Screen.LogViewer.route) },
                 )
                 SettingsDivider()
                 SettingsRow(

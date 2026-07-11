@@ -33,6 +33,9 @@ object LogBuffer {
 }
 
 class AppLogTree(private val context: Context) : Timber.Tree() {
+    /** 开关：关闭时只输出 logcat，不写入内存缓冲区和文件 */
+    var enabled: Boolean = false
+
     private val logDir: File = File(context.filesDir, "logs")
     private val logFile: File = File(logDir, "app.log")
     private val fileDateFormat = SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault())
@@ -50,6 +53,10 @@ class AppLogTree(private val context: Context) : Timber.Tree() {
             Log.ERROR -> 'E'
             else -> '?'
         }
+        Log.println(priority, tagSafe, message)
+
+        if (!enabled) return
+
         val entry = LogEntry(
             timestamp = System.currentTimeMillis(),
             level = level,
