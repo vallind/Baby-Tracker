@@ -1,5 +1,7 @@
 # AGENTS.md — AI 工作说明书
 
+> ⚠️ 任务前必须读取 [docs/lessons.md](docs/lessons.md)，确认无相关教训后再动手。
+>
 > 核心理念：先想清楚再动代码，改完只擦自己的屁股。
 
 ---
