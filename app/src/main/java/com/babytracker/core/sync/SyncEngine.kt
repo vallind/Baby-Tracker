@@ -8,6 +8,8 @@ import io.github.jan.supabase.postgrest.postgrest
 import timber.log.Timber
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,6 +46,8 @@ class SyncEngine(
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
 
     private val json = Json { ignoreUnknownKeys = true }
+
+    private val fullSyncMutex = Mutex()
 
     /** 当前家庭 ID（登录+加入家庭后设置），push 时自动注入到每条记录 */
     var currentFamilyId: String? = null
@@ -263,10 +267,10 @@ class SyncEngine(
     }
 
     /** 全量同步，返回 [拉取数, 推送数] */
-    suspend fun fullSync(): Pair<Int, Int> {
+    suspend fun fullSync(): Pair<Int, Int> = fullSyncMutex.withLock {
         val pulled = pull()
         val pushed = push()
-        return pushed to pulled
+        pushed to pulled
     }
 
     /**

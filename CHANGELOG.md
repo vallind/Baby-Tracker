@@ -2,6 +2,11 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.5] — 2026-07-18
+
+**修复并发触发两次全量同步的重复请求问题：**
+- `fullSync()` 新增 `Mutex.withLock` 互斥保护，避免 `tryAutoSync` 和 `currentFamily` collector 同时调用时重复拉取
+
 ### [1.5.4] — 2026-07-18
 
 **今日概览和统计分析页喂养统计改为自适应展示：**
