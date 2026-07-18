@@ -1,8 +1,10 @@
 ## 更新日志
-遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 规范。
+遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
 ### [Unreleased]
+
+### [1.5.0] — 2026-07-18
 
 **启用 coreLibraryDesugaring 修复 445 个 NewApi lint 错误：**
 - `minSdk = 24` 但大量使用 `java.time.*` API（要求 API 26+），未启用 desugaring 导致 Lint 失败
@@ -445,7 +447,7 @@
 - **滑动删除**：新增 `SwipeToDeleteContainer` 组件，左滑红色背景 + 删除图标松手即删；`SwipeToEditDeleteContainer` 双方向（左滑删/右滑编）
 - **撤销删除**：所有删除操作后弹出 Snackbar「撤销」，点击自动重新插入原记录
 
-### [Unreleased] — 2026-06-28
+### [1.4.3] — 2026-06-28
 
 **AGENTS.md 重构：**
 - 从 219 行精简为 ~120 行地图式结构，遵循"地图而非百科"原则
