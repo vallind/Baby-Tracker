@@ -392,61 +392,6 @@
 - Koin DI 新增 syncModule，注册 SupabaseClient / AuthService / LoginViewModel
 - 数据库 module 补充 SyncMetadataDao
 
-### [1.4.2] — 2026-06-28
-
-**DatePicker & TimePicker TDesign 风格重构：**
-- 移除 M3 DatePickerDialog + AlertDialog 原生样式，改为 TDesign 风格自定义底部面板
-- 日历面板：月/年标题 + 左右箭头切换 + 日期网格（圆形品牌色选中标记 + 今天品牌色文字）
-- 时间面板：滚轮式时/分选择器（中间行品牌色高亮背景 + 上下分隔线 + 拖拽吸附）
-- 级联流程：先选日期 → "下一步" → 选时间 → "确认"，统一在一个底部面板内完成
-- 提取 WheelPicker 为独立共享组件（timepicker 包内 public，供 TimePickerDialog 和 DateTimeCascadeDialog 共用）
-+- 修复滚轮选择器边界值重复显示（小时 23 重复三次、分钟 0 重复三次），改为 null 占位替代 coerceIn
-+- 修复小时/分钟 range 错误（0..24→0..23、0..60→0..59）
-+- 修复确认按钮点击后窗口不消失（onConfirm 后追加 onDismiss）
-+- WheelPicker → AppWheelPicker → TimePickerLogic（符合命名规范），文件名同步重命名
-- 令牌扩展：DatePickerTokens/TimePickerTokens 新增 toolbarHeight/toolbarTextColor/dividerColor/selectedBackgroundColor 等 TDesign 风格字段
-
-### [1.4.1] — 2026-06-28
-
-**修复底部导航栏图标显示不全：**
-- BottomBarTokens 高度 64dp → 80dp、图标 22dp → 24dp，与 M3 NavigationBar 默认值对齐，解决图标被裁剪问题
-- NavigationBar 添加 navigationBarsPadding() 防止系统手势条遮挡
-
-**修复主题切换后组件颜色不跟随变化：**
-- LocalAppComponentTokens 从 staticCompositionLocalOf 改为 compositionLocalOf，确保主题切换时可靠重组
-- BabyTrackerTheme.resolvedColors 从硬编码 AppColors.light()/dark() 改为基于 theme.colors 调用 AppColors.derive()，使暖阳粉/极光紫等主题的组件令牌颜色正确跟随
-
-**设计令牌参照 shadcn/ui 样式升级：**
-- 组件令牌补 contentColor：CardTokens/DialogTokens 新增 contentColor，与 containerColor 成对
-- 圆角体系：AppShapes 新增 radiusScale 全局缩放 + scaled() 方法，所有组件 cornerRadius 标注与 shapes 对应关系
-- ButtonTokens.contentColor 默认值从 Color.Transparent 修正为 c.onPrimary
-- AppColors.derive 重构为语义派生（参照 PaletteColors）：输入 primary/surface/onSurface/border 4 个基础色，自动推导全部 39 字段
-- light()/dark() 改用 derive 实现，消除冗余手写值
-- 文档：AGENTS.md 补充令牌设计约定，design-system.md 补充 surface/foreground 配对 + 圆角派生说明
-
-**shadcn 风格视觉调优：**
-- 色彩：亮色主色 #4285F4→#3B82F6(blue-500)，背景 #E6F0FF→#F8FAFC(slate-50)，边框 #E0EAF5→#E4E4E7(zinc-200)，success/warning/danger 同步对齐
-- 暗色：surface #1E1E32→#18181B(zinc-900)，background #12121F→#09090B(zinc-950)
-- 圆角：medium 12dp→8dp，large 16dp→12dp，small 8dp→6dp，对标 shadcn --radius=0.5rem
-- 卡片：border 0dp→1dp 描边风格，cornerRadius shapes.large→shapes.medium
-- 按钮：cornerRadius shapes.medium*2→shapes.medium
-- 标签/Chip：cornerRadius 20dp→shapes.full 胶囊形
-- Card 新增 borderColor/borderWidth 参数支持
-
-**令牌系统全面迁移（LocalThemeColors → LocalAppColors）：**
-- 组件层：13 个组件全部迁移到新令牌系统（Fab/Input/Section/TopBar/BottomNav/Button/Chip/Dialog/IconButton/Scaffold/RecordCard/BabyIllustration/BorderContainer）
-- 补充令牌定义：FabTokens/BottomBarTokens/AppBarTokens/ListItemTokens/ChipTokens 新增颜色字段；新增 IconButtonTokens/ScaffoldTokens/BorderContainerTokens
-- Feature 层：13 个页面文件批量迁移，属性映射 bg→pageBackground, primaryLight→primaryContainer, card→surface, accent→warning 等
-- Gradients 工具类参数类型从 ThemeColors 迁移到 AppColors
-- 消除全部硬编码颜色值：CountdownChip/BadgeIcon/BabyIllustration/RecordCard 改用令牌
-
-### [1.4.0] — 2026-06-25
-
-**记录编辑与删除优化：**
-- **编辑功能**：喂养/睡眠/尿布/生长/疫苗/健康 6 种记录全部支持点击编辑，表单预填原有数据，保存调用 `repo.update()`
-- **滑动删除**：新增 `SwipeToDeleteContainer` 组件，左滑红色背景 + 删除图标松手即删；`SwipeToEditDeleteContainer` 双方向（左滑删/右滑编）
-- **撤销删除**：所有删除操作后弹出 Snackbar「撤销」，点击自动重新插入原记录
-
 ### [1.4.3] — 2026-06-28
 
 **AGENTS.md 重构：**
@@ -567,6 +512,61 @@ ui/components/  — 19 个 Composable 文件 + 导出索引
 显式参数 > Defaults 参数 > 组件令牌 > 语义令牌 > 硬编码回退
 ```
 - **TimelineViewModel**：新增 `undoLastDelete()` 方法暂存最近删除实体用于撤销
+
+### [1.4.2] — 2026-06-28
+
+**DatePicker & TimePicker TDesign 风格重构：**
+- 移除 M3 DatePickerDialog + AlertDialog 原生样式，改为 TDesign 风格自定义底部面板
+- 日历面板：月/年标题 + 左右箭头切换 + 日期网格（圆形品牌色选中标记 + 今天品牌色文字）
+- 时间面板：滚轮式时/分选择器（中间行品牌色高亮背景 + 上下分隔线 + 拖拽吸附）
+- 级联流程：先选日期 → "下一步" → 选时间 → "确认"，统一在一个底部面板内完成
+- 提取 WheelPicker 为独立共享组件（timepicker 包内 public，供 TimePickerDialog 和 DateTimeCascadeDialog 共用）
++- 修复滚轮选择器边界值重复显示（小时 23 重复三次、分钟 0 重复三次），改为 null 占位替代 coerceIn
++- 修复小时/分钟 range 错误（0..24→0..23、0..60→0..59）
++- 修复确认按钮点击后窗口不消失（onConfirm 后追加 onDismiss）
++- WheelPicker → AppWheelPicker → TimePickerLogic（符合命名规范），文件名同步重命名
+- 令牌扩展：DatePickerTokens/TimePickerTokens 新增 toolbarHeight/toolbarTextColor/dividerColor/selectedBackgroundColor 等 TDesign 风格字段
+
+### [1.4.1] — 2026-06-28
+
+**修复底部导航栏图标显示不全：**
+- BottomBarTokens 高度 64dp → 80dp、图标 22dp → 24dp，与 M3 NavigationBar 默认值对齐，解决图标被裁剪问题
+- NavigationBar 添加 navigationBarsPadding() 防止系统手势条遮挡
+
+**修复主题切换后组件颜色不跟随变化：**
+- LocalAppComponentTokens 从 staticCompositionLocalOf 改为 compositionLocalOf，确保主题切换时可靠重组
+- BabyTrackerTheme.resolvedColors 从硬编码 AppColors.light()/dark() 改为基于 theme.colors 调用 AppColors.derive()，使暖阳粉/极光紫等主题的组件令牌颜色正确跟随
+
+**设计令牌参照 shadcn/ui 样式升级：**
+- 组件令牌补 contentColor：CardTokens/DialogTokens 新增 contentColor，与 containerColor 成对
+- 圆角体系：AppShapes 新增 radiusScale 全局缩放 + scaled() 方法，所有组件 cornerRadius 标注与 shapes 对应关系
+- ButtonTokens.contentColor 默认值从 Color.Transparent 修正为 c.onPrimary
+- AppColors.derive 重构为语义派生（参照 PaletteColors）：输入 primary/surface/onSurface/border 4 个基础色，自动推导全部 39 字段
+- light()/dark() 改用 derive 实现，消除冗余手写值
+- 文档：AGENTS.md 补充令牌设计约定，design-system.md 补充 surface/foreground 配对 + 圆角派生说明
+
+**shadcn 风格视觉调优：**
+- 色彩：亮色主色 #4285F4→#3B82F6(blue-500)，背景 #E6F0FF→#F8FAFC(slate-50)，边框 #E0EAF5→#E4E4E7(zinc-200)，success/warning/danger 同步对齐
+- 暗色：surface #1E1E32→#18181B(zinc-900)，background #12121F→#09090B(zinc-950)
+- 圆角：medium 12dp→8dp，large 16dp→12dp，small 8dp→6dp，对标 shadcn --radius=0.5rem
+- 卡片：border 0dp→1dp 描边风格，cornerRadius shapes.large→shapes.medium
+- 按钮：cornerRadius shapes.medium*2→shapes.medium
+- 标签/Chip：cornerRadius 20dp→shapes.full 胶囊形
+- Card 新增 borderColor/borderWidth 参数支持
+
+**令牌系统全面迁移（LocalThemeColors → LocalAppColors）：**
+- 组件层：13 个组件全部迁移到新令牌系统（Fab/Input/Section/TopBar/BottomNav/Button/Chip/Dialog/IconButton/Scaffold/RecordCard/BabyIllustration/BorderContainer）
+- 补充令牌定义：FabTokens/BottomBarTokens/AppBarTokens/ListItemTokens/ChipTokens 新增颜色字段；新增 IconButtonTokens/ScaffoldTokens/BorderContainerTokens
+- Feature 层：13 个页面文件批量迁移，属性映射 bg→pageBackground, primaryLight→primaryContainer, card→surface, accent→warning 等
+- Gradients 工具类参数类型从 ThemeColors 迁移到 AppColors
+- 消除全部硬编码颜色值：CountdownChip/BadgeIcon/BabyIllustration/RecordCard 改用令牌
+
+### [1.4.0] — 2026-06-25
+
+**记录编辑与删除优化：**
+- **编辑功能**：喂养/睡眠/尿布/生长/疫苗/健康 6 种记录全部支持点击编辑，表单预填原有数据，保存调用 `repo.update()`
+- **滑动删除**：新增 `SwipeToDeleteContainer` 组件，左滑红色背景 + 删除图标松手即删；`SwipeToEditDeleteContainer` 双方向（左滑删/右滑编）
+- **撤销删除**：所有删除操作后弹出 Snackbar「撤销」，点击自动重新插入原记录
 
 ### [1.3.0] — 2026-06-18
 
