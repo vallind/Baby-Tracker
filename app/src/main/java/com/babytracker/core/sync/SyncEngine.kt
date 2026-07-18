@@ -533,8 +533,10 @@ class SyncEngine(
     // 所以统一用 jsonStr() 转换，JsonNull → null
     // ================================================================
 
-    private fun jsonStr(json: JsonObject, key: String): String? =
-        (json[key] as? JsonPrimitive)?.content
+    private fun jsonStr(json: JsonObject, key: String): String? {
+        val value = (json[key] as? JsonPrimitive)?.content
+        return if (value == "null") null else value
+    }
 
     private fun parseBaby(json: JsonObject): BabyEntity = BabyEntity(
         id = 0,

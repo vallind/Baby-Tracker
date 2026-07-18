@@ -2,6 +2,12 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.2] — 2026-07-18
+
+**`jsonStr()` 增加防御性清洗，避免 JSON `null` 被解析为字符串 `"null"`：**
+- 从 Supabase 拉取记录时，`JsonNull` 可能被底层库序列化为字符串 `"null"`，导致空字段显示 `"null"` 文本
+- `jsonStr()` 返回值增加 `if (value == "null") null` 防御判断
+
 ### [1.5.1] — 2026-07-18
 
 **修复全量同步时 push 覆盖拉取锚点导致互相看不到对方记录：**
