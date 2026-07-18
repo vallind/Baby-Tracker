@@ -421,12 +421,14 @@
 
 **删除体验统一：**
 - 所有屏幕卡片编辑改为长按触发（`onClick` → `onLongClick`），Vaccination 保持点击
-- 左滑删除统一弹出 `AppConfirmDialog` 确认后执行
-- 7 个屏幕长按删除全部移除，仅保留左滑删除
+- 左滑删除统一弹出 `AppConfirmDialog` 确认后执行（`SwipeToDeleteContainer` / `SwipeToEditDeleteContainer`）
+- 红色背景裁剪：滑动容器外层加 `Box.clip(RoundedCornerShape(DT.cardRadius.dp))`，解决红色超出卡片边界的问题
+- 卡片间距外移：卡片内部 `padding(vertical=4dp)` 移到 `SwipeToDeleteContainer` 外层 modifier，避免红色填充卡片间隙
+- 移除 Feeding/Sleep/Diaper/Growth/Vaccination/Health/Timeline 共 7 个屏幕的长按删除逻辑，仅保留左滑删除（已含确认弹窗）
 
 **记录页直接编辑：**
-- TimelineScreen 点击卡片直接弹出编辑表单（不再跳转功能页）
-- TimelineViewModel 新增 `findXxx(id)` / `updateXxx(entity)` 方法
+- TimelineScreen 点击卡片直接弹出编辑表单（不再跳转功能页），支持喂养/睡眠/尿布/生长/健康
+- TimelineViewModel 新增 `findXxx(id)` / `updateXxx(entity)` 方法供直接编辑使用
 
 **单元测试：**
 - 新增 `DateUtilsTest`（相对日期 4 场景）
@@ -453,18 +455,6 @@
 - **PaiButton 工厂**：PRIMARY/SECONDARY/TEXT 三变体简化工厂
 - **静态审计测试**：`ThemeTokenizationStaticAuditTest` 验证所有 Defaults 文件路由正确性
 - **组件脚手架**：`scripts/generate-component.sh` 一键生成 Xxx.kt / XxxDefaults.kt / XxxLogic.kt / XxxLogicTest.kt
-
-**滑动删除体验改进：**
-- **滑动确认弹窗**：`SwipeToDeleteContainer` / `SwipeToEditDeleteContainer` 左滑不再直接删除，改为弹出 `AppConfirmDialog` 确认后执行
-- **红色背景裁剪**：滑动容器外层加 `Box.clip(RoundedCornerShape(DT.cardRadius.dp))`，解决红色超出卡片边界的问题
-- **卡片间距外移**：卡片内部 `padding(vertical=4dp)` 移到 `SwipeToDeleteContainer` 外层 modifier，避免红色填充卡片间隙
-
-**记录页直接编辑：**
-- **TimelineScreen 点击编辑**：点击时间线卡片直接弹出对应类型的编辑表单（喂养/睡眠/尿布/生长/健康），不再跳转功能页
-- **TimelineViewModel 新增**：`findXxx(id)` / `updateXxx(entity)` 方法供直接编辑使用
-
-**长按删除统一移除：**
-- 移除 Feeding/Sleep/Diaper/Growth/Vaccination/Health/Timeline 共 7 个屏幕的长按删除逻辑，仅保留左滑删除（已含确认弹窗）
 
 **组件目录化 + 语义色阶补齐 + Typography 令牌化：**
 - **组件目录化**：14 个组件各自独立目录，`AppComponentDefaults.kt` 拆分为 9 个独立 `XxxDefaults.kt` 各归其位
