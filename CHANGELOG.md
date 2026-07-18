@@ -2,7 +2,11 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-### [Unreleased]
+### [1.5.1] — 2026-07-18
+
+**修复全量同步时 push 覆盖拉取锚点导致互相看不到对方记录：**
+- `SyncEngine.fullSync()` 原来先 `push()` 后 `pull()`，`push()` 末尾调用 `updateLastSyncAt(now)` 把增量锚点设成当前时间，导致后续 `pull()` 只拉取 `updatedAt >= now` 的记录——所有历史数据全部跳过
+- 修复：互换顺序，先 `pull()` 拉取（此时 `lastSyncAt` 还是 null/上一个锚点），再 `push()` 推送本地变更
 
 ### [1.5.0] — 2026-07-18
 

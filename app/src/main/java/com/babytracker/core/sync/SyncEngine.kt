@@ -262,10 +262,10 @@ class SyncEngine(
         syncMeta.clearLastSyncAt()
     }
 
-    /** 全量同步，返回 [推送数, 拉取数] */
+    /** 全量同步，返回 [拉取数, 推送数] */
     suspend fun fullSync(): Pair<Int, Int> {
-        val pushed = push()
         val pulled = pull()
+        val pushed = push()
         return pushed to pulled
     }
 
