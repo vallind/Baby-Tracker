@@ -270,6 +270,7 @@ class SyncEngine(
     suspend fun fullSync(): Pair<Int, Int> = fullSyncMutex.withLock {
         val pulled = pull()
         val pushed = push()
+        syncMeta.updateLastSyncAt(System.currentTimeMillis())
         pushed to pulled
     }
 
