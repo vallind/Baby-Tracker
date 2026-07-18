@@ -4,6 +4,10 @@
 
 ### [Unreleased]
 
+**修复消息中心每次清空后重新播种演示数据的 bug：**
+- `MessageViewModel.seedDemoIfEmpty()` 在用户清空所有消息后重进页面会再次插入 6 条演示消息，用户误判为"每天生成虚假通知"
+- 移除 `seedDemoIfEmpty()` 及其调用，消息中心不再自动生成演示数据
+
 **修复时间选择器滚轮无法选中边缘值（0/23/0/59）：**
 - 首尾填充 halfVisible 个 Spacer 使边缘值能滚动到视口正中央
 - Spacer 显式指定不冲突的 key 避免与值 key 冲突
