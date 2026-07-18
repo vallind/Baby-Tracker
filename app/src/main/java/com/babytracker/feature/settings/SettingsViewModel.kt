@@ -107,7 +107,7 @@ class SettingsViewModel(
                         syncEngine.fullSync()       // 拉取新家庭所有历史数据
                         lastSyncedFamilyId = newId
                     }
-                } else {
+                } else if (newId != null) {
                     lastSyncedFamilyId = newId
                 }
 
