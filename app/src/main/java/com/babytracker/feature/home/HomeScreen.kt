@@ -87,7 +87,7 @@ fun HomeScreen(navController: NavController) {
             FeatureGrid(navController)
 
             Spacer(Modifier.height(spacing.md))
-            TodayOverviewCard(feedCount = state.feedCount, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
+            TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
 
             if (state.recentItems.isNotEmpty()) {
                 Spacer(Modifier.height(spacing.md))
@@ -163,12 +163,16 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
 }
 
 @Composable
-fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
+fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formulaTotalMl: Int, sleepHours: String, diaperCount: Int) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypographyStyle.current
     val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
+    val animatedBreast by androidx.compose.animation.core.animateIntAsState(targetValue = breastFeedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "breast")
     val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
+    val showBreast = breastFeedCount > 0
+    val showFormula = formulaCount > 0
+    val showGeneric = !showBreast && !showFormula
     AppCard(
         modifier = Modifier
             .padding(horizontal = spacing.md)
@@ -178,8 +182,18 @@ fun TodayOverviewCard(feedCount: Int, sleepHours: String, diaperCount: Int) {
             Text("今日概览", style = typography.titleMedium, color = c.textPrimary)
             Spacer(Modifier.height(spacing.md))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextStatCell(animatedFeed.toString(), "次", "喂养次数")
-                StatDivider()
+                if (showBreast) {
+                    TextStatCell(animatedBreast.toString(), "次", "母乳")
+                    StatDivider()
+                }
+                if (showFormula) {
+                    TextStatCell(if (formulaTotalMl > 0) "${formulaTotalMl}" else "0", "ml", "配方奶")
+                    StatDivider()
+                }
+                if (showGeneric) {
+                    TextStatCell(animatedFeed.toString(), "次", "喂养次数")
+                    StatDivider()
+                }
                 TextStatCell(sleepHours, "", "睡眠时长")
                 StatDivider()
                 TextStatCell(animatedDiaper.toString(), "次", "换尿布")

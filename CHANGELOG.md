@@ -2,6 +2,12 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.4] — 2026-07-18
+
+**今日概览和统计分析页喂养统计改为自适应展示：**
+- 今日概览：有母乳记录显示`母乳 N次`，有配方显示`配方 Xml`，均无则显示`喂养 N次`
+- 统计分析：喂养卡片同步自适应，母乳和配方分别独立展示
+
 ### [1.5.3] — 2026-07-18
 
 **修复疫苗列表卡片连在一块的问题：**

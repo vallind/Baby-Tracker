@@ -118,6 +118,9 @@ fun StatsScreen(navController: NavController) {
             ) {
                 FeedingCard(
                     count = state.feedingCount,
+                    breastFeedCount = state.breastFeedCount,
+                    formulaCount = state.formulaCount,
+                    formulaTotalMl = state.formulaTotalMl,
                     compare = state.feedingCompare,
                     points = state.feedingPoints,
                 )
@@ -192,6 +195,9 @@ private fun DateRangeNav(
 @Composable
 private fun FeedingCard(
     count: Int,
+    breastFeedCount: Int,
+    formulaCount: Int,
+    formulaTotalMl: Int,
     compare: String,
     points: List<Float>,
     modifier: Modifier = Modifier,
@@ -199,6 +205,8 @@ private fun FeedingCard(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypographyStyle.current
+    val showBreast = breastFeedCount > 0
+    val showFormula = formulaCount > 0
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -208,10 +216,19 @@ private fun FeedingCard(
             Column {
                 StatCardIcon("🍼", c.warning)
                 Spacer(Modifier.height(spacing.sm))
-                Text("喂养次数", style = typography.label, color = c.textTertiary)
+                Text("喂养", style = typography.label, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("${count}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                if (showBreast && showFormula) {
+                    Text("母乳 ${breastFeedCount}次", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                    Text("配方 ${formulaTotalMl}ml", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                } else if (showBreast) {
+                    Text("母乳 ${breastFeedCount}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                } else if (showFormula) {
+                    Text("配方 ${formulaTotalMl}ml", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                } else {
+                    Text("${count}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                }
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }

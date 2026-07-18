@@ -14,6 +14,9 @@ import java.time.format.DateTimeFormatter
 
 data class HomeUiState(
     val feedCount: Int = 0,
+    val breastFeedCount: Int = 0,
+    val formulaCount: Int = 0,
+    val formulaTotalMl: Int = 0,
     val sleepHours: String = "--",
     val diaperCount: Int = 0,
     val recentItems: List<Any> = emptyList(),
@@ -59,6 +62,9 @@ class HomeViewModel(
 
                     HomeUiState(
                         feedCount = todayFeedings.size,
+                        breastFeedCount = todayFeedings.count { it.type == FeedingType.BREAST },
+                        formulaCount = todayFeedings.count { it.type == FeedingType.FORMULA },
+                        formulaTotalMl = todayFeedings.filter { it.type == FeedingType.FORMULA }.sumOf { it.amountMl ?: 0 },
                         sleepHours = if (nightSleepMin > 0) "${nightSleepMin / 60}时${nightSleepMin % 60}分" else "--",
                         diaperCount = todayDiapers.size,
                         recentItems = allItems,

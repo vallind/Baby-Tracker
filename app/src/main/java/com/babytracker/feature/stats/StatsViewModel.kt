@@ -22,6 +22,9 @@ data class StatsUiState(
     val dateRangeText: String = "",
     // —— 当前周期数据 ——
     val feedingCount: Int = 0,
+    val breastFeedCount: Int = 0,
+    val formulaCount: Int = 0,
+    val formulaTotalMl: Int = 0,
     val sleepMinutes: Long = 0,
     val height: String = "--",
     val heightRaw: Float = 0f,
@@ -123,6 +126,9 @@ class StatsViewModel(
             !t.isBefore(prevStart) && t.isBefore(prevEnd)
         }
         val feedingCount = feedingInRange.size
+        val breastFeedCount = feedingInRange.count { it.type == FeedingType.BREAST }
+        val formulaCount = feedingInRange.count { it.type == FeedingType.FORMULA }
+        val formulaTotalMl = feedingInRange.filter { it.type == FeedingType.FORMULA }.sumOf { it.amountMl ?: 0 }
         val feedingCompare = buildCompare((feedingCount - feedingPrevInRange.size).toLong(), "次")
 
         val bucketCount = periodBucketCount(period)
@@ -196,6 +202,9 @@ class StatsViewModel(
             periodOffset = offset,
             dateRangeText = dateRangeText,
             feedingCount = feedingCount,
+            breastFeedCount = breastFeedCount,
+            formulaCount = formulaCount,
+            formulaTotalMl = formulaTotalMl,
             sleepMinutes = sleepMinutes,
             height = height,
             heightRaw = heightRaw,
