@@ -4,6 +4,11 @@
 
 ### [Unreleased]
 
+**启用 coreLibraryDesugaring 修复 445 个 NewApi lint 错误：**
+- `minSdk = 24` 但大量使用 `java.time.*` API（要求 API 26+），未启用 desugaring 导致 Lint 失败
+- `gradle/libs.versions.toml` 新增 `desugar_jdk_libs` 依赖
+- `app/build.gradle.kts` 开启 `isCoreLibraryDesugaringEnabled` + 添加 `coreLibraryDesugaring` 依赖
+
 **修复消息中心每次清空后重新播种演示数据的 bug：**
 - `MessageViewModel.seedDemoIfEmpty()` 在用户清空所有消息后重进页面会再次插入 6 条演示消息，用户误判为"每天生成虚假通知"
 - 移除 `seedDemoIfEmpty()` 及其调用，消息中心不再自动生成演示数据
