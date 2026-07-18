@@ -240,6 +240,7 @@ fun VaccinationListScreen(navController: NavController) {
                         end = spacing.md,
                         bottom = 80.dp,
                     ),
+                    verticalArrangement = Arrangement.spacedBy(spacing.sm),
                 ) {
                     items(items = filtered, key = { it.id }) { v ->
                         VaccinationCard(

@@ -2,6 +2,12 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.3] — 2026-07-18
+
+**修复疫苗列表卡片连在一块的问题：**
+- `VaccinationListScreen` 的 `LazyColumn` 缺少 `verticalArrangement`，卡片之间无间距
+- 新增 `Arrangement.spacedBy(spacing.sm)` 恢复卡片间距
+
 ### [1.5.2] — 2026-07-18
 
 **`jsonStr()` 增加防御性清洗，避免 JSON `null` 被解析为字符串 `"null"`：**
