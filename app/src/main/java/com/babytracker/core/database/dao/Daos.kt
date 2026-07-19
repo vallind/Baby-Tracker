@@ -241,7 +241,7 @@ interface SyncMetadataDao {
     @Query("UPDATE sync_metadata SET syncStatus = 'conflict', updatedAt = :updatedAt WHERE id = :id")
     suspend fun markConflict(id: Int, updatedAt: Long)
 
-    @Query("UPDATE sync_metadata SET lastSyncAt = :lastSyncAt WHERE lastSyncAt IS NULL OR lastSyncAt < :lastSyncAt")
+    @Query("UPDATE sync_metadata SET lastSyncAt = :lastSyncAt")
     suspend fun updateLastSyncAt(lastSyncAt: Long)
 
     /** 清除全局 lastSyncAt 时间戳，使下次 pull 执行全量拉取（用于切换/加入家庭时同步历史数据） */
