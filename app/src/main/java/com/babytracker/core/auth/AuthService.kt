@@ -54,28 +54,31 @@ class AuthService(
     val nickname: StateFlow<String?> = _nickname.asStateFlow()
 
     init {
-        try {
-            _currentUser.value = client.auth.currentUserOrNull()
-        } catch (_: Exception) {
-            _currentUser.value = null
-        }
-        // 无论会话是否立即恢复，都从 SharedPreferences 加载账户名和昵称
+        // 1. 优先从 SP 缓存恢复登录态（立即生效，不等 Supabase）
+        var restored = false
         if (prefs.getBoolean(KEY_LOGGED_IN, false)) {
             val cachedId = prefs.getString(KEY_USER_ID, null)
             _displayAccount.value = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
             _nickname.value = prefs.getString(KEY_NICKNAME, null)
-            Timber.tag("Auth").d("init: cached session uid=%s supabase=%s", cachedId ?: "?", _currentUser.value?.id ?: "null")
-            // Supabase 验证失败时用 SP 缓存兜底，使断网也能保持登录态
-            if (_currentUser.value == null && cachedId != null) {
+            if (cachedId != null) {
                 _currentUser.value = UserInfo(id = cachedId, aud = "authenticated")
-                Timber.tag("Auth").d("init: using cached uid=%s (offline fallback)", cachedId)
+                restored = true
+                Timber.tag("Auth").d("init: restored from cache uid=%s", cachedId)
+            } else {
+                Timber.tag("Auth").d("init: KEY_LOGGED_IN=true but KEY_USER_ID missing, waiting for Supabase")
             }
         }
-        if (_currentUser.value != null) {
+        // 2. 尝试从 Supabase 获取实时 session（异步恢复，完成后覆盖缓存值）
+        if (!restored) {
+            try {
+                _currentUser.value = client.auth.currentUserOrNull()
+                if (_currentUser.value != null) restored = true
+            } catch (_: Exception) { }
+        }
+        if (restored) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
         }
-        // 监听 Supabase session 状态，同步到 _currentUser
-        // 断网时不覆盖缓存的登录态
+        // 3. 监听 Supabase session 状态变更（登录/登出/刷新）
         CoroutineScope(Dispatchers.IO).launch {
             client.auth.sessionStatus.collect { status ->
                 val user = when (status) {
@@ -84,6 +87,7 @@ class AuthService(
                 }
                 if (user != null) {
                     _currentUser.value = user
+                    prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).apply()
                     Timber.tag("Auth").d("sessionStatus: authenticated uid=%s", user.id)
                 } else if (!prefs.getBoolean(KEY_LOGGED_IN, false)) {
                     _currentUser.value = null
