@@ -211,7 +211,9 @@ class SyncEngine(
                 }
             }
             Timber.tag("Sync").d("push done: %d pushed", pushed)
-            syncMeta.updateLastSyncAt(System.currentTimeMillis())
+            if (pushed > 0) {
+                syncMeta.updateLastSyncAt(System.currentTimeMillis())
+            }
         } finally {
             _syncState.value = SyncState.IDLE
         }
@@ -254,7 +256,9 @@ class SyncEngine(
                 }
             }
             Timber.tag("Sync").d("pull done: %d pulled", pulled)
-            syncMeta.updateLastSyncAt(System.currentTimeMillis())
+            if (pulled > 0) {
+                syncMeta.updateLastSyncAt(System.currentTimeMillis())
+            }
         } finally {
             _syncState.value = SyncState.IDLE
         }
@@ -276,7 +280,9 @@ class SyncEngine(
     suspend fun fullSync(): Pair<Int, Int> = fullSyncMutex.withLock {
         val pulled = pull()
         val pushed = push()
-        syncMeta.updateLastSyncAt(System.currentTimeMillis())
+        if (pulled > 0 || pushed > 0) {
+            syncMeta.updateLastSyncAt(System.currentTimeMillis())
+        }
         pushed to pulled
     }
 

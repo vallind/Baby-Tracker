@@ -123,7 +123,6 @@ class SettingsViewModel(
     }
 
     private var lastAutoSyncUserId: String? = null
-    private var firstSyncInSession = true
 
     private suspend fun tryAutoSync() {
         val uid = authService.currentUserId()
@@ -132,11 +131,6 @@ class SettingsViewModel(
             return
         }
         lastAutoSyncUserId = uid
-        if (firstSyncInSession) {
-            syncEngine.resetLastSync()
-            firstSyncInSession = false
-            Timber.tag("SyncVM").d("tryAutoSync: reset lastSync (session first)")
-        }
         try {
             syncEngine.currentFamilyId = ensureFamily()
             if (syncEngine.currentFamilyId == null) {
