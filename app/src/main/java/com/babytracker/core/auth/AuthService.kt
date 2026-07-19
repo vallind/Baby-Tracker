@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * Supabase Auth 服务。
@@ -64,9 +65,33 @@ class AuthService(
             _displayAccount.value = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
             _nickname.value = prefs.getString(KEY_NICKNAME, null)
             Timber.tag("Auth").d("init: cached session uid=%s supabase=%s", cachedId ?: "?", _currentUser.value?.id ?: "null")
+            // Supabase 验证失败时用 SP 缓存兜底，使断网也能保持登录态
+            if (_currentUser.value == null && cachedId != null) {
+                _currentUser.value = UserInfo(id = cachedId, aud = "authenticated")
+                Timber.tag("Auth").d("init: using cached uid=%s (offline fallback)", cachedId)
+            }
         }
         if (_currentUser.value != null) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
+        }
+        // 监听 Supabase session 状态，同步到 _currentUser
+        // 断网时不覆盖缓存的登录态
+        CoroutineScope(Dispatchers.IO).launch {
+            client.auth.sessionStatus.collect { status ->
+                val user = when (status) {
+                    is SessionStatus.Authenticated -> status.session.user
+                    else -> null
+                }
+                if (user != null) {
+                    _currentUser.value = user
+                    Timber.tag("Auth").d("sessionStatus: authenticated uid=%s", user.id)
+                } else if (!prefs.getBoolean(KEY_LOGGED_IN, false)) {
+                    _currentUser.value = null
+                    Timber.tag("Auth").d("sessionStatus: not authenticated (no cached session)")
+                } else {
+                    Timber.tag("Auth").d("sessionStatus: %s (cached session preserved)", status::class.simpleName)
+                }
+            }
         }
     }
 
@@ -156,31 +181,18 @@ class AuthService(
     /** 当前是否已登录 */
     fun isLoggedIn(): Boolean = _currentUser.value != null
 
+    /** SharedPreferences 中是否有缓存的登录记录（用于离线兜底判断） */
+    fun hasCachedSession(): Boolean = prefs.getBoolean(KEY_LOGGED_IN, false)
+
     /** 获取当前用户 ID，未登录返回 null */
     fun currentUserId(): String? = _currentUser.value?.id
 
     // ─── 状态监听 ───
 
     /**
-     * 监听登录状态变化（从 Supabase Auth 实时状态流）。
-     * 用于同步引擎判断是否应该启动/停止同步。
+     * 监听登录状态变化。
+     * 数据源为 `_currentUser`（已合并 Supabase session + SP 缓存），
+     * 断网时自动回退到缓存，不会因 Supabase 验证失败而发射 null。
      */
-    fun observeAuthState(): StateFlow<UserInfo?> = client.auth.sessionStatus
-        .map { status ->
-            val result = when (status) {
-                is SessionStatus.Authenticated -> {
-                    Timber.tag("Auth").d("observeAuthState: authenticated userId=%s", status.session.user?.id)
-                    status.session.user
-                }
-                is SessionStatus.NotAuthenticated -> { Timber.tag("Auth").d("observeAuthState: not authenticated"); null }
-                is SessionStatus.Initializing -> { Timber.tag("Auth").d("observeAuthState: initializing"); null }
-                is SessionStatus.RefreshFailure -> { Timber.tag("Auth").d("observeAuthState: refresh failure"); null }
-            }
-            result
-        }
-        .stateIn(
-            scope = CoroutineScope(Dispatchers.IO),
-            started = SharingStarted.Eagerly,
-            initialValue = _currentUser.value,
-        )
+    fun observeAuthState(): StateFlow<UserInfo?> = _currentUser.asStateFlow()
 }
