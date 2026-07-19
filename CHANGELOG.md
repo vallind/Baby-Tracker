@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.9] — 2026-07-18
+
+**修复增量拉取永远漏记录（`push` 覆写 `updatedAt` + 锚点仅同步时推进）：**
+- `push()` 将记录 `updatedAt` 覆写为当前时间戳上传 Supabase，无论记录何时创建，对方增量查询必定命中
+- `pull()` / `push()` / `fullSync()` 仅在同步到数据时推进 `lastSyncAt`，无数据同步不涨锚点
+- 修复：A 离线多日间 B 多次同步，锚点保持旧值，A 上线推送后 B 一次拉取即可全部命中
+
 ### [1.5.8] — 2026-07-18
 
 **修复增量拉取漏记录（`updateLastSyncAt` WHERE 条件导致未来时间戳阻塞）：**
