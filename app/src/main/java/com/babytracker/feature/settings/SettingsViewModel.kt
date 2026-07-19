@@ -81,6 +81,7 @@ class SettingsViewModel(
                     realtimeManager.unsubscribe()
                     syncEngine.currentFamilyId = null
                     lastSyncedFamilyId = null
+                    lastAutoSyncUserId = null
                 }
             }
         }
@@ -94,7 +95,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             familyService.currentFamily.collect { family ->
                 val newId = family?.id
-                syncEngine.currentFamilyId = newId
+                if (newId != null) {
+                    syncEngine.currentFamilyId = newId
+                }
                 // 持久化到本地，Supabase 不通时仍可同步
                 newId?.let { prefs.edit().putString("current_family_id", it).apply() }
 
@@ -119,7 +122,15 @@ class SettingsViewModel(
         }
     }
 
+    private var lastAutoSyncUserId: String? = null
+
     private suspend fun tryAutoSync() {
+        val uid = authService.currentUserId()
+        if (uid != null && uid == lastAutoSyncUserId) {
+            Timber.tag("SyncVM").d("tryAutoSync: skip duplicate uid=%s", uid)
+            return
+        }
+        lastAutoSyncUserId = uid
         try {
             syncEngine.currentFamilyId = ensureFamily()
             if (syncEngine.currentFamilyId == null) {
