@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.6] — 2026-07-18
+
+**修复同步链路竞态条件（全量拉取退化为增量、重复全量、网络延迟）：**
+- `currentFamily` collector 初始 null 发射不再覆盖 `lastSyncedFamilyId`，避免误判为家庭切换触发多余全量拉取
+- `resetLastSync()` 从协程内移到 collector 中同步执行，确保 `tryAutoSync()` 的 `fullSync()` 读到已清零的锚点
+- `fullSync()` 末尾兜底调用 `updateLastSyncAt(now)`，保证无待推送时锚点也能推进
+- `ensureFamily()` 优先检查 SharedPreferences 本地持久化，避免每次同步都等 Supabase 网络请求
+
 ### [1.5.5] — 2026-07-18
 
 **修复并发触发两次全量同步的重复请求问题：**
