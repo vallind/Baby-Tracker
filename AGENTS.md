@@ -99,8 +99,7 @@ app/src/main/java/com/babytracker/
 ## 七、注释与提交规范
 
 - 所有注释**必须中文**。Commit message **必须中文**。
-- 每次构建成功必须新提交。
-- 必须先更新 `CHANGELOG.md` 再提交。
+- 每次构建成功必须先更新 `CHANGELOG.md` 然后提交。
 - CHANGELOG 条目必须分配版本号，不允许留在 `[Unreleased]` 下提交。
 - 复杂逻辑写注释解释**为什么**（why），不重复代码表面意思（what）。
 
