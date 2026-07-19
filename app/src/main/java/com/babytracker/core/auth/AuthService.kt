@@ -36,6 +36,7 @@ class AuthService(
     companion object {
         private const val SYNTHETIC_DOMAIN = "@baby-tracker.app"
         private const val KEY_LOGGED_IN = "auth_logged_in"
+        private const val KEY_USER_ID = "auth_user_id"
         private const val KEY_DISPLAY_ACCOUNT = "auth_display_account"
         private const val KEY_NICKNAME = "auth_nickname"
     }
@@ -59,8 +60,10 @@ class AuthService(
         }
         // 无论会话是否立即恢复，都从 SharedPreferences 加载账户名和昵称
         if (prefs.getBoolean(KEY_LOGGED_IN, false)) {
+            val cachedId = prefs.getString(KEY_USER_ID, null)
             _displayAccount.value = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
             _nickname.value = prefs.getString(KEY_NICKNAME, null)
+            Timber.tag("Auth").d("init: cached session uid=%s supabase=%s", cachedId ?: "?", _currentUser.value?.id ?: "null")
         }
         if (_currentUser.value != null) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
@@ -97,8 +100,8 @@ class AuthService(
             _currentUser.value = sessionUser
             sessionUser
         }
-        // 持久化登录标记 + 账户名
-        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_DISPLAY_ACCOUNT, account).apply()
+        // 持久化登录标记 + 账户名 + userId
+        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).putString(KEY_USER_ID, user.id).putString(KEY_DISPLAY_ACCOUNT, account).apply()
         _displayAccount.value = account
         // 登录时不清空已有昵称（可能从 SharedPreferences 已恢复）
         Timber.tag("Auth").d("signUp ok account=%s userId=%s", account, user.id)
@@ -115,7 +118,7 @@ class AuthService(
         }
         val user = client.auth.retrieveUserForCurrentSession()
         _currentUser.value = user
-        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_DISPLAY_ACCOUNT, account).apply()
+        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).putString(KEY_DISPLAY_ACCOUNT, account).apply()
         _displayAccount.value = account
         Timber.tag("Auth").d("signIn ok account=%s userId=%s", account, user.id)
         user
@@ -131,7 +134,7 @@ class AuthService(
         _currentUser.value = null
         _displayAccount.value = null
         _nickname.value = null
-        prefs.edit().putBoolean(KEY_LOGGED_IN, false).remove(KEY_DISPLAY_ACCOUNT).remove(KEY_NICKNAME).apply()
+        prefs.edit().putBoolean(KEY_LOGGED_IN, false).remove(KEY_USER_ID).remove(KEY_DISPLAY_ACCOUNT).remove(KEY_NICKNAME).apply()
     }
 
     // ─── 昵称管理 ───
@@ -164,12 +167,16 @@ class AuthService(
      */
     fun observeAuthState(): StateFlow<UserInfo?> = client.auth.sessionStatus
         .map { status ->
-            when (status) {
-                is SessionStatus.Authenticated -> status.session.user
-                is SessionStatus.NotAuthenticated -> null
-                is SessionStatus.Initializing -> null
-                is SessionStatus.RefreshFailure -> null
+            val result = when (status) {
+                is SessionStatus.Authenticated -> {
+                    Timber.tag("Auth").d("observeAuthState: authenticated userId=%s", status.session.user?.id)
+                    status.session.user
+                }
+                is SessionStatus.NotAuthenticated -> { Timber.tag("Auth").d("observeAuthState: not authenticated"); null }
+                is SessionStatus.Initializing -> { Timber.tag("Auth").d("observeAuthState: initializing"); null }
+                is SessionStatus.RefreshFailure -> { Timber.tag("Auth").d("observeAuthState: refresh failure"); null }
             }
+            result
         }
         .stateIn(
             scope = CoroutineScope(Dispatchers.IO),
