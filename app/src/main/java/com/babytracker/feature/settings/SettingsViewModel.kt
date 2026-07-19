@@ -101,19 +101,19 @@ class SettingsViewModel(
                 // 加入/切换到新家庭时，触发全量同步（拉取该家庭的历史数据）
                 val isNewFamily = newId != null && newId != lastSyncedFamilyId
                 Timber.tag("SyncVM").d("familyChanged id=%s isNew=%b", newId, isNewFamily)
-                if (isNewFamily && _isOnline.value) {
-                    viewModelScope.launch {
-                        syncEngine.resetLastSync()  // 清除增量锚点，执行全量拉取
-                        syncEngine.fullSync()       // 拉取新家庭所有历史数据
+                if (isNewFamily) {
+                    syncEngine.resetLastSync()  // 同步清除锚点，确保后续 fullSync 全量拉取
+                    if (_isOnline.value) {
+                        viewModelScope.launch {
+                            syncEngine.fullSync()       // 拉取新家庭所有历史数据
+                            lastSyncedFamilyId = newId
+                        }
+                    } else {
                         lastSyncedFamilyId = newId
                     }
+                    realtimeManager.subscribeAll()
                 } else if (newId != null) {
                     lastSyncedFamilyId = newId
-                }
-
-                // 同步完成后可能需要刷新 Realtime 订阅（RLS 已随家庭成员变化更新）
-                if (isNewFamily) {
-                    realtimeManager.subscribeAll()
                 }
             }
         }
