@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.10] — 2026-07-18
+
+**AuthService init 优先从 SP 缓存恢复登录态，消除启动时"未登录"闪烁：**
+- 恢复顺序改为：SP 缓存 → Supabase 异步恢复 → sessionStatus 监听
+- SP 有 `userId` 时立即设 `_currentUser`，不等 Supabase 验证
+- `sessionStatus` 确认后持续更新缓存，下次启动直接恢复
+- 断网时 SP 缓存正常工作，不再闪"点击登录"
+
 ### [1.5.9] — 2026-07-18
 
 **修复增量拉取永远漏记录（`push` 覆写 `updatedAt` + 锚点仅同步时推进）：**
