@@ -2,6 +2,17 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.8] — 2026-07-18
+
+**修复增量拉取漏记录（`updateLastSyncAt` WHERE 条件导致未来时间戳阻塞）：**
+- `updateLastSyncAt` 的 `WHERE lastSyncAt < :now` 条件使写入过未来时间戳的行永不更新
+- `MAX(lastSyncAt)` 永久返回未来值，后续所有增量拉取 `updatedAt >= 未来时间戳` 过滤掉所有正常记录
+- 修复：去掉 WHERE 条件，每次无条件更新全部行
+
+**修复 collector null 发射误清 `currentFamilyId` + `tryAutoSync` 去重：**
+- collector 的 `newId=null` 不再覆盖 `syncEngine.currentFamilyId`
+- 缓存 + Supabase 确认双发 auth 导致重复 `tryAutoSync`，增加 `lastAutoSyncUserId` 去重
+
 ### [1.5.7] — 2026-07-18
 
 **断网保持登录态和家庭信息：**
