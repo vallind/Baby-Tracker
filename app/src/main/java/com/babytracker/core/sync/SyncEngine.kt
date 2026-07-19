@@ -185,7 +185,13 @@ class SyncEngine(
                     val localEntity = dao.getById(meta.localId) ?: continue
 
                     val basePayload = entityToJson(meta.tableName, localEntity)
-                    val payload = injectFamilyId(basePayload)
+                    val now = System.currentTimeMillis()
+                    val payload = injectFamilyId(basePayload).let { json ->
+                        buildJsonObject {
+                            json.forEach { (key, value) -> put(key, value) }
+                            put("updatedAt", JsonPrimitive(now))
+                        }
+                    }
 
                     val remoteUuid = meta.remoteUuid ?: payload["uuid"]?.toString()?.removeSurrounding("\"")
                     if (remoteUuid != null) {
