@@ -136,19 +136,22 @@ class SettingsViewModel(
     }
 
     /**
-     * 获取当前家庭 ID（多层回退）：
-     * 1. 内存 currentFamily → 2. Supabase API → 3. SharedPreferences 离线兜底
+     * 获取当前家庭 ID（三层回退）：
+     * 1. 内存 currentFamily → 2. SharedPreferences 本地持久化 → 3. Supabase API
      * 不自动创建——家庭需用户主动创建或加入
      */
     private suspend fun ensureFamily(): String? = ensureFamilyMutex.withLock {
+        // 1. 内存已有
+        familyService.currentFamily.value?.let { return@withLock it.id }
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        // 2. 本地持久化（避免网络延迟）
+        prefs.getString("current_family_id", null)?.let { return@withLock it }
+        // 3. Supabase API 兜底
         try {
-            familyService.currentFamily.value?.let { return@withLock it.id }
             familyService.loadMyFamilies()
             familyService.currentFamily.value?.id
         } catch (_: Exception) {
-            // 离线回退：App 重启后内存/Supabase 都为空时，从本地持久化恢复
-            val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            prefs.getString("current_family_id", null)
+            null
         }
     }
 
