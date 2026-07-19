@@ -2,6 +2,15 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.7] — 2026-07-18
+
+**断网保持登录态和家庭信息：**
+- `AuthService` 登录/注册时缓存 `userId` 到 SharedPreferences，`init` 时 Supabase 验证失败用缓存兜底
+- `sessionStatus` 监听器只在无缓存时清空登录态，断网保留缓存值
+- `observeAuthState()` 改为直接暴露 `_currentUser` 流，不再映射 Supabase 原始流
+- `ensureFamily()` 已优先从 SP 恢复家庭 ID，断网不依赖网络请求
+- 新增 `Auth: init: cached session uid=...`、`Auth: sessionStatus: ...` 日志，可追踪登录态延迟
+
 ### [1.5.6] — 2026-07-18
 
 **修复同步链路竞态条件（全量拉取退化为增量、重复全量、网络延迟）：**
