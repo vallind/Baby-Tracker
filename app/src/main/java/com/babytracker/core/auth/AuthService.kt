@@ -68,12 +68,22 @@ class AuthService(
                 Timber.tag("Auth").d("init: KEY_LOGGED_IN=true but KEY_USER_ID missing, waiting for Supabase")
             }
         }
-        // 2. 尝试从 Supabase 获取实时 session（异步恢复，完成后覆盖缓存值）
+        // 2. 尝试从 Supabase 获取实时 session
         if (!restored) {
             try {
                 _currentUser.value = client.auth.currentUserOrNull()
                 if (_currentUser.value != null) restored = true
             } catch (_: Exception) { }
+        }
+        // 3. 兜底：SP 有登录标记但无 userId（旧版升级），用展示名占位
+        //    这样 UI 启动即显示已登录，Supabase 确认后覆盖为真实用户
+        if (!restored && prefs.getBoolean(KEY_LOGGED_IN, false)) {
+            val displayName = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
+            if (displayName != null) {
+                _currentUser.value = UserInfo(id = displayName, aud = "authenticated")
+                restored = true
+                Timber.tag("Auth").d("init: placeholder uid=%s (waiting for Supabase)", displayName)
+            }
         }
         if (restored) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
