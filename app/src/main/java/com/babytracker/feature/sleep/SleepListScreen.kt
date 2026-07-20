@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
@@ -49,6 +50,7 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -436,7 +438,17 @@ fun SleepFormDialog(
     var timerStartMs by remember {
         mutableLongStateOf(prefs.getLong("sleep_timer_start_millis", 0L))
     }
-    var elapsed by remember { mutableIntStateOf(0) }
+    var elapsed by remember {
+        mutableIntStateOf(
+            if (editEntity != null && !prefs.getBoolean("sleep_timer_running", false)) {
+                val start = try { LocalDateTime.parse(editEntity.startTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { null }
+                val end = try { LocalDateTime.parse(editEntity.endTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { null }
+                if (start != null && end != null) Duration.between(start, end).seconds.toInt() else 0
+            } else {
+                0
+            }
+        )
+    }
 
     LaunchedEffect(timerRunning) {
         if (timerRunning) {
@@ -491,7 +503,8 @@ fun SleepFormDialog(
                 style = LocalAppTypography.current.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (timerRunning) LocalAppColors.current.primary else LocalAppColors.current.textSecondary,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).widthIn(min = 100.dp),
+                textAlign = TextAlign.Start,
             )
             if (timerRunning) {
                 PrimaryButton(

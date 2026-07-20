@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -409,7 +410,15 @@ fun FeedingFormDialog(
     var timerStartMs by remember {
         mutableLongStateOf(prefs.getLong("feeding_timer_start_millis", 0L))
     }
-    var elapsed by remember { mutableIntStateOf(0) }
+    var elapsed by remember {
+        mutableIntStateOf(
+            if (editEntity != null && !prefs.getBoolean("feeding_timer_running", false)) {
+                (editEntity.durationMin ?: 0) * 60
+            } else {
+                0
+            }
+        )
+    }
 
     LaunchedEffect(timerRunning) {
         if (timerRunning) {
@@ -483,7 +492,8 @@ fun FeedingFormDialog(
                         style = LocalAppTypography.current.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (timerRunning) c.primary else c.textSecondary,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).widthIn(min = 100.dp),
+                        textAlign = TextAlign.Start,
                     )
                     if (timerRunning) {
                         PrimaryButton(
