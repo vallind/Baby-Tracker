@@ -7,16 +7,10 @@
 **同步系统稳定性与启动速度优化：**
 - 持久化上次家庭/用户/标记状态到 SharedPreferences，重启不重复跑 markExistingPending
 - 自动触发按 syncDelay 设置防抖（2s/5s/10s/30s），ON_EXIT 模式退后台才触发
-- auth/network 首次发射跳过触发，避免与家庭触发争抢
-- 家庭观察器首次发射不算"切换家庭"，改用"启动"
 - SyncWorker 改用 KoinComponent 注入，删除 koin-androidx-workmanager 依赖
 - WorkManager 恢复自动初始化（ContentProvider），不再手动 initialize
 - NetworkMonitor 改用 registerDefaultNetworkCallback，修复启动时无法获取当前网络状态
-- push/fullSync 增加 reason 参数，日志标注同步类型（启动/登录/网络恢复/切换家庭/新增记录/手动/退后台）
 - WorkManager/SyncTrigger/ProcessLifecycleOwner 延后到首帧之后启动，不阻塞 onCreate
-- 每表 pull 增加 NonCancellable + withTimeout(30s)，单表超时不中断其他表
-- manualSync 改用独立 CoroutineScope，页面离开不停止同步
-- 同步状态文本显示"已同步"替代"待同步"，同步后展示推送/拉取结果
 
 ### [1.5.16] — 2026-07-21
 
