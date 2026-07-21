@@ -26,14 +26,14 @@ val appModule = module {
     single { ThemeController(get()) }
     single { BabyController(get(), get()) }
     single { BackupManager(get()) }
-    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get()) }
+    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get(), get()) }
     single<FeedingRepository> { FeedingRepositoryImpl(get(), get()) }
     single<SleepRepository> { SleepRepositoryImpl(get(), get()) }
     single<GrowthRepository> { GrowthRepositoryImpl(get(), get()) }
     single<VaccinationRepository> { VaccinationRepositoryImpl(get(), get()) }
     single<HealthRepository> { HealthRepositoryImpl(get(), get()) }
     single<DiaperRepository> { DiaperRepositoryImpl(get(), get()) }
-    single<MessageRepository> { MessageRepositoryImpl(get(), get()) }
+    single<MessageRepository> { MessageRepositoryImpl(get()) }
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
@@ -61,6 +61,7 @@ val databaseModule = module {
     single { get<AppDatabase>().developmentAssessmentDao() }
     single { get<AppDatabase>().reminderDao() }
     single { get<AppDatabase>().syncMetadataDao() }
+    single { get<AppDatabase>().syncCursorDao() }
 }
 
 // ── Supabase 同步模块 ──

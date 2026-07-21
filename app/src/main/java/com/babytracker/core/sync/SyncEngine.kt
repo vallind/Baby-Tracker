@@ -41,6 +41,7 @@ class SyncEngine(
     private val supabase: SupabaseClient,
 ) {
     private val syncMeta: SyncMetadataDao get() = db.syncMetadataDao()
+    private val syncCursor get() = db.syncCursorDao()
 
     private val _syncState = MutableStateFlow(SyncState.IDLE)
     val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
@@ -51,6 +52,11 @@ class SyncEngine(
 
     /** 当前家庭 ID（登录+加入家庭后设置），push 时自动注入到每条记录 */
     var currentFamilyId: String? = null
+
+    private val syncedTables = listOf(
+        "babies", "feedings", "sleeps", "growths", "vaccinations",
+        "health_records", "diapers", "development_assessments", "reminders",
+    )
 
     /** 表名到 DAO 操作的映射。upsert 按 uuid 查本地：存在则 update（保留原 id），不存在则 insert */
     private suspend fun getEntityDao(tableName: String): EntityDao<*>? = when (tableName) {
@@ -167,10 +173,15 @@ class SyncEngine(
     /** 上行同步，返回实际推送的记录数 */
     suspend fun push(): Int {
         if (_syncState.value == SyncState.SYNCING) return 0
+        val fid = currentFamilyId ?: run {
+            Timber.tag("Sync").d("push: no familyId, skip")
+            return 0
+        }
         _syncState.value = SyncState.SYNCING
         var pushed = 0
         try {
-            val pendingChanges = syncMeta.getPendingChanges()
+            syncMeta.assignUnscopedToFamily(fid)
+            val pendingChanges = syncMeta.getPendingChanges(fid, System.currentTimeMillis())
             if (pendingChanges.isEmpty()) {
                 Timber.tag("Sync").d("push: nothing pending")
                 _syncState.value = SyncState.IDLE
@@ -185,35 +196,42 @@ class SyncEngine(
                     val localEntity = dao.getById(meta.localId) ?: continue
 
                     val basePayload = entityToJson(meta.tableName, localEntity)
-                    val now = System.currentTimeMillis()
-                    val payload = injectFamilyId(basePayload).let { json ->
-                        buildJsonObject {
-                            json.forEach { (key, value) -> put(key, value) }
-                            put("updatedAt", JsonPrimitive(now))
-                        }
-                    }
+                    val payload = injectFamilyId(basePayload)
 
-                    val remoteUuid = meta.remoteUuid ?: payload["uuid"]?.toString()?.removeSurrounding("\"")
+                    val remoteUuid = meta.remoteUuid ?: jsonStr(payload, "uuid")
                     if (remoteUuid != null) {
-                        supabase.postgrest.from(meta.tableName)
-                            .upsert(payload) { onConflict = "uuid" }
-                        syncMeta.markSynced(meta.id, remoteUuid, System.currentTimeMillis())
+                        val remote = supabase.postgrest.from(meta.tableName)
+                            .select(columns = Columns.ALL) {
+                                filter {
+                                    eq("uuid", remoteUuid)
+                                    eq("family_id", fid)
+                                }
+                            }
+                            .decodeList<JsonObject>()
+                            .firstOrNull()
+                        val localUpdatedAt = payload["updatedAt"]?.toString()?.toLongOrNull() ?: meta.updatedAt
+                        val remoteUpdatedAt = remote?.get("updatedAt")?.toString()?.toLongOrNull() ?: Long.MIN_VALUE
+                        if (remote != null && remoteUpdatedAt >= localUpdatedAt) {
+                            check(applyRemoteChange(meta.tableName, remote)) { "远程较新记录写入本地失败" }
+                        } else {
+                            supabase.postgrest.from(meta.tableName)
+                                .upsert(payload) { onConflict = "uuid" }
+                        }
+                        syncMeta.markSynced(meta.id, remoteUuid, maxOf(localUpdatedAt, remoteUpdatedAt))
                         Timber.tag("Sync").d("push %s id=%d uuid=%s ok", meta.tableName, meta.localId, remoteUuid)
                     } else {
                         supabase.postgrest.from(meta.tableName).insert(payload)
-                        syncMeta.markSynced(meta.id, payload["uuid"]?.toString()?.removeSurrounding("\""), System.currentTimeMillis())
+                        syncMeta.markSynced(meta.id, jsonStr(payload, "uuid"), meta.updatedAt)
                         Timber.tag("Sync").d("push %s id=%d insert ok", meta.tableName, meta.localId)
                     }
                     pushed++
                 } catch (e: Exception) {
                     Timber.tag("Sync").e(e, "push failed %s id=%d", meta.tableName, meta.localId)
-                    syncMeta.markConflict(meta.id, System.currentTimeMillis())
+                    val retryDelay = (1L shl meta.retryCount.coerceAtMost(5)) * 5_000L
+                    syncMeta.markRetry(meta.id, System.currentTimeMillis() + retryDelay, e.message?.take(500))
                 }
             }
             Timber.tag("Sync").d("push done: %d pushed", pushed)
-            if (pushed > 0) {
-                syncMeta.updateLastSyncAt(System.currentTimeMillis())
-            }
         } finally {
             _syncState.value = SyncState.IDLE
         }
@@ -231,34 +249,41 @@ class SyncEngine(
         var pulled = 0
         try {
             _syncState.value = SyncState.PULLING
-            val lastSyncAt = syncMeta.getLastSyncAt()
-            Timber.tag("Sync").d("pull start: family=%s lastSync=%s", fid, lastSyncAt ?: "full")
-            val tables = listOf(
-                "babies", "feedings", "sleeps", "growths", "vaccinations",
-                "health_records", "diapers", "development_assessments", "reminders",
-            )
-            for (tableName in tables) {
+            Timber.tag("Sync").d("pull start: family=%s", fid)
+            for (tableName in syncedTables) {
                 try {
-                    val result: List<JsonObject> = supabase.postgrest.from(tableName)
-                        .select(columns = Columns.ALL) {
-                            filter {
-                                eq("family_id", fid)
-                                if (lastSyncAt != null) gte("updatedAt", lastSyncAt)
+                    var pageCursor = syncCursor.get(fid, tableName) ?: 0L
+                    while (true) {
+                        val result: List<JsonObject> = supabase.postgrest.from(tableName)
+                            .select(columns = Columns.ALL) {
+                                filter {
+                                    eq("family_id", fid)
+                                    gt("sync_version", pageCursor)
+                                }
+                                order("sync_version", Order.ASCENDING)
+                                limit(500)
                             }
+                            .decodeList<JsonObject>()
+                        if (result.isNotEmpty()) {
+                            Timber.tag("Sync").d("pull %s: %d rows", tableName, result.size)
                         }
-                        .decodeList<JsonObject>()
-                    if (result.isNotEmpty()) {
-                        Timber.tag("Sync").d("pull %s: %d rows", tableName, result.size)
+                        var maxVersion = pageCursor
+                        for (row in result) {
+                            check(applyRemoteChange(tableName, row)) { "远程记录写入本地失败" }
+                            maxVersion = maxOf(maxVersion, row["sync_version"]?.toString()?.toLongOrNull() ?: 0L)
+                            pulled++
+                        }
+                        if (maxVersion > pageCursor) {
+                            pageCursor = maxVersion
+                            syncCursor.set(SyncCursorEntity(fid, tableName, pageCursor))
+                        }
+                        if (result.size < 500) break
                     }
-                    for (row in result) { applyRemoteChange(tableName, row); pulled++ }
                 } catch (e: Exception) {
                     Timber.tag("Sync").e(e, "pull failed table=%s", tableName)
                 }
             }
             Timber.tag("Sync").d("pull done: %d pulled", pulled)
-            if (pulled > 0) {
-                syncMeta.updateLastSyncAt(System.currentTimeMillis())
-            }
         } finally {
             _syncState.value = SyncState.IDLE
         }
@@ -266,23 +291,20 @@ class SyncEngine(
     }
 
     /** 查询当前 pending 记录数（仅诊断用） */
-    suspend fun pendingCount(): Int = syncMeta.getPendingChanges().size
+    suspend fun pendingCount(): Int = currentFamilyId?.let { syncMeta.pendingCount(it) } ?: 0
 
     /**
      * 清除全局 lastSyncAt 时间戳。
      * 下次 pull() 将执行全量拉取（而非增量），用于切换/加入新家庭时同步历史数据。
      */
     suspend fun resetLastSync() {
-        syncMeta.clearLastSyncAt()
+        currentFamilyId?.let { syncCursor.clear(it) }
     }
 
     /** 全量同步，返回 [拉取数, 推送数] */
     suspend fun fullSync(): Pair<Int, Int> = fullSyncMutex.withLock {
-        val pulled = pull()
         val pushed = push()
-        if (pulled > 0 || pushed > 0) {
-            syncMeta.updateLastSyncAt(System.currentTimeMillis())
-        }
+        val pulled = pull()
         pushed to pulled
     }
 
@@ -292,28 +314,30 @@ class SyncEngine(
      */
     suspend fun markExistingPending() {
         val db = db.openHelper.writableDatabase
-        val tables = listOf(
-            "babies", "feedings", "sleeps", "growths", "vaccinations",
-            "health_records", "diapers", "development_assessments", "reminders",
-        )
+        val fid = currentFamilyId ?: return
         db.beginTransaction()
         try {
             // 清理已摘除同步的表
             db.execSQL("DELETE FROM sync_metadata WHERE tableName='messages'")
-            for (table in tables) {
+            db.execSQL("UPDATE babies SET familyId=? WHERE familyId IS NULL", arrayOf(fid))
+            for (table in syncedTables) {
                 try {
                     db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
-                    // 将之前失败的 conflict 重置为 pending
-                    db.execSQL("UPDATE sync_metadata SET syncStatus='pending' WHERE tableName='$table' AND syncStatus='conflict'")
+                    db.execSQL("UPDATE $table SET updatedAt = ${System.currentTimeMillis()} WHERE updatedAt <= 0 AND deletedAt IS NULL")
                     db.execSQL("""
-                        INSERT INTO sync_metadata (tableName, localId, remoteUuid, syncStatus, updatedAt)
-                        SELECT '$table', id, uuid, 'pending', COALESCE(updatedAt, 0)
+                        INSERT OR IGNORE INTO sync_metadata
+                            (tableName, localId, remoteUuid, syncStatus, updatedAt, familyId, retryCount, nextRetryAt)
+                        SELECT '$table', id, uuid, 'pending', updatedAt, ?, 0, 0
                         FROM $table
                         WHERE deletedAt IS NULL AND uuid IS NOT NULL
                           AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')
-                    """)
+                    """, arrayOf(fid))
                 } catch (_: Exception) { /* 单表失败不影响其他表 */ }
             }
+            db.execSQL(
+                "UPDATE sync_metadata SET familyId=? WHERE familyId IS NULL AND tableName != 'messages'",
+                arrayOf(fid),
+            )
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
@@ -325,9 +349,9 @@ class SyncEngine(
     // ================================================================
 
     /** 包内可见：供 RealtimeManager 调用，将远程变更写入本地 Room */
-    internal suspend fun applyRemoteChange(tableName: String, remoteRow: JsonObject) {
-        val dao = getEntityDao(tableName) ?: return
-        val remoteUuid = remoteRow["uuid"]?.toString()?.removeSurrounding("\"") ?: return
+    internal suspend fun applyRemoteChange(tableName: String, remoteRow: JsonObject): Boolean {
+        val dao = getEntityDao(tableName) ?: return false
+        val remoteUuid = jsonStr(remoteRow, "uuid") ?: return false
         val remoteUpdatedAt = remoteRow["updatedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0L
 
         try {
@@ -336,7 +360,7 @@ class SyncEngine(
             if (localEntity != null) {
                 val localUpdatedAt = getUpdatedAt(localEntity)
                 // 本地版本更新 → 忽略远程变更
-                if (localUpdatedAt >= remoteUpdatedAt) return
+                if (localUpdatedAt >= remoteUpdatedAt) return true
             }
 
             // 远程版本更新（或本地无此记录）→ 写入本地
@@ -350,10 +374,13 @@ class SyncEngine(
                     syncStatus = "synced",
                     updatedAt = remoteUpdatedAt,
                     lastSyncAt = System.currentTimeMillis(),
+                    familyId = currentFamilyId,
                 )
             )
-        } catch (_: Exception) {
-            // 记录冲突
+            return true
+        } catch (e: Exception) {
+            Timber.tag("Sync").e(e, "apply remote failed table=%s uuid=%s", tableName, remoteUuid)
+            return false
         }
     }
 
@@ -567,6 +594,7 @@ class SyncEngine(
         uuid = jsonStr(json, "uuid"),
         updatedAt = jsonStr(json, "updatedAt")?.toLongOrNull() ?: 0L,
         deletedAt = jsonStr(json, "deletedAt")?.toLongOrNull(),
+        familyId = jsonStr(json, "family_id"),
     )
 
     private suspend fun parseFeeding(json: JsonObject): FeedingEntity = FeedingEntity(

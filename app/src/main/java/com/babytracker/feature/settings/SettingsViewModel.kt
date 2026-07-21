@@ -48,6 +48,7 @@ class SettingsViewModel(
 
     /** 防止并发创建多个家庭 */
     private val ensureFamilyMutex = Mutex()
+    private val autoSyncMutex = Mutex()
 
     /** 综合同步状态文本 */
     val syncStatusText: StateFlow<String> = combine(syncState, connectionState, isLoggedIn, isOnline) { sync, conn, loggedIn, online ->
@@ -81,7 +82,6 @@ class SettingsViewModel(
                     realtimeManager.unsubscribe()
                     syncEngine.currentFamilyId = null
                     lastSyncedFamilyId = null
-                    lastAutoSyncUserId = null
                 }
             }
         }
@@ -122,20 +122,14 @@ class SettingsViewModel(
         }
     }
 
-    private var lastAutoSyncUserId: String? = null
-
-    private suspend fun tryAutoSync() {
+    private suspend fun tryAutoSync() = autoSyncMutex.withLock {
         val uid = authService.currentUserId()
-        if (uid != null && uid == lastAutoSyncUserId) {
-            Timber.tag("SyncVM").d("tryAutoSync: skip duplicate uid=%s", uid)
-            return
-        }
-        lastAutoSyncUserId = uid
+        if (uid == null) return@withLock
         try {
             syncEngine.currentFamilyId = ensureFamily()
             if (syncEngine.currentFamilyId == null) {
                 Timber.tag("SyncVM").d("tryAutoSync: no familyId, skip")
-                return
+                return@withLock
             }
             Timber.tag("SyncVM").d("tryAutoSync: fid=%s online=%b", syncEngine.currentFamilyId, _isOnline.value)
             syncEngine.markExistingPending()  // 首次同步标记存量

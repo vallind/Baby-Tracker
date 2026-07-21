@@ -2,6 +2,7 @@ package com.babytracker.core.sync
 
 import com.babytracker.core.database.AppDatabase
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Supabase Realtime 订阅管理器。
@@ -44,12 +46,13 @@ class RealtimeManager(
     /** 订阅所有业务表的变更（切换家庭时重新调用，确保先断开旧频道再建新频道） */
     fun subscribeAll() {
         scope.launch {
+            val familyId = syncEngine.currentFamilyId ?: return@launch
             // 先断开旧频道，避免订阅冲突和 RLS 上下文过期
             disconnect()
             try {
                 _connectionState.value = RealtimeState.CONNECTING
 
-                val ch = supabase.channel("db-changes")
+                val ch = supabase.channel("db-changes-$familyId")
 
                 // 为每张表订阅变更（监听所有事件类型：INSERT/UPDATE/DELETE）
                 val tables = listOf(
@@ -61,7 +64,10 @@ class RealtimeManager(
                 for (tableName in tables) {
                     val changeFlow = ch.postgresChangeFlow<PostgresAction>(
                         schema = "public",
-                        filter = { table = tableName },
+                        filter = {
+                            table = tableName
+                            filter("family_id", FilterOperator.EQ, familyId)
+                        },
                     )
 
                     changeFlow.onEach { action ->
@@ -95,6 +101,15 @@ class RealtimeManager(
     /** 处理来自 Realtime 的变更事件 */
     private suspend fun handleRealtimeChange(tableName: String, action: PostgresAction) {
         try {
+            val record = when (action) {
+                is PostgresAction.Insert -> action.record as? JsonObject
+                is PostgresAction.Update -> action.record as? JsonObject
+                is PostgresAction.Delete -> action.oldRecord as? JsonObject
+                is PostgresAction.Select -> null
+            }
+            val familyId = (record?.get("family_id") as? JsonPrimitive)?.content
+            if (familyId != null && familyId != syncEngine.currentFamilyId) return
+
             // family_members 表不在 Room 中，仅通知 ViewModel 刷新 UI
             if (tableName == "family_members") {
                 _familyMembersChanged.tryEmit(Unit)
@@ -103,15 +118,13 @@ class RealtimeManager(
 
             when (action) {
                 is PostgresAction.Insert -> {
-                    val record = action.record as? JsonObject ?: return
-                    syncEngine.applyRemoteChange(tableName, record)
+                    syncEngine.applyRemoteChange(tableName, record ?: return)
                 }
                 is PostgresAction.Update -> {
-                    val record = action.record as? JsonObject ?: return
-                    syncEngine.applyRemoteChange(tableName, record)
+                    syncEngine.applyRemoteChange(tableName, record ?: return)
                 }
                 is PostgresAction.Delete -> {
-                    val oldRecord = action.oldRecord as? JsonObject ?: return
+                    val oldRecord = record ?: return
                     val uuid = oldRecord["uuid"]?.toString()?.removeSurrounding("\"") ?: return
                     val now = System.currentTimeMillis()
                     // 通过 uuid 查找并软删除本地记录
