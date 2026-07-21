@@ -46,16 +46,17 @@ class SettingsViewModel(
         .map { it != null }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), authService.isLoggedIn())
 
-    val syncStatusText: StateFlow<String> = combine(syncState, connectionState, isLoggedIn, isOnline) { sync, conn, loggedIn, online ->
-        when {
+    val syncStatusText: StateFlow<String> = combine(syncState, connectionState, isLoggedIn, isOnline, syncResult) { sync, conn, loggedIn, online, result ->
+        val base = when {
             !loggedIn -> "未登录"
             sync == SyncState.SYNCING || sync == SyncState.PUSHING || sync == SyncState.PULLING -> "同步中..."
             !online -> "离线"
             conn == RealtimeState.CONNECTED -> "已连接"
             conn == RealtimeState.CONNECTING -> "连接中..."
             conn == RealtimeState.ERROR -> "连接失败"
-            else -> "待同步"
+            else -> "已同步"
         }
+        if (result != null && base != "同步中..." && base != "离线") "$base·${result}" else base
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "待同步")
 
     private val _syncResult = MutableStateFlow<String?>(null)
