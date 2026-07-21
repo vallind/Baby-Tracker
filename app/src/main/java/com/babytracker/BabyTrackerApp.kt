@@ -21,6 +21,10 @@ import com.babytracker.core.sync.SyncSettings
 import com.babytracker.core.sync.SyncTrigger
 import com.babytracker.core.sync.SyncWorker
 import com.babytracker.core.util.AppLogTree
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import timber.log.Timber
@@ -43,36 +47,41 @@ class BabyTrackerApp : Application() {
             FileWriter(crashLog, true).use { it.append("Timber init failed: ${e.message}\n") }
         }
 
+        val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         try {
             val koin = startKoin {
                 androidContext(this@BabyTrackerApp)
                 modules(appModule, databaseModule, syncModule)
             }.koin
 
-            try {
-                WorkManager.initialize(this, Configuration.Builder()
-                    .setWorkerFactory(object : WorkerFactory() {
-                        override fun createWorker(
-                            appContext: Context,
-                            className: String,
-                            workerParams: WorkerParameters,
-                        ): ListenableWorker? {
-                            if (className == SyncWorker::class.java.name) {
-                                return SyncWorker(
-                                    appContext, workerParams,
-                                    koin.get<SyncEngine>(),
-                                    koin.get<SyncSettings>(),
-                                    koin.get<AuthService>(),
-                                    koin.get<FamilyService>(),
-                                )
+            // 后台初始化 WorkManager（不阻塞主线程）
+            bgScope.launch {
+                try {
+                    WorkManager.initialize(this@BabyTrackerApp, Configuration.Builder()
+                        .setWorkerFactory(object : WorkerFactory() {
+                            override fun createWorker(
+                                appContext: Context,
+                                className: String,
+                                workerParams: WorkerParameters,
+                            ): ListenableWorker? {
+                                if (className == SyncWorker::class.java.name) {
+                                    return SyncWorker(
+                                        appContext, workerParams,
+                                        koin.get<SyncEngine>(),
+                                        koin.get<SyncSettings>(),
+                                        koin.get<AuthService>(),
+                                        koin.get<FamilyService>(),
+                                    )
+                                }
+                                return null
                             }
-                            return null
-                        }
-                    })
-                    .build())
-            } catch (e: Throwable) {
-                Log.e("BabyTracker", "WorkManager init failed", e)
-                FileWriter(crashLog, true).use { it.append("WorkManager: ${e.message}\n") }
+                        })
+                        .build())
+                } catch (e: Throwable) {
+                    Log.e("BabyTracker", "WorkManager init failed", e)
+                    FileWriter(crashLog, true).use { it.append("WorkManager: ${e.message}\n") }
+                }
             }
 
             try {
@@ -86,7 +95,9 @@ class BabyTrackerApp : Application() {
                 ProcessLifecycleOwner.get().lifecycle.addObserver(object : LifecycleObserver {
                     @OnLifecycleEvent(androidx.lifecycle.Lifecycle.Event.ON_STOP)
                     fun onBackground() {
-                        try { koin.get<SyncTrigger>().onAppBackgrounded() } catch (_: Throwable) {}
+                        bgScope.launch {
+                            try { koin.get<SyncTrigger>().onAppBackgrounded() } catch (_: Throwable) {}
+                        }
                     }
                 })
             } catch (e: Throwable) {
