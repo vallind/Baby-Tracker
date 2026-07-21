@@ -14,8 +14,8 @@ import com.babytracker.core.database.entity.*
         GrowthEntity::class, VaccinationEntity::class, HealthRecordEntity::class,
         DiaperEntity::class, BackupConfigEntity::class, MessageEntity::class,
         DevelopmentAssessmentEntity::class, ReminderEntity::class,
-        SyncMetadataEntity::class, SyncCursorEntity::class],
-    version = 7, exportSchema = false,
+        SyncMetadataEntity::class],
+    version = 6, exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun babyDao(): BabyDao
@@ -30,7 +30,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun developmentAssessmentDao(): DevelopmentAssessmentDao
     abstract fun reminderDao(): ReminderDao
     abstract fun syncMetadataDao(): SyncMetadataDao
-    abstract fun syncCursorDao(): SyncCursorDao
 
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -145,53 +144,11 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE babies ADD COLUMN familyId TEXT")
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS sync_metadata_new (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        tableName TEXT NOT NULL,
-                        localId INTEGER NOT NULL,
-                        remoteUuid TEXT,
-                        syncStatus TEXT NOT NULL,
-                        updatedAt INTEGER NOT NULL,
-                        lastSyncAt INTEGER,
-                        familyId TEXT,
-                        retryCount INTEGER NOT NULL,
-                        nextRetryAt INTEGER NOT NULL,
-                        lastError TEXT
-                    )
-                """.trimIndent())
-                db.execSQL("""
-                    INSERT INTO sync_metadata_new
-                        (id, tableName, localId, remoteUuid, syncStatus, updatedAt, lastSyncAt, retryCount, nextRetryAt)
-                    SELECT id, tableName, localId, remoteUuid, syncStatus, updatedAt, lastSyncAt, 0, 0
-                    FROM sync_metadata
-                    WHERE id IN (
-                        SELECT MAX(id) FROM sync_metadata GROUP BY tableName, localId
-                    )
-                """.trimIndent())
-                db.execSQL("DROP TABLE sync_metadata")
-                db.execSQL("ALTER TABLE sync_metadata_new RENAME TO sync_metadata")
-                db.execSQL("CREATE UNIQUE INDEX index_sync_metadata_tableName_localId ON sync_metadata(tableName, localId)")
-                db.execSQL("DELETE FROM sync_metadata WHERE tableName = 'messages'")
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS sync_cursors (
-                        familyId TEXT NOT NULL,
-                        tableName TEXT NOT NULL,
-                        lastVersion INTEGER NOT NULL,
-                        PRIMARY KEY(familyId, tableName)
-                    )
-                """.trimIndent())
-            }
-        }
-
         @Volatile private var instance: AppDatabase? = null
         fun get(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(context, AppDatabase::class.java, "babytracker.db")
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                     .build().also { instance = it }
             }
         }

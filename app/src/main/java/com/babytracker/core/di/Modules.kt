@@ -26,14 +26,14 @@ val appModule = module {
     single { ThemeController(get()) }
     single { BabyController(get(), get()) }
     single { BackupManager(get()) }
-    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get(), get()) }
+    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get()) }
     single<FeedingRepository> { FeedingRepositoryImpl(get(), get()) }
     single<SleepRepository> { SleepRepositoryImpl(get(), get()) }
     single<GrowthRepository> { GrowthRepositoryImpl(get(), get()) }
     single<VaccinationRepository> { VaccinationRepositoryImpl(get(), get()) }
     single<HealthRepository> { HealthRepositoryImpl(get(), get()) }
     single<DiaperRepository> { DiaperRepositoryImpl(get(), get()) }
-    single<MessageRepository> { MessageRepositoryImpl(get()) }
+    single<MessageRepository> { MessageRepositoryImpl(get(), get()) }
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
@@ -43,7 +43,7 @@ val appModule = module {
     viewModel { ReminderViewModel(get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), androidContext()) }
     viewModel { FamilyViewModel(get(), get()) }
 }
 
@@ -61,21 +61,13 @@ val databaseModule = module {
     single { get<AppDatabase>().developmentAssessmentDao() }
     single { get<AppDatabase>().reminderDao() }
     single { get<AppDatabase>().syncMetadataDao() }
-    single { get<AppDatabase>().syncCursorDao() }
 }
 
 // ── Supabase 同步模块 ──
 val syncModule = module {
     single { com.babytracker.core.sync.SupabaseProvider.client }
     single { com.babytracker.core.auth.AuthService(get(), get()) }
-    single { FamilyService(get(), get()) }
     single { com.babytracker.core.sync.SyncEngine(get(), get()) }
     single { com.babytracker.core.sync.RealtimeManager(get(), get(), get()) }
-    single { com.babytracker.core.sync.SyncChangeTracker(get(), get()) }
-    single { com.babytracker.core.sync.SyncSettings(get()) }
-    single {
-        com.babytracker.core.sync.SyncCoordinator(
-            androidContext(), get(), get(), get(), get(), get(), get(),
-        )
-    }
+    single { FamilyService(get(), get()) }
 }

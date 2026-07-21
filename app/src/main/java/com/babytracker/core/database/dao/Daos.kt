@@ -6,12 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BabyDao {
-    @Query("SELECT * FROM babies WHERE familyId = :familyId ORDER BY id ASC")
-    fun watchByFamily(familyId: String): Flow<List<BabyEntity>>
-    @Query("SELECT * FROM babies WHERE familyId IS NULL ORDER BY id ASC")
-    fun watchUnscoped(): Flow<List<BabyEntity>>
     @Query("SELECT * FROM babies ORDER BY id ASC")
-    suspend fun getAll(): List<BabyEntity>
+    fun watchAll(): Flow<List<BabyEntity>>
     @Query("SELECT * FROM babies WHERE id = :id")
     suspend fun getById(id: Int): BabyEntity?
     @Query("SELECT * FROM babies WHERE uuid = :uuid LIMIT 1")
@@ -227,14 +223,8 @@ interface ReminderDao {
 
 @Dao
 interface SyncMetadataDao {
-    @Query("SELECT * FROM sync_metadata WHERE syncStatus = 'pending' AND familyId = :familyId AND nextRetryAt <= :now ORDER BY updatedAt ASC")
-    suspend fun getPendingChanges(familyId: String, now: Long): List<SyncMetadataEntity>
-
-    @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending' AND familyId = :familyId")
-    suspend fun pendingCount(familyId: String): Int
-
-    @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending'")
-    fun watchPendingCount(): Flow<Int>
+    @Query("SELECT * FROM sync_metadata WHERE syncStatus = 'pending' ORDER BY updatedAt ASC")
+    suspend fun getPendingChanges(): List<SyncMetadataEntity>
 
     @Query("SELECT * FROM sync_metadata WHERE tableName = :tableName AND localId = :localId LIMIT 1")
     suspend fun getByTableAndId(tableName: String, localId: Int): SyncMetadataEntity?
@@ -245,18 +235,11 @@ interface SyncMetadataDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: SyncMetadataEntity)
 
-    @Query("UPDATE sync_metadata SET syncStatus = 'synced', remoteUuid = :remoteUuid, updatedAt = :updatedAt, retryCount = 0, nextRetryAt = 0, lastError = NULL WHERE id = :id")
+    @Query("UPDATE sync_metadata SET syncStatus = 'synced', remoteUuid = :remoteUuid, updatedAt = :updatedAt WHERE id = :id")
     suspend fun markSynced(id: Int, remoteUuid: String?, updatedAt: Long)
 
-    @Query("""
-        UPDATE sync_metadata
-        SET retryCount = retryCount + 1,
-            nextRetryAt = :nextRetryAt,
-            lastError = :error,
-            syncStatus = CASE WHEN retryCount + 1 >= 5 THEN 'conflict' ELSE 'pending' END
-        WHERE id = :id
-    """)
-    suspend fun markRetry(id: Int, nextRetryAt: Long, error: String?)
+    @Query("UPDATE sync_metadata SET syncStatus = 'conflict', updatedAt = :updatedAt WHERE id = :id")
+    suspend fun markConflict(id: Int, updatedAt: Long)
 
     @Query("UPDATE sync_metadata SET lastSyncAt = :lastSyncAt")
     suspend fun updateLastSyncAt(lastSyncAt: Long)
@@ -268,16 +251,4 @@ interface SyncMetadataDao {
     /** 按 remoteUuid 查找同步元数据 */
     @Query("SELECT * FROM sync_metadata WHERE remoteUuid = :remoteUuid AND tableName = :tableName LIMIT 1")
     suspend fun getByRemoteUuid(tableName: String, remoteUuid: String): SyncMetadataEntity?
-}
-
-@Dao
-interface SyncCursorDao {
-    @Query("SELECT lastVersion FROM sync_cursors WHERE familyId = :familyId AND tableName = :tableName")
-    suspend fun get(familyId: String, tableName: String): Long?
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun set(cursor: SyncCursorEntity)
-
-    @Query("DELETE FROM sync_cursors WHERE familyId = :familyId")
-    suspend fun clear(familyId: String)
 }

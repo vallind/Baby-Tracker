@@ -20,7 +20,6 @@ data class BabyEntity(
     val uuid: String? = null,             // Supabase 云端 UUID
     val updatedAt: Long = 0L,             // 最后更新时间戳（epoch milli）
     val deletedAt: Long? = null,          // 软删除时间戳，非空表示已删除
-    val familyId: String? = null,          // 本地家庭隔离；离线未选家庭时可为空
 )
 
 @Entity(tableName = "feedings")
@@ -232,10 +231,7 @@ data class ReminderEntity(
  * 每条业务记录的同步状态记录：哪张表、哪个本地 ID、对应的云端 UUID、同步状态。
  * lastSyncAt 存 epoch milli，作为全局增量同步的锚点。
  */
-@Entity(
-    tableName = "sync_metadata",
-    indices = [Index(value = ["tableName", "localId"], unique = true)],
-)
+@Entity(tableName = "sync_metadata")
 data class SyncMetadataEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val tableName: String,                  // 表名："feedings", "sleeps", ...
@@ -244,16 +240,4 @@ data class SyncMetadataEntity(
     val syncStatus: String = "pending",     // pending | synced | conflict
     val updatedAt: Long = System.currentTimeMillis(),
     val lastSyncAt: Long? = null,           // 全局上次同步时间戳
-    val familyId: String? = null,
-    val retryCount: Int = 0,
-    val nextRetryAt: Long = 0L,
-    val lastError: String? = null,
-)
-
-/** 每个家庭、每张表独立保存服务端递增同步版本。 */
-@Entity(tableName = "sync_cursors", primaryKeys = ["familyId", "tableName"])
-data class SyncCursorEntity(
-    val familyId: String,
-    val tableName: String,
-    val lastVersion: Long = 0L,
 )

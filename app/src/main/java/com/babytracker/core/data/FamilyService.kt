@@ -20,7 +20,6 @@ data class Family(
     val id: String = "",
     val name: String = "",
     @SerialName("invite_code") val inviteCode: String = "",
-    @SerialName("created_by") val createdBy: String? = null,
 )
 
 @Serializable
@@ -49,9 +48,7 @@ class FamilyService(
     private val _myFamilies = MutableStateFlow<List<Family>>(emptyList())
     val myFamilies: StateFlow<List<Family>> = _myFamilies.asStateFlow()
 
-    private val _currentFamily = MutableStateFlow(
-        prefs.getString(PREF_CURRENT_FAMILY_ID, null)?.let { Family(id = it) }
-    )
+    private val _currentFamily = MutableStateFlow<Family?>(null)
     val currentFamily: StateFlow<Family?> = _currentFamily.asStateFlow()
 
     /** 生成 6 位大写数字+字母邀请码（客户端生成，离线可用） */
@@ -155,9 +152,11 @@ class FamilyService(
         }
 
         _myFamilies.value = allFamilies
-        val selectedId = _currentFamily.value?.id ?: prefs.getString(PREF_CURRENT_FAMILY_ID, null)
-        _currentFamily.value = selectedId?.let { id -> allFamilies.find { it.id == id } }
-            ?: allFamilies.firstOrNull()
+        if (_currentFamily.value == null) {
+            val savedId = prefs.getString(PREF_CURRENT_FAMILY_ID, null)
+            _currentFamily.value = savedId?.let { id -> allFamilies.find { it.id == id } }
+                ?: allFamilies.firstOrNull()
+        }
         Timber.tag("Family").d("loadMyFamilies count=%d current=%s", allFamilies.size, _currentFamily.value?.id)
         return allFamilies
     }
