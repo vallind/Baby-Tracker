@@ -9,7 +9,11 @@ import timber.log.Timber
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -255,42 +259,47 @@ class SyncEngine(
             Timber.tag("Sync").d("pull start: family=%s", fid)
             for (tableName in syncedTables) {
                 try {
-                    var pageCursor = syncCursor.get(fid, tableName) ?: 0L
-                    while (true) {
-                        val result: List<JsonObject> = supabase.postgrest.from(tableName)
-                            .select(columns = Columns.ALL) {
-                                filter {
-                                    eq("family_id", fid)
-                                    gt("sync_version", pageCursor)
+                    withContext(NonCancellable) {
+                        var pageCursor = syncCursor.get(fid, tableName) ?: 0L
+                        while (true) {
+                            withTimeout(30_000L) {
+                                val result: List<JsonObject> = supabase.postgrest.from(tableName)
+                                    .select(columns = Columns.ALL) {
+                                        filter {
+                                            eq("family_id", fid)
+                                            gt("sync_version", pageCursor)
+                                        }
+                                        order("sync_version", Order.ASCENDING)
+                                        limit(500)
+                                    }
+                                    .decodeList<JsonObject>()
+                                if (result.isNotEmpty()) {
+                                    Timber.tag("Sync").d("pull %s: %d rows", tableName, result.size)
                                 }
-                                order("sync_version", Order.ASCENDING)
-                                limit(500)
+                                var maxVersion = pageCursor
+                                var pageApplied = 0
+                                for (row in result) {
+                                    check(applyRemoteChange(tableName, row)) { "远程记录写入本地失败" }
+                                    maxVersion = maxOf(maxVersion, row["sync_version"]?.toString()?.toLongOrNull() ?: 0L)
+                                    pageApplied++
+                                }
+                                val committedCursor = committedSyncCursor(pageCursor, maxVersion, allApplied = true)
+                                if (committedCursor > pageCursor) {
+                                    pageCursor = committedCursor
+                                    syncCursor.set(SyncCursorEntity(fid, tableName, pageCursor))
+                                }
+                                pulled += pageApplied
+                                if (result.size < 500) break
                             }
-                            .decodeList<JsonObject>()
-                        if (result.isNotEmpty()) {
-                            Timber.tag("Sync").d("pull %s: %d rows", tableName, result.size)
                         }
-                        var maxVersion = pageCursor
-                        var pageApplied = 0
-                        for (row in result) {
-                            check(applyRemoteChange(tableName, row)) { "远程记录写入本地失败" }
-                            maxVersion = maxOf(maxVersion, row["sync_version"]?.toString()?.toLongOrNull() ?: 0L)
-                            pageApplied++
-                        }
-                        val committedCursor = committedSyncCursor(pageCursor, maxVersion, allApplied = true)
-                        if (committedCursor > pageCursor) {
-                            pageCursor = committedCursor
-                            syncCursor.set(SyncCursorEntity(fid, tableName, pageCursor))
-                        }
-                        pulled += pageApplied
-                        if (result.size < 500) break
                     }
+                } catch (e: TimeoutCancellationException) {
+                    Timber.tag("Sync").d("pull timeout table=%s", tableName)
+                    failures += SyncFailure(tableName, message = "拉取超时")
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    if (e is CancellationException) {
-                        Timber.tag("Sync").d("pull cancelled table=%s", tableName)
-                    } else {
-                        Timber.tag("Sync").e(e, "pull failed table=%s", tableName)
-                    }
+                    Timber.tag("Sync").e(e, "pull failed table=%s", tableName)
                     failures += SyncFailure(tableName, message = e.message ?: "拉取失败")
                 }
             }
