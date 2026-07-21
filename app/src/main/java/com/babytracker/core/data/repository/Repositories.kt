@@ -2,11 +2,11 @@ package com.babytracker.core.data.repository
 
 import com.babytracker.core.database.AppDatabase
 import com.babytracker.core.database.dao.*
-import com.babytracker.core.database.entity.SyncMetadataEntity
 import com.babytracker.core.data.FamilyService
 import com.babytracker.core.data.mapper.toDomain
 import com.babytracker.core.data.mapper.toEntity
 import com.babytracker.core.domain.model.*
+import com.babytracker.core.sync.SyncChangeTracker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -16,21 +16,6 @@ import java.util.UUID
 
 private val nowEpoch get() = System.currentTimeMillis()
 private fun newUuid() = UUID.randomUUID().toString()
-
-/** 标记本地记录为待同步到 Supabase */
-private suspend fun SyncMetadataDao.pendingChange(tableName: String, localId: Int, uuid: String?, updatedAt: Long) {
-    val existing = getByTableAndId(tableName, localId)
-    insert(
-        (existing ?: SyncMetadataEntity(tableName = tableName, localId = localId)).copy(
-            remoteUuid = uuid ?: existing?.remoteUuid,
-            syncStatus = "pending",
-            updatedAt = updatedAt,
-            retryCount = 0,
-            nextRetryAt = 0,
-            lastError = null,
-        )
-    )
-}
 
 // ── 宝宝 ──
 
@@ -45,7 +30,7 @@ interface BabyRepository {
 
 class BabyRepositoryImpl(
     private val dao: BabyDao,
-    private val syncMeta: SyncMetadataDao,
+    private val syncMeta: SyncChangeTracker,
     private val db: AppDatabase,
     private val familyService: FamilyService,
 ) : BabyRepository {
@@ -53,7 +38,11 @@ class BabyRepositoryImpl(
     override fun watchAll() = familyService.currentFamily.flatMapLatest { family ->
         family?.id?.let(dao::watchByFamily) ?: dao.watchUnscoped()
     }.map { list -> list.map { it.toDomain() } }
-    override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
+    override suspend fun getById(id: Int): Baby? {
+        val entity = dao.getById(id) ?: return null
+        val familyId = familyService.currentFamily.value?.id
+        return entity.takeIf { it.familyId == familyId }?.toDomain()
+    }
     override suspend fun insert(baby: Baby): Long {
         val entity = baby.copy(uuid = baby.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
             .copy(familyId = familyService.currentFamily.value?.id)
@@ -125,7 +114,7 @@ interface FeedingRepository {
     suspend fun delete(feeding: Feeding)
 }
 
-class FeedingRepositoryImpl(private val dao: FeedingDao, private val syncMeta: SyncMetadataDao) : FeedingRepository {
+class FeedingRepositoryImpl(private val dao: FeedingDao, private val syncMeta: SyncChangeTracker) : FeedingRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(feeding: Feeding): Long {
@@ -156,7 +145,7 @@ interface SleepRepository {
     suspend fun delete(sleep: Sleep)
 }
 
-class SleepRepositoryImpl(private val dao: SleepDao, private val syncMeta: SyncMetadataDao) : SleepRepository {
+class SleepRepositoryImpl(private val dao: SleepDao, private val syncMeta: SyncChangeTracker) : SleepRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(sleep: Sleep): Long {
@@ -187,7 +176,7 @@ interface GrowthRepository {
     suspend fun delete(growth: Growth)
 }
 
-class GrowthRepositoryImpl(private val dao: GrowthDao, private val syncMeta: SyncMetadataDao) : GrowthRepository {
+class GrowthRepositoryImpl(private val dao: GrowthDao, private val syncMeta: SyncChangeTracker) : GrowthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(growth: Growth): Long {
@@ -218,7 +207,7 @@ interface VaccinationRepository {
     suspend fun delete(vaccination: Vaccination)
 }
 
-class VaccinationRepositoryImpl(private val dao: VaccinationDao, private val syncMeta: SyncMetadataDao) : VaccinationRepository {
+class VaccinationRepositoryImpl(private val dao: VaccinationDao, private val syncMeta: SyncChangeTracker) : VaccinationRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(vaccination: Vaccination): Long {
@@ -249,7 +238,7 @@ interface HealthRepository {
     suspend fun delete(record: HealthRecord)
 }
 
-class HealthRepositoryImpl(private val dao: HealthRecordDao, private val syncMeta: SyncMetadataDao) : HealthRepository {
+class HealthRepositoryImpl(private val dao: HealthRecordDao, private val syncMeta: SyncChangeTracker) : HealthRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(record: HealthRecord): Long {
@@ -280,7 +269,7 @@ interface DiaperRepository {
     suspend fun delete(diaper: Diaper)
 }
 
-class DiaperRepositoryImpl(private val dao: DiaperDao, private val syncMeta: SyncMetadataDao) : DiaperRepository {
+class DiaperRepositoryImpl(private val dao: DiaperDao, private val syncMeta: SyncChangeTracker) : DiaperRepository {
     override fun watchByBaby(babyId: Int) = dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
     override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
     override suspend fun insert(diaper: Diaper): Long {
@@ -350,7 +339,7 @@ interface DevelopmentAssessmentRepository {
 
 class DevelopmentAssessmentRepositoryImpl(
     private val dao: DevelopmentAssessmentDao,
-    private val syncMeta: SyncMetadataDao,
+    private val syncMeta: SyncChangeTracker,
 ) : DevelopmentAssessmentRepository {
     override fun watchByBaby(babyId: Int): Flow<List<DevelopmentAssessment>> =
         dao.watchByBaby(babyId).map { list -> list.map { it.toDomain() } }
@@ -394,7 +383,7 @@ interface ReminderRepository {
     suspend fun setEnabled(id: Int, enabled: Boolean)
 }
 
-class ReminderRepositoryImpl(private val dao: ReminderDao, private val syncMeta: SyncMetadataDao) : ReminderRepository {
+class ReminderRepositoryImpl(private val dao: ReminderDao, private val syncMeta: SyncChangeTracker) : ReminderRepository {
     override fun watchPending(babyId: Int): Flow<List<Reminder>> =
         dao.watchPending(babyId).map { list -> list.map { it.toDomain() } }
 

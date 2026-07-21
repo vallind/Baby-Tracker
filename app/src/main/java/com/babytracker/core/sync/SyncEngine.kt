@@ -170,30 +170,30 @@ class SyncEngine(
      * 将本地所有 pending 变更推送到 Supabase。
      * 使用 upsert 策略（冲突时用云端 uuid 匹配，updatedAt 决定覆盖）。
      */
-    /** 上行同步，返回实际推送的记录数 */
-    suspend fun push(): Int {
-        if (_syncState.value == SyncState.SYNCING) return 0
+    /** 上行同步，返回成功数和逐条失败信息。 */
+    suspend fun push(): SyncBatchResult {
+        if (_syncState.value == SyncState.SYNCING) return SyncBatchResult()
         val fid = currentFamilyId ?: run {
             Timber.tag("Sync").d("push: no familyId, skip")
-            return 0
+            return SyncBatchResult()
         }
         _syncState.value = SyncState.SYNCING
         var pushed = 0
+        val failures = mutableListOf<SyncFailure>()
         try {
-            syncMeta.assignUnscopedToFamily(fid)
             val pendingChanges = syncMeta.getPendingChanges(fid, System.currentTimeMillis())
             if (pendingChanges.isEmpty()) {
                 Timber.tag("Sync").d("push: nothing pending")
                 _syncState.value = SyncState.IDLE
-                return 0
+                return SyncBatchResult()
             }
             Timber.tag("Sync").d("push: %d pending", pendingChanges.size)
             _syncState.value = SyncState.PUSHING
 
             for (meta in pendingChanges) {
                 try {
-                    val dao = getEntityDao(meta.tableName) ?: continue
-                    val localEntity = dao.getById(meta.localId) ?: continue
+                    val dao = checkNotNull(getEntityDao(meta.tableName)) { "不支持的同步表" }
+                    val localEntity = checkNotNull(dao.getById(meta.localId)) { "本地记录不存在" }
 
                     val basePayload = entityToJson(meta.tableName, localEntity)
                     val payload = injectFamilyId(basePayload)
@@ -227,7 +227,8 @@ class SyncEngine(
                     pushed++
                 } catch (e: Exception) {
                     Timber.tag("Sync").e(e, "push failed %s id=%d", meta.tableName, meta.localId)
-                    val retryDelay = (1L shl meta.retryCount.coerceAtMost(5)) * 5_000L
+                    failures += SyncFailure(meta.tableName, meta.localId, e.message ?: "推送失败")
+                    val retryDelay = syncRetryDelay(meta.retryCount)
                     syncMeta.markRetry(meta.id, System.currentTimeMillis() + retryDelay, e.message?.take(500))
                 }
             }
@@ -235,18 +236,19 @@ class SyncEngine(
         } finally {
             _syncState.value = SyncState.IDLE
         }
-        return pushed
+        return SyncBatchResult(pushed, failures)
     }
 
-    /** 下行同步，返回实际拉取的记录数 */
-    suspend fun pull(): Int {
-        if (_syncState.value == SyncState.SYNCING) return 0
+    /** 下行同步，只有整页全部落库成功才推进游标和成功数。 */
+    suspend fun pull(): SyncBatchResult {
+        if (_syncState.value == SyncState.SYNCING) return SyncBatchResult()
         val fid = currentFamilyId ?: run {
             Timber.tag("Sync").d("pull: no familyId, skip")
-            return 0
+            return SyncBatchResult()
         }
         _syncState.value = SyncState.SYNCING
         var pulled = 0
+        val failures = mutableListOf<SyncFailure>()
         try {
             _syncState.value = SyncState.PULLING
             Timber.tag("Sync").d("pull start: family=%s", fid)
@@ -268,26 +270,30 @@ class SyncEngine(
                             Timber.tag("Sync").d("pull %s: %d rows", tableName, result.size)
                         }
                         var maxVersion = pageCursor
+                        var pageApplied = 0
                         for (row in result) {
                             check(applyRemoteChange(tableName, row)) { "远程记录写入本地失败" }
                             maxVersion = maxOf(maxVersion, row["sync_version"]?.toString()?.toLongOrNull() ?: 0L)
-                            pulled++
+                            pageApplied++
                         }
-                        if (maxVersion > pageCursor) {
-                            pageCursor = maxVersion
+                        val committedCursor = committedSyncCursor(pageCursor, maxVersion, allApplied = true)
+                        if (committedCursor > pageCursor) {
+                            pageCursor = committedCursor
                             syncCursor.set(SyncCursorEntity(fid, tableName, pageCursor))
                         }
+                        pulled += pageApplied
                         if (result.size < 500) break
                     }
                 } catch (e: Exception) {
                     Timber.tag("Sync").e(e, "pull failed table=%s", tableName)
+                    failures += SyncFailure(tableName, message = e.message ?: "拉取失败")
                 }
             }
             Timber.tag("Sync").d("pull done: %d pulled", pulled)
         } finally {
             _syncState.value = SyncState.IDLE
         }
-        return pulled
+        return SyncBatchResult(pulled, failures)
     }
 
     /** 查询当前 pending 记录数（仅诊断用） */
@@ -301,11 +307,15 @@ class SyncEngine(
         currentFamilyId?.let { syncCursor.clear(it) }
     }
 
-    /** 全量同步，返回 [拉取数, 推送数] */
-    suspend fun fullSync(): Pair<Int, Int> = fullSyncMutex.withLock {
+    /** 完整双向同步，保留部分失败明细供后台重试和 UI 展示。 */
+    suspend fun fullSync(): SyncRunResult = fullSyncMutex.withLock {
         val pushed = push()
         val pulled = pull()
-        pushed to pulled
+        SyncRunResult(
+            pushed = pushed.successCount,
+            pulled = pulled.successCount,
+            failures = pushed.failures + pulled.failures,
+        )
     }
 
     /**
@@ -319,25 +329,46 @@ class SyncEngine(
         try {
             // 清理已摘除同步的表
             db.execSQL("DELETE FROM sync_metadata WHERE tableName='messages'")
-            db.execSQL("UPDATE babies SET familyId=? WHERE familyId IS NULL", arrayOf(fid))
             for (table in syncedTables) {
                 try {
-                    db.execSQL("UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL")
-                    db.execSQL("UPDATE $table SET updatedAt = ${System.currentTimeMillis()} WHERE updatedAt <= 0 AND deletedAt IS NULL")
+                    val scope = if (table == "babies") "familyId = ?" else
+                        "baby_id IN (SELECT id FROM babies WHERE familyId = ?)"
+                    db.execSQL(
+                        "UPDATE $table SET uuid = lower(hex(randomblob(16))) WHERE uuid IS NULL AND deletedAt IS NULL AND $scope",
+                        arrayOf(fid),
+                    )
+                    db.execSQL(
+                        "UPDATE $table SET updatedAt = ${System.currentTimeMillis()} WHERE updatedAt <= 0 AND deletedAt IS NULL AND $scope",
+                        arrayOf(fid),
+                    )
+                    val source = if (table == "babies") {
+                        "SELECT '$table', id, uuid, 'pending', updatedAt, familyId, 0, 0 FROM babies " +
+                            "WHERE familyId = ? AND deletedAt IS NULL AND uuid IS NOT NULL " +
+                            "AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')"
+                    } else {
+                        "SELECT '$table', t.id, t.uuid, 'pending', t.updatedAt, b.familyId, 0, 0 " +
+                            "FROM $table t JOIN babies b ON b.id = t.baby_id WHERE b.familyId = ? " +
+                            "AND t.deletedAt IS NULL AND t.uuid IS NOT NULL " +
+                            "AND t.id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')"
+                    }
                     db.execSQL("""
                         INSERT OR IGNORE INTO sync_metadata
                             (tableName, localId, remoteUuid, syncStatus, updatedAt, familyId, retryCount, nextRetryAt)
-                        SELECT '$table', id, uuid, 'pending', updatedAt, ?, 0, 0
-                        FROM $table
-                        WHERE deletedAt IS NULL AND uuid IS NOT NULL
-                          AND id NOT IN (SELECT localId FROM sync_metadata WHERE tableName = '$table')
+                        $source
                     """, arrayOf(fid))
-                } catch (_: Exception) { /* 单表失败不影响其他表 */ }
+                    val ownerQuery = if (table == "babies") {
+                        "SELECT familyId FROM babies WHERE id = sync_metadata.localId"
+                    } else {
+                        "SELECT b.familyId FROM $table t JOIN babies b ON b.id = t.baby_id " +
+                            "WHERE t.id = sync_metadata.localId"
+                    }
+                    db.execSQL(
+                        "UPDATE sync_metadata SET familyId = ($ownerQuery) WHERE tableName = '$table'",
+                    )
+                } catch (e: Exception) {
+                    Timber.tag("Sync").e(e, "markExistingPending failed table=%s", table)
+                }
             }
-            db.execSQL(
-                "UPDATE sync_metadata SET familyId=? WHERE familyId IS NULL AND tableName != 'messages'",
-                arrayOf(fid),
-            )
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
@@ -719,6 +750,39 @@ private class EntityDao<T>(
     val upsert: suspend (JsonObject) -> Long,
     val updateLocal: suspend (T) -> Unit,
 )
+
+data class SyncFailure(
+    val tableName: String,
+    val localId: Int? = null,
+    val message: String,
+)
+
+data class SyncBatchResult(
+    val successCount: Int = 0,
+    val failures: List<SyncFailure> = emptyList(),
+)
+
+data class SyncRunResult(
+    val pushed: Int = 0,
+    val pulled: Int = 0,
+    val failures: List<SyncFailure> = emptyList(),
+) {
+    val total: Int get() = pushed + pulled
+    val outcome: SyncOutcome
+        get() = when {
+            failures.isEmpty() -> SyncOutcome.SUCCESS
+            total > 0 -> SyncOutcome.PARTIAL_FAILURE
+            else -> SyncOutcome.FAILURE
+        }
+}
+
+enum class SyncOutcome { SUCCESS, PARTIAL_FAILURE, FAILURE }
+
+internal fun syncRetryDelay(retryCount: Int): Long =
+    (1L shl retryCount.coerceIn(0, 5)) * 5_000L
+
+internal fun committedSyncCursor(current: Long, pageMaximum: Long, allApplied: Boolean): Long =
+    if (allApplied) maxOf(current, pageMaximum) else current
 
 /** 同步状态枚举 */
 enum class SyncState { IDLE, SYNCING, PUSHING, PULLING }

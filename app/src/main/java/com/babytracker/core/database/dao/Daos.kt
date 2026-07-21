@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BabyDao {
-    @Query("SELECT * FROM babies WHERE familyId = :familyId OR familyId IS NULL ORDER BY id ASC")
+    @Query("SELECT * FROM babies WHERE familyId = :familyId ORDER BY id ASC")
     fun watchByFamily(familyId: String): Flow<List<BabyEntity>>
     @Query("SELECT * FROM babies WHERE familyId IS NULL ORDER BY id ASC")
     fun watchUnscoped(): Flow<List<BabyEntity>>
@@ -233,8 +233,8 @@ interface SyncMetadataDao {
     @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending' AND familyId = :familyId")
     suspend fun pendingCount(familyId: String): Int
 
-    @Query("UPDATE sync_metadata SET familyId = :familyId WHERE familyId IS NULL AND tableName != 'messages'")
-    suspend fun assignUnscopedToFamily(familyId: String)
+    @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending'")
+    fun watchPendingCount(): Flow<Int>
 
     @Query("SELECT * FROM sync_metadata WHERE tableName = :tableName AND localId = :localId LIMIT 1")
     suspend fun getByTableAndId(tableName: String, localId: Int): SyncMetadataEntity?

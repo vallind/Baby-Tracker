@@ -11,6 +11,10 @@ class SyncSafetyStaticAuditTest {
     private val syncEngine = File(moduleDir, "src/main/java/com/babytracker/core/sync/SyncEngine.kt").readText()
     private val realtime = File(moduleDir, "src/main/java/com/babytracker/core/sync/RealtimeManager.kt").readText()
     private val repositories = File(moduleDir, "src/main/java/com/babytracker/core/data/repository/Repositories.kt").readText()
+    private val daos = File(moduleDir, "src/main/java/com/babytracker/core/database/dao/Daos.kt").readText()
+    private val app = File(moduleDir, "src/main/java/com/babytracker/BabyTrackerApp.kt").readText()
+    private val coordinator = File(moduleDir, "src/main/java/com/babytracker/core/sync/SyncCoordinator.kt").readText()
+    private val settingsViewModel = File(moduleDir, "src/main/java/com/babytracker/feature/settings/SettingsViewModel.kt").readText()
 
     @Test
     fun `messages must remain outside cloud sync`() {
@@ -36,5 +40,21 @@ class SyncSafetyStaticAuditTest {
     @Test
     fun `conflicts must not be reset to pending in bulk`() {
         assert(!syncEngine.contains("syncStatus='pending' WHERE tableName='\$table' AND syncStatus='conflict'"))
+    }
+
+    @Test
+    fun `未归属记录不得被当前家庭自动认领`() {
+        assert(!syncEngine.contains("assignUnscopedToFamily"))
+        assert(!syncEngine.contains("UPDATE babies SET familyId=? WHERE familyId IS NULL"))
+        assert(!daos.contains("familyId = :familyId OR familyId IS NULL"))
+    }
+
+    @Test
+    fun `同步生命周期必须在应用启动而不是设置页启动`() {
+        assert(app.contains("get<SyncCoordinator>().start()"))
+        assert(coordinator.contains("PeriodicWorkRequestBuilder<SyncWorker>"))
+        assert(coordinator.contains("watchPendingCount()"))
+        assert(!settingsViewModel.contains("registerNetworkCallback"))
+        assert(!settingsViewModel.contains("tryAutoSync"))
     }
 }

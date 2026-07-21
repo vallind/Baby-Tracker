@@ -43,7 +43,7 @@ val appModule = module {
     viewModel { ReminderViewModel(get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), androidContext()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get()) }
 }
 
@@ -68,7 +68,13 @@ val databaseModule = module {
 val syncModule = module {
     single { com.babytracker.core.sync.SupabaseProvider.client }
     single { com.babytracker.core.auth.AuthService(get(), get()) }
+    single { FamilyService(get(), get()) }
     single { com.babytracker.core.sync.SyncEngine(get(), get()) }
     single { com.babytracker.core.sync.RealtimeManager(get(), get(), get()) }
-    single { FamilyService(get(), get()) }
+    single { com.babytracker.core.sync.SyncChangeTracker(get(), get()) }
+    single {
+        com.babytracker.core.sync.SyncCoordinator(
+            androidContext(), get(), get(), get(), get(), get(),
+        )
+    }
 }
