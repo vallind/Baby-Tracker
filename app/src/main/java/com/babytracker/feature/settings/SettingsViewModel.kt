@@ -64,6 +64,8 @@ class SettingsViewModel(
 
     /** 上次已同步的家庭 ID，用于检测家庭切换并触发全量同步 */
     private var lastSyncedFamilyId: String? = null
+    private val autoSyncMutex = Mutex()
+    private var lastAutoSyncUserId: String? = null
 
     init {
         // 启动时从本地恢复 familyId（Supabase 挂了也能同步）
@@ -103,7 +105,6 @@ class SettingsViewModel(
 
                 // 加入/切换到新家庭时，触发全量同步（拉取该家庭的历史数据）
                 val isNewFamily = newId != null && newId != lastSyncedFamilyId
-                Timber.tag("SyncVM").d("familyChanged id=%s isNew=%b", newId, isNewFamily)
                 if (isNewFamily) {
                     syncEngine.resetLastSync()  // 同步清除锚点，确保后续 fullSync 全量拉取
                     if (_isOnline.value) {
@@ -122,20 +123,18 @@ class SettingsViewModel(
         }
     }
 
-    private var lastAutoSyncUserId: String? = null
-
-    private suspend fun tryAutoSync() {
+    private suspend fun tryAutoSync() = autoSyncMutex.withLock {
         val uid = authService.currentUserId()
         if (uid != null && uid == lastAutoSyncUserId) {
             Timber.tag("SyncVM").d("tryAutoSync: skip duplicate uid=%s", uid)
-            return
+            return@withLock
         }
         lastAutoSyncUserId = uid
         try {
             syncEngine.currentFamilyId = ensureFamily()
             if (syncEngine.currentFamilyId == null) {
                 Timber.tag("SyncVM").d("tryAutoSync: no familyId, skip")
-                return
+                return@withLock
             }
             Timber.tag("SyncVM").d("tryAutoSync: fid=%s online=%b", syncEngine.currentFamilyId, _isOnline.value)
             syncEngine.markExistingPending()  // 首次同步标记存量
@@ -187,10 +186,9 @@ class SettingsViewModel(
                 syncEngine.markExistingPending()
                 val pending = syncEngine.pendingCount()
                 val result = syncEngine.fullSync()
-                val count = result.first + result.second
                 _syncResult.value = when {
-                    pending == 0 && count == 0 -> "无数据需同步"
-                    count > 0 -> "同步完成 ✓ 推送${result.first}拉取${result.second}"
+                    pending == 0 && result.total == 0 -> "无数据需同步"
+                    result.total > 0 -> "同步完成 ✓ 推送${result.pushed}拉取${result.pulled}"
                     else -> "待推送${pending}条，同步失败（网络或权限）"
                 }
             } catch (e: Exception) {

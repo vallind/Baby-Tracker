@@ -20,6 +20,7 @@ data class Family(
     val id: String = "",
     val name: String = "",
     @SerialName("invite_code") val inviteCode: String = "",
+    @SerialName("created_by") val createdBy: String? = null,
 )
 
 @Serializable
@@ -48,7 +49,9 @@ class FamilyService(
     private val _myFamilies = MutableStateFlow<List<Family>>(emptyList())
     val myFamilies: StateFlow<List<Family>> = _myFamilies.asStateFlow()
 
-    private val _currentFamily = MutableStateFlow<Family?>(null)
+    private val _currentFamily = MutableStateFlow(
+        prefs.getString(PREF_CURRENT_FAMILY_ID, null)?.let { Family(id = it) }
+    )
     val currentFamily: StateFlow<Family?> = _currentFamily.asStateFlow()
 
     /** 生成 6 位大写数字+字母邀请码（客户端生成，离线可用） */
@@ -124,7 +127,7 @@ class FamilyService(
         val userId = client.auth.currentUserOrNull()?.id ?: run {
             _myFamilies.value = emptyList()
             _currentFamily.value = null
-            prefs.edit().remove(PREF_CURRENT_FAMILY_ID).apply()
+            prefs.edit().remove(PREF_CURRENT_FAMILY_ID).commit()
             return emptyList()
         }
 
@@ -152,11 +155,9 @@ class FamilyService(
         }
 
         _myFamilies.value = allFamilies
-        if (_currentFamily.value == null) {
-            val savedId = prefs.getString(PREF_CURRENT_FAMILY_ID, null)
-            _currentFamily.value = savedId?.let { id -> allFamilies.find { it.id == id } }
-                ?: allFamilies.firstOrNull()
-        }
+        val selectedId = _currentFamily.value?.id ?: prefs.getString(PREF_CURRENT_FAMILY_ID, null)
+        _currentFamily.value = selectedId?.let { id -> allFamilies.find { it.id == id } }
+            ?: allFamilies.firstOrNull()
         Timber.tag("Family").d("loadMyFamilies count=%d current=%s", allFamilies.size, _currentFamily.value?.id)
         return allFamilies
     }
@@ -164,7 +165,7 @@ class FamilyService(
     /** 手动切换当前家庭（供 FamilyPage 的 FilterChip 使用） */
     fun selectFamily(family: Family) {
         _currentFamily.value = family
-        prefs.edit().putString(PREF_CURRENT_FAMILY_ID, family.id).apply()
+        prefs.edit().putString(PREF_CURRENT_FAMILY_ID, family.id).commit()
     }
 
     /** 获取家庭成员列表 */

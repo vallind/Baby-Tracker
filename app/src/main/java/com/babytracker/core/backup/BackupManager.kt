@@ -161,6 +161,7 @@ class BackupManager(private val db: AppDatabase) {
                 uuid = j.optString("uuid").ifBlank { null },
                 updatedAt = j.optLong("updatedAt", 0),
                 deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
+                familyId = j.optString("familyId").ifBlank { null },
             )
         }
 
@@ -190,7 +191,7 @@ class BackupManager(private val db: AppDatabase) {
         val db = db.openHelper.writableDatabase
         // 按 FK 依赖逆序：先删子表，再删父表
         val tables = listOf(
-            "reminders", "development_assessments", "sync_metadata", "messages",
+            "reminders", "development_assessments", "sync_cursors", "sync_metadata", "messages",
             "diapers", "health_records", "vaccinations", "growths", "sleeps",
             "feedings", "backup_config", "babies",
         )
@@ -331,10 +332,10 @@ class BackupManager(private val db: AppDatabase) {
 
     private suspend fun exportAll(): JSONObject {
         val data = JSONObject()
-        data.put("version", 1)
+        data.put("version", 2)
         data.put("exported_at", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME))
 
-        val babies = db.babyDao().watchAll().first()
+        val babies = db.babyDao().getAll()
         data.put("babies", JSONArray().apply {
             babies.forEach { put(it.toJson()) }
         })
@@ -385,6 +386,7 @@ private fun BabyEntity.toJson() = JSONObject().apply {
     put("birthDate", birthDate); put("birthWeight", birthWeight); put("birthHeight", birthHeight)
     put("avatarPath", avatarPath); put("createdAt", createdAt)
     put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
+    put("familyId", familyId)
 }
 
 private fun FeedingEntity.toJson() = JSONObject().apply {
