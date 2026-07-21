@@ -42,4 +42,19 @@ class SyncPolicyTest {
         assertEquals("family-b", resolveSyncFamilyId(null, "family-b"))
         assertEquals(null, resolveSyncFamilyId(null, null))
     }
+
+    @Test
+    fun `非法写入延迟配置回退到两秒`() {
+        assertEquals(SyncDelay.TWO_SECONDS, SyncDelay.fromStored("unknown"))
+        assertEquals(SyncDelay.ON_BACKGROUND, SyncDelay.fromStored("on_background"))
+    }
+
+    @Test
+    fun `非法后台周期配置回退到三十分钟`() {
+        assertEquals(
+            BackgroundSyncInterval.THIRTY_MINUTES,
+            BackgroundSyncInterval.fromStored("unknown"),
+        )
+        assertEquals(BackgroundSyncInterval.OFF, BackgroundSyncInterval.fromStored("off"))
+    }
 }

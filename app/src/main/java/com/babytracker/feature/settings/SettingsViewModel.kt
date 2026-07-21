@@ -6,6 +6,10 @@ import com.babytracker.core.auth.AuthService
 import com.babytracker.core.sync.RealtimeManager
 import com.babytracker.core.sync.RealtimeState
 import com.babytracker.core.sync.SyncCoordinator
+import com.babytracker.core.sync.BackgroundSyncInterval
+import com.babytracker.core.sync.SyncConfig
+import com.babytracker.core.sync.SyncDelay
+import com.babytracker.core.sync.SyncSettings
 import com.babytracker.core.sync.SyncOutcome
 import com.babytracker.core.sync.SyncReason
 import com.babytracker.core.sync.SyncState
@@ -22,10 +26,13 @@ class SettingsViewModel(
     private val coordinator: SyncCoordinator,
     realtimeManager: RealtimeManager,
     authService: AuthService,
+    private val syncSettings: SyncSettings,
 ) : ViewModel() {
     val syncState: StateFlow<SyncState> = coordinator.syncState
     val connectionState: StateFlow<RealtimeState> = realtimeManager.connectionState
     val isOnline: StateFlow<Boolean> = coordinator.isOnline
+    val syncConfig: StateFlow<SyncConfig> = syncSettings.flow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, syncSettings.current)
 
     val isLoggedIn: StateFlow<Boolean> = authService.observeAuthState()
         .map { it != null }
@@ -73,4 +80,13 @@ class SettingsViewModel(
     fun clearSyncResult() {
         _syncResult.value = null
     }
+
+    fun updateAutoSync(enabled: Boolean) = syncSettings.updateAutoSync(enabled)
+
+    fun updateSyncDelay(delay: SyncDelay) = syncSettings.updateDelay(delay)
+
+    fun updateBackgroundInterval(interval: BackgroundSyncInterval) =
+        syncSettings.updateBackgroundInterval(interval)
+
+    fun updateUnmeteredOnly(enabled: Boolean) = syncSettings.updateUnmeteredOnly(enabled)
 }

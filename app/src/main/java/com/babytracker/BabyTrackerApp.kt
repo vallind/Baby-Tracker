@@ -2,6 +2,9 @@ package com.babytracker
 
 import android.app.Application
 import android.content.Context
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import com.babytracker.core.util.AppLogTree
 import com.babytracker.core.di.appModule
 import com.babytracker.core.di.databaseModule
@@ -25,6 +28,12 @@ class BabyTrackerApp : Application() {
             androidContext(this@BabyTrackerApp)
             modules(appModule, databaseModule, syncModule)
         }.koin
-        koin.get<SyncCoordinator>().start()
+        val syncCoordinator = koin.get<SyncCoordinator>()
+        syncCoordinator.start()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStop(owner: LifecycleOwner) {
+                syncCoordinator.onAppBackgrounded()
+            }
+        })
     }
 }

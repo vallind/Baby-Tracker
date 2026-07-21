@@ -12,7 +12,18 @@ class SyncWorker(
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result {
         val coordinator = GlobalContext.get().get<SyncCoordinator>()
-        val result = coordinator.syncNow(SyncReason.BACKGROUND) ?: return Result.success()
-        return if (result.failures.isEmpty()) Result.success() else Result.retry()
+        val mode = runCatching { SyncMode.valueOf(inputData.getString(KEY_MODE) ?: SyncMode.FULL.name) }
+            .getOrDefault(SyncMode.FULL)
+        val result = coordinator.syncNow(SyncReason.BACKGROUND, mode) ?: return Result.success()
+        return when {
+            result.failures.isEmpty() -> Result.success()
+            runAttemptCount < MAX_RETRIES -> Result.retry()
+            else -> Result.failure()
+        }
+    }
+
+    companion object {
+        const val KEY_MODE = "sync_mode"
+        private const val MAX_RETRIES = 5
     }
 }

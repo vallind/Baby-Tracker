@@ -322,9 +322,10 @@ class SyncEngine(
      * 将本地所有已有的、未标记 pending 的记录标记为 pending。
      * 用于存量数据首次同步——之前创建的数据没有 sync_metadata 记录。
      */
-    suspend fun markExistingPending() {
+    suspend fun markExistingPending(): List<SyncFailure> {
         val db = db.openHelper.writableDatabase
-        val fid = currentFamilyId ?: return
+        val fid = currentFamilyId ?: return emptyList()
+        val failures = mutableListOf<SyncFailure>()
         db.beginTransaction()
         try {
             // 清理已摘除同步的表
@@ -367,12 +368,14 @@ class SyncEngine(
                     )
                 } catch (e: Exception) {
                     Timber.tag("Sync").e(e, "markExistingPending failed table=%s", table)
+                    failures += SyncFailure(table, message = e.message ?: "存量数据检查失败")
                 }
             }
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
         }
+        return failures
     }
 
     // ================================================================

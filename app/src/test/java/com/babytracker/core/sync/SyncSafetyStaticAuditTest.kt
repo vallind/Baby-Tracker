@@ -15,6 +15,7 @@ class SyncSafetyStaticAuditTest {
     private val app = File(moduleDir, "src/main/java/com/babytracker/BabyTrackerApp.kt").readText()
     private val coordinator = File(moduleDir, "src/main/java/com/babytracker/core/sync/SyncCoordinator.kt").readText()
     private val settingsViewModel = File(moduleDir, "src/main/java/com/babytracker/feature/settings/SettingsViewModel.kt").readText()
+    private val syncSettings = File(moduleDir, "src/main/java/com/babytracker/core/sync/SyncSettings.kt").readText()
 
     @Test
     fun `messages must remain outside cloud sync`() {
@@ -51,10 +52,19 @@ class SyncSafetyStaticAuditTest {
 
     @Test
     fun `同步生命周期必须在应用启动而不是设置页启动`() {
-        assert(app.contains("get<SyncCoordinator>().start()"))
+        assert(app.contains("syncCoordinator.start()"))
+        assert(app.contains("syncCoordinator.onAppBackgrounded()"))
         assert(coordinator.contains("PeriodicWorkRequestBuilder<SyncWorker>"))
         assert(coordinator.contains("watchPendingCount()"))
         assert(!settingsViewModel.contains("registerNetworkCallback"))
         assert(!settingsViewModel.contains("tryAutoSync"))
+    }
+
+    @Test
+    fun `自动同步配置必须控制实时订阅和后台任务`() {
+        assert(coordinator.contains("realtimeManager.unsubscribe()"))
+        assert(coordinator.contains("ExistingPeriodicWorkPolicy.UPDATE"))
+        assert(coordinator.contains("NetworkType.UNMETERED"))
+        assert(syncSettings.contains("KEY_RECONCILED_FAMILIES"))
     }
 }
