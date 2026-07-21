@@ -85,6 +85,7 @@ class SyncTrigger(
                 val newId = family?.id
                 Timber.tag("Sync").d("observeFamily family=%s", newId)
                 syncEngine.currentFamilyId = newId
+                com.babytracker.core.data.repository.currentSyncFamilyId = newId
                 if (newId != null) {
                     if (!existingPendingMarked) {
                         Timber.tag("Sync").d("observeFamily markExistingPending + push")
