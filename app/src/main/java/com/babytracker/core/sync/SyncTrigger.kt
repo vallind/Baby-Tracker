@@ -45,7 +45,7 @@ class SyncTrigger(
     private val realtimeManager: RealtimeManager,
     private val context: Context,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _lastSyncResult = MutableStateFlow<String?>(null)
     val lastSyncResult: StateFlow<String?> = _lastSyncResult.asStateFlow()
