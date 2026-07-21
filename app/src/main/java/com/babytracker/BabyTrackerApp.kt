@@ -2,6 +2,8 @@ package com.babytracker
 
 import android.app.Application
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -35,6 +37,8 @@ class BabyTrackerApp : Application() {
     lateinit var appLogTree: AppLogTree
         private set
 
+    private val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onCreate() {
         super.onCreate()
         val crashLog = File(filesDir, "crash.log")
@@ -47,62 +51,62 @@ class BabyTrackerApp : Application() {
             FileWriter(crashLog, true).use { it.append("Timber init failed: ${e.message}\n") }
         }
 
-        val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
         try {
             val koin = startKoin {
                 androidContext(this@BabyTrackerApp)
                 modules(appModule, databaseModule, syncModule)
             }.koin
 
-            // 后台初始化 WorkManager（不阻塞主线程）
-            bgScope.launch {
-                try {
-                    WorkManager.initialize(this@BabyTrackerApp, Configuration.Builder()
-                        .setWorkerFactory(object : WorkerFactory() {
-                            override fun createWorker(
-                                appContext: Context,
-                                className: String,
-                                workerParams: WorkerParameters,
-                            ): ListenableWorker? {
-                                if (className == SyncWorker::class.java.name) {
-                                    return SyncWorker(
-                                        appContext, workerParams,
-                                        koin.get<SyncEngine>(),
-                                        koin.get<SyncSettings>(),
-                                        koin.get<AuthService>(),
-                                        koin.get<FamilyService>(),
-                                    )
+            // 延后至首帧之后启动，不阻塞启动速度
+            Handler(Looper.getMainLooper()).post {
+                bgScope.launch {
+                    try {
+                        WorkManager.initialize(this@BabyTrackerApp, Configuration.Builder()
+                            .setWorkerFactory(object : WorkerFactory() {
+                                override fun createWorker(
+                                    appContext: Context,
+                                    className: String,
+                                    workerParams: WorkerParameters,
+                                ): ListenableWorker? {
+                                    if (className == SyncWorker::class.java.name) {
+                                        return SyncWorker(
+                                            appContext, workerParams,
+                                            koin.get<SyncEngine>(),
+                                            koin.get<SyncSettings>(),
+                                            koin.get<AuthService>(),
+                                            koin.get<FamilyService>(),
+                                        )
+                                    }
+                                    return null
                                 }
-                                return null
-                            }
-                        })
-                        .build())
-                } catch (e: Throwable) {
-                    Log.e("BabyTracker", "WorkManager init failed", e)
-                    FileWriter(crashLog, true).use { it.append("WorkManager: ${e.message}\n") }
-                }
-            }
-
-            try {
-                koin.get<SyncTrigger>().start()
-            } catch (e: Throwable) {
-                Log.e("BabyTracker", "SyncTrigger start failed", e)
-                FileWriter(crashLog, true).use { it.append("SyncTrigger: ${e.message}\n") }
-            }
-
-            try {
-                ProcessLifecycleOwner.get().lifecycle.addObserver(object : LifecycleObserver {
-                    @OnLifecycleEvent(androidx.lifecycle.Lifecycle.Event.ON_STOP)
-                    fun onBackground() {
-                        bgScope.launch {
-                            try { koin.get<SyncTrigger>().onAppBackgrounded() } catch (_: Throwable) {}
-                        }
+                            })
+                            .build())
+                    } catch (e: Throwable) {
+                        Log.e("BabyTracker", "WorkManager init failed", e)
+                        FileWriter(crashLog, true).use { it.append("WorkManager: ${e.message}\n") }
                     }
-                })
-            } catch (e: Throwable) {
-                Log.e("BabyTracker", "ProcessLifecycleOwner failed", e)
-                FileWriter(crashLog, true).use { it.append("Lifecycle: ${e.message}\n") }
+                }
+
+                try {
+                    koin.get<SyncTrigger>().start()
+                } catch (e: Throwable) {
+                    Log.e("BabyTracker", "SyncTrigger start failed", e)
+                    FileWriter(crashLog, true).use { it.append("SyncTrigger: ${e.message}\n") }
+                }
+
+                try {
+                    ProcessLifecycleOwner.get().lifecycle.addObserver(object : LifecycleObserver {
+                        @OnLifecycleEvent(androidx.lifecycle.Lifecycle.Event.ON_STOP)
+                        fun onBackground() {
+                            bgScope.launch {
+                                try { koin.get<SyncTrigger>().onAppBackgrounded() } catch (_: Throwable) {}
+                            }
+                        }
+                    })
+                } catch (e: Throwable) {
+                    Log.e("BabyTracker", "ProcessLifecycleOwner failed", e)
+                    FileWriter(crashLog, true).use { it.append("Lifecycle: ${e.message}\n") }
+                }
             }
         } catch (e: Throwable) {
             Log.e("BabyTracker", "Startup failed", e)
