@@ -45,10 +45,7 @@ class NetworkMonitor(context: Context) {
 
     private fun registerNetworkCallback() {
         try {
-            val request = NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .build()
-            cm?.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
+            cm?.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     _isOnline.value = true
                     _isUnmetered.value = checkUnmetered()
@@ -58,9 +55,12 @@ class NetworkMonitor(context: Context) {
                     _isUnmetered.value = false
                 }
                 override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                    _isOnline.value = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                     _isUnmetered.value = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
                 }
             })
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            android.util.Log.e("NetworkMonitor", "registerDefaultNetworkCallback failed", e)
+        }
     }
 }
