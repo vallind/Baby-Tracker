@@ -63,7 +63,6 @@ dependencies {
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
-    implementation(libs.koin.workmanager)
 
     // Supabase
     implementation(platform(libs.supabase.bom))

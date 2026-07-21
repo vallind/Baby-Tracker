@@ -84,7 +84,6 @@ navigation-compose = { group = "androidx.navigation", name = "navigation-compose
 # ── Koin (DI) ──
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
-koin-workmanager = { group = "io.insert-koin", name = "koin-androidx-workmanager", version.ref = "koin" }
 
 # ── Room (Database) ──
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }

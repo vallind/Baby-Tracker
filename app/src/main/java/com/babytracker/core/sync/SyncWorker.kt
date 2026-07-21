@@ -5,15 +5,18 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.babytracker.core.auth.AuthService
 import com.babytracker.core.data.FamilyService
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class SyncWorker(
     app: Context,
     params: WorkerParameters,
-    private val syncEngine: SyncEngine,
-    private val syncSettings: SyncSettings,
-    private val authService: AuthService,
-    private val familyService: FamilyService,
-) : CoroutineWorker(app, params) {
+) : CoroutineWorker(app, params), KoinComponent {
+
+    private val syncEngine: SyncEngine by inject()
+    private val syncSettings: SyncSettings by inject()
+    private val authService: AuthService by inject()
+    private val familyService: FamilyService by inject()
 
     override suspend fun doWork(): Result {
         val config = syncSettings.config.value
