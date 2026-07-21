@@ -51,6 +51,8 @@ class SyncTrigger(
     val lastSyncResult: StateFlow<String?> = _lastSyncResult.asStateFlow()
 
     private var existingPendingMarked = false
+    private var lastSyncedFamilyId: String? = null
+    private var lastTriggeredUserId: String? = null
 
     companion object {
         private const val SYNC_WORK_NAME = "bg_sync"
@@ -59,6 +61,8 @@ class SyncTrigger(
     fun start() {
         Timber.tag("Sync").d("SyncTrigger start")
         observeFamily()
+        observeAuth()
+        observeNetwork()
         observeAutoTrigger()
         observeBgInterval()
     }
@@ -87,18 +91,57 @@ class SyncTrigger(
                 syncEngine.currentFamilyId = newId
                 com.babytracker.core.data.repository.currentSyncFamilyId = newId
                 if (newId != null) {
+                    val isNewFamily = newId != lastSyncedFamilyId
+                    if (isNewFamily) {
+                        syncEngine.resetLastSync()
+                        lastSyncedFamilyId = newId
+                    }
                     if (!existingPendingMarked) {
-                        Timber.tag("Sync").d("observeFamily markExistingPending + push")
                         syncEngine.markExistingPending()
                         existingPendingMarked = true
-                        syncEngine.push()
                     }
+                    triggerSync()
                     authService.currentUserId()?.let {
                         realtimeManager.subscribeAll()
                     }
                 } else {
                     realtimeManager.unsubscribe()
                 }
+            }
+        }
+    }
+
+    private fun observeAuth() {
+        scope.launch {
+            authService.observeAuthState().collect { user ->
+                val uid = user?.id
+                if (uid != null && uid != lastTriggeredUserId) {
+                    lastTriggeredUserId = uid
+                    triggerSync()
+                } else if (user == null) {
+                    realtimeManager.unsubscribe()
+                }
+            }
+        }
+    }
+
+    private fun observeNetwork() {
+        scope.launch {
+            networkMonitor.isOnline.collect { online ->
+                if (online && authService.isLoggedIn() && syncEngine.currentFamilyId != null) {
+                    triggerSync()
+                }
+            }
+        }
+    }
+
+    private fun triggerSync() {
+        scope.launch {
+            try {
+                syncEngine.push()
+                Timber.tag("Sync").d("auto trigger sync done")
+            } catch (e: Exception) {
+                Timber.tag("Sync").e(e, "auto trigger sync failed")
             }
         }
     }
