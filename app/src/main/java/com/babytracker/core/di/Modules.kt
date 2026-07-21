@@ -17,6 +17,9 @@ import com.babytracker.feature.auth.LoginViewModel
 import com.babytracker.feature.settings.SettingsViewModel
 import com.babytracker.feature.family.FamilyViewModel
 import com.babytracker.core.data.FamilyService
+import com.babytracker.core.sync.SyncSettings
+import com.babytracker.core.sync.SyncTrigger
+import com.babytracker.core.util.NetworkMonitor
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -26,6 +29,7 @@ val appModule = module {
     single { ThemeController(get()) }
     single { BabyController(get(), get()) }
     single { BackupManager(get()) }
+    single { NetworkMonitor(androidContext()) }
     single<BabyRepository> { BabyRepositoryImpl(get(), get(), get(), get()) }
     single<FeedingRepository> { FeedingRepositoryImpl(get(), get(), get()) }
     single<SleepRepository> { SleepRepositoryImpl(get(), get(), get()) }
@@ -36,6 +40,7 @@ val appModule = module {
     single<MessageRepository> { MessageRepositoryImpl(get(), get()) }
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get(), get()) }
+    single { SyncSettings(get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { MessageViewModel(get()) }
@@ -43,7 +48,7 @@ val appModule = module {
     viewModel { ReminderViewModel(get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), androidContext()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), androidContext(), get(), get()) }
     viewModel { FamilyViewModel(get(), get()) }
 }
 
@@ -71,4 +76,5 @@ val syncModule = module {
     single { FamilyService(get(), get()) }
     single { com.babytracker.core.sync.SyncEngine(get(), get()) }
     single { com.babytracker.core.sync.RealtimeManager(get(), get(), get()) }
+    single { SyncTrigger(get(), get(), get(), get(), get(), get(), get(), androidContext()) }
 }

@@ -2,6 +2,23 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.16] — 2026-07-21
+
+**应用级自动同步体系：**
+- 新增 SyncConfig / SyncSettings 支持四种同步配置，SharedPreferences 持久化 + StateFlow 响应式
+- 新增 SyncTrigger 实时同步触发器：监听待同步数量、配置、登录、网络，按延迟策略防抖触发 push
+- 新增 SyncWorker 后台周期同步，WorkManager 管理，设备重启后持续有效
+- 新增 NetworkMonitor 共享网络状态服务，支持在线/非计费网络双检测
+- wifiOnly 统一约束实时同步、后台同步、退出同步所有入口
+- 自动同步从关闭切到开启时立即触发一次推送
+- 新增 SyncSettingsScreen 同步设置子页面，自动同步/同步延迟/后台同步/仅 Wi‑Fi 四项配置
+- 主设置页增加同步设置入口并动态显示状态摘要
+- SyncMetadataDao 新增 watchPendingCountByFamily 按家庭过滤待同步数
+- SettingsViewModel 重构：注入 SyncSettings/NetworkMonitor，移除旧 tryAutoSync 逻辑
+- manualSync 删除 markExistingPending 调用，避免每次手动同步重复标记存量
+- 新增 lifecycle-process 依赖，应用进入后台触发 ON_EXIT 模式同步
+- 禁用 WorkManager 自动初始化，改为 Koin 就绪后手动初始化
+
 ### [1.5.15] — 2026-07-21
 
 **宝宝查询严格匹配家庭，同步元数据写入固化家庭归属：**

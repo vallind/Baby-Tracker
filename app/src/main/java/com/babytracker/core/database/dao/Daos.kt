@@ -238,6 +238,9 @@ interface SyncMetadataDao {
     @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending'")
     fun watchPendingCount(): Flow<Int>
 
+    @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending' AND familyId = :familyId")
+    fun watchPendingCountByFamily(familyId: String): Flow<Int>
+
     @Query("SELECT * FROM sync_metadata WHERE tableName = :tableName AND localId = :localId LIMIT 1")
     suspend fun getByTableAndId(tableName: String, localId: Int): SyncMetadataEntity?
 

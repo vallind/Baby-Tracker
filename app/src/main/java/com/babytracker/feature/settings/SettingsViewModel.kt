@@ -1,22 +1,19 @@
 package com.babytracker.feature.settings
 
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.auth.AuthService
 import com.babytracker.core.data.FamilyService
+import com.babytracker.core.sync.BgInterval
 import com.babytracker.core.sync.RealtimeManager
 import com.babytracker.core.sync.RealtimeState
+import com.babytracker.core.sync.SyncConfig
+import com.babytracker.core.sync.SyncDelay
 import com.babytracker.core.sync.SyncEngine
+import com.babytracker.core.sync.SyncSettings
 import com.babytracker.core.sync.SyncState
-import timber.log.Timber
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import com.babytracker.core.util.NetworkMonitor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +22,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class SettingsViewModel(
     private val syncEngine: SyncEngine,
@@ -33,23 +29,20 @@ class SettingsViewModel(
     private val authService: AuthService,
     private val familyService: FamilyService,
     private val context: Context,
+    private val syncSettings: SyncSettings,
+    private val networkMonitor: NetworkMonitor,
 ) : ViewModel() {
 
     val syncState: StateFlow<SyncState> = syncEngine.syncState
     val connectionState: StateFlow<RealtimeState> = realtimeManager.connectionState
+    val isOnline: StateFlow<Boolean> = networkMonitor.isOnline
+    val isUnmetered: StateFlow<Boolean> = networkMonitor.isUnmetered
+    val syncConfig: StateFlow<SyncConfig> = syncSettings.config
 
     val isLoggedIn: StateFlow<Boolean> = authService.observeAuthState()
         .map { it != null }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), authService.isLoggedIn())
 
-    /** 网络是否可用 */
-    private val _isOnline = MutableStateFlow(checkNetwork())
-    val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
-
-    /** 防止并发创建多个家庭 */
-    private val ensureFamilyMutex = Mutex()
-
-    /** 综合同步状态文本 */
     val syncStatusText: StateFlow<String> = combine(syncState, connectionState, isLoggedIn, isOnline) { sync, conn, loggedIn, online ->
         when {
             !loggedIn -> "未登录"
@@ -62,113 +55,21 @@ class SettingsViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "待同步")
 
-    /** 上次已同步的家庭 ID，用于检测家庭切换并触发全量同步 */
-    private var lastSyncedFamilyId: String? = null
-    private val autoSyncMutex = Mutex()
-    private var lastAutoSyncUserId: String? = null
-
-    init {
-        // 启动时从本地恢复 familyId（Supabase 挂了也能同步）
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        lastSyncedFamilyId = prefs.getString("current_family_id", null)
-        syncEngine.currentFamilyId = lastSyncedFamilyId
-
-        registerNetworkCallback()
-        viewModelScope.launch {
-            combine(
-                authService.observeAuthState(),
-                isOnline,
-            ) { user, online -> user to online }.collect { (user, online) ->
-                Timber.tag("SyncVM").d("authState user=%s online=%b", user?.id, online)
-                if (user != null && online) {
-                    tryAutoSync()
-                } else if (user == null) {
-                    realtimeManager.unsubscribe()
-                    syncEngine.currentFamilyId = null
-                    lastSyncedFamilyId = null
-                    lastAutoSyncUserId = null
-                }
-            }
-        }
-        viewModelScope.launch {
-            familyService.currentFamily.collect { family ->
-                val newId = family?.id
-                if (newId != null) {
-                    syncEngine.currentFamilyId = newId
-                }
-                // 持久化到本地，Supabase 不通时仍可同步
-                newId?.let { prefs.edit().putString("current_family_id", it).apply() }
-
-                // 加入/切换到新家庭时，触发全量同步（拉取该家庭的历史数据）
-                val isNewFamily = newId != null && newId != lastSyncedFamilyId
-                if (isNewFamily) {
-                    syncEngine.resetLastSync()  // 同步清除锚点，确保后续 fullSync 全量拉取
-                    if (_isOnline.value) {
-                        viewModelScope.launch {
-                            syncEngine.fullSync()       // 拉取新家庭所有历史数据
-                            lastSyncedFamilyId = newId
-                        }
-                    } else {
-                        lastSyncedFamilyId = newId
-                    }
-                    realtimeManager.subscribeAll()
-                } else if (newId != null) {
-                    lastSyncedFamilyId = newId
-                }
-            }
-        }
-    }
-
-    private suspend fun tryAutoSync() {
-        val uid = authService.currentUserId()
-        if (uid != null && uid == lastAutoSyncUserId) {
-            Timber.tag("SyncVM").d("tryAutoSync: skip duplicate uid=%s", uid)
-            return
-        }
-        autoSyncMutex.withLock {
-            if (uid != lastAutoSyncUserId) lastAutoSyncUserId = uid else return@withLock
-            try {
-                syncEngine.currentFamilyId = ensureFamily()
-                if (syncEngine.currentFamilyId == null) {
-                    Timber.tag("SyncVM").d("tryAutoSync: no familyId, skip")
-                    return@withLock
-                }
-                Timber.tag("SyncVM").d("tryAutoSync: fid=%s online=%b", syncEngine.currentFamilyId, _isOnline.value)
-                syncEngine.markExistingPending()
-                realtimeManager.subscribeAll()
-                syncEngine.fullSync()
-            } catch (e: Exception) {
-                Timber.tag("SyncVM").e(e, "tryAutoSync failed")
-            }
-        }
-    }
-
-    /**
-     * 获取当前家庭 ID（三层回退）：
-     * 1. 内存 currentFamily → 2. SharedPreferences 本地持久化 → 3. Supabase API
-     * 不自动创建——家庭需用户主动创建或加入
-     */
-    private suspend fun ensureFamily(): String? = ensureFamilyMutex.withLock {
-        // 1. 内存已有
-        familyService.currentFamily.value?.let { return@withLock it.id }
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        // 2. 本地持久化（避免网络延迟）
-        prefs.getString("current_family_id", null)?.let { return@withLock it }
-        // 3. Supabase API 兜底
-        try {
-            familyService.loadMyFamilies()
-            familyService.currentFamily.value?.id
-        } catch (_: Exception) {
-            null
-        }
-    }
-
     private val _syncResult = MutableStateFlow<String?>(null)
     val syncResult: StateFlow<String?> = _syncResult.asStateFlow()
 
+    // ── 同步配置更新 ──
+
+    fun updateAutoSync(enabled: Boolean) = syncSettings.updateAutoSync(enabled)
+    fun updateSyncDelay(delay: SyncDelay) = syncSettings.updateSyncDelay(delay)
+    fun updateBgInterval(interval: BgInterval) = syncSettings.updateBgInterval(interval)
+    fun updateWifiOnly(enabled: Boolean) = syncSettings.updateWifiOnly(enabled)
+
+    // ── 手动同步 ──
+
     fun manualSync() {
         viewModelScope.launch {
-            if (!_isOnline.value) {
+            if (!isOnline.value) {
                 _syncResult.value = "当前离线，无法同步"
                 return@launch
             }
@@ -180,8 +81,6 @@ class SettingsViewModel(
                     _syncResult.value = "请先创建或加入家庭"
                     return@launch
                 }
-                // 首次同步：标记存量数据为 pending
-                syncEngine.markExistingPending()
                 val pending = syncEngine.pendingCount()
                 val result = syncEngine.fullSync()
                 _syncResult.value = when {
@@ -197,29 +96,17 @@ class SettingsViewModel(
 
     fun clearSyncResult() { _syncResult.value = null }
 
-    // ── 网络监听 ──
+    // ── 家庭 ID 获取 ──
 
-    private fun checkNetwork(): Boolean {
+    private suspend fun ensureFamily(): String? {
+        familyService.currentFamily.value?.let { return it.id }
+        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        prefs.getString("current_family_id", null)?.let { return it }
         return try {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return true
-            val network = cm.activeNetwork ?: return true // 无法判断时假设在线
-            val caps = cm.getNetworkCapabilities(network) ?: return true
-            caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            val families = familyService.loadMyFamilies()
+            families.firstOrNull()?.id
         } catch (_: Exception) {
-            true // 缺权限或异常时假设在线，避免误伤
+            null
         }
-    }
-
-    private fun registerNetworkCallback() {
-        try {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
-            val request = NetworkRequest.Builder()
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                .build()
-            cm.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
-                override fun onAvailable(network: Network) { _isOnline.value = true }
-                override fun onLost(network: Network) { _isOnline.value = false }
-            })
-        } catch (_: Exception) { }
     }
 }

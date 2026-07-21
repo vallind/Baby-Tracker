@@ -15,7 +15,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "1.5.14"
+        versionName = "1.5.16"
     }
 
     buildTypes {
@@ -63,6 +63,7 @@ dependencies {
     // Koin
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.workmanager)
 
     // Supabase
     implementation(platform(libs.supabase.bom))
@@ -96,9 +97,15 @@ implementation(libs.documentfile)
 // Logging
 implementation(libs.timber)
 
-// Coroutines
+    // Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
+
+    // WorkManager
+    implementation(libs.work.runtime.ktx)
+
+    // Lifecycle Process
+    implementation(libs.lifecycle.process)
 
     // Test
     testImplementation(libs.junit)

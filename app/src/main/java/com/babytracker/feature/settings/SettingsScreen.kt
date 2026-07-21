@@ -100,6 +100,7 @@ fun SettingsScreen(navController: NavController) {
     val syncState by settingsVM.syncState.collectAsState()
     val isLoggedIn by settingsVM.isLoggedIn.collectAsState()
     val syncResult by settingsVM.syncResult.collectAsState()
+    val syncConfig by settingsVM.syncConfig.collectAsState()
     var showLogoutConfirm by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -186,6 +187,13 @@ fun SettingsScreen(navController: NavController) {
                 )
                 SettingsDivider()
                 SettingsRow(
+                    emoji = "🔄",
+                    label = "同步设置",
+                    subtitle = if (syncConfig.autoSync) "已开启 / 延迟 ${syncConfig.syncDelay.label}" else "已关闭",
+                    onClick = { navController.navigate(Screen.SyncSettings.route) },
+                )
+                SettingsDivider()
+                SettingsRow(
                     emoji = "🔒",
                     label = "隐私设置",
                     onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() },
@@ -268,10 +276,13 @@ fun SettingsScreen(navController: NavController) {
                     )
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        "立即同步",
+                        if (syncConfig.autoSync) "同步设置 >" else "手动同步",
                         color = c.primary,
                         style = typography.labelSmall,
-                        modifier = Modifier.clickable { settingsVM.manualSync() },
+                        modifier = Modifier.clickable {
+                            if (syncConfig.autoSync) navController.navigate(Screen.SyncSettings.route)
+                            else settingsVM.manualSync()
+                        },
                     )
                 }
             }
