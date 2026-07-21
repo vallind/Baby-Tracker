@@ -261,7 +261,8 @@ class SyncEngine(
                 try {
                     withContext(NonCancellable) {
                         var pageCursor = syncCursor.get(fid, tableName) ?: 0L
-                        while (true) {
+                        var hasMore = true
+                        while (hasMore) {
                             withTimeout(30_000L) {
                                 val result: List<JsonObject> = supabase.postgrest.from(tableName)
                                     .select(columns = Columns.ALL) {
@@ -289,7 +290,7 @@ class SyncEngine(
                                     syncCursor.set(SyncCursorEntity(fid, tableName, pageCursor))
                                 }
                                 pulled += pageApplied
-                                if (result.size < 500) break
+                                hasMore = result.size >= 500
                             }
                         }
                     }
