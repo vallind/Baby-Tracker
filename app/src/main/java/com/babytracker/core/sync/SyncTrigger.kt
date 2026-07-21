@@ -112,27 +112,24 @@ class SyncTrigger(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeAutoTrigger() {
         Timber.tag("Sync").d("observeAutoTrigger start")
-        combine(
-            PendingChangeNotifier.events,
-            syncSettings.config,
-            authService.observeAuthState().map { it != null },
-            networkMonitor.isOnline,
-            networkMonitor.isUnmetered,
-        ) { _, config, loggedIn, online, unmetered ->
-            val fid = syncEngine.currentFamilyId ?: return@combine false
-            if (!config.autoSync || !loggedIn || !online) return@combine false
-            if (config.wifiOnly && !unmetered) return@combine false
-            val pending = syncMeta.pendingCount(fid)
-            Timber.tag("Sync").d("autoTrigger eval: pending=%d autoSync=%s loggedIn=%s online=%s",
-                pending, config.autoSync, loggedIn, online)
-            pending > 0
-        }.filter { it }.let { flow ->
-            val delay = syncSettings.config.value.syncDelay
-            if (delay.millis > 0L) flow.debounce(delay.millis) else flow
-        }.onEach {
-            Timber.tag("Sync").d("autoTrigger firing push")
-            doPush()
-        }.launchIn(scope)
+        scope.launch {
+            PendingChangeNotifier.events.collect {
+                Timber.tag("Sync").d("autoTrigger event received")
+                val config = syncSettings.config.value
+                val fid = syncEngine.currentFamilyId
+                if (fid == null || !config.autoSync) return@collect
+                val loggedIn = authService.currentUserId() != null
+                val online = networkMonitor.isOnline.value
+                val unmetered = networkMonitor.isUnmetered.value
+                if (!loggedIn || !online) return@collect
+                if (config.wifiOnly && !unmetered) return@collect
+                val pending = syncMeta.pendingCount(fid)
+                Timber.tag("Sync").d("autoTrigger eval: pending=%d autoSync=%s online=%s",
+                    pending, config.autoSync, online)
+                if (pending <= 0) return@collect
+                doPush()
+            }
+        }
     }
 
     private fun observeBgInterval() {

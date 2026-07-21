@@ -8,6 +8,7 @@ import io.github.jan.supabase.postgrest.postgrest
 import timber.log.Timber
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -285,7 +286,11 @@ class SyncEngine(
                         if (result.size < 500) break
                     }
                 } catch (e: Exception) {
-                    Timber.tag("Sync").e(e, "pull failed table=%s", tableName)
+                    if (e is CancellationException) {
+                        Timber.tag("Sync").d("pull cancelled table=%s", tableName)
+                    } else {
+                        Timber.tag("Sync").e(e, "pull failed table=%s", tableName)
+                    }
                     failures += SyncFailure(tableName, message = e.message ?: "拉取失败")
                 }
             }
