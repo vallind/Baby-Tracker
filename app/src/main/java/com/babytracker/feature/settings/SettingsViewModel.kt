@@ -82,6 +82,7 @@ class SettingsViewModel(
                     return@launch
                 }
                 val pending = syncEngine.pendingCount()
+                if (pending == 0) syncEngine.markExistingPending()
                 val result = syncEngine.fullSync()
                 _syncResult.value = when {
                     pending == 0 && result.total == 0 -> "无数据需同步"
