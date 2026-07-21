@@ -7,9 +7,10 @@ import com.babytracker.core.data.FamilyService
 import com.babytracker.core.data.mapper.toDomain
 import com.babytracker.core.data.mapper.toEntity
 import com.babytracker.core.domain.model.*
+import com.babytracker.core.sync.PendingChangeNotifier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
@@ -21,6 +22,7 @@ private fun newUuid() = UUID.randomUUID().toString()
 /** 标记本地记录为待同步到 Supabase，同步固化家庭归属 */
 private suspend fun SyncMetadataDao.pendingChange(tableName: String, localId: Int, uuid: String?, updatedAt: Long, familyId: String? = null) {
     insert(SyncMetadataEntity(tableName = tableName, localId = localId, remoteUuid = uuid, syncStatus = "pending", updatedAt = updatedAt, familyId = familyId))
+    PendingChangeNotifier.changed()
 }
 
 // ── 宝宝 ──

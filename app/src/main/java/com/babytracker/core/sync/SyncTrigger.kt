@@ -14,21 +14,33 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
+
+/**
+ * 待同步变更通知 — Repository 写入 sync_metadata(pending) 后发出事件，
+ * 绕过 Room Flow 失效传播的不可靠性。
+ */
+object PendingChangeNotifier {
+    private val _events = MutableSharedFlow<Unit>(extraBufferCapacity = 64)
+    val events = _events.asSharedFlow()
+
+    fun changed() {
+        _events.tryEmit(Unit)
+    }
+}
 
 class SyncTrigger(
     private val syncMeta: SyncMetadataDao,
@@ -45,7 +57,6 @@ class SyncTrigger(
     private val _lastSyncResult = MutableStateFlow<String?>(null)
     val lastSyncResult: StateFlow<String?> = _lastSyncResult.asStateFlow()
 
-    /** 是否已对当前家庭执行过存量标记 */
     private var existingPendingMarked = false
 
     companion object {
@@ -53,6 +64,7 @@ class SyncTrigger(
     }
 
     fun start() {
+        Timber.tag("Sync").d("SyncTrigger start")
         observeFamily()
         observeAutoTrigger()
         observeBgInterval()
@@ -75,11 +87,14 @@ class SyncTrigger(
 
     private fun observeFamily() {
         scope.launch {
+            Timber.tag("Sync").d("observeFamily start")
             familyService.currentFamily.collect { family ->
                 val newId = family?.id
+                Timber.tag("Sync").d("observeFamily family=%s", newId)
                 syncEngine.currentFamilyId = newId
                 if (newId != null) {
                     if (!existingPendingMarked) {
+                        Timber.tag("Sync").d("observeFamily markExistingPending + push")
                         syncEngine.markExistingPending()
                         existingPendingMarked = true
                         syncEngine.push()
@@ -96,25 +111,28 @@ class SyncTrigger(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeAutoTrigger() {
-        syncSettings.config.flatMapLatest { config ->
-            val fid = familyService.currentFamily.value?.id
-            if (fid == null || !config.autoSync) {
-                return@flatMapLatest flowOf<Boolean>()
-            }
-            val conditions: Flow<Boolean> = combine(
-                syncMeta.watchPendingCountByFamily(fid),
-                authService.observeAuthState().map { user -> user != null },
-                networkMonitor.isOnline,
-                networkMonitor.isUnmetered,
-            ) { pending: Int, loggedIn: Boolean, online: Boolean, unmetered: Boolean ->
-                pending > 0 && loggedIn && online && (!config.wifiOnly || unmetered)
-            }
-            when (config.syncDelay) {
-                SyncDelay.IMMEDIATE -> conditions.filter { it }
-                SyncDelay.ON_EXIT -> flowOf()
-                else -> conditions.filter { it }.debounce(config.syncDelay.millis)
-            }
-        }.onEach { doPush() }.launchIn(scope)
+        Timber.tag("Sync").d("observeAutoTrigger start")
+        combine(
+            PendingChangeNotifier.events,
+            syncSettings.config,
+            authService.observeAuthState().map { it != null },
+            networkMonitor.isOnline,
+            networkMonitor.isUnmetered,
+        ) { _, config, loggedIn, online, unmetered ->
+            val fid = syncEngine.currentFamilyId ?: return@combine false
+            if (!config.autoSync || !loggedIn || !online) return@combine false
+            if (config.wifiOnly && !unmetered) return@combine false
+            val pending = syncMeta.pendingCount(fid)
+            Timber.tag("Sync").d("autoTrigger eval: pending=%d autoSync=%s loggedIn=%s online=%s",
+                pending, config.autoSync, loggedIn, online)
+            pending > 0
+        }.filter { it }.let { flow ->
+            val delay = syncSettings.config.value.syncDelay
+            if (delay.millis > 0L) flow.debounce(delay.millis) else flow
+        }.onEach {
+            Timber.tag("Sync").d("autoTrigger firing push")
+            doPush()
+        }.launchIn(scope)
     }
 
     private fun observeBgInterval() {
