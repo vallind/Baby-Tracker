@@ -1,6 +1,7 @@
 package com.babytracker.core.sync
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -47,12 +48,15 @@ class SyncTrigger(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+
     private val _lastSyncResult = MutableStateFlow<String?>(null)
     val lastSyncResult: StateFlow<String?> = _lastSyncResult.asStateFlow()
 
-    private var existingPendingMarked = false
-    private var lastSyncedFamilyId: String? = null
-    private var lastTriggeredUserId: String? = null
+    private var existingPendingMarked = prefs.getBoolean("sync_pending_marked", false)
+    private var lastSyncedFamilyId: String? = prefs.getString("sync_last_family", null)
+    private var lastTriggeredUserId: String? = prefs.getString("sync_last_user", null)
 
     companion object {
         private const val SYNC_WORK_NAME = "bg_sync"
@@ -95,10 +99,12 @@ class SyncTrigger(
                     if (isNewFamily) {
                         syncEngine.resetLastSync()
                         lastSyncedFamilyId = newId
+                        prefs.edit().putString("sync_last_family", newId).apply()
                     }
                     if (!existingPendingMarked) {
                         syncEngine.markExistingPending()
                         existingPendingMarked = true
+                        prefs.edit().putBoolean("sync_pending_marked", true).apply()
                     }
                     triggerSync()
                     authService.currentUserId()?.let {
@@ -117,6 +123,7 @@ class SyncTrigger(
                 val uid = user?.id
                 if (uid != null && uid != lastTriggeredUserId) {
                     lastTriggeredUserId = uid
+                    prefs.edit().putString("sync_last_user", uid).apply()
                     triggerSync()
                 } else if (user == null) {
                     realtimeManager.unsubscribe()
