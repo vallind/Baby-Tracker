@@ -75,22 +75,18 @@ class SettingsViewModel(
 
         registerNetworkCallback()
         viewModelScope.launch {
-            authService.observeAuthState().collect { user ->
-                Timber.tag("SyncVM").d("authState user=%s online=%b", user?.id, _isOnline.value)
-                if (user != null && _isOnline.value) {
+            combine(
+                authService.observeAuthState(),
+                isOnline,
+            ) { user, online -> user to online }.collect { (user, online) ->
+                Timber.tag("SyncVM").d("authState user=%s online=%b", user?.id, online)
+                if (user != null && online) {
                     tryAutoSync()
                 } else if (user == null) {
                     realtimeManager.unsubscribe()
                     syncEngine.currentFamilyId = null
                     lastSyncedFamilyId = null
                     lastAutoSyncUserId = null
-                }
-            }
-        }
-        viewModelScope.launch {
-            isOnline.collect { online ->
-                if (online && authService.isLoggedIn()) {
-                    tryAutoSync()
                 }
             }
         }
@@ -123,25 +119,27 @@ class SettingsViewModel(
         }
     }
 
-    private suspend fun tryAutoSync() = autoSyncMutex.withLock {
+    private suspend fun tryAutoSync() {
         val uid = authService.currentUserId()
         if (uid != null && uid == lastAutoSyncUserId) {
             Timber.tag("SyncVM").d("tryAutoSync: skip duplicate uid=%s", uid)
-            return@withLock
+            return
         }
-        lastAutoSyncUserId = uid
-        try {
-            syncEngine.currentFamilyId = ensureFamily()
-            if (syncEngine.currentFamilyId == null) {
-                Timber.tag("SyncVM").d("tryAutoSync: no familyId, skip")
-                return@withLock
+        autoSyncMutex.withLock {
+            if (uid != lastAutoSyncUserId) lastAutoSyncUserId = uid else return@withLock
+            try {
+                syncEngine.currentFamilyId = ensureFamily()
+                if (syncEngine.currentFamilyId == null) {
+                    Timber.tag("SyncVM").d("tryAutoSync: no familyId, skip")
+                    return@withLock
+                }
+                Timber.tag("SyncVM").d("tryAutoSync: fid=%s online=%b", syncEngine.currentFamilyId, _isOnline.value)
+                syncEngine.markExistingPending()
+                realtimeManager.subscribeAll()
+                syncEngine.fullSync()
+            } catch (e: Exception) {
+                Timber.tag("SyncVM").e(e, "tryAutoSync failed")
             }
-            Timber.tag("SyncVM").d("tryAutoSync: fid=%s online=%b", syncEngine.currentFamilyId, _isOnline.value)
-            syncEngine.markExistingPending()  // 首次同步标记存量
-            realtimeManager.subscribeAll()
-            syncEngine.fullSync()
-        } catch (e: Exception) {
-            Timber.tag("SyncVM").e(e, "tryAutoSync failed")
         }
     }
 

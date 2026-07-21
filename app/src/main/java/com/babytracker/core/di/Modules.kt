@@ -26,16 +26,16 @@ val appModule = module {
     single { ThemeController(get()) }
     single { BabyController(get(), get()) }
     single { BackupManager(get()) }
-    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get()) }
-    single<FeedingRepository> { FeedingRepositoryImpl(get(), get()) }
-    single<SleepRepository> { SleepRepositoryImpl(get(), get()) }
-    single<GrowthRepository> { GrowthRepositoryImpl(get(), get()) }
-    single<VaccinationRepository> { VaccinationRepositoryImpl(get(), get()) }
-    single<HealthRepository> { HealthRepositoryImpl(get(), get()) }
-    single<DiaperRepository> { DiaperRepositoryImpl(get(), get()) }
+    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get(), get()) }
+    single<FeedingRepository> { FeedingRepositoryImpl(get(), get(), get()) }
+    single<SleepRepository> { SleepRepositoryImpl(get(), get(), get()) }
+    single<GrowthRepository> { GrowthRepositoryImpl(get(), get(), get()) }
+    single<VaccinationRepository> { VaccinationRepositoryImpl(get(), get(), get()) }
+    single<HealthRepository> { HealthRepositoryImpl(get(), get(), get()) }
+    single<DiaperRepository> { DiaperRepositoryImpl(get(), get(), get()) }
     single<MessageRepository> { MessageRepositoryImpl(get(), get()) }
-    single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get()) }
-    single<ReminderRepository> { ReminderRepositoryImpl(get(), get()) }
+    single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get(), get()) }
+    single<ReminderRepository> { ReminderRepositoryImpl(get(), get(), get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { MessageViewModel(get()) }

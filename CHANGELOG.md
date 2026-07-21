@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.15] — 2026-07-21
+
+**宝宝查询严格匹配家庭，同步元数据写入固化家庭归属：**
+- BabyRepository 查询改为按当前家庭过滤，兼容无归属存量宝宝
+- 新建/更新宝宝时注入当前家庭 ID，记录类通过 BabyDao 从宝宝推导家庭
+- sync_metadata 写入时立即固化 familyId，避免 pending 变更无法被 push 拾取
+- 修复 SettingsViewModel 两次 tryAutoSync 重复触发问题，合并 auth + network 为单 collector
+
 ### [1.5.14] — 2026-07-21
 
 **回滚自动同步策略，保留后端 schema 兼容：**

@@ -14,12 +14,13 @@ fun BabyEntity.toDomain() = Baby(
     uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
 )
 
-fun Baby.toEntity() = BabyEntity(
+fun Baby.toEntity(familyId: String? = null) = BabyEntity(
     id = id, name = name, gender = gender,
     birthDate = birthDate,
     birthWeight = birthWeight, birthHeight = birthHeight, avatarPath = avatarPath,
     createdAt = createdAt,
     uuid = uuid, updatedAt = updatedAt, deletedAt = deletedAt,
+    familyId = familyId,
 )
 
 fun FeedingEntity.toDomain() = Feeding(
