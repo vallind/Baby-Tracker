@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.babytracker.core.sync.BgInterval
 import com.babytracker.core.sync.SyncDelay
+import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -89,6 +90,23 @@ fun SyncSettingsScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(spacing.lg))
+
+            var syncing by remember { mutableStateOf(false) }
+
+            PrimaryButton(
+                label = if (syncing) "同步中..." else "立即同步",
+                onClick = {
+                    syncing = true
+                    vm.manualSync()
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.sm),
+            )
+
+            LaunchedEffect(syncResult) {
+                if (syncResult != null) syncing = false
+            }
+
+            Spacer(Modifier.height(spacing.md))
 
             Box(
                 Modifier.fillMaxWidth().padding(horizontal = spacing.sm),

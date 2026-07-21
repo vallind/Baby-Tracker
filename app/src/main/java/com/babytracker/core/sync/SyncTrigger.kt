@@ -46,6 +46,9 @@ class SyncTrigger(
     private val _lastSyncResult = MutableStateFlow<String?>(null)
     val lastSyncResult: StateFlow<String?> = _lastSyncResult.asStateFlow()
 
+    /** 是否已对当前家庭执行过存量标记 */
+    private var existingPendingMarked = false
+
     companion object {
         private const val SYNC_WORK_NAME = "bg_sync"
     }
@@ -77,7 +80,13 @@ class SyncTrigger(
                 val newId = family?.id
                 syncEngine.currentFamilyId = newId
                 if (newId != null) {
-                    realtimeManager.subscribeAll()
+                    if (!existingPendingMarked) {
+                        syncEngine.markExistingPending()
+                        existingPendingMarked = true
+                    }
+                    authService.currentUserId()?.let {
+                        realtimeManager.subscribeAll()
+                    }
                 } else {
                     realtimeManager.unsubscribe()
                 }
