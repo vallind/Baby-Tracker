@@ -335,6 +335,8 @@ class SyncEngine(
         try {
             // 清理已摘除同步的表
             db.execSQL("DELETE FROM sync_metadata WHERE tableName='messages'")
+            // 补全无归属宝宝的 familyId
+            db.execSQL("UPDATE babies SET familyId = ? WHERE familyId IS NULL AND deletedAt IS NULL", arrayOf(fid))
             for (table in syncedTables) {
                 try {
                     val scope = if (table == "babies") "familyId = ?" else
