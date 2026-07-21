@@ -14,6 +14,9 @@ import com.babytracker.core.sync.SyncEngine
 import com.babytracker.core.sync.SyncSettings
 import com.babytracker.core.sync.SyncState
 import com.babytracker.core.util.NetworkMonitor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -65,14 +68,15 @@ class SettingsViewModel(
     fun updateBgInterval(interval: BgInterval) = syncSettings.updateBgInterval(interval)
     fun updateWifiOnly(enabled: Boolean) = syncSettings.updateWifiOnly(enabled)
 
-    // ── 手动同步 ──
+    // ── 手动同步（使用独立 scope，页面离开不停止）──
+    private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     fun manualSync() {
-        viewModelScope.launch {
-            if (!isOnline.value) {
-                _syncResult.value = "当前离线，无法同步"
-                return@launch
-            }
+        if (!isOnline.value) {
+            _syncResult.value = "当前离线，无法同步"
+            return
+        }
+        syncScope.launch {
             try {
                 if (syncEngine.currentFamilyId == null) {
                     syncEngine.currentFamilyId = ensureFamily()
@@ -84,10 +88,12 @@ class SettingsViewModel(
                 val pending = syncEngine.pendingCount()
                 if (pending == 0) syncEngine.markExistingPending()
                 val result = syncEngine.fullSync()
-                _syncResult.value = when {
-                    pending == 0 && result.total == 0 -> "无数据需同步"
-                    result.total > 0 -> "同步完成 ✓ 推送${result.pushed}拉取${result.pulled}"
-                    else -> "待推送${pending}条，同步失败（网络或权限）"
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _syncResult.value = when {
+                        pending == 0 && result.total == 0 -> "无数据需同步"
+                        result.total > 0 -> "同步完成 ✓ 推送${result.pushed}拉取${result.pulled}"
+                        else -> "待推送${pending}条，同步失败（网络或权限）"
+                    }
                 }
             } catch (e: Exception) {
                 _syncResult.value = "同步失败：${e.message}"
