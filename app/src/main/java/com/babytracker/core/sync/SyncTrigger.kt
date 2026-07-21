@@ -13,18 +13,11 @@ import com.babytracker.core.util.NetworkMonitor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -109,7 +102,6 @@ class SyncTrigger(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeAutoTrigger() {
         Timber.tag("Sync").d("observeAutoTrigger start")
         scope.launch {
@@ -117,16 +109,18 @@ class SyncTrigger(
                 Timber.tag("Sync").d("autoTrigger event received")
                 val config = syncSettings.config.value
                 val fid = syncEngine.currentFamilyId
-                if (fid == null || !config.autoSync) return@collect
+                if (fid == null) { Timber.tag("Sync").d("autoTrigger skip: no fid"); return@collect }
+                if (!config.autoSync) { Timber.tag("Sync").d("autoTrigger skip: autoSync off"); return@collect }
                 val loggedIn = authService.currentUserId() != null
                 val online = networkMonitor.isOnline.value
                 val unmetered = networkMonitor.isUnmetered.value
-                if (!loggedIn || !online) return@collect
-                if (config.wifiOnly && !unmetered) return@collect
+                if (!loggedIn) { Timber.tag("Sync").d("autoTrigger skip: not logged in"); return@collect }
+                if (!online) { Timber.tag("Sync").d("autoTrigger skip: offline"); return@collect }
+                if (config.wifiOnly && !unmetered) { Timber.tag("Sync").d("autoTrigger skip: not unmetered"); return@collect }
                 val pending = syncMeta.pendingCount(fid)
-                Timber.tag("Sync").d("autoTrigger eval: pending=%d autoSync=%s online=%s",
-                    pending, config.autoSync, online)
-                if (pending <= 0) return@collect
+                Timber.tag("Sync").d("autoTrigger eval: pending=%d", pending)
+                if (pending <= 0) { Timber.tag("Sync").d("autoTrigger skip: no pending"); return@collect }
+                Timber.tag("Sync").d("autoTrigger firing push")
                 doPush()
             }
         }
