@@ -2,6 +2,16 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.6.0] — 2026-07-22
+
+**AI 多供应商运行基础：**
+- 新增应用级 AI 配置协调器，仅在 Supabase 用户与家庭均通过验证后刷新远端配置
+- 使用 Android Keystore 生成设备 RSA 密钥，供应商凭据只缓存设备公钥加密后的密文
+- 支持 OpenAI Responses 与 OpenAI-compatible Chat 协议，以及超时、429、5xx 的跨供应商降级
+- 新增 `ai-bootstrap` Edge Function，校验家庭成员关系并按设备公钥封装多供应商凭据
+- 新增配置校验与响应解析单元测试；不修改 Room 表结构，不保存或同步 AI 聊天记录
+- Android 应用版本同步更新为 1.6.0
+
 ### [1.5.19] — 2026-07-22
 
 **P0 问题修复：**

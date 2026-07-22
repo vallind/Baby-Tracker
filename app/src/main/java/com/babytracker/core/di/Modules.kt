@@ -2,6 +2,13 @@ package com.babytracker.core.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.babytracker.core.ai.config.AiBootstrapClient
+import com.babytracker.core.ai.config.AiConfigCoordinator
+import com.babytracker.core.ai.config.AiConfigStore
+import com.babytracker.core.ai.config.AiDeviceKeyStore
+import com.babytracker.core.ai.provider.AiProviderClient
+import com.babytracker.core.ai.provider.OpenAiCompatibleChatAdapter
+import com.babytracker.core.ai.provider.OpenAiResponsesAdapter
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.core.database.AppDatabase
 import com.babytracker.designsystem.theme.ThemeController
@@ -23,6 +30,8 @@ import com.babytracker.core.util.NetworkMonitor
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 val appModule = module {
     single<SharedPreferences> { androidContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
@@ -77,4 +86,24 @@ val syncModule = module {
     single { com.babytracker.core.sync.SyncEngine(get(), get()) }
     single { com.babytracker.core.sync.RealtimeManager(get(), get(), get()) }
     single { SyncTrigger(get(), get(), get(), get(), get(), get(), get(), androidContext()) }
+    single {
+        OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+    single { AiConfigStore(get()) }
+    single { AiDeviceKeyStore() }
+    single { AiBootstrapClient(get(), get()) }
+    single { AiConfigCoordinator(get(), get(), get(), get(), get()) }
+    single { OpenAiCompatibleChatAdapter(get()) }
+    single { OpenAiResponsesAdapter(get()) }
+    single {
+        AiProviderClient(
+            adapters = listOf(get<OpenAiCompatibleChatAdapter>(), get<OpenAiResponsesAdapter>()),
+            configCoordinator = get(),
+            deviceKeyStore = get(),
+        )
+    }
 }

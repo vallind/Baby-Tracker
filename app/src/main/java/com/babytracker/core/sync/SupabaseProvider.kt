@@ -10,17 +10,16 @@ import io.github.jan.supabase.storage.Storage
 /**
  * Supabase Client 单例提供者。
  *
- * 配置通过 BuildConfig 注入，避免硬编码密钥。
- * 需要在 app/build.gradle.kts 中配置 buildConfigField。
+ * 这里只保存客户端可公开的项目地址和 API Key，不包含服务端密钥。
  */
 object SupabaseProvider {
 
-    // 注：生产环境应通过 BuildConfig 注入，避免硬编码密钥
-    private const val SUPABASE_URL = "https://kzwmcbdgmngyqmjgmjne.supabase.co"
-    private const val SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6d21jYmRnbW5neXFtamdtam5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjg5MzUsImV4cCI6MjA5NzcwNDkzNX0.GTwQDfE8pNF_W--PLmVc3PxjemDTxUvDwNfr1ONQzLA"
+    // 当前为客户端可公开的 legacy anon key，不得在这里放 service_role 或 secret key。
+    const val PROJECT_URL = "https://kzwmcbdgmngyqmjgmjne.supabase.co"
+    const val PUBLIC_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6d21jYmRnbW5neXFtamdtam5lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMjg5MzUsImV4cCI6MjA5NzcwNDkzNX0.GTwQDfE8pNF_W--PLmVc3PxjemDTxUvDwNfr1ONQzLA"
 
     val client: SupabaseClient by lazy {
-        createSupabaseClient(SUPABASE_URL, SUPABASE_KEY) {
+        createSupabaseClient(PROJECT_URL, PUBLIC_API_KEY) {
             install(Postgrest)
             install(Auth) {
                 // 启动时自动从本地存储恢复登录态

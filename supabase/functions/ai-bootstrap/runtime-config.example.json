@@ -1,0 +1,40 @@
+{
+  "configVersion": 1,
+  "defaultOption": "balanced",
+  "ttlSeconds": 604800,
+  "providers": [
+    {
+      "id": "provider_a",
+      "protocol": "openai_responses",
+      "baseUrl": "https://api.provider-a.example/v1",
+      "credentialVersion": 1,
+      "credentialEnv": "AI_PROVIDER_A_KEY"
+    },
+    {
+      "id": "provider_b",
+      "protocol": "openai_compatible_chat",
+      "baseUrl": "https://api.provider-b.example/v1",
+      "credentialVersion": 1,
+      "credentialEnv": "AI_PROVIDER_B_KEY"
+    }
+  ],
+  "options": [
+    {
+      "id": "balanced",
+      "name": "均衡",
+      "maxOutputTokens": 2400,
+      "targets": [
+        {
+          "providerId": "provider_a",
+          "model": "provider-a-model-id",
+          "priority": 0
+        },
+        {
+          "providerId": "provider_b",
+          "model": "provider-b-model-id",
+          "priority": 1
+        }
+      ]
+    }
+  ]
+}

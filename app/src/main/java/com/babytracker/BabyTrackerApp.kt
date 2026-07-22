@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.babytracker.core.ai.config.AiConfigCoordinator
 import com.babytracker.core.di.appModule
 import com.babytracker.core.di.databaseModule
 import com.babytracker.core.di.syncModule
@@ -47,6 +48,13 @@ class BabyTrackerApp : Application() {
                 } catch (e: Throwable) {
                     Log.e("BabyTracker", "SyncTrigger start failed", e)
                     FileWriter(crashLog, true).use { it.append("SyncTrigger: ${e.message}\n") }
+                }
+
+                try {
+                    koin.get<AiConfigCoordinator>().start()
+                } catch (e: Throwable) {
+                    Log.e("BabyTracker", "AiConfigCoordinator start failed", e)
+                    FileWriter(crashLog, true).use { it.append("AI config: ${e.message}\n") }
                 }
 
                 try {
