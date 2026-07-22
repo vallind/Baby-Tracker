@@ -2,6 +2,12 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.5.19] — 2026-07-22
+
+**同步延迟与退后台分离：**
+- 切后台同步从同步延迟选项中独立为单独的开关，与新增记录防抖推送互不干涉
+- 删除 SyncDelay.ON_EXIT 枚举值，同步延迟选项只控制新增记录后的防抖延迟
+
 ### [1.5.18] — 2026-07-22
 
 **多账号与多家庭数据隔离：**

@@ -100,7 +100,7 @@ class SyncTrigger(
 
     fun onAppBackgrounded() {
         val config = syncSettings.config.value
-        if (config.syncDelay != SyncDelay.ON_EXIT) return
+        if (!config.syncOnExit) return
         if (!shouldSync(config)) return
         scope.launch {
             try {
@@ -176,7 +176,7 @@ class SyncTrigger(
         scope.launch {
             PendingChangeNotifier.events.collect {
                 val config = syncSettings.config.value
-                if (config.syncDelay == SyncDelay.ON_EXIT) return@collect
+                if (config.syncOnExit) return@collect
                 val fid = syncEngine.currentFamilyId
                 if (fid == null) return@collect
                 if (!config.autoSync) { Timber.tag("Sync").d("autoTrigger skip: autoSync off"); return@collect }

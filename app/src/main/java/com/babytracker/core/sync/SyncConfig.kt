@@ -7,6 +7,7 @@ data class SyncConfig(
     val syncDelay: SyncDelay = SyncDelay.SECONDS_2,
     val bgInterval: BgInterval = BgInterval.OFF,
     val wifiOnly: Boolean = false,
+    val syncOnExit: Boolean = false,
 )
 
 enum class SyncDelay(val label: String, val millis: Long) {
@@ -15,7 +16,6 @@ enum class SyncDelay(val label: String, val millis: Long) {
     SECONDS_5("5 秒", 5000L),
     SECONDS_10("10 秒", 10000L),
     SECONDS_30("30 秒", 30000L),
-    ON_EXIT("退出应用时同步", -1L),
 }
 
 enum class BgInterval(val label: String, val periodMillis: Long) {

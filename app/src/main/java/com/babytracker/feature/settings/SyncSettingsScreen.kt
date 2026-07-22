@@ -81,6 +81,15 @@ fun SyncSettingsScreen(navController: NavController) {
                 SettingsDivider()
 
                 SettingsRow(
+                    emoji = "🚪",
+                    label = "退出时同步",
+                    trailing = {
+                        Switch(checked = config.syncOnExit, onCheckedChange = { vm.updateSyncOnExit(it) })
+                    },
+                )
+                SettingsDivider()
+
+                SettingsRow(
                     emoji = "📶",
                     label = "仅 Wi‑Fi",
                     trailing = {

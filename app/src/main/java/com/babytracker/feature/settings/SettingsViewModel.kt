@@ -66,6 +66,7 @@ class SettingsViewModel(
     fun updateSyncDelay(delay: SyncDelay) = syncSettings.updateSyncDelay(delay)
     fun updateBgInterval(interval: BgInterval) = syncSettings.updateBgInterval(interval)
     fun updateWifiOnly(enabled: Boolean) = syncSettings.updateWifiOnly(enabled)
+    fun updateSyncOnExit(enabled: Boolean) = syncSettings.updateSyncOnExit(enabled)
 
     // ── 手动同步（使用独立 scope，页面离开不停止）──
     private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
