@@ -211,10 +211,10 @@ class SyncTrigger(
 
     private suspend fun doPush() {
         try {
-            syncEngine.fullSync()
-            Timber.tag("Sync").d("auto trigger sync done")
+            syncEngine.push()
+            Timber.tag("Sync").d("auto push done")
         } catch (e: Exception) {
-            Timber.tag("Sync").e(e, "auto trigger sync failed")
+            Timber.tag("Sync").e(e, "auto push failed")
         }
     }
 }
