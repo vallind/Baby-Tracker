@@ -176,7 +176,6 @@ class SyncTrigger(
         scope.launch {
             PendingChangeNotifier.events.collect {
                 val config = syncSettings.config.value
-                if (config.syncOnExit) return@collect
                 val fid = syncEngine.currentFamilyId
                 if (fid == null) return@collect
                 if (!config.autoSync) { Timber.tag("Sync").d("autoTrigger skip: autoSync off"); return@collect }

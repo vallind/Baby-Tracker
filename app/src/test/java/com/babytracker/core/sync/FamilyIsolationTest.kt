@@ -16,6 +16,11 @@ class FamilyIsolationTest {
         return if (fromApp.exists()) fromApp else File("app/src/main/java/$path")
     }
 
+    private fun repositoryFile(path: String): File {
+        val fromRoot = File(path)
+        return if (fromRoot.exists()) fromRoot else File("../$path")
+    }
+
     @Test
     fun `cached family cannot drive cloud sync`() {
         val state = FamilySessionState(
@@ -61,5 +66,24 @@ class FamilyIsolationTest {
             .substringBefore("suspend fun claimUnscopedData")
 
         assertEquals(false, pendingScan.contains("SET familyId = ? WHERE familyId IS NULL"))
+    }
+
+    @Test
+    fun `exit sync does not disable pending change push`() {
+        val source = sourceFile("com/babytracker/core/sync/SyncTrigger.kt").readText()
+        val autoTrigger = source.substringAfter("private fun observeAutoTrigger")
+            .substringBefore("private fun observeBgInterval")
+
+        assertEquals(false, autoTrigger.contains("if (config.syncOnExit) return@collect"))
+    }
+
+    @Test
+    fun `app version matches latest changelog version`() {
+        val build = repositoryFile("app/build.gradle.kts").readText()
+        val changelog = repositoryFile("CHANGELOG.md").readText()
+        val appVersion = Regex("""versionName\s*=\s*"([^"]+)"""").find(build)?.groupValues?.get(1)
+        val changelogVersion = Regex("""### \[([^]]+)]""").find(changelog)?.groupValues?.get(1)
+
+        assertEquals(changelogVersion, appVersion)
     }
 }
