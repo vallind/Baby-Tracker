@@ -39,6 +39,7 @@ import com.babytracker.designsystem.components.button.SecondaryButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.progress.AppCircularProgress
+import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -65,10 +66,27 @@ fun FamilyPage(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.md, vertical = spacing.md),
         ) {
+            if (uiState.families.isNotEmpty() || uiState.unscopedBabyCount > 0) {
+                FamilyModeSelector(
+                    families = uiState.families,
+                    currentFamily = uiState.currentFamily,
+                    localSelected = uiState.isLocalMode,
+                    localCount = uiState.unscopedBabyCount,
+                    onSelectFamily = vm::selectFamily,
+                    onSelectLocal = vm::selectLocalMode,
+                )
+                Spacer(Modifier.height(spacing.md))
+            }
             if (uiState.isLoading && uiState.families.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
                     AppCircularProgress(indicatorColor = c.primary)
                 }
+            } else if (uiState.isLocalMode) {
+                LocalDataView(
+                    count = uiState.unscopedBabyCount,
+                    families = uiState.families,
+                    onMigrate = vm::requestMigration,
+                )
             } else if (uiState.currentFamily == null) {
                 // ── 无家庭：提示创建或加入 ──
                 EmptyFamilyView(
@@ -80,8 +98,6 @@ fun FamilyPage(navController: NavController) {
                 FamilyDetailView(
                     family = uiState.currentFamily!!,
                     members = uiState.members,
-                    families = uiState.families,
-                    onSelectFamily = { vm.selectFamily(it) },
                     onCreateClick = { vm.showCreateDialog() },
                     onJoinClick = { vm.showJoinDialog() },
                 )
@@ -146,6 +162,78 @@ fun FamilyPage(navController: NavController) {
             },
         )
     }
+
+    AppConfirmDialog(
+        show = uiState.migrationTarget != null,
+        title = "归属本机数据",
+        message = "将 ${uiState.unscopedBabyCount} 个宝宝及其全部记录归入“${uiState.migrationTarget?.name.orEmpty()}”？归属后这些数据会参与该家庭的云同步。",
+        confirmText = "确认归属",
+        onConfirm = vm::confirmMigration,
+        onDismiss = vm::cancelMigration,
+    )
+}
+
+@Composable
+private fun FamilyModeSelector(
+    families: List<Family>,
+    currentFamily: Family?,
+    localSelected: Boolean,
+    localCount: Int,
+    onSelectFamily: (Family) -> Unit,
+    onSelectLocal: () -> Unit,
+) {
+    val spacing = LocalAppSpacing.current
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+    ) {
+        if (localCount > 0) {
+            AppFilterChip(
+                selected = localSelected,
+                onClick = onSelectLocal,
+                label = "本机数据 · $localCount",
+            )
+        }
+        families.forEach { family ->
+            AppFilterChip(
+                selected = !localSelected && currentFamily?.id == family.id,
+                onClick = { onSelectFamily(family) },
+                label = family.name,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LocalDataView(
+    count: Int,
+    families: List<Family>,
+    onMigrate: (Family) -> Unit,
+) {
+    val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    AppCard(modifier = Modifier.fillMaxWidth(), elevation = 1.dp) {
+        Column(Modifier.padding(spacing.lg)) {
+            Text("本机数据", style = typography.titleMedium)
+            Spacer(Modifier.height(spacing.sm))
+            Text(
+                "$count 个无家庭归属的宝宝及其记录仍保存在本机，不会上传。你可以继续本地使用，或明确选择一个家庭归属。",
+                style = typography.bodyLarge,
+                color = c.textSecondary,
+            )
+            if (count > 0 && families.isNotEmpty()) {
+                Spacer(Modifier.height(spacing.md))
+                families.forEach { family ->
+                    SecondaryButton(
+                        onClick = { onMigrate(family) },
+                        label = "归入 ${family.name}",
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    )
+                }
+            }
+        }
+    }
 }
 
 /** 空态：未加入任何家庭 */
@@ -179,8 +267,6 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
 private fun FamilyDetailView(
     family: Family,
     members: List<FamilyMember>,
-    families: List<Family>,
-    onSelectFamily: (Family) -> Unit,
     onCreateClick: () -> Unit,
     onJoinClick: () -> Unit,
 ) {
@@ -189,24 +275,6 @@ private fun FamilyDetailView(
     val typography = LocalAppTypographyStyle.current
     val shapes = LocalAppShapes.current
     val context = LocalContext.current
-
-    // 家庭切换（多家庭时显示）
-    if (families.size > 1) {
-        Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        ) {
-            families.forEach { f ->
-                val selected = f.id == family.id
-                AppFilterChip(
-                    selected = selected,
-                    onClick = { onSelectFamily(f) },
-                    label = if (selected) "${f.name} · 当前" else f.name,
-                )
-            }
-        }
-        Spacer(Modifier.height(spacing.md))
-    }
 
     // 家庭名称卡片
     AppCard(

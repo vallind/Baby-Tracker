@@ -1,6 +1,5 @@
 package com.babytracker.feature.settings
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.auth.AuthService
@@ -31,7 +30,6 @@ class SettingsViewModel(
     private val realtimeManager: RealtimeManager,
     private val authService: AuthService,
     private val familyService: FamilyService,
-    private val context: Context,
     private val syncSettings: SyncSettings,
     private val networkMonitor: NetworkMonitor,
 ) : ViewModel() {
@@ -79,9 +77,13 @@ class SettingsViewModel(
         }
         syncScope.launch {
             try {
-                if (syncEngine.currentFamilyId == null) {
-                    syncEngine.currentFamilyId = ensureFamily()
+                val verifiedUserId = authService.verifiedUserId()
+                if (verifiedUserId == null) {
+                    _syncResult.value = "登录会话尚未验证"
+                    return@launch
                 }
+                familyService.refreshForUser(verifiedUserId)
+                syncEngine.currentFamilyId = familyService.sessionState.value.verifiedFamilyForSync?.id
                 if (syncEngine.currentFamilyId == null) {
                     _syncResult.value = "请先创建或加入家庭"
                     return@launch
@@ -104,17 +106,4 @@ class SettingsViewModel(
 
     fun clearSyncResult() { _syncResult.value = null }
 
-    // ── 家庭 ID 获取 ──
-
-    private suspend fun ensureFamily(): String? {
-        familyService.currentFamily.value?.let { return it.id }
-        val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        prefs.getString("current_family_id", null)?.let { return it }
-        return try {
-            val families = familyService.loadMyFamilies()
-            families.firstOrNull()?.id
-        } catch (_: Exception) {
-            null
-        }
-    }
 }

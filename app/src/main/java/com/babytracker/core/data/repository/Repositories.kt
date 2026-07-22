@@ -11,7 +11,6 @@ import com.babytracker.core.sync.PendingChangeNotifier
 import com.babytracker.core.sync.SyncEngine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import java.time.LocalDateTime
@@ -20,12 +19,9 @@ import java.util.UUID
 private val nowEpoch get() = System.currentTimeMillis()
 private fun newUuid() = UUID.randomUUID().toString()
 
-/** SyncTrigger 在家庭切换时更新，作为 sync_metadata 写入时 familyId 的兜底值 */
-var currentSyncFamilyId: String? = null
-
 /** 标记本地记录为待同步到 Supabase，同步固化家庭归属 */
 private suspend fun SyncMetadataDao.pendingChange(tableName: String, localId: Int, uuid: String?, updatedAt: Long, familyId: String? = null) {
-    insert(SyncMetadataEntity(tableName = tableName, localId = localId, remoteUuid = uuid, syncStatus = "pending", updatedAt = updatedAt, familyId = familyId ?: currentSyncFamilyId))
+    insert(SyncMetadataEntity(tableName = tableName, localId = localId, remoteUuid = uuid, syncStatus = "pending", updatedAt = updatedAt, familyId = familyId))
     PendingChangeNotifier.changed()
 }
 
@@ -47,41 +43,50 @@ class BabyRepositoryImpl(
     private val familyService: FamilyService,
 ) : BabyRepository {
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun watchAll() = familyService.currentFamily.flatMapLatest { family ->
-        val fid = family?.id
-        if (fid != null) combine(
-            dao.watchByFamily(fid),
-            dao.watchUnscoped(),
-        ) { scoped, unscoped -> scoped + unscoped }
-        else dao.watchUnscoped()
+    override fun watchAll() = familyService.sessionState.flatMapLatest { state ->
+        state.activeFamily?.id?.let(dao::watchByFamily) ?: dao.watchUnscoped()
     }.map { list -> list.map { it.toDomain() } }
-    override suspend fun getById(id: Int) = dao.getById(id)?.toDomain()
+    override suspend fun getById(id: Int) = dao.getById(id)
+        ?.takeIf { it.familyId == familyService.sessionState.value.activeFamily?.id }
+        ?.toDomain()
     override suspend fun insert(baby: Baby): Long {
-        val fid = familyService.currentFamily.value?.id
+        val fid = familyService.sessionState.value.activeFamily?.id
         val entity = baby.copy(uuid = baby.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity(familyId = fid)
         val id = dao.insert(entity)
         syncMeta.pendingChange("babies", id.toInt(), entity.uuid, entity.updatedAt, fid)
         return id
     }
     override suspend fun update(baby: Baby) {
-        val entity = baby.copy(updatedAt = nowEpoch).toEntity(familyId = familyService.currentFamily.value?.id)
+        val owner = requireCurrentOwner(baby.id)
+        val entity = baby.copy(updatedAt = nowEpoch).toEntity(familyId = owner)
         dao.update(entity)
         syncMeta.pendingChange("babies", baby.id, entity.uuid, entity.updatedAt, entity.familyId)
     }
     override suspend fun delete(baby: Baby) {
-        val entity = baby.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity(familyId = familyService.currentFamily.value?.id)
+        val owner = requireCurrentOwner(baby.id)
+        val entity = baby.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity(familyId = owner)
         dao.update(entity)
         // 级联软删除子记录
-        cascadeSoftDelete(baby.id)
+        cascadeSoftDelete(baby.id, owner)
         syncMeta.pendingChange("babies", baby.id, entity.uuid, entity.updatedAt, entity.familyId)
     }
     override suspend fun restore(baby: Baby) {
-        val entity = baby.copy(deletedAt = null, updatedAt = nowEpoch).toEntity(familyId = familyService.currentFamily.value?.id)
+        val owner = requireCurrentOwner(baby.id)
+        val entity = baby.copy(deletedAt = null, updatedAt = nowEpoch).toEntity(familyId = owner)
         dao.update(entity)
         syncMeta.pendingChange("babies", baby.id, entity.uuid, entity.updatedAt, entity.familyId)
     }
 
-    private suspend fun cascadeSoftDelete(babyId: Int) {
+    private suspend fun requireCurrentOwner(babyId: Int): String? {
+        val owner = dao.getById(babyId)?.familyId ?: run {
+            check(familyService.sessionState.value.activeFamily == null) { "不能在家庭模式修改本机数据" }
+            return null
+        }
+        check(owner == familyService.sessionState.value.activeFamily?.id) { "不能修改其他家庭的数据" }
+        return owner
+    }
+
+    private suspend fun cascadeSoftDelete(babyId: Int, familyId: String?) {
         val sql = db.openHelper.writableDatabase
         val tables = listOf("feedings", "sleeps", "growths", "vaccinations",
             "health_records", "diapers", "development_assessments", "reminders")
@@ -109,7 +114,7 @@ class BabyRepositoryImpl(
 
         // 为所有级联删除的子记录标记 pending，确保它们能上行同步到 Supabase
         for ((table, id, uuid) in pendingSync) {
-            syncMeta.pendingChange(table, id, uuid, now)
+            syncMeta.pendingChange(table, id, uuid, now, familyId)
         }
     }
 }

@@ -21,9 +21,12 @@ class SyncWorker(
     override suspend fun doWork(): Result {
         val config = syncSettings.config.value
         if (!config.autoSync) return Result.success()
-        if (!authService.isLoggedIn()) return Result.success()
+        val userId = authService.verifiedUserId()
+            ?: return if (authService.hasCachedSession() && runAttemptCount < 3) Result.retry() else Result.success()
 
-        syncEngine.currentFamilyId = familyService.currentFamily.value?.id
+        runCatching { familyService.refreshForUser(userId) }
+            .getOrElse { return if (runAttemptCount < 3) Result.retry() else Result.failure() }
+        syncEngine.currentFamilyId = familyService.sessionState.value.verifiedFamilyForSync?.id
         if (syncEngine.currentFamilyId == null) return Result.success()
 
         return try {

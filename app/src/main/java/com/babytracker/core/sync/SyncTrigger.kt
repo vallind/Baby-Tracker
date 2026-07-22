@@ -21,6 +21,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -56,7 +60,6 @@ class SyncTrigger(
     private val _lastSyncResult = MutableStateFlow<String?>(null)
     val lastSyncResult: StateFlow<String?> = _lastSyncResult.asStateFlow()
 
-    private var existingPendingMarked = prefs.getBoolean("sync_pending_marked", false)
     private var lastSyncedFamilyId: String? = prefs.getString("sync_last_family", null)
 
     companion object {
@@ -65,10 +68,34 @@ class SyncTrigger(
 
     fun start() {
         Timber.tag("Sync").d("SyncTrigger start")
+        observeAuth()
         observeFamily()
         observeNetwork()
         observeAutoTrigger()
         observeBgInterval()
+    }
+
+    private fun observeAuth() {
+        scope.launch {
+            combine(
+                authService.observeAuthState().map { it?.id },
+                authService.observeVerifiedAuthState().map { it?.id },
+            ) { cachedId, verifiedId -> cachedId to verifiedId }
+                .distinctUntilChanged()
+                .collectLatest { (cachedId, verifiedId) ->
+                    when {
+                        cachedId == null -> familyService.clearSession()
+                        cachedId == verifiedId -> {
+                            if (familyService.sessionState.value.userId != cachedId) {
+                                familyService.restoreCachedForUser(cachedId)
+                            }
+                            runCatching { familyService.refreshForUser(cachedId) }
+                                .onFailure { Timber.tag("Family").e(it, "auth refresh failed") }
+                        }
+                        else -> familyService.restoreCachedForUser(cachedId)
+                    }
+                }
+        }
     }
 
     fun onAppBackgrounded() {
@@ -89,11 +116,10 @@ class SyncTrigger(
     private fun observeFamily() {
         scope.launch {
             Timber.tag("Sync").d("observeFamily start")
-            familyService.currentFamily.collect { family ->
-                val newId = family?.id
+            familyService.sessionState.map { it.verifiedFamilyForSync?.id }
+                .distinctUntilChanged().collect { newId ->
                 Timber.tag("Sync").d("observeFamily family=%s", newId)
                 syncEngine.currentFamilyId = newId
-                com.babytracker.core.data.repository.currentSyncFamilyId = newId
                 if (newId != null) {
                     val isNewFamily = newId != lastSyncedFamilyId
                     if (isNewFamily) {
@@ -101,13 +127,13 @@ class SyncTrigger(
                         lastSyncedFamilyId = newId
                         prefs.edit().putString("sync_last_family", newId).apply()
                     }
-                    if (!existingPendingMarked) {
+                    val pendingKey = "sync_pending_marked_$newId"
+                    if (!prefs.getBoolean(pendingKey, false)) {
                         syncEngine.markExistingPending()
-                        existingPendingMarked = true
-                        prefs.edit().putBoolean("sync_pending_marked", true).apply()
+                        prefs.edit().putBoolean(pendingKey, true).apply()
                     }
                     triggerSync()
-                    authService.currentUserId()?.let {
+                    authService.verifiedUserId()?.let {
                         realtimeManager.subscribeAll()
                     }
                 } else {
@@ -122,8 +148,12 @@ class SyncTrigger(
             var first = true
             networkMonitor.isOnline.collect { online ->
                 if (first) { first = false; return@collect }
-                if (online && authService.isLoggedIn() && syncEngine.currentFamilyId != null) {
-                    triggerSync()
+                if (online) {
+                    authService.verifiedUserId()?.let { userId ->
+                        runCatching { familyService.refreshForUser(userId) }
+                            .onFailure { Timber.tag("Family").e(it, "network refresh failed") }
+                    }
+                    if (authService.verifiedUserId() != null && syncEngine.currentFamilyId != null) triggerSync()
                 }
             }
         }
@@ -150,7 +180,7 @@ class SyncTrigger(
                 val fid = syncEngine.currentFamilyId
                 if (fid == null) return@collect
                 if (!config.autoSync) { Timber.tag("Sync").d("autoTrigger skip: autoSync off"); return@collect }
-                val loggedIn = authService.currentUserId() != null
+                val loggedIn = authService.verifiedUserId() != null
                 val online = networkMonitor.isOnline.value
                 val unmetered = networkMonitor.isUnmetered.value
                 if (!loggedIn) return@collect
@@ -202,7 +232,7 @@ class SyncTrigger(
     private fun shouldSync(config: SyncConfig): Boolean {
         val fid = syncEngine.currentFamilyId ?: return false
         if (!config.autoSync) return false
-        val user = authService.currentUserId()
+        val user = authService.verifiedUserId()
         if (user == null) return false
         if (!networkMonitor.isOnline.value) return false
         if (config.wifiOnly && !networkMonitor.isUnmetered.value) return false

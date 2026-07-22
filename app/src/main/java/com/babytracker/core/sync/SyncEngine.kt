@@ -345,8 +345,6 @@ class SyncEngine(
         try {
             // 清理已摘除同步的表
             db.execSQL("DELETE FROM sync_metadata WHERE tableName='messages'")
-            // 补全无归属宝宝的 familyId
-            db.execSQL("UPDATE babies SET familyId = ? WHERE familyId IS NULL AND deletedAt IS NULL", arrayOf(fid))
             for (table in syncedTables) {
                 try {
                     val scope = if (table == "babies") "familyId = ?" else
@@ -393,6 +391,49 @@ class SyncEngine(
             db.endTransaction()
         }
         return failures
+    }
+
+    /**
+     * 用户确认后，才把本机无归属宝宝及其记录归入目标家庭。
+     * 归属和同步元数据修正放在同一事务，避免中途产生半迁移状态。
+     */
+    suspend fun claimUnscopedData(familyId: String): Int {
+        check(currentFamilyId == familyId) { "目标家庭不是当前已验证家庭" }
+        val sql = db.openHelper.writableDatabase
+        val ids = buildList {
+            val cursor = sql.query("SELECT id FROM babies WHERE familyId IS NULL")
+            try {
+                while (cursor.moveToNext()) add(cursor.getInt(0))
+            } finally {
+                cursor.close()
+            }
+        }
+        if (ids.isEmpty()) return 0
+        val idList = ids.joinToString(",")
+        sql.beginTransaction()
+        try {
+            sql.execSQL("UPDATE babies SET familyId = ? WHERE id IN ($idList)", arrayOf(familyId))
+            sql.execSQL(
+                "UPDATE sync_metadata SET familyId = ?, syncStatus = 'pending', retryCount = 0, nextRetryAt = 0 " +
+                    "WHERE tableName = 'babies' AND localId IN ($idList)",
+                arrayOf(familyId),
+            )
+            for (table in syncedTables.filterNot { it == "babies" }) {
+                sql.execSQL(
+                    "UPDATE sync_metadata SET familyId = ?, syncStatus = 'pending', retryCount = 0, nextRetryAt = 0 " +
+                        "WHERE tableName = '$table' AND localId IN " +
+                        "(SELECT id FROM $table WHERE baby_id IN ($idList))",
+                    arrayOf(familyId),
+                )
+            }
+            sql.setTransactionSuccessful()
+        } finally {
+            sql.endTransaction()
+        }
+        val failures = markExistingPending()
+        check(failures.isEmpty()) { failures.joinToString { it.message } }
+        PendingChangeNotifier.changed()
+        return ids.size
     }
 
     // ================================================================

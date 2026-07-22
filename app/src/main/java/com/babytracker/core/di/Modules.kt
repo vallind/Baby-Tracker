@@ -48,8 +48,8 @@ val appModule = module {
     viewModel { ReminderViewModel(get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), androidContext(), get(), get()) }
-    viewModel { FamilyViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { FamilyViewModel(get(), get(), get(), get()) }
 }
 
 val databaseModule = module {

@@ -5,16 +5,23 @@ import androidx.lifecycle.viewModelScope
 import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilyMember
 import com.babytracker.core.data.FamilyService
+import com.babytracker.core.database.dao.BabyDao
 import com.babytracker.core.sync.RealtimeManager
+import com.babytracker.core.sync.SyncEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class FamilyViewModel(
     private val familyService: FamilyService,
     private val realtimeManager: RealtimeManager,
+    private val babyDao: BabyDao,
+    private val syncEngine: SyncEngine,
 ) : ViewModel() {
 
     data class UiState(
@@ -22,6 +29,10 @@ class FamilyViewModel(
         val currentFamily: Family? = null,
         val members: List<FamilyMember> = emptyList(),
         val isLoading: Boolean = false,
+        val isLocalMode: Boolean = false,
+        val isSessionVerified: Boolean = false,
+        val unscopedBabyCount: Int = 0,
+        val migrationTarget: Family? = null,
         val errorMessage: String? = null,
         val newFamilyName: String = "",
         val inviteCode: String = "",
@@ -34,49 +45,32 @@ class FamilyViewModel(
 
     init {
         viewModelScope.launch {
-            try {
-                _uiState.update { it.copy(isLoading = true) }
-                val families = familyService.loadMyFamilies()
-                // 优先使用 FamilyService 中已选中的家庭，而非硬取第一个
-                val activeFamily = familyService.currentFamily.value
-                    ?.let { selected -> families.find { it.id == selected.id } }
-                    ?: families.firstOrNull()
+            combine(familyService.sessionState, babyDao.watchUnscopedCount()) { session, count ->
+                session to count
+            }.collect { (session, count) ->
                 _uiState.update {
                     it.copy(
-                        families = families,
-                        currentFamily = activeFamily,
-                        isLoading = false,
+                        families = session.families,
+                        currentFamily = session.activeFamily,
+                        isLoading = session.isLoading,
+                        isLocalMode = session.isLocalMode,
+                        isSessionVerified = session.sessionVerified,
+                        unscopedBabyCount = count,
+                        errorMessage = session.errorMessage ?: it.errorMessage,
                     )
-                }
-                // 加载当前家庭成员列表
-                activeFamily?.let { loadMembers(it.id) }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(isLoading = false, errorMessage = e.message ?: "加载失败")
                 }
             }
         }
-
-        // 监听 Realtime 推送的家庭成员变更，实时刷新 UI
+        viewModelScope.launch {
+            familyService.sessionState.map { it.verifiedFamilyForSync?.id }
+                .distinctUntilChanged().collect { familyId ->
+                    if (familyId == null) _uiState.update { it.copy(members = emptyList()) }
+                    else loadMembers(familyId)
+                }
+        }
         viewModelScope.launch {
             realtimeManager.familyMembersChanged.collect {
-                _uiState.value.currentFamily?.let { family ->
-                    // 重新加载家庭列表（可能有新家庭加入）和成员列表
-                    try {
-                        val families = familyService.loadMyFamilies()
-                        // 刷新时保持当前选中家庭，不硬切到第一个
-                        val activeFamily = familyService.currentFamily.value
-                            ?.let { selected -> families.find { it.id == selected.id } }
-                            ?: families.firstOrNull()
-                        _uiState.update {
-                            it.copy(
-                                families = families,
-                                currentFamily = activeFamily,
-                            )
-                        }
-                        activeFamily?.let { loadMembers(it.id) }
-                    } catch (_: Exception) { }
-                }
+                familyService.sessionState.value.verifiedFamilyForSync?.id?.let(::loadMembers)
             }
         }
     }
@@ -85,7 +79,6 @@ class FamilyViewModel(
     fun hideCreateDialog() = _uiState.update { it.copy(showCreateDialog = false, newFamilyName = "") }
     fun showJoinDialog() = _uiState.update { it.copy(showJoinDialog = true) }
     fun hideJoinDialog() = _uiState.update { it.copy(showJoinDialog = false, inviteCode = "") }
-
     fun onFamilyNameChange(value: String) = _uiState.update { it.copy(newFamilyName = value) }
     fun onInviteCodeChange(value: String) = _uiState.update { it.copy(inviteCode = value) }
 
@@ -97,71 +90,64 @@ class FamilyViewModel(
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            familyService.createFamily(name)
-                .onSuccess { family ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            showCreateDialog = false,
-                            newFamilyName = "",
-                            currentFamily = family,
-                            families = it.families + family,
-                        )
-                    }
-                    loadMembers(family.id)
-                }
-                .onFailure { e ->
-                    _uiState.update {
-                        it.copy(isLoading = false, errorMessage = e.message)
-                    }
-                }
+            familyService.createFamily(name).fold(
+                onSuccess = { hideCreateDialog() },
+                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message) } },
+            )
         }
     }
 
     fun joinFamily() {
         val code = _uiState.value.inviteCode.trim().uppercase()
-        if (code.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "请输入邀请码") }
+        if (code.length != 6) {
+            _uiState.update { it.copy(errorMessage = "请输入 6 位邀请码") }
             return
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            familyService.joinFamily(code)
-                .onSuccess { family ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            showJoinDialog = false,
-                            inviteCode = "",
-                            currentFamily = family,
-                        )
-                    }
-                    // 重新加载
-                    val families = familyService.loadMyFamilies()
-                    _uiState.update { it.copy(families = families) }
-                    loadMembers(family.id)
-                }
-                .onFailure { e ->
-                    _uiState.update {
-                        it.copy(isLoading = false, errorMessage = e.message ?: "加入失败，请检查邀请码")
-                    }
-                }
+            familyService.joinFamily(code).fold(
+                onSuccess = { hideJoinDialog() },
+                onFailure = { e -> _uiState.update { it.copy(isLoading = false, errorMessage = e.message ?: "加入失败") } },
+            )
         }
     }
 
-    fun loadMembers(familyId: String) {
+    private fun loadMembers(familyId: String) {
         viewModelScope.launch {
-            try {
-                val members = familyService.getFamilyMembers(familyId)
-                _uiState.update { it.copy(members = members) }
-            } catch (_: Exception) { }
+            runCatching { familyService.getFamilyMembers(familyId) }
+                .onSuccess { members -> _uiState.update { it.copy(members = members) } }
         }
     }
 
     fun selectFamily(family: Family) {
-        familyService.selectFamily(family)  // 同步全局状态 → SettingsViewModel 感知切换
-        _uiState.update { it.copy(currentFamily = family) }
-        loadMembers(family.id)
+        if (!familyService.selectFamily(family)) {
+            _uiState.update { it.copy(errorMessage = "该家庭尚未通过当前账号验证") }
+        }
+    }
+
+    fun selectLocalMode() = familyService.selectLocalMode()
+    fun requestMigration(family: Family) = _uiState.update { it.copy(migrationTarget = family) }
+    fun cancelMigration() = _uiState.update { it.copy(migrationTarget = null) }
+
+    fun confirmMigration() {
+        val target = _uiState.value.migrationTarget ?: return
+        if (!familyService.selectFamily(target)) {
+            _uiState.update { it.copy(migrationTarget = null, errorMessage = "目标家庭尚未验证") }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, migrationTarget = null, errorMessage = null) }
+            runCatching {
+                check(familyService.sessionState.value.verifiedFamilyForSync?.id == target.id) { "登录会话尚未验证" }
+                syncEngine.currentFamilyId = target.id
+                syncEngine.claimUnscopedData(target.id)
+            }.onSuccess { count ->
+                _uiState.update { it.copy(isLoading = false, errorMessage = "已将 $count 个宝宝及其记录归入${target.name}") }
+            }.onFailure { e ->
+                familyService.selectLocalMode()
+                _uiState.update { it.copy(isLoading = false, errorMessage = "归属失败：${e.message}") }
+            }
+        }
     }
 
     fun clearError() = _uiState.update { it.copy(errorMessage = null) }

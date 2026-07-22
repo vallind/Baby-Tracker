@@ -12,6 +12,10 @@ interface BabyDao {
     fun watchByFamily(familyId: String): Flow<List<BabyEntity>>
     @Query("SELECT * FROM babies WHERE familyId IS NULL ORDER BY id ASC")
     fun watchUnscoped(): Flow<List<BabyEntity>>
+    @Query("SELECT COUNT(*) FROM babies WHERE familyId IS NULL AND deletedAt IS NULL")
+    fun watchUnscopedCount(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM babies WHERE familyId IS NULL AND deletedAt IS NULL")
+    suspend fun unscopedCount(): Int
     @Query("SELECT * FROM babies ORDER BY id ASC")
     suspend fun getAll(): List<BabyEntity>
     @Query("SELECT * FROM babies WHERE id = :id")

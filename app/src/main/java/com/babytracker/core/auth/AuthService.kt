@@ -10,11 +10,8 @@ import io.github.jan.supabase.auth.user.UserInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -44,6 +41,9 @@ class AuthService(
 
     private val _currentUser = MutableStateFlow<UserInfo?>(null)
     val currentUser: StateFlow<UserInfo?> = _currentUser.asStateFlow()
+
+    private val _verifiedUser = MutableStateFlow<UserInfo?>(null)
+    val verifiedUser: StateFlow<UserInfo?> = _verifiedUser.asStateFlow()
 
     /** 已登录的账户名（从 SharedPreferences 恢复，用于 UI 展示） */
     private val _displayAccount = MutableStateFlow<String?>(null)
@@ -75,16 +75,6 @@ class AuthService(
                 if (_currentUser.value != null) restored = true
             } catch (_: Exception) { }
         }
-        // 3. 兜底：SP 有登录标记但无 userId（旧版升级），用展示名占位
-        //    这样 UI 启动即显示已登录，Supabase 确认后覆盖为真实用户
-        if (!restored && prefs.getBoolean(KEY_LOGGED_IN, false)) {
-            val displayName = prefs.getString(KEY_DISPLAY_ACCOUNT, null)
-            if (displayName != null) {
-                _currentUser.value = UserInfo(id = displayName, aud = "authenticated")
-                restored = true
-                Timber.tag("Auth").d("init: placeholder uid=%s (waiting for Supabase)", displayName)
-            }
-        }
         if (restored) {
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
         }
@@ -97,9 +87,13 @@ class AuthService(
                 }
                 if (user != null) {
                     _currentUser.value = user
+                    _verifiedUser.value = user
                     prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).apply()
                     Timber.tag("Auth").d("sessionStatus: authenticated uid=%s", user.id)
-                } else if (!prefs.getBoolean(KEY_LOGGED_IN, false)) {
+                } else {
+                    _verifiedUser.value = null
+                }
+                if (user == null && !prefs.getBoolean(KEY_LOGGED_IN, false)) {
                     _currentUser.value = null
                     Timber.tag("Auth").d("sessionStatus: not authenticated (no cached session)")
                 } else {
@@ -132,15 +126,17 @@ class AuthService(
         val user: UserInfo = if (signUpResult != null) {
             // 确认开启：直接用返回值
             _currentUser.value = signUpResult
+            _verifiedUser.value = client.auth.currentUserOrNull()?.takeIf { it.id == signUpResult.id }
             signUpResult
         } else {
             // 确认关闭：从当前会话获取
             val sessionUser = client.auth.retrieveUserForCurrentSession()
             _currentUser.value = sessionUser
+            _verifiedUser.value = sessionUser
             sessionUser
         }
         // 持久化登录标记 + 账户名 + userId
-        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).putString(KEY_USER_ID, user.id).putString(KEY_DISPLAY_ACCOUNT, account).apply()
+        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).putString(KEY_DISPLAY_ACCOUNT, account).apply()
         _displayAccount.value = account
         // 登录时不清空已有昵称（可能从 SharedPreferences 已恢复）
         Timber.tag("Auth").d("signUp ok account=%s userId=%s", account, user.id)
@@ -157,6 +153,7 @@ class AuthService(
         }
         val user = client.auth.retrieveUserForCurrentSession()
         _currentUser.value = user
+        _verifiedUser.value = user
         prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).putString(KEY_DISPLAY_ACCOUNT, account).apply()
         _displayAccount.value = account
         Timber.tag("Auth").d("signIn ok account=%s userId=%s", account, user.id)
@@ -171,6 +168,7 @@ class AuthService(
             client.auth.signOut()
         } catch (_: Exception) { }
         _currentUser.value = null
+        _verifiedUser.value = null
         _displayAccount.value = null
         _nickname.value = null
         prefs.edit().putBoolean(KEY_LOGGED_IN, false).remove(KEY_USER_ID).remove(KEY_DISPLAY_ACCOUNT).remove(KEY_NICKNAME).apply()
@@ -201,6 +199,9 @@ class AuthService(
     /** 获取当前用户 ID，未登录返回 null */
     fun currentUserId(): String? = _currentUser.value?.id
 
+    /** 仅返回已由 Supabase 会话确认的用户，云同步只能使用该值。 */
+    fun verifiedUserId(): String? = _verifiedUser.value?.id
+
     // ─── 状态监听 ───
 
     /**
@@ -209,4 +210,6 @@ class AuthService(
      * 断网时自动回退到缓存，不会因 Supabase 验证失败而发射 null。
      */
     fun observeAuthState(): StateFlow<UserInfo?> = _currentUser.asStateFlow()
+
+    fun observeVerifiedAuthState(): StateFlow<UserInfo?> = _verifiedUser.asStateFlow()
 }
