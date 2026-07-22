@@ -58,7 +58,6 @@ class SyncTrigger(
 
     private var existingPendingMarked = prefs.getBoolean("sync_pending_marked", false)
     private var lastSyncedFamilyId: String? = prefs.getString("sync_last_family", null)
-    private var lastTriggeredUserId: String? = prefs.getString("sync_last_user", null)
 
     companion object {
         private const val SYNC_WORK_NAME = "bg_sync"
@@ -67,7 +66,6 @@ class SyncTrigger(
     fun start() {
         Timber.tag("Sync").d("SyncTrigger start")
         observeFamily()
-        observeAuth()
         observeNetwork()
         observeAutoTrigger()
         observeBgInterval()
@@ -113,23 +111,6 @@ class SyncTrigger(
                         realtimeManager.subscribeAll()
                     }
                 } else {
-                    realtimeManager.unsubscribe()
-                }
-            }
-        }
-    }
-
-    private fun observeAuth() {
-        scope.launch {
-            var first = true
-            authService.observeAuthState().collect { user ->
-                if (first) { first = false; return@collect }
-                val uid = user?.id
-                if (uid != null && uid != lastTriggeredUserId) {
-                    lastTriggeredUserId = uid
-                    prefs.edit().putString("sync_last_user", uid).apply()
-                    triggerSync()
-                } else if (user == null) {
                     realtimeManager.unsubscribe()
                 }
             }
