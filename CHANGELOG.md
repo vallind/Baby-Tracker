@@ -11,6 +11,9 @@
 - WorkManager 恢复自动初始化（ContentProvider），不再手动 initialize
 - NetworkMonitor 改用 registerDefaultNetworkCallback，修复启动时无法获取当前网络状态
 - WorkManager/SyncTrigger/ProcessLifecycleOwner 延后到首帧之后启动，不阻塞 onCreate
+- 自动触发/退后台/网络恢复改为 fullSync（推+拉），新增记录保持 push-only
+- 启动时 auth 首次发射跳过触发，避免与 family 观察器重合
+- 删除冗余 observeAuth 登录触发（有家庭必然触发 observeFamily）
 
 ### [1.5.16] — 2026-07-21
 
