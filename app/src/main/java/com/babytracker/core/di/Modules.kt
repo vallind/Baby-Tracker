@@ -37,7 +37,7 @@ val appModule = module {
     single<VaccinationRepository> { VaccinationRepositoryImpl(get(), get(), get()) }
     single<HealthRepository> { HealthRepositoryImpl(get(), get(), get()) }
     single<DiaperRepository> { DiaperRepositoryImpl(get(), get(), get()) }
-    single<MessageRepository> { MessageRepositoryImpl(get(), get()) }
+    single<MessageRepository> { MessageRepositoryImpl(get()) }
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get(), get()) }
     single { SyncSettings(get()) }

@@ -359,7 +359,7 @@ interface MessageRepository {
     suspend fun delete(message: AppMessage)
 }
 
-class MessageRepositoryImpl(private val dao: MessageDao, private val syncMeta: SyncMetadataDao) : MessageRepository {
+class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
     override fun watchByType(type: MessageType): Flow<List<AppMessage>> =
         dao.watchByType(MessageType.raw(type)).map { list -> list.map { it.toDomain() } }
 
@@ -370,9 +370,7 @@ class MessageRepositoryImpl(private val dao: MessageDao, private val syncMeta: S
 
     override suspend fun insert(message: AppMessage): Long {
         val entity = message.copy(uuid = message.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-        val id = dao.insert(entity)
-        syncMeta.pendingChange("messages", id.toInt(), entity.uuid, entity.updatedAt)
-        return id
+        return dao.insert(entity)
     }
 
     override suspend fun markRead(id: Long) = dao.markRead(id)
@@ -382,7 +380,6 @@ class MessageRepositoryImpl(private val dao: MessageDao, private val syncMeta: S
     override suspend fun delete(message: AppMessage) {
         val entity = message.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
         dao.update(entity)
-        syncMeta.pendingChange("messages", message.id.toInt(), entity.uuid, entity.updatedAt)
     }
 }
 
@@ -483,9 +480,23 @@ class ReminderRepositoryImpl(
         syncMeta.pendingChange("reminders", reminder.id, entity.uuid, entity.updatedAt, familyId)
     }
 
-    override suspend fun markDone(id: Int, doneDate: LocalDateTime) =
-        dao.markDone(id, doneDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli())
+    override suspend fun markDone(id: Int, doneDate: LocalDateTime) {
+        val current = dao.getById(id) ?: return
+        val entity = current.copy(
+            isDone = true,
+            doneDate = doneDate.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+            updatedAt = nowEpoch,
+        )
+        dao.update(entity)
+        val familyId = babyDao.getById(entity.babyId)?.familyId
+        syncMeta.pendingChange("reminders", entity.id, entity.uuid, entity.updatedAt, familyId)
+    }
 
-    override suspend fun setEnabled(id: Int, enabled: Boolean) =
-        dao.setEnabled(id, enabled)
+    override suspend fun setEnabled(id: Int, enabled: Boolean) {
+        val current = dao.getById(id) ?: return
+        val entity = current.copy(isEnabled = enabled, updatedAt = nowEpoch)
+        dao.update(entity)
+        val familyId = babyDao.getById(entity.babyId)?.familyId
+        syncMeta.pendingChange("reminders", entity.id, entity.uuid, entity.updatedAt, familyId)
+    }
 }

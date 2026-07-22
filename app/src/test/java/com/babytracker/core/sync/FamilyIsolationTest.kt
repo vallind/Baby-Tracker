@@ -69,6 +69,25 @@ class FamilyIsolationTest {
     }
 
     @Test
+    fun `messages never create sync metadata`() {
+        val source = sourceFile("com/babytracker/core/data/repository/Repositories.kt").readText()
+        val messageRepository = source.substringAfter("class MessageRepositoryImpl")
+            .substringBefore("// —— 发育评估")
+
+        assertEquals(false, messageRepository.contains("pendingChange"))
+    }
+
+    @Test
+    fun `reminder state changes create sync metadata`() {
+        val source = sourceFile("com/babytracker/core/data/repository/Repositories.kt").readText()
+        val stateChanges = source.substringAfter("override suspend fun markDone")
+            .substringBefore("// ── Repository 工厂辅助")
+
+        assertEquals(2, Regex("pendingChange\\(\\\"reminders\\\"").findAll(stateChanges).count())
+        assertEquals(2, Regex("updatedAt = nowEpoch").findAll(stateChanges).count())
+    }
+
+    @Test
     fun `exit sync does not disable pending change push`() {
         val source = sourceFile("com/babytracker/core/sync/SyncTrigger.kt").readText()
         val autoTrigger = source.substringAfter("private fun observeAutoTrigger")

@@ -40,6 +40,8 @@ import com.babytracker.core.data.repository.HealthRepository
 import com.babytracker.core.data.repository.VaccinationRepository
 import kotlinx.coroutines.launch
 import com.babytracker.core.domain.model.HealthRecord
+import com.babytracker.core.domain.model.Vaccination
+import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
@@ -57,6 +59,9 @@ private data class HealthCategoryMeta(
     val emoji: String,
     val bgColor: Color,
 )
+
+internal fun completedVaccinationCount(vaccinations: List<Vaccination>): Int =
+    vaccinations.count { it.status == VaccinationStatus.DONE }
 
 private fun healthCategories(c: AppColors) = listOf(
     HealthCategoryMeta("birth_info", "出生信息", "🍼", c.secondary),
@@ -101,7 +106,7 @@ fun HealthScreen(navController: NavController) {
 
     val grouped = remember(records) { records.groupBy { it.category } }
     val vaccinatedCount = remember(vaccinations) {
-        vaccinations.count { it.status.name == "COMPLETED" || it.status.name == "ADMINISTERED" }
+        completedVaccinationCount(vaccinations)
     }
 
     AppScaffold(
