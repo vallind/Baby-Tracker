@@ -79,10 +79,10 @@ class SyncTrigger(
         if (!shouldSync(config)) return
         scope.launch {
             try {
-                syncEngine.push()
+                syncEngine.fullSync()
                 _lastSyncResult.value = "同步完成"
             } catch (e: Exception) {
-                Timber.tag("Sync").e(e, "onAppBackgrounded push failed")
+                Timber.tag("Sync").e(e, "onAppBackgrounded fullSync failed")
                 _lastSyncResult.value = "同步失败"
             }
         }
@@ -147,11 +147,13 @@ class SyncTrigger(
     private fun triggerSync() {
         scope.launch {
             try {
-                syncEngine.push()
+                syncEngine.fullSync()
                 Timber.tag("Sync").d("auto trigger sync done")
             } catch (e: Exception) {
-                Timber.tag("Sync").e(e, "auto trigger sync failed")
+                Timber.tag("Sync").e(e, "trigger fullSync failed")
             }
+        }
+    }
         }
     }
 
@@ -226,10 +228,10 @@ class SyncTrigger(
 
     private suspend fun doPush() {
         try {
-            syncEngine.push()
-            Timber.tag("Sync").d("auto push done")
+            syncEngine.fullSync()
+            Timber.tag("Sync").d("auto trigger sync done")
         } catch (e: Exception) {
-            Timber.tag("Sync").e(e, "auto push failed")
+            Timber.tag("Sync").e(e, "auto trigger sync failed")
         }
     }
 }
