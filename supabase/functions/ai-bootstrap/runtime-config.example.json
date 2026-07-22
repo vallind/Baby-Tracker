@@ -4,18 +4,11 @@
   "ttlSeconds": 604800,
   "providers": [
     {
-      "id": "provider_a",
-      "protocol": "openai_responses",
-      "baseUrl": "https://api.provider-a.example/v1",
-      "credentialVersion": 1,
-      "credentialEnv": "AI_PROVIDER_A_KEY"
-    },
-    {
-      "id": "provider_b",
+      "id": "deepseek",
       "protocol": "openai_compatible_chat",
-      "baseUrl": "https://api.provider-b.example/v1",
+      "baseUrl": "https://api.deepseek.com",
       "credentialVersion": 1,
-      "credentialEnv": "AI_PROVIDER_B_KEY"
+      "credentialEnv": "AI_PROVIDER_DEEPSEEK_KEY"
     }
   ],
   "options": [
@@ -25,14 +18,21 @@
       "maxOutputTokens": 2400,
       "targets": [
         {
-          "providerId": "provider_a",
-          "model": "provider-a-model-id",
+          "providerId": "deepseek",
+          "model": "deepseek-v4-flash",
           "priority": 0
-        },
+        }
+      ]
+    },
+    {
+      "id": "deep",
+      "name": "深度",
+      "maxOutputTokens": 4000,
+      "targets": [
         {
-          "providerId": "provider_b",
-          "model": "provider-b-model-id",
-          "priority": 1
+          "providerId": "deepseek",
+          "model": "deepseek-v4-pro",
+          "priority": 0
         }
       ]
     }
