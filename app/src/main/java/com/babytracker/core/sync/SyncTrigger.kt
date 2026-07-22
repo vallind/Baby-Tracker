@@ -121,7 +121,9 @@ class SyncTrigger(
 
     private fun observeAuth() {
         scope.launch {
+            var first = true
             authService.observeAuthState().collect { user ->
+                if (first) { first = false; return@collect }
                 val uid = user?.id
                 if (uid != null && uid != lastTriggeredUserId) {
                     lastTriggeredUserId = uid
@@ -136,7 +138,9 @@ class SyncTrigger(
 
     private fun observeNetwork() {
         scope.launch {
+            var first = true
             networkMonitor.isOnline.collect { online ->
+                if (first) { first = false; return@collect }
                 if (online && authService.isLoggedIn() && syncEngine.currentFamilyId != null) {
                     triggerSync()
                 }
@@ -152,8 +156,6 @@ class SyncTrigger(
             } catch (e: Exception) {
                 Timber.tag("Sync").e(e, "trigger fullSync failed")
             }
-        }
-    }
         }
     }
 
