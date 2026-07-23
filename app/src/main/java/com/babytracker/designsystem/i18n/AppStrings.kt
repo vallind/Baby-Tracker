@@ -110,4 +110,32 @@ object AppStrings {
 
     // —— 提醒 ——
     const val reminder = "提醒"
+
+    // —— AI 育儿助手 ——
+    const val aiAssistant = "AI 育儿助手"
+    const val aiAssistantSubtitle = "结合宝宝信息，解答日常育儿问题"
+    const val aiWelcome = "你好，我会结合当前宝宝的信息提供育儿建议。"
+    const val aiAnswering = "AI 正在回答…"
+    const val aiDataNotice = "当前仅使用宝宝昵称、月龄和性别"
+    const val aiInputLabel = "输入问题"
+    const val aiInputPlaceholder = "例如：这个月龄需要注意什么？"
+    const val aiSend = "发送"
+    const val aiStop = "停止"
+    const val aiRetry = "重试"
+    const val aiConfigLoading = "正在准备 AI 模型配置…"
+    const val aiConfigUnavailable = "AI 模型配置暂不可用，请稍后重试"
+    const val aiNoBaby = "请先添加并选择宝宝"
+    const val aiMonthAgeUnknown = "月龄未知"
+    const val aiInputTooLong = "问题不能超过 2000 字"
+    const val aiAuthError = "模型认证失败，请检查服务端配置"
+    const val aiBalanceError = "模型账户余额不足，请充值后重试"
+    const val aiRequestError = "模型或请求参数不受支持，请检查服务端配置"
+    const val aiRateLimitError = "请求较多，请稍后再试"
+    const val aiServiceError = "AI 服务暂时不可用，请稍后重试"
+    const val aiNetworkError = "网络连接失败，请检查网络后重试"
+    const val aiUnknownError = "回答生成失败，请重试"
+    const val aiDisclaimer = "AI 回答仅供育儿参考，不能替代医生诊断。"
+    const val aiQuestionAge = "宝宝这个月龄需要注意什么？"
+    const val aiQuestionSleep = "如何建立规律的睡前流程？"
+    const val aiQuestionFeeding = "这个月龄喂养需要注意什么？"
 }

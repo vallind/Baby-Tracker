@@ -27,6 +27,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.navigation.Screen
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Feeding
@@ -87,6 +88,9 @@ fun HomeScreen(navController: NavController) {
             FeatureGrid(navController)
 
             Spacer(Modifier.height(spacing.md))
+            AiAssistantEntryCard(navController)
+
+            Spacer(Modifier.height(spacing.md))
             TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
 
             if (state.recentItems.isNotEmpty()) {
@@ -98,6 +102,43 @@ fun HomeScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(80.dp))
+        }
+    }
+}
+
+@Composable
+private fun AiAssistantEntryCard(navController: NavController) {
+    val colors = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    val shapes = LocalAppShapes.current
+    AppCard(
+        modifier = Modifier
+            .padding(horizontal = spacing.md)
+            .fillMaxWidth()
+            .clickable { navController.navigate(Screen.AiAssistant.route) },
+        containerColor = colors.primaryContainer,
+    ) {
+        Row(
+            Modifier.padding(spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(shapes.large))
+                    .background(colors.primary.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("✨", style = typography.headline)
+            }
+            Spacer(Modifier.width(spacing.md))
+            Column(Modifier.weight(1f)) {
+                Text(AppStrings.aiAssistant, style = typography.titleMedium, color = colors.textPrimary)
+                Spacer(Modifier.height(spacing.xs))
+                Text(AppStrings.aiAssistantSubtitle, style = typography.bodyMedium, color = colors.textSecondary)
+            }
+            Text("→", style = typography.titleMedium, color = colors.primary)
         }
     }
 }

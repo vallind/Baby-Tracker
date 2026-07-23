@@ -3,7 +3,9 @@ package com.babytracker.core.ai.provider
 import com.babytracker.core.ai.AiCompletion
 import com.babytracker.core.ai.AiMessage
 import com.babytracker.core.ai.config.AiConfigCoordinator
+import com.babytracker.core.ai.config.AiCredentialDecryptException
 import com.babytracker.core.ai.config.AiDeviceKeyStore
+import com.babytracker.core.ai.AiRuntimeBundle
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 
@@ -21,6 +23,20 @@ class AiProviderClient(
         require(messages.isNotEmpty()) { "AI 问题不能为空" }
         require(messages.all { it.content.isNotBlank() }) { "AI 消息内容不能为空" }
         val bundle = configCoordinator.readyBundle() ?: error("AI 配置尚未就绪")
+        return try {
+            completeWithBundle(bundle, messages, optionId)
+        } catch (error: AiCredentialDecryptException) {
+            currentCoroutineContext().ensureActive()
+            val refreshed = configCoordinator.refreshNow().getOrElse { throw error }
+            completeWithBundle(refreshed, messages, optionId)
+        }
+    }
+
+    private suspend fun completeWithBundle(
+        bundle: AiRuntimeBundle,
+        messages: List<AiMessage>,
+        optionId: String?,
+    ): AiCompletion {
         val selectedId = optionId ?: bundle.config.defaultOption
         val option = bundle.config.options.firstOrNull { it.id == selectedId }
             ?: error("AI 模型选项不存在：$selectedId")

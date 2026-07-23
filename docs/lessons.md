@@ -97,3 +97,35 @@ brand = jsonStr(json, "brand")
 ```
 
 **规则：** 所有从 JSON 解析字段的地方**禁止**使用 `json["x"]?.toString()?.removeSurrounding("\"")`，必须用 `(json[x] as? JsonPrimitive)?.content` 或封装辅助函数。`JsonNull` 不是 `JsonPrimitive` 的子类，`as?` 会自动返回 null。
+
+---
+
+## 7. Android 15+ 的 RSA-OAEP 必须单独授权 MGF1 摘要
+
+**现象：** AI 配置获取成功，但解密供应商密钥时抛出：
+
+```text
+InvalidKeyException: Keystore operation failed
+INCOMPATIBLE_MGF_DIGEST
+```
+
+**原因：** `setDigests(SHA-256)` 只授权 RSA-OAEP 的主摘要。Android 15（API 35）起，MGF1 摘要是独立的密钥授权项；未指定时默认使用 SHA-1，而服务端 WebCrypto 的 RSA-OAEP 使用 SHA-256，导致硬件 Keystore 拒绝操作。
+
+**修复：**
+
+```kotlin
+val builder = KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_DECRYPT)
+    .setDigests(KeyProperties.DIGEST_SHA256)
+    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+    builder.setMgf1Digests(KeyProperties.DIGEST_SHA256)
+}
+```
+
+**规则：**
+
+- 客户端的 OAEP 主摘要、MGF1 摘要必须与服务端完全一致。
+- 修正密钥生成参数后必须更换密钥别名或删除旧密钥；已有 Keystore 密钥的授权参数无法原地修改。
+- 密钥轮换会使本地缓存的旧密文失效，调用链必须捕获解密异常，重新获取用新公钥加密的配置，并且最多自动重试一次。
+- `InvalidKeyException` 发生在模型请求之前，不要误判为供应商余额、模型名或 API Key 问题。

@@ -1,8 +1,10 @@
 package com.babytracker.core.ai.config
 
+import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import java.security.GeneralSecurityException
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.spec.MGF1ParameterSpec
@@ -12,7 +14,7 @@ import javax.crypto.spec.PSource
 
 class AiDeviceKeyStore {
     companion object {
-        private const val KEY_ALIAS = "baby_tracker_ai_device_key_v1"
+        private const val KEY_ALIAS = "baby_tracker_ai_device_key_v2"
         private const val KEYSTORE = "AndroidKeyStore"
     }
 
@@ -34,25 +36,34 @@ class AiDeviceKeyStore {
             MGF1ParameterSpec.SHA256,
             PSource.PSpecified.DEFAULT,
         )
-        cipher.init(Cipher.DECRYPT_MODE, privateKey, oaep)
-        return cipher.doFinal(Base64.decode(envelope, Base64.DEFAULT)).toString(Charsets.UTF_8)
+        return try {
+            cipher.init(Cipher.DECRYPT_MODE, privateKey, oaep)
+            cipher.doFinal(Base64.decode(envelope, Base64.DEFAULT)).toString(Charsets.UTF_8)
+        } catch (error: GeneralSecurityException) {
+            throw AiCredentialDecryptException(error)
+        }
     }
 
     private fun ensureKeyPair() {
         if (keyStore().containsAlias(KEY_ALIAS)) return
         val generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, KEYSTORE)
-        val spec = KeyGenParameterSpec.Builder(
+        val builder = KeyGenParameterSpec.Builder(
             KEY_ALIAS,
             KeyProperties.PURPOSE_DECRYPT,
         )
             .setKeySize(2_048)
-            .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+            .setDigests(KeyProperties.DIGEST_SHA256)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
             .setUserAuthenticationRequired(false)
-            .build()
-        generator.initialize(spec)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // API 35 起 MGF1 摘要是独立授权项，必须与服务端 WebCrypto 的 SHA-256 保持一致。
+            builder.setMgf1Digests(KeyProperties.DIGEST_SHA256)
+        }
+        generator.initialize(builder.build())
         generator.generateKeyPair()
     }
 
     private fun keyStore(): KeyStore = KeyStore.getInstance(KEYSTORE).apply { load(null) }
 }
+
+class AiCredentialDecryptException(cause: Throwable) : Exception("AI 设备凭据解密失败", cause)

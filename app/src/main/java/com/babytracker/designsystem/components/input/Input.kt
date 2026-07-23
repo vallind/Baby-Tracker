@@ -41,6 +41,9 @@ fun AppInput(
     errorMessage: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     leadingIcon: @Composable (() -> Unit)? = null,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
     height: Dp = InputDefaults.height(),
     cornerRadius: Dp = InputDefaults.cornerRadius(),
     fontSize: TextUnit = InputDefaults.fontSize(),
@@ -65,7 +68,9 @@ fun AppInput(
             }
         } else null,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true,
+        singleLine = singleLine,
+        minLines = minLines,
+        maxLines = maxLines,
         shape = RoundedCornerShape(cornerRadius),
         modifier = modifier.defaultMinSize(minHeight = height),
         colors = OutlinedTextFieldDefaults.colors(
