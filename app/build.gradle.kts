@@ -14,8 +14,8 @@ android {
         applicationId = "com.babytracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.6.4"
+        versionCode = 7
+        versionName = "1.6.5"
     }
 
     buildTypes {
@@ -95,6 +95,8 @@ implementation(libs.documentfile)
 
 // Logging
 implementation(libs.timber)
+    implementation(libs.commonmark)
+    implementation(libs.commonmark.strikethrough)
 
     // Coroutines
     implementation(libs.coroutines.core)

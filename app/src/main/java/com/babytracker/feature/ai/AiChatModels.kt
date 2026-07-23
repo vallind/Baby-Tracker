@@ -1,6 +1,7 @@
 package com.babytracker.feature.ai
 
 import com.babytracker.core.ai.AiModelOption
+import com.babytracker.core.ai.settings.AiAssistantPreferences
 import com.babytracker.core.domain.model.Baby
 
 enum class AiChatRole {
@@ -32,6 +33,7 @@ enum class AiChatError {
 
 enum class AiChatPrerequisite {
     READY,
+    DISABLED,
     NOT_LOGGED_IN,
     NO_FAMILY,
     FAMILY_VERIFYING,
@@ -51,6 +53,8 @@ data class AiChatUiState(
     val isSending: Boolean = false,
     val error: AiChatError? = null,
     val prerequisite: AiChatPrerequisite = AiChatPrerequisite.CONFIG_LOADING,
+    val familyId: String? = null,
+    val preferences: AiAssistantPreferences = AiAssistantPreferences(),
 ) {
     val canSend: Boolean
         get() = prerequisite == AiChatPrerequisite.READY &&

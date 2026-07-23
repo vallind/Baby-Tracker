@@ -1,5 +1,6 @@
 package com.babytracker.feature.ai
 
+import com.babytracker.core.ai.settings.AiAssistantPreferences
 import com.babytracker.core.domain.model.Diaper
 import com.babytracker.core.domain.model.DiaperType
 import com.babytracker.core.domain.model.Feeding
@@ -25,6 +26,28 @@ class AiContextBuilderTest {
         assertEquals(AiQuestionCategory.GROWTH, classifyAiQuestion("看看体重增长趋势"))
         assertEquals(AiQuestionCategory.HEALTH, classifyAiQuestion("宝宝发烧了"))
         assertEquals(AiQuestionCategory.GENERAL, classifyAiQuestion("这个月龄要注意什么"))
+    }
+
+    @Test
+    fun `近期记录总开关和分类开关共同生效`() {
+        assertTrue(
+            !isAiContextEnabled(
+                AiQuestionCategory.SLEEP,
+                AiAssistantPreferences(useRecentRecords = false),
+            ),
+        )
+        assertTrue(
+            !isAiContextEnabled(
+                AiQuestionCategory.HEALTH,
+                AiAssistantPreferences(useHealthRecords = false),
+            ),
+        )
+        assertTrue(
+            isAiContextEnabled(
+                AiQuestionCategory.FEEDING,
+                AiAssistantPreferences(),
+            ),
+        )
     }
 
     @Test

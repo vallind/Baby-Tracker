@@ -44,6 +44,7 @@ PrimaryButton(onClick = { ... }, label = "保存")   // 主按钮
 PaiButton("保存", onClick = { ... })               // 简化工厂
 AppConfirmDialog(show, onConfirm, onDismiss)       // 替代 AlertDialog 样板
 snackbar.showUndo(onUndo = { repo.insert(r) })    // 替代 showSnackbar + ActionPerformed 样板
+AppMarkdownText(markdown = content)                // 安全渲染文本 Markdown，不加载远程图片或执行 HTML
 ```
 
 ## Logic 模式（纯 Kotlin，可 JVM 单测）

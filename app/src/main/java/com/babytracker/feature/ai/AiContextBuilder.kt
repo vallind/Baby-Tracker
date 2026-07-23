@@ -1,5 +1,6 @@
 package com.babytracker.feature.ai
 
+import com.babytracker.core.ai.settings.AiAssistantPreferences
 import com.babytracker.core.data.repository.DiaperRepository
 import com.babytracker.core.data.repository.FeedingRepository
 import com.babytracker.core.data.repository.GrowthRepository
@@ -41,45 +42,71 @@ class AiContextBuilder(
     private val healthRepository: HealthRepository,
     private val diaperRepository: DiaperRepository,
 ) {
-    suspend fun build(babyId: Int, question: String): AiContextResult {
+    suspend fun build(
+        babyId: Int,
+        question: String,
+        preferences: AiAssistantPreferences,
+    ): AiContextResult {
+        val category = classifyAiQuestion(question)
+        if (!isAiContextEnabled(category, preferences)) return AiContextResult("", emptyList())
         val now = LocalDateTime.now()
-        return when (classifyAiQuestion(question)) {
+        return when (category) {
             AiQuestionCategory.GENERAL -> AiContextResult("", emptyList())
             AiQuestionCategory.SLEEP -> {
                 val sleep = summarizeSleep(sleepRepository.watchByBaby(babyId).first(), now)
-                val feeding = summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now)
-                AiContextResult(
-                    prompt = listOf(sleep, feeding).joinToString("\n"),
-                    references = listOf("最近7天睡眠", "最近3天喂养"),
-                )
+                val parts = mutableListOf(sleep to "最近7天睡眠")
+                if (preferences.useFeedingRecords) {
+                    parts += summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now) to
+                        "最近3天喂养"
+                }
+                parts.toContextResult()
             }
             AiQuestionCategory.FEEDING -> {
                 val feeding = summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now)
-                val growth = summarizeGrowth(growthRepository.watchByBaby(babyId).first(), now)
-                AiContextResult(
-                    prompt = listOf(feeding, growth).joinToString("\n"),
-                    references = listOf("最近3天喂养", "最近90天生长"),
-                )
+                val parts = mutableListOf(feeding to "最近3天喂养")
+                if (preferences.useGrowthRecords) {
+                    parts += summarizeGrowth(growthRepository.watchByBaby(babyId).first(), now) to
+                        "最近90天生长"
+                }
+                parts.toContextResult()
             }
             AiQuestionCategory.DIAPER -> {
                 val diaper = summarizeDiaper(diaperRepository.watchByBaby(babyId).first(), now)
-                val feeding = summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now)
-                AiContextResult(
-                    prompt = listOf(diaper, feeding).joinToString("\n"),
-                    references = listOf("最近3天尿布", "最近3天喂养"),
-                )
+                val parts = mutableListOf(diaper to "最近3天尿布")
+                if (preferences.useFeedingRecords) {
+                    parts += summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now) to
+                        "最近3天喂养"
+                }
+                parts.toContextResult()
             }
-            AiQuestionCategory.GROWTH -> AiContextResult(
-                prompt = summarizeGrowth(growthRepository.watchByBaby(babyId).first(), now),
-                references = listOf("最近90天生长"),
-            )
-            AiQuestionCategory.HEALTH -> AiContextResult(
-                prompt = summarizeHealth(healthRepository.watchByBaby(babyId).first(), now),
-                references = listOf("最近30天健康记录"),
-            )
+            AiQuestionCategory.GROWTH -> listOf(
+                summarizeGrowth(growthRepository.watchByBaby(babyId).first(), now) to
+                    "最近90天生长",
+            ).toContextResult()
+            AiQuestionCategory.HEALTH -> listOf(
+                summarizeHealth(healthRepository.watchByBaby(babyId).first(), now) to
+                    "最近30天健康记录",
+            ).toContextResult()
         }
     }
 }
+
+internal fun isAiContextEnabled(
+    category: AiQuestionCategory,
+    preferences: AiAssistantPreferences,
+): Boolean = preferences.useRecentRecords && when (category) {
+    AiQuestionCategory.GENERAL -> false
+    AiQuestionCategory.SLEEP -> preferences.useSleepRecords
+    AiQuestionCategory.FEEDING -> preferences.useFeedingRecords
+    AiQuestionCategory.DIAPER -> preferences.useDiaperRecords
+    AiQuestionCategory.GROWTH -> preferences.useGrowthRecords
+    AiQuestionCategory.HEALTH -> preferences.useHealthRecords
+}
+
+private fun List<Pair<String, String>>.toContextResult() = AiContextResult(
+    prompt = joinToString("\n") { it.first },
+    references = map { it.second },
+)
 
 internal fun classifyAiQuestion(question: String): AiQuestionCategory {
     val normalized = question.lowercase()

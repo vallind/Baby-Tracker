@@ -194,6 +194,13 @@ fun SettingsScreen(navController: NavController) {
                 )
                 SettingsDivider()
                 SettingsRow(
+                    emoji = "✨",
+                    label = AppStrings.aiSettings,
+                    subtitle = "模型、宝宝数据与回答偏好",
+                    onClick = { navController.navigate(Screen.AiSettings.route) },
+                )
+                SettingsDivider()
+                SettingsRow(
                     emoji = "🔒",
                     label = "隐私设置",
                     onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() },

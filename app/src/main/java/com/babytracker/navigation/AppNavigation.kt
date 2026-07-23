@@ -28,6 +28,7 @@ import com.babytracker.feature.reminder.ReminderScreen
 import com.babytracker.feature.auth.LoginScreen
 import com.babytracker.feature.family.FamilyPage
 import com.babytracker.feature.ai.AiChatScreen
+import com.babytracker.feature.ai.AiSettingsScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("/")
@@ -51,6 +52,7 @@ sealed class Screen(val route: String) {
     object Reminder : Screen("/reminder")
     object Login : Screen("/login")
     object AiAssistant : Screen("/ai-assistant")
+    object AiSettings : Screen("/ai-assistant/settings")
 }
 
 @Composable
@@ -78,6 +80,7 @@ fun AppNavigation() {
         instantComposable(Screen.Reminder.route) { ReminderScreen(navController) }
         instantComposable(Screen.Login.route) { LoginScreen(navController) }
         instantComposable(Screen.AiAssistant.route) { AiChatScreen(navController) }
+        instantComposable(Screen.AiSettings.route) { AiSettingsScreen(navController) }
     }
 }
 

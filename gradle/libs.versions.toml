@@ -50,6 +50,7 @@ desugar = "2.1.5"
 
 # ── Logging ──
 timber = "5.0.1"
+commonmark = "0.29.0"
 
 # ── Test ──
 junit = "4.13.2"
@@ -125,6 +126,8 @@ desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", ver
 
 # ── Logging ──
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+commonmark = { group = "org.commonmark", name = "commonmark", version.ref = "commonmark" }
+commonmark-strikethrough = { group = "org.commonmark", name = "commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
 
 # ── Test ──
 junit = { group = "junit", name = "junit", version.ref = "junit" }

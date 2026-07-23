@@ -25,6 +25,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -42,6 +46,7 @@ import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.components.markdown.AppMarkdownText
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -52,6 +57,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
+import com.babytracker.navigation.Screen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
@@ -70,14 +76,16 @@ fun AiChatScreen(navController: NavController) {
     val copyAnswer: (String) -> Unit = { answer ->
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText(AppStrings.aiAssistant, answer))
-        scope.launch { appSnackbar.showMessage(AppStrings.aiCopied) }
+        if (state.preferences.showCopyFeedback) {
+            scope.launch { appSnackbar.showMessage(AppStrings.aiCopied) }
+        }
     }
 
     LaunchedEffect(currentBabyId) {
         viewModel.selectBaby(currentBabyId)
     }
     LaunchedEffect(state.messages.size, state.isSending) {
-        if (state.messages.isNotEmpty()) {
+        if (state.preferences.autoScroll && state.messages.isNotEmpty()) {
             listState.animateScrollToItem(state.messages.lastIndex)
         }
     }
@@ -87,6 +95,14 @@ fun AiChatScreen(navController: NavController) {
             AppTopBar(
                 title = AppStrings.aiAssistant,
                 onBack = { navController.popBackStack() },
+                actions = {
+                    IconButton(onClick = { navController.navigate(Screen.AiSettings.route) }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = AppStrings.aiSettings,
+                        )
+                    }
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -115,11 +131,15 @@ fun AiChatScreen(navController: NavController) {
                 ),
                 verticalArrangement = Arrangement.spacedBy(LocalAppSpacing.current.sm),
             ) {
-                if (state.messages.isEmpty()) {
+                if (state.messages.isEmpty() && state.preferences.showRecommendedQuestions) {
                     item { AiWelcomeCard(onQuestion = viewModel::updateInput) }
                 }
                 items(state.messages, key = { it.id }) { message ->
-                    AiMessageBubble(message, onCopy = copyAnswer)
+                    AiMessageBubble(
+                        message = message,
+                        renderMarkdown = state.preferences.renderMarkdown,
+                        onCopy = copyAnswer,
+                    )
                 }
                 if (state.isSending) {
                     item { AiTypingIndicator() }
@@ -167,7 +187,11 @@ private fun AiBabySummary(state: AiChatUiState) {
             )
             Spacer(Modifier.height(spacing.xs))
             Text(
-                text = AppStrings.aiDataNotice,
+                text = if (state.preferences.useRecentRecords) {
+                    AppStrings.aiDataNotice
+                } else {
+                    AppStrings.aiDataNoticeDisabled
+                },
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
             )
@@ -225,6 +249,7 @@ private fun AiModelSelector(
 
 private fun prerequisiteMessage(prerequisite: AiChatPrerequisite): String = when (prerequisite) {
     AiChatPrerequisite.READY -> ""
+    AiChatPrerequisite.DISABLED -> AppStrings.aiDisabled
     AiChatPrerequisite.NOT_LOGGED_IN -> AppStrings.aiNotLoggedIn
     AiChatPrerequisite.NO_FAMILY -> AppStrings.aiNoFamily
     AiChatPrerequisite.FAMILY_VERIFYING -> AppStrings.aiFamilyVerifying
@@ -260,7 +285,11 @@ private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
 }
 
 @Composable
-private fun AiMessageBubble(message: AiChatEntry, onCopy: (String) -> Unit) {
+private fun AiMessageBubble(
+    message: AiChatEntry,
+    renderMarkdown: Boolean,
+    onCopy: (String) -> Unit,
+) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
@@ -278,11 +307,19 @@ private fun AiMessageBubble(message: AiChatEntry, onCopy: (String) -> Unit) {
                     .background(if (isUser) colors.primary else colors.surfaceElevated)
                     .padding(spacing.md),
             ) {
-                Text(
-                    text = message.content,
-                    style = typography.bodyLarge,
-                    color = if (isUser) colors.onPrimary else colors.textPrimary,
-                )
+                if (!isUser && renderMarkdown) {
+                    AppMarkdownText(
+                        markdown = message.content,
+                        style = typography.bodyLarge,
+                        color = colors.textPrimary,
+                    )
+                } else {
+                    Text(
+                        text = message.content,
+                        style = typography.bodyLarge,
+                        color = if (isUser) colors.onPrimary else colors.textPrimary,
+                    )
+                }
                 if (!isUser) {
                     Spacer(Modifier.height(spacing.sm))
                     Text(

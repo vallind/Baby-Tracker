@@ -9,6 +9,7 @@ import com.babytracker.core.ai.config.AiDeviceKeyStore
 import com.babytracker.core.ai.provider.AiProviderClient
 import com.babytracker.core.ai.provider.OpenAiCompatibleChatAdapter
 import com.babytracker.core.ai.provider.OpenAiResponsesAdapter
+import com.babytracker.core.ai.settings.AiSettingsStore
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.core.database.AppDatabase
 import com.babytracker.designsystem.theme.ThemeController
@@ -25,6 +26,7 @@ import com.babytracker.feature.settings.SettingsViewModel
 import com.babytracker.feature.family.FamilyViewModel
 import com.babytracker.feature.ai.AiChatViewModel
 import com.babytracker.feature.ai.AiContextBuilder
+import com.babytracker.feature.ai.AiSettingsViewModel
 import com.babytracker.core.data.FamilyService
 import com.babytracker.core.sync.SyncSettings
 import com.babytracker.core.sync.SyncTrigger
@@ -52,6 +54,7 @@ val appModule = module {
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get(), get()) }
     single { SyncSettings(get()) }
+    single { AiSettingsStore(get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get(), get()) }
     viewModel { MessageViewModel(get()) }
@@ -61,7 +64,8 @@ val appModule = module {
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
-    viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { AiSettingsViewModel(get(), get(), get()) }
     single { AiContextBuilder(get(), get(), get(), get(), get()) }
 }
 
