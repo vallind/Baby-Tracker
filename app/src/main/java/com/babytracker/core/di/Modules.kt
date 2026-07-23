@@ -61,7 +61,7 @@ val appModule = module {
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
-    viewModel { AiChatViewModel(get(), get(), get(), get()) }
+    viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get()) }
     single { AiContextBuilder(get(), get(), get(), get(), get()) }
 }
 

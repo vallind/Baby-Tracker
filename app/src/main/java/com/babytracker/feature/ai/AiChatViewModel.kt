@@ -7,6 +7,8 @@ import com.babytracker.core.ai.config.AiConfigCoordinator
 import com.babytracker.core.ai.config.AiCredentialDecryptException
 import com.babytracker.core.ai.provider.AiProviderClient
 import com.babytracker.core.ai.provider.AiProviderException
+import com.babytracker.core.auth.AuthService
+import com.babytracker.core.data.FamilyService
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.util.DateUtils
@@ -30,6 +32,8 @@ class AiChatViewModel(
     private val configCoordinator: AiConfigCoordinator,
     private val providerClient: AiProviderClient,
     private val contextBuilder: AiContextBuilder,
+    authService: AuthService,
+    familyService: FamilyService,
 ) : ViewModel() {
     private val selectedBabyId = MutableStateFlow(0)
     private val messageIds = AtomicLong(0)
@@ -45,8 +49,27 @@ class AiChatViewModel(
             }
         }
         viewModelScope.launch {
-            combine(babyFlow, configCoordinator.state) { baby, runtime -> baby to runtime }
-                .collect { (baby, runtime) ->
+            combine(
+                babyFlow,
+                configCoordinator.state,
+                authService.observeAuthState(),
+                familyService.sessionState,
+            ) { baby, runtime, user, familyState ->
+                val options = runtime.bundle?.config?.options.orEmpty()
+                val prerequisite = when {
+                    user == null -> AiChatPrerequisite.NOT_LOGGED_IN
+                    familyState.userId != user.id -> AiChatPrerequisite.FAMILY_VERIFYING
+                    familyState.isLocalMode || familyState.activeFamily == null ->
+                        AiChatPrerequisite.NO_FAMILY
+                    options.isNotEmpty() && baby != null -> AiChatPrerequisite.READY
+                    baby == null -> AiChatPrerequisite.NO_BABY
+                    familyState.isLoading -> AiChatPrerequisite.FAMILY_VERIFYING
+                    !familyState.sessionVerified -> AiChatPrerequisite.FAMILY_UNVERIFIED
+                    runtime.isRefreshing -> AiChatPrerequisite.CONFIG_LOADING
+                    else -> AiChatPrerequisite.CONFIG_UNAVAILABLE
+                }
+                Triple(baby, runtime, prerequisite)
+            }.collect { (baby, runtime, prerequisite) ->
                     val options = runtime.bundle?.config?.options.orEmpty()
                     _state.update { current ->
                         val selected = current.selectedOptionId
@@ -57,6 +80,7 @@ class AiChatViewModel(
                             modelOptions = options,
                             selectedOptionId = selected,
                             isConfigRefreshing = runtime.isRefreshing,
+                            prerequisite = prerequisite,
                             error = if (options.isEmpty() && runtime.errorMessage != null) {
                                 AiChatError.CONFIG_UNAVAILABLE
                             } else if (current.error == AiChatError.CONFIG_UNAVAILABLE) {
@@ -66,7 +90,7 @@ class AiChatViewModel(
                             },
                         )
                     }
-                }
+            }
         }
     }
 
@@ -160,7 +184,11 @@ class AiChatViewModel(
                 val context = contextBuilder.build(baby.id, currentQuestion)
                 val requestMessages = buildList {
                     add(AiMessage(role = "system", content = systemPrompt(baby, context.prompt, riskLevel)))
-                    snapshot.messages.takeLast(MAX_HISTORY_MESSAGES).forEach { entry ->
+                    selectAiHistory(
+                        messages = snapshot.messages,
+                        maxMessages = MAX_HISTORY_MESSAGES,
+                        maxCharacters = MAX_HISTORY_CHARACTERS,
+                    ).forEach { entry ->
                         add(
                             AiMessage(
                                 role = if (entry.role == AiChatRole.USER) "user" else "assistant",
@@ -252,5 +280,6 @@ class AiChatViewModel(
     companion object {
         const val MAX_INPUT_LENGTH = 2_000
         private const val MAX_HISTORY_MESSAGES = 10
+        private const val MAX_HISTORY_CHARACTERS = 16_000
     }
 }

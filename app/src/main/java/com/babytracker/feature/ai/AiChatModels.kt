@@ -30,6 +30,17 @@ enum class AiChatError {
     UNKNOWN,
 }
 
+enum class AiChatPrerequisite {
+    READY,
+    NOT_LOGGED_IN,
+    NO_FAMILY,
+    FAMILY_VERIFYING,
+    FAMILY_UNVERIFIED,
+    NO_BABY,
+    CONFIG_LOADING,
+    CONFIG_UNAVAILABLE,
+}
+
 data class AiChatUiState(
     val baby: Baby? = null,
     val modelOptions: List<AiModelOption> = emptyList(),
@@ -39,10 +50,10 @@ data class AiChatUiState(
     val isConfigRefreshing: Boolean = false,
     val isSending: Boolean = false,
     val error: AiChatError? = null,
+    val prerequisite: AiChatPrerequisite = AiChatPrerequisite.CONFIG_LOADING,
 ) {
     val canSend: Boolean
-        get() = baby != null &&
-            modelOptions.isNotEmpty() &&
+        get() = prerequisite == AiChatPrerequisite.READY &&
             input.isNotBlank() &&
             input.length <= AiChatViewModel.MAX_INPUT_LENGTH &&
             !isSending

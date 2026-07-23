@@ -1,5 +1,8 @@
 package com.babytracker.feature.ai
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -19,14 +22,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.components.button.AppTextButton
@@ -35,6 +43,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -45,6 +54,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
 
 @Composable
 fun AiChatScreen(navController: NavController) {
@@ -53,6 +63,15 @@ fun AiChatScreen(navController: NavController) {
     val state by viewModel.state.collectAsState()
     val currentBabyId = babyController.currentBabyId
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember(snackbarHostState) { AppSnackbar(snackbarHostState) }
+    val copyAnswer: (String) -> Unit = { answer ->
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText(AppStrings.aiAssistant, answer))
+        scope.launch { appSnackbar.showMessage(AppStrings.aiCopied) }
+    }
 
     LaunchedEffect(currentBabyId) {
         viewModel.selectBaby(currentBabyId)
@@ -70,6 +89,7 @@ fun AiChatScreen(navController: NavController) {
                 onBack = { navController.popBackStack() },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
             Modifier
@@ -99,7 +119,7 @@ fun AiChatScreen(navController: NavController) {
                     item { AiWelcomeCard(onQuestion = viewModel::updateInput) }
                 }
                 items(state.messages, key = { it.id }) { message ->
-                    AiMessageBubble(message)
+                    AiMessageBubble(message, onCopy = copyAnswer)
                 }
                 if (state.isSending) {
                     item { AiTypingIndicator() }
@@ -166,19 +186,22 @@ private fun AiModelSelector(
     val typography = LocalAppTypographyStyle.current
     Column(Modifier.padding(horizontal = spacing.md)) {
         when {
-            state.modelOptions.isEmpty() && state.isConfigRefreshing -> Text(
-                AppStrings.aiConfigLoading,
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
-            )
-            state.modelOptions.isEmpty() -> Row(verticalAlignment = Alignment.CenterVertically) {
+            state.prerequisite != AiChatPrerequisite.READY -> Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    AppStrings.aiConfigUnavailable,
+                    text = prerequisiteMessage(state.prerequisite),
                     style = typography.bodyMedium,
-                    color = colors.error,
+                    color = if (state.prerequisite == AiChatPrerequisite.CONFIG_UNAVAILABLE) {
+                        colors.error
+                    } else {
+                        colors.textSecondary
+                    },
                     modifier = Modifier.weight(1f),
                 )
-                AppTextButton(onClick = onRefresh, label = AppStrings.aiRetry)
+                if (state.prerequisite == AiChatPrerequisite.CONFIG_UNAVAILABLE) {
+                    AppTextButton(onClick = onRefresh, label = AppStrings.aiRetry)
+                }
             }
             else -> Row(
                 Modifier
@@ -198,6 +221,17 @@ private fun AiModelSelector(
             }
         }
     }
+}
+
+private fun prerequisiteMessage(prerequisite: AiChatPrerequisite): String = when (prerequisite) {
+    AiChatPrerequisite.READY -> ""
+    AiChatPrerequisite.NOT_LOGGED_IN -> AppStrings.aiNotLoggedIn
+    AiChatPrerequisite.NO_FAMILY -> AppStrings.aiNoFamily
+    AiChatPrerequisite.FAMILY_VERIFYING -> AppStrings.aiFamilyVerifying
+    AiChatPrerequisite.FAMILY_UNVERIFIED -> AppStrings.aiFamilyUnverified
+    AiChatPrerequisite.NO_BABY -> AppStrings.aiNoBaby
+    AiChatPrerequisite.CONFIG_LOADING -> AppStrings.aiConfigLoading
+    AiChatPrerequisite.CONFIG_UNAVAILABLE -> AppStrings.aiConfigUnavailable
 }
 
 @Composable
@@ -226,7 +260,7 @@ private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
 }
 
 @Composable
-private fun AiMessageBubble(message: AiChatEntry) {
+private fun AiMessageBubble(message: AiChatEntry, onCopy: (String) -> Unit) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
@@ -265,6 +299,10 @@ private fun AiMessageBubble(message: AiChatEntry) {
                         text = AppStrings.aiDisclaimer,
                         style = typography.label,
                         color = colors.textTertiary,
+                    )
+                    AppTextButton(
+                        onClick = { onCopy(message.content) },
+                        label = AppStrings.aiCopy,
                     )
                 }
             }
@@ -369,7 +407,7 @@ private fun AiComposer(
             onValueChange = onInputChange,
             label = AppStrings.aiInputLabel,
             placeholder = AppStrings.aiInputPlaceholder,
-            enabled = state.baby != null && state.modelOptions.isNotEmpty() && !state.isSending,
+            enabled = state.prerequisite == AiChatPrerequisite.READY && !state.isSending,
             isError = state.error == AiChatError.INPUT_TOO_LONG,
             errorMessage = if (state.error == AiChatError.INPUT_TOO_LONG) AppStrings.aiInputTooLong else null,
             singleLine = false,

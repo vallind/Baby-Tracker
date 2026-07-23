@@ -17,6 +17,14 @@ import com.babytracker.designsystem.i18n.AppStrings
  *   }
  */
 class AppSnackbar(private val hostState: SnackbarHostState) {
+    /** 显示无需操作的短提示。 */
+    suspend fun showMessage(message: String) {
+        hostState.showSnackbar(
+            message = message,
+            duration = SnackbarDuration.Short,
+        )
+    }
+
     /**
      * 显示"已删除，可撤销" Snackbar。suspend 函数，调用方负责在协程中调用。
      *
