@@ -1,6 +1,7 @@
 package com.babytracker.core.ai.provider
 
 import com.babytracker.core.ai.AiMessage
+import com.babytracker.core.ai.AiGenerationOptions
 import com.babytracker.core.ai.AiProtocols
 import com.babytracker.core.ai.AiProviderConfig
 import kotlinx.serialization.json.Json
@@ -25,11 +26,23 @@ class OpenAiResponsesAdapter(
         model: String,
         messages: List<AiMessage>,
         maxOutputTokens: Int,
+        options: AiGenerationOptions,
         apiKey: String,
+        onTextUpdate: suspend (String) -> Unit,
     ): String {
         val body = buildJsonObject {
             put("model", model)
-            put("max_output_tokens", maxOutputTokens)
+            put("stream", options.streaming)
+            put("max_output_tokens", options.maxOutputTokens ?: maxOutputTokens)
+            options.temperature?.let { put("temperature", it) }
+            val effort = when (options.thinking) {
+                "disabled" -> "none"
+                "enabled" -> options.reasoningEffort ?: "medium"
+                else -> options.reasoningEffort
+            }
+            effort?.let {
+                put("reasoning", buildJsonObject { put("effort", it) })
+            }
             put("input", buildJsonArray {
                 messages.forEach { message ->
                     add(buildJsonObject {
@@ -39,6 +52,27 @@ class OpenAiResponsesAdapter(
                     })
                 }
             })
+        }
+        if (options.streaming) {
+            val text = StringBuilder()
+            executeStreamingRequest(
+                httpClient = httpClient,
+                provider = provider,
+                path = "responses",
+                apiKey = apiKey,
+                body = body,
+            ) { data ->
+                val delta = parseStreamDelta(data)
+                if (!delta.isNullOrEmpty()) {
+                    text.append(delta)
+                    onTextUpdate(text.toString())
+                }
+            }
+            return text.toString().takeIf { it.isNotBlank() } ?: throw AiProviderException(
+                providerId = provider.id,
+                retryable = false,
+                message = "供应商 ${provider.id} 的回答为空",
+            )
         }
         val response = executeJsonRequest(
             httpClient = httpClient,
@@ -69,4 +103,10 @@ class OpenAiResponsesAdapter(
                 .takeIf { it.isNotBlank() }
         }.getOrNull()
     }
+
+    internal fun parseStreamDelta(data: String): String? = runCatching {
+        val event = json.parseToJsonElement(data).jsonObject
+        event.takeIf { it["type"]?.jsonPrimitive?.contentOrNull == "response.output_text.delta" }
+            ?.get("delta")?.jsonPrimitive?.contentOrNull
+    }.getOrNull()
 }

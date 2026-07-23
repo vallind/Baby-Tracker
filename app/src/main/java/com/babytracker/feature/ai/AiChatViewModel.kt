@@ -2,6 +2,7 @@ package com.babytracker.feature.ai
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.babytracker.core.ai.AiGenerationOptions
 import com.babytracker.core.ai.AiMessage
 import com.babytracker.core.ai.config.AiConfigCoordinator
 import com.babytracker.core.ai.config.AiCredentialDecryptException
@@ -10,7 +11,9 @@ import com.babytracker.core.ai.provider.AiProviderException
 import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
 import com.babytracker.core.ai.settings.AiAssistantPreferences
+import com.babytracker.core.ai.settings.AiReasoningEffort
 import com.babytracker.core.ai.settings.AiSettingsStore
+import com.babytracker.core.ai.settings.AiThinkingMode
 import com.babytracker.core.auth.AuthService
 import com.babytracker.core.data.FamilyService
 import com.babytracker.core.data.repository.BabyRepository
@@ -231,6 +234,7 @@ class AiChatViewModel(
 
         requestJob?.cancel()
         requestJob = viewModelScope.launch {
+            var streamedEntryId: Long? = null
             try {
                 val context = contextBuilder.build(baby.id, currentQuestion, snapshot.preferences)
                 val requestMessages = buildList {
@@ -247,8 +251,8 @@ class AiChatViewModel(
                     )
                     selectAiHistory(
                         messages = snapshot.messages,
-                        maxMessages = MAX_HISTORY_MESSAGES,
-                        maxCharacters = MAX_HISTORY_CHARACTERS,
+                        maxMessages = snapshot.preferences.contextRounds * 2 + 1,
+                        maxCharacters = Int.MAX_VALUE,
                     ).forEach { entry ->
                         add(
                             AiMessage(
@@ -258,18 +262,58 @@ class AiChatViewModel(
                         )
                     }
                 }
-                val completion = providerClient.complete(requestMessages, optionId)
+                val completion = providerClient.complete(
+                    messages = requestMessages,
+                    optionId = optionId,
+                    generationOptions = snapshot.preferences.toGenerationOptions(),
+                ) { text ->
+                    if (selectedBabyId.value != babyIdAtRequest) return@complete
+                    if (text.isEmpty()) {
+                        streamedEntryId?.let { entryId ->
+                            _state.update { state ->
+                                state.copy(messages = state.messages.filterNot { it.id == entryId })
+                            }
+                        }
+                        streamedEntryId = null
+                    } else {
+                        val entryId = streamedEntryId ?: messageIds.incrementAndGet().also {
+                            streamedEntryId = it
+                        }
+                        _state.update { state ->
+                            val entry = AiChatEntry(
+                                id = entryId,
+                                role = AiChatRole.ASSISTANT,
+                                content = text,
+                                references = context.references,
+                            )
+                            val exists = state.messages.any { it.id == entryId }
+                            state.copy(
+                                messages = if (exists) {
+                                    state.messages.map { if (it.id == entryId) entry else it }
+                                } else {
+                                    state.messages + entry
+                                },
+                            )
+                        }
+                    }
+                }
                 if (selectedBabyId.value != babyIdAtRequest) return@launch
                 _state.update {
+                    val entry = AiChatEntry(
+                        id = streamedEntryId ?: messageIds.incrementAndGet(),
+                        role = AiChatRole.ASSISTANT,
+                        content = completion.text,
+                        providerId = completion.providerId,
+                        model = completion.model,
+                        references = context.references,
+                    )
+                    val exists = it.messages.any { message -> message.id == entry.id }
                     it.copy(
-                        messages = it.messages + AiChatEntry(
-                            id = messageIds.incrementAndGet(),
-                            role = AiChatRole.ASSISTANT,
-                            content = completion.text,
-                            providerId = completion.providerId,
-                            model = completion.model,
-                            references = context.references,
-                        ),
+                        messages = if (exists) {
+                            it.messages.map { message -> if (message.id == entry.id) entry else message }
+                        } else {
+                            it.messages + entry
+                        },
                         isSending = false,
                         error = null,
                     )
@@ -277,6 +321,11 @@ class AiChatViewModel(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: AiProviderException) {
+                streamedEntryId?.let { entryId ->
+                    _state.update { state ->
+                        state.copy(messages = state.messages.filterNot { it.id == entryId })
+                    }
+                }
                 Timber.tag("AI").e(
                     error,
                     "回答请求失败 provider=%s status=%s retryable=%s",
@@ -293,6 +342,11 @@ class AiChatViewModel(
                     _state.update { it.copy(isSending = false, error = AiChatError.CONFIG_UNAVAILABLE) }
                 }
             } catch (error: Exception) {
+                streamedEntryId?.let { entryId ->
+                    _state.update { state ->
+                        state.copy(messages = state.messages.filterNot { it.id == entryId })
+                    }
+                }
                 Timber.tag("AI").e(error, "回答请求出现未分类异常 type=%s", error::class.java.simpleName)
                 if (selectedBabyId.value == babyIdAtRequest) {
                     _state.update { it.copy(isSending = false, error = AiChatError.UNKNOWN) }
@@ -342,8 +396,6 @@ class AiChatViewModel(
 
     companion object {
         const val MAX_INPUT_LENGTH = 2_000
-        private const val MAX_HISTORY_MESSAGES = 10
-        private const val MAX_HISTORY_CHARACTERS = 16_000
     }
 
     private data class ChatDependencies(
@@ -355,6 +407,21 @@ class AiChatViewModel(
         val defaultModels: Map<String, String>,
     )
 }
+
+internal fun AiAssistantPreferences.toGenerationOptions() = AiGenerationOptions(
+    maxOutputTokens = maxOutputTokens.takeIf { it > 0 },
+    streaming = streamingEnabled,
+    thinking = when (thinkingMode) {
+        AiThinkingMode.AUTO -> if (reasoningEffort == AiReasoningEffort.AUTO) null else "enabled"
+        AiThinkingMode.ENABLED -> "enabled"
+        AiThinkingMode.DISABLED -> "disabled"
+    },
+    reasoningEffort = when (reasoningEffort) {
+        AiReasoningEffort.AUTO -> null
+        else -> reasoningEffort.name.lowercase()
+    },
+    temperature = temperatureTenths.div(10.0).takeIf { customTemperature },
+)
 
 internal fun answerPreferencePrompt(preferences: AiAssistantPreferences): String {
     val detail = when (preferences.answerDetail) {

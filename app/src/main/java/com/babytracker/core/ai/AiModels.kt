@@ -31,6 +31,15 @@ data class AiModelOption(
     val name: String,
     val targets: List<AiModelTarget>,
     val maxOutputTokens: Int = 2_400,
+    val capabilities: AiModelCapabilities = AiModelCapabilities(),
+)
+
+@Serializable
+data class AiModelCapabilities(
+    val streaming: Boolean = false,
+    val thinking: Boolean = false,
+    val reasoningEfforts: List<String> = emptyList(),
+    val temperature: Boolean = false,
 )
 
 @Serializable
@@ -85,6 +94,14 @@ data class AiCompletion(
     val text: String,
 )
 
+data class AiGenerationOptions(
+    val maxOutputTokens: Int? = null,
+    val streaming: Boolean = false,
+    val thinking: String? = null,
+    val reasoningEffort: String? = null,
+    val temperature: Double? = null,
+)
+
 object AiRuntimeConfigValidator {
     fun requireValid(bundle: AiRuntimeBundle): AiRuntimeBundle {
         require(bundle.userId.isNotBlank()) { "AI 配置缺少用户范围" }
@@ -132,7 +149,10 @@ object AiRuntimeConfigValidator {
         config.options.forEach { option ->
             require(option.id.isNotBlank() && option.name.isNotBlank()) { "AI 模型选项信息不完整" }
             require(option.targets.isNotEmpty()) { "模型选项 ${option.id} 没有调用目标" }
-            require(option.maxOutputTokens in 1..32_768) { "模型选项 ${option.id} 的输出上限无效" }
+            require(option.maxOutputTokens > 0) { "模型选项 ${option.id} 的默认输出 Token 无效" }
+            require(option.capabilities.reasoningEfforts.all { it in VALID_REASONING_EFFORTS }) {
+                "模型选项 ${option.id} 的推理强度声明无效"
+            }
             option.targets.forEach { target ->
                 require(target.providerId in providers) {
                     "模型选项 ${option.id} 引用了未知供应商 ${target.providerId}"
@@ -142,4 +162,6 @@ object AiRuntimeConfigValidator {
         }
         return config
     }
+
+    private val VALID_REASONING_EFFORTS = setOf("low", "medium", "high", "max")
 }

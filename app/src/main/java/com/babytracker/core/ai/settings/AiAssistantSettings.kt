@@ -21,11 +21,32 @@ enum class AiAnswerTone {
     PROFESSIONAL,
 }
 
+enum class AiThinkingMode {
+    AUTO,
+    ENABLED,
+    DISABLED,
+}
+
+enum class AiReasoningEffort {
+    AUTO,
+    LOW,
+    MEDIUM,
+    HIGH,
+    MAX,
+}
+
 data class AiAssistantPreferences(
     val assistantEnabled: Boolean = true,
     val answerDetail: AiAnswerDetail = AiAnswerDetail.BALANCED,
     val answerTone: AiAnswerTone = AiAnswerTone.PRACTICAL,
     val includeActionChecklist: Boolean = true,
+    val contextRounds: Int = 5,
+    val maxOutputTokens: Int = 0,
+    val streamingEnabled: Boolean = true,
+    val thinkingMode: AiThinkingMode = AiThinkingMode.AUTO,
+    val reasoningEffort: AiReasoningEffort = AiReasoningEffort.AUTO,
+    val customTemperature: Boolean = false,
+    val temperatureTenths: Int = 10,
     val useRecentRecords: Boolean = true,
     val useFeedingRecords: Boolean = true,
     val useSleepRecords: Boolean = true,
@@ -71,6 +92,16 @@ class AiSettingsStore(private val prefs: SharedPreferences) {
         answerDetail = enumValue(prefs.getString(KEY_DETAIL, null), AiAnswerDetail.BALANCED),
         answerTone = enumValue(prefs.getString(KEY_TONE, null), AiAnswerTone.PRACTICAL),
         includeActionChecklist = prefs.getBoolean(KEY_ACTION_CHECKLIST, true),
+        contextRounds = prefs.getInt(KEY_CONTEXT_ROUNDS, 5).coerceAtLeast(0),
+        maxOutputTokens = prefs.getInt(KEY_MAX_OUTPUT_TOKENS, 0).coerceAtLeast(0),
+        streamingEnabled = prefs.getBoolean(KEY_STREAMING, true),
+        thinkingMode = enumValue(prefs.getString(KEY_THINKING_MODE, null), AiThinkingMode.AUTO),
+        reasoningEffort = enumValue(
+            prefs.getString(KEY_REASONING_EFFORT, null),
+            AiReasoningEffort.AUTO,
+        ),
+        customTemperature = prefs.getBoolean(KEY_CUSTOM_TEMPERATURE, false),
+        temperatureTenths = prefs.getInt(KEY_TEMPERATURE_TENTHS, 10).coerceIn(0, 20),
         useRecentRecords = prefs.getBoolean(KEY_USE_RECORDS, true),
         useFeedingRecords = prefs.getBoolean(KEY_USE_FEEDING, true),
         useSleepRecords = prefs.getBoolean(KEY_USE_SLEEP, true),
@@ -89,6 +120,13 @@ class AiSettingsStore(private val prefs: SharedPreferences) {
             .putString(KEY_DETAIL, value.answerDetail.name)
             .putString(KEY_TONE, value.answerTone.name)
             .putBoolean(KEY_ACTION_CHECKLIST, value.includeActionChecklist)
+            .putInt(KEY_CONTEXT_ROUNDS, value.contextRounds.coerceAtLeast(0))
+            .putInt(KEY_MAX_OUTPUT_TOKENS, value.maxOutputTokens.coerceAtLeast(0))
+            .putBoolean(KEY_STREAMING, value.streamingEnabled)
+            .putString(KEY_THINKING_MODE, value.thinkingMode.name)
+            .putString(KEY_REASONING_EFFORT, value.reasoningEffort.name)
+            .putBoolean(KEY_CUSTOM_TEMPERATURE, value.customTemperature)
+            .putInt(KEY_TEMPERATURE_TENTHS, value.temperatureTenths.coerceIn(0, 20))
             .putBoolean(KEY_USE_RECORDS, value.useRecentRecords)
             .putBoolean(KEY_USE_FEEDING, value.useFeedingRecords)
             .putBoolean(KEY_USE_SLEEP, value.useSleepRecords)
@@ -118,6 +156,13 @@ class AiSettingsStore(private val prefs: SharedPreferences) {
         private const val KEY_DETAIL = "ai_answer_detail"
         private const val KEY_TONE = "ai_answer_tone"
         private const val KEY_ACTION_CHECKLIST = "ai_action_checklist"
+        private const val KEY_CONTEXT_ROUNDS = "ai_context_rounds"
+        private const val KEY_MAX_OUTPUT_TOKENS = "ai_max_output_tokens"
+        private const val KEY_STREAMING = "ai_streaming"
+        private const val KEY_THINKING_MODE = "ai_thinking_mode"
+        private const val KEY_REASONING_EFFORT = "ai_reasoning_effort"
+        private const val KEY_CUSTOM_TEMPERATURE = "ai_custom_temperature"
+        private const val KEY_TEMPERATURE_TENTHS = "ai_temperature_tenths"
         private const val KEY_USE_RECORDS = "ai_use_recent_records"
         private const val KEY_USE_FEEDING = "ai_use_feeding"
         private const val KEY_USE_SLEEP = "ai_use_sleep"

@@ -16,6 +16,12 @@
       "id": "balanced",
       "name": "均衡",
       "maxOutputTokens": 2400,
+      "capabilities": {
+        "streaming": true,
+        "thinking": true,
+        "reasoningEfforts": ["high", "max"],
+        "temperature": true
+      },
       "targets": [
         {
           "providerId": "deepseek",
@@ -28,6 +34,12 @@
       "id": "deep",
       "name": "深度",
       "maxOutputTokens": 4000,
+      "capabilities": {
+        "streaming": true,
+        "thinking": true,
+        "reasoningEfforts": ["high", "max"],
+        "temperature": true
+      },
       "targets": [
         {
           "providerId": "deepseek",

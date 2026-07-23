@@ -3,10 +3,32 @@ package com.babytracker.feature.ai
 import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
 import com.babytracker.core.ai.settings.AiAssistantPreferences
+import com.babytracker.core.ai.settings.AiReasoningEffort
+import com.babytracker.core.ai.settings.AiThinkingMode
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AiAnswerPreferencesTest {
+    @Test
+    fun `生成参数使用本地选择且不应用后端数量上限`() {
+        val options = AiAssistantPreferences(
+            contextRounds = 20,
+            maxOutputTokens = 100_000,
+            streamingEnabled = true,
+            thinkingMode = AiThinkingMode.ENABLED,
+            reasoningEffort = AiReasoningEffort.MAX,
+            customTemperature = true,
+            temperatureTenths = 7,
+        ).toGenerationOptions()
+
+        assertEquals(100_000, options.maxOutputTokens)
+        assertEquals(true, options.streaming)
+        assertEquals("enabled", options.thinking)
+        assertEquals("max", options.reasoningEffort)
+        assertEquals(0.7, options.temperature ?: 0.0, 0.001)
+    }
+
     @Test
     fun `回答偏好进入系统提示`() {
         val prompt = answerPreferencePrompt(

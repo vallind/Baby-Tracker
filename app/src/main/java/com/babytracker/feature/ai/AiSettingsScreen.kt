@@ -20,12 +20,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
+import com.babytracker.core.ai.AiModelOption
 import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
+import com.babytracker.core.ai.settings.AiReasoningEffort
+import com.babytracker.core.ai.settings.AiThinkingMode
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.slider.AppSlider
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
@@ -45,6 +51,7 @@ fun AiSettingsScreen(navController: NavController) {
     val viewModel: AiSettingsViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
     val preferences = state.preferences
+    val capabilities = state.selectedModel?.capabilities
     val spacing = LocalAppSpacing.current
     var showClearConfirm by remember { mutableStateOf(false) }
 
@@ -86,6 +93,131 @@ fun AiSettingsScreen(navController: NavController) {
                     onSelect = viewModel::setDefaultModel,
                 )
                 SettingsDivider()
+                AiCapabilitySetting(state.selectedModel)
+                SettingsDivider()
+                AiChoiceSetting(
+                    emoji = "🧩",
+                    label = AppStrings.aiSettingsContextRounds,
+                    subtitle = AppStrings.aiSettingsContextRoundsSubtitle,
+                    options = listOf(0, 2, 5, 10, 20).map { rounds ->
+                        rounds.toString() to if (rounds == 0) {
+                            AppStrings.aiSettingsNoContext
+                        } else {
+                            "$rounds ${AppStrings.aiSettingsRounds}"
+                        }
+                    },
+                    selectedId = preferences.contextRounds.toString(),
+                    onSelect = { viewModel.setContextRounds(it.toInt()) },
+                )
+                SettingsDivider()
+                AiChoiceSetting(
+                    emoji = "🔢",
+                    label = AppStrings.aiSettingsMaxTokens,
+                    subtitle = AppStrings.aiSettingsMaxTokensSubtitle,
+                    options = listOf(0, 1_024, 2_048, 4_096, 8_192, 16_384).map { tokens ->
+                        tokens.toString() to if (tokens == 0) {
+                            AppStrings.aiSettingsAutomatic
+                        } else {
+                            tokens.toString()
+                        }
+                    },
+                    selectedId = preferences.maxOutputTokens.toString(),
+                    onSelect = { viewModel.setMaxOutputTokens(it.toInt()) },
+                )
+                AppInput(
+                    value = preferences.maxOutputTokens.takeIf { it > 0 }?.toString().orEmpty(),
+                    onValueChange = { value ->
+                        val digits = value.filter(Char::isDigit)
+                        viewModel.setMaxOutputTokens(digits.toIntOrNull() ?: 0)
+                    },
+                    label = AppStrings.aiSettingsCustomTokens,
+                    placeholder = AppStrings.aiSettingsAutomatic,
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.md, vertical = spacing.sm),
+                )
+                SettingsDivider()
+                AiSwitchRow(
+                    emoji = "⚡",
+                    label = AppStrings.aiSettingsStreaming,
+                    subtitle = if (capabilities?.streaming == true) {
+                        AppStrings.aiSettingsStreamingSubtitle
+                    } else {
+                        AppStrings.aiSettingsUnsupported
+                    },
+                    checked = preferences.streamingEnabled && capabilities?.streaming == true,
+                    enabled = capabilities?.streaming == true,
+                    onCheckedChange = viewModel::setStreaming,
+                )
+                SettingsDivider()
+                if (capabilities?.thinking == true) {
+                    AiChoiceSetting(
+                        emoji = "💭",
+                        label = AppStrings.aiSettingsThinking,
+                        options = AiThinkingMode.entries.map { it.name to thinkingLabel(it) },
+                        selectedId = preferences.thinkingMode.name,
+                        onSelect = { viewModel.setThinkingMode(AiThinkingMode.valueOf(it)) },
+                    )
+                    val supportedEfforts = capabilities.reasoningEfforts
+                    if (supportedEfforts.isNotEmpty()) {
+                        SettingsDivider()
+                        AiChoiceSetting(
+                            emoji = "⚙️",
+                            label = AppStrings.aiSettingsReasoningEffort,
+                            options = AiReasoningEffort.entries
+                                .filter {
+                                    it == AiReasoningEffort.AUTO ||
+                                        it.name.lowercase() in supportedEfforts
+                                }
+                                .map { it.name to effortLabel(it) },
+                            selectedId = preferences.reasoningEffort.name,
+                            onSelect = {
+                                viewModel.setReasoningEffort(AiReasoningEffort.valueOf(it))
+                            },
+                        )
+                    }
+                } else {
+                    SettingsRow(
+                        emoji = "💭",
+                        label = AppStrings.aiSettingsThinking,
+                        subtitle = AppStrings.aiSettingsUnsupported,
+                        trailing = { },
+                    )
+                }
+                if (capabilities?.temperature == true) {
+                    SettingsDivider()
+                    AiSwitchRow(
+                        emoji = "🌡️",
+                        label = AppStrings.aiSettingsTemperature,
+                        subtitle = AppStrings.aiSettingsTemperatureSubtitle,
+                        checked = preferences.customTemperature,
+                        onCheckedChange = viewModel::setCustomTemperature,
+                    )
+                    if (preferences.customTemperature) {
+                        AppSlider(
+                            value = preferences.temperatureTenths.toFloat(),
+                            onValueChange = { viewModel.setTemperatureTenths(it.toInt()) },
+                            valueRange = 0f..20f,
+                            steps = 19,
+                            modifier = Modifier.padding(horizontal = spacing.md),
+                        )
+                        Text(
+                            text = String.format("%.1f", preferences.temperatureTenths / 10f),
+                            style = LocalAppTypographyStyle.current.bodyMedium,
+                            color = LocalAppColors.current.textSecondary,
+                            modifier = Modifier.padding(
+                                start = spacing.md,
+                                end = spacing.md,
+                                bottom = spacing.sm,
+                            ),
+                        )
+                    }
+                }
+            }
+
+            AiSettingsSectionTitle(AppStrings.aiSettingsAnswerPreference)
+            SettingsCard {
                 AiChoiceSetting(
                     emoji = "📏",
                     label = AppStrings.aiSettingsDetail,
@@ -168,27 +300,6 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsRecommended,
                     checked = preferences.showRecommendedQuestions,
                     onCheckedChange = viewModel::setRecommendedQuestions,
-                )
-                SettingsDivider()
-                AiSwitchRow(
-                    emoji = "↕️",
-                    label = AppStrings.aiSettingsAutoScroll,
-                    checked = preferences.autoScroll,
-                    onCheckedChange = viewModel::setAutoScroll,
-                )
-                SettingsDivider()
-                AiSwitchRow(
-                    emoji = "📝",
-                    label = AppStrings.aiSettingsMarkdown,
-                    checked = preferences.renderMarkdown,
-                    onCheckedChange = viewModel::setRenderMarkdown,
-                )
-                SettingsDivider()
-                AiSwitchRow(
-                    emoji = "📋",
-                    label = AppStrings.aiSettingsCopyFeedback,
-                    checked = preferences.showCopyFeedback,
-                    onCheckedChange = viewModel::setCopyFeedback,
                 )
             }
 
@@ -282,6 +393,8 @@ private fun AiChoiceSetting(
     options: List<Pair<String, String>>,
     selectedId: String?,
     onSelect: (String) -> Unit,
+    subtitle: String? = null,
+    interactive: Boolean = true,
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
@@ -291,6 +404,14 @@ private fun AiChoiceSetting(
             style = LocalAppTypographyStyle.current.bodyLarge,
             color = colors.textPrimary,
         )
+        if (subtitle != null) {
+            Text(
+                text = subtitle,
+                style = LocalAppTypographyStyle.current.bodyMedium,
+                color = colors.textSecondary,
+                modifier = Modifier.padding(top = spacing.xs),
+            )
+        }
         Spacer(Modifier.height(spacing.sm))
         if (options.isEmpty()) {
             Text(
@@ -309,12 +430,35 @@ private fun AiChoiceSetting(
                         label = optionLabel,
                         backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
                         textColor = if (selected) colors.onPrimary else colors.textSecondary,
-                        modifier = Modifier.clickable { onSelect(id) },
+                        modifier = if (interactive) {
+                            Modifier.clickable { onSelect(id) }
+                        } else {
+                            Modifier
+                        },
                     )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun AiCapabilitySetting(model: AiModelOption?) {
+    val capabilities = model?.capabilities
+    val labels = buildList {
+        if (capabilities?.streaming == true) add(AppStrings.aiCapabilityStreaming)
+        if (capabilities?.thinking == true) add(AppStrings.aiCapabilityThinking)
+        if (capabilities?.temperature == true) add(AppStrings.aiCapabilityTemperature)
+        if (isEmpty()) add(AppStrings.aiCapabilityBasic)
+    }
+    AiChoiceSetting(
+        emoji = "✨",
+        label = AppStrings.aiSettingsModelCapabilities,
+        options = labels.map { it to it },
+        selectedId = null,
+        onSelect = { },
+        interactive = false,
+    )
 }
 
 private fun detailLabel(value: AiAnswerDetail): String = when (value) {
@@ -327,6 +471,20 @@ private fun toneLabel(value: AiAnswerTone): String = when (value) {
     AiAnswerTone.PRACTICAL -> AppStrings.aiTonePractical
     AiAnswerTone.GENTLE -> AppStrings.aiToneGentle
     AiAnswerTone.PROFESSIONAL -> AppStrings.aiToneProfessional
+}
+
+private fun thinkingLabel(value: AiThinkingMode): String = when (value) {
+    AiThinkingMode.AUTO -> AppStrings.aiSettingsThinkingAuto
+    AiThinkingMode.ENABLED -> AppStrings.aiSettingsThinkingOn
+    AiThinkingMode.DISABLED -> AppStrings.aiSettingsThinkingOff
+}
+
+private fun effortLabel(value: AiReasoningEffort): String = when (value) {
+    AiReasoningEffort.AUTO -> AppStrings.aiSettingsAutomatic
+    AiReasoningEffort.LOW -> AppStrings.aiSettingsEffortLow
+    AiReasoningEffort.MEDIUM -> AppStrings.aiSettingsEffortMedium
+    AiReasoningEffort.HIGH -> AppStrings.aiSettingsEffortHigh
+    AiReasoningEffort.MAX -> AppStrings.aiSettingsEffortMax
 }
 
 private fun configStatus(state: AiSettingsUiState): String {

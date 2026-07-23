@@ -19,6 +19,14 @@ type ModelOption = {
   name: string;
   targets: ModelTarget[];
   maxOutputTokens?: number;
+  capabilities?: ModelCapabilities;
+};
+
+type ModelCapabilities = {
+  streaming?: boolean;
+  thinking?: boolean;
+  reasoningEfforts?: Array<"low" | "medium" | "high" | "max">;
+  temperature?: boolean;
 };
 
 type RuntimeConfig = {
@@ -94,6 +102,12 @@ Deno.serve(async (request: Request) => {
       options: config.options.map((option) => ({
         ...option,
         maxOutputTokens: option.maxOutputTokens ?? 2_400,
+        capabilities: {
+          streaming: option.capabilities?.streaming ?? false,
+          thinking: option.capabilities?.thinking ?? false,
+          reasoningEfforts: option.capabilities?.reasoningEfforts ?? [],
+          temperature: option.capabilities?.temperature ?? false,
+        },
         targets: option.targets.map((target) => ({
           ...target,
           priority: target.priority ?? 0,
@@ -164,6 +178,11 @@ function validateRuntimeConfig(config: RuntimeConfig): void {
     optionIds.add(option.id);
     if (!Array.isArray(option.targets) || option.targets.length === 0) {
       throw new Error(`targets_missing:${option.id}`);
+    }
+    const efforts = option.capabilities?.reasoningEfforts ?? [];
+    if (!Array.isArray(efforts) ||
+      efforts.some((effort) => !["low", "medium", "high", "max"].includes(effort))) {
+      throw new Error(`invalid_reasoning_efforts:${option.id}`);
     }
     for (const target of option.targets) {
       if (!providerIds.has(target.providerId) || !target.model) {

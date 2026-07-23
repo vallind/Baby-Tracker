@@ -1,6 +1,7 @@
 package com.babytracker.core.ai.provider
 
 import com.babytracker.core.ai.AiMessage
+import com.babytracker.core.ai.AiGenerationOptions
 import com.babytracker.core.ai.AiProtocols
 import com.babytracker.core.ai.AiProviderConfig
 import kotlinx.serialization.json.Json
@@ -24,12 +25,21 @@ class OpenAiCompatibleChatAdapter(
         model: String,
         messages: List<AiMessage>,
         maxOutputTokens: Int,
+        options: AiGenerationOptions,
         apiKey: String,
+        onTextUpdate: suspend (String) -> Unit,
     ): String {
         val body = buildJsonObject {
             put("model", model)
-            put("stream", false)
-            put("max_tokens", maxOutputTokens)
+            put("stream", options.streaming)
+            put("max_tokens", options.maxOutputTokens ?: maxOutputTokens)
+            options.temperature?.let { put("temperature", it) }
+            options.thinking?.let { thinking ->
+                put("thinking", buildJsonObject {
+                    put("type", thinking)
+                    options.reasoningEffort?.let { put("reasoning_effort", it) }
+                })
+            }
             put("messages", buildJsonArray {
                 messages.forEach { message ->
                     add(buildJsonObject {
@@ -38,6 +48,27 @@ class OpenAiCompatibleChatAdapter(
                     })
                 }
             })
+        }
+        if (options.streaming) {
+            val text = StringBuilder()
+            executeStreamingRequest(
+                httpClient = httpClient,
+                provider = provider,
+                path = "chat/completions",
+                apiKey = apiKey,
+                body = body,
+            ) { data ->
+                val delta = parseStreamDelta(data)
+                if (!delta.isNullOrEmpty()) {
+                    text.append(delta)
+                    onTextUpdate(text.toString())
+                }
+            }
+            return text.toString().takeIf { it.isNotBlank() } ?: throw AiProviderException(
+                providerId = provider.id,
+                retryable = false,
+                message = "供应商 ${provider.id} 的回答为空",
+            )
         }
         val response = executeJsonRequest(
             httpClient = httpClient,
@@ -60,5 +91,12 @@ class OpenAiCompatibleChatAdapter(
             ?.get("message")?.jsonObject
             ?.get("content")?.jsonPrimitive?.contentOrNull
             ?.takeIf { it.isNotBlank() }
+    }.getOrNull()
+
+    internal fun parseStreamDelta(data: String): String? = runCatching {
+        json.parseToJsonElement(data).jsonObject["choices"]?.jsonArray
+            ?.firstOrNull()?.jsonObject
+            ?.get("delta")?.jsonObject
+            ?.get("content")?.jsonPrimitive?.contentOrNull
     }.getOrNull()
 }

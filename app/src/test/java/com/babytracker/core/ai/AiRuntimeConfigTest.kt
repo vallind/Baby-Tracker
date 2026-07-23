@@ -41,6 +41,24 @@ class AiRuntimeConfigTest {
     }
 
     @Test
+    fun `backend capability config does not cap output tokens`() {
+        val config = validConfig().copy(
+            options = listOf(
+                validConfig().options.first().copy(
+                    maxOutputTokens = 100_000,
+                    capabilities = AiModelCapabilities(
+                        streaming = true,
+                        thinking = true,
+                        reasoningEfforts = listOf("high", "max"),
+                    ),
+                ),
+            ),
+        )
+
+        assertEquals(config, AiRuntimeConfigValidator.requireValid(config))
+    }
+
+    @Test
     fun `credential version must match provider`() {
         val config = validConfig()
         val bundle = AiRuntimeBundle(

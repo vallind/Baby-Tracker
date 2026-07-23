@@ -7,7 +7,9 @@ import com.babytracker.core.ai.config.AiConfigCoordinator
 import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
 import com.babytracker.core.ai.settings.AiAssistantPreferences
+import com.babytracker.core.ai.settings.AiReasoningEffort
 import com.babytracker.core.ai.settings.AiSettingsStore
+import com.babytracker.core.ai.settings.AiThinkingMode
 import com.babytracker.core.data.FamilyService
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +22,7 @@ data class AiSettingsUiState(
     val familyId: String? = null,
     val modelOptions: List<AiModelOption> = emptyList(),
     val selectedModelId: String? = null,
+    val selectedModel: AiModelOption? = null,
     val configVersion: Int? = null,
     val expiresAt: Long? = null,
     val isRefreshing: Boolean = false,
@@ -47,6 +50,7 @@ class AiSettingsViewModel(
             familyId = familyId,
             modelOptions = options,
             selectedModelId = selected,
+            selectedModel = options.firstOrNull { it.id == selected },
             configVersion = runtime.bundle?.config?.configVersion,
             expiresAt = runtime.bundle?.expiresAt,
             isRefreshing = runtime.isRefreshing,
@@ -62,6 +66,17 @@ class AiSettingsViewModel(
     fun setAnswerDetail(value: AiAnswerDetail) = update { it.copy(answerDetail = value) }
     fun setAnswerTone(value: AiAnswerTone) = update { it.copy(answerTone = value) }
     fun setActionChecklist(value: Boolean) = update { it.copy(includeActionChecklist = value) }
+    fun setContextRounds(value: Int) = update { it.copy(contextRounds = value.coerceAtLeast(0)) }
+    fun setMaxOutputTokens(value: Int) = update {
+        it.copy(maxOutputTokens = value.coerceAtLeast(0))
+    }
+    fun setStreaming(value: Boolean) = update { it.copy(streamingEnabled = value) }
+    fun setThinkingMode(value: AiThinkingMode) = update { it.copy(thinkingMode = value) }
+    fun setReasoningEffort(value: AiReasoningEffort) = update { it.copy(reasoningEffort = value) }
+    fun setCustomTemperature(value: Boolean) = update { it.copy(customTemperature = value) }
+    fun setTemperatureTenths(value: Int) = update {
+        it.copy(temperatureTenths = value.coerceIn(0, 20))
+    }
     fun setUseRecentRecords(value: Boolean) = update { it.copy(useRecentRecords = value) }
     fun setUseFeeding(value: Boolean) = update { it.copy(useFeedingRecords = value) }
     fun setUseSleep(value: Boolean) = update { it.copy(useSleepRecords = value) }

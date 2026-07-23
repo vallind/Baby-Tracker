@@ -34,4 +34,28 @@ class AiResponseParserTest {
             OpenAiResponsesAdapter(OkHttpClient()).parseText(response),
         )
     }
+
+    @Test
+    fun `compatible chat extracts stream content delta`() {
+        val adapter = OpenAiCompatibleChatAdapter(OkHttpClient())
+
+        assertEquals(
+            "你好",
+            adapter.parseStreamDelta(
+                """{"choices":[{"delta":{"content":"你好"},"finish_reason":null}]}""",
+            ),
+        )
+    }
+
+    @Test
+    fun `responses extracts output text stream delta`() {
+        val adapter = OpenAiResponsesAdapter(OkHttpClient())
+
+        assertEquals(
+            "建议",
+            adapter.parseStreamDelta(
+                """{"type":"response.output_text.delta","delta":"建议"}""",
+            ),
+        )
+    }
 }

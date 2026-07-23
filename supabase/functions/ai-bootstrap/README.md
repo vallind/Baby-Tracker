@@ -64,7 +64,7 @@ Value: 下方压缩后的单行 JSON
 ```
 
 ```json
-{"configVersion":1,"defaultOption":"balanced","ttlSeconds":604800,"providers":[{"id":"deepseek","protocol":"openai_compatible_chat","baseUrl":"https://api.deepseek.com","credentialVersion":1,"credentialEnv":"AI_PROVIDER_DEEPSEEK_KEY"}],"options":[{"id":"balanced","name":"均衡","maxOutputTokens":2400,"targets":[{"providerId":"deepseek","model":"deepseek-v4-flash","priority":0}]},{"id":"deep","name":"深度","maxOutputTokens":4000,"targets":[{"providerId":"deepseek","model":"deepseek-v4-pro","priority":0}]}]}
+{"configVersion":2,"defaultOption":"balanced","ttlSeconds":604800,"providers":[{"id":"deepseek","protocol":"openai_compatible_chat","baseUrl":"https://api.deepseek.com","credentialVersion":1,"credentialEnv":"AI_PROVIDER_DEEPSEEK_KEY"}],"options":[{"id":"balanced","name":"均衡","maxOutputTokens":2400,"capabilities":{"streaming":true,"thinking":true,"reasoningEfforts":["high","max"],"temperature":true},"targets":[{"providerId":"deepseek","model":"deepseek-v4-flash","priority":0}]},{"id":"deep","name":"深度","maxOutputTokens":4000,"capabilities":{"streaming":true,"thinking":true,"reasoningEfforts":["high","max"],"temperature":true},"targets":[{"providerId":"deepseek","model":"deepseek-v4-pro","priority":0}]}]}
 ```
 
 保存 Secret 后立即生效，不需要重新部署函数。
@@ -121,7 +121,7 @@ verify_jwt = true
 
 ```dotenv
 AI_PROVIDER_DEEPSEEK_KEY=替换为真实Key
-AI_RUNTIME_CONFIG={"configVersion":1,"defaultOption":"balanced","ttlSeconds":604800,"providers":[{"id":"deepseek","protocol":"openai_compatible_chat","baseUrl":"https://api.deepseek.com","credentialVersion":1,"credentialEnv":"AI_PROVIDER_DEEPSEEK_KEY"}],"options":[{"id":"balanced","name":"均衡","maxOutputTokens":2400,"targets":[{"providerId":"deepseek","model":"deepseek-v4-flash","priority":0}]},{"id":"deep","name":"深度","maxOutputTokens":4000,"targets":[{"providerId":"deepseek","model":"deepseek-v4-pro","priority":0}]}]}
+AI_RUNTIME_CONFIG={"configVersion":2,"defaultOption":"balanced","ttlSeconds":604800,"providers":[{"id":"deepseek","protocol":"openai_compatible_chat","baseUrl":"https://api.deepseek.com","credentialVersion":1,"credentialEnv":"AI_PROVIDER_DEEPSEEK_KEY"}],"options":[{"id":"balanced","name":"均衡","maxOutputTokens":2400,"capabilities":{"streaming":true,"thinking":true,"reasoningEfforts":["high","max"],"temperature":true},"targets":[{"providerId":"deepseek","model":"deepseek-v4-flash","priority":0}]},{"id":"deep","name":"深度","maxOutputTokens":4000,"capabilities":{"streaming":true,"thinking":true,"reasoningEfforts":["high","max"],"temperature":true},"targets":[{"providerId":"deepseek","model":"deepseek-v4-pro","priority":0}]}]}
 ```
 
 然后执行：
@@ -200,7 +200,13 @@ PowerShell 可能把非 2xx 响应显示为异常；重点是 HTTP 状态码必�
 | `credentialVersion` | 单个供应商凭据版本；换 Key 时递增 |
 | `credentialEnv` | 存放真实 Key 的 Secret 名称 |
 | `options[].targets` | 选项对应的供应商、模型和回退优先级 |
-| `maxOutputTokens` | 该选项允许的最大输出 Token 数 |
+| `maxOutputTokens` | App 选择“自动”时使用的建议输出 Token，不是上限 |
+| `capabilities.streaming` | 当前模型选项是否保证支持流式输出 |
+| `capabilities.thinking` | 当前模型选项是否保证支持思考开关 |
+| `capabilities.reasoningEfforts` | 可选择的推理强度，例如 `high`、`max` |
+| `capabilities.temperature` | 是否允许 App 自定义温度 |
+
+`capabilities` 只描述模型能力，不限制用户的上下文轮数或最大输出 Token。一个选项配置多个回退目标时，应声明所有目标共同支持的能力，避免切换供应商后参数失效。
 
 仅修改模型映射时：
 

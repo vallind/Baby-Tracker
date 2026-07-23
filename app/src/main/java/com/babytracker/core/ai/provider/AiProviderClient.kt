@@ -1,6 +1,7 @@
 package com.babytracker.core.ai.provider
 
 import com.babytracker.core.ai.AiCompletion
+import com.babytracker.core.ai.AiGenerationOptions
 import com.babytracker.core.ai.AiMessage
 import com.babytracker.core.ai.config.AiConfigCoordinator
 import com.babytracker.core.ai.config.AiCredentialDecryptException
@@ -19,16 +20,18 @@ class AiProviderClient(
     suspend fun complete(
         messages: List<AiMessage>,
         optionId: String? = null,
+        generationOptions: AiGenerationOptions = AiGenerationOptions(),
+        onTextUpdate: suspend (String) -> Unit = {},
     ): AiCompletion {
         require(messages.isNotEmpty()) { "AI 问题不能为空" }
         require(messages.all { it.content.isNotBlank() }) { "AI 消息内容不能为空" }
         val bundle = configCoordinator.readyBundle() ?: error("AI 配置尚未就绪")
         return try {
-            completeWithBundle(bundle, messages, optionId)
+            completeWithBundle(bundle, messages, optionId, generationOptions, onTextUpdate)
         } catch (error: AiCredentialDecryptException) {
             currentCoroutineContext().ensureActive()
             val refreshed = configCoordinator.refreshNow().getOrElse { throw error }
-            completeWithBundle(refreshed, messages, optionId)
+            completeWithBundle(refreshed, messages, optionId, generationOptions, onTextUpdate)
         }
     }
 
@@ -36,6 +39,8 @@ class AiProviderClient(
         bundle: AiRuntimeBundle,
         messages: List<AiMessage>,
         optionId: String?,
+        generationOptions: AiGenerationOptions,
+        onTextUpdate: suspend (String) -> Unit,
     ): AiCompletion {
         val selectedId = optionId ?: bundle.config.defaultOption
         val option = bundle.config.options.firstOrNull { it.id == selectedId }
@@ -54,12 +59,22 @@ class AiProviderClient(
                 ?: error("AI 协议未实现：${provider.protocol}")
             val apiKey = deviceKeyStore.decrypt(credential.envelope)
             try {
+                onTextUpdate("")
                 val text = adapter.complete(
                     provider = provider,
                     model = target.model,
                     messages = messages,
                     maxOutputTokens = option.maxOutputTokens,
+                    options = generationOptions.copy(
+                        streaming = generationOptions.streaming && option.capabilities.streaming,
+                        thinking = generationOptions.thinking.takeIf { option.capabilities.thinking },
+                        reasoningEffort = generationOptions.reasoningEffort
+                            ?.takeIf { it in option.capabilities.reasoningEfforts },
+                        temperature = generationOptions.temperature
+                            ?.takeIf { option.capabilities.temperature },
+                    ),
                     apiKey = apiKey,
+                    onTextUpdate = onTextUpdate,
                 )
                 return AiCompletion(provider.id, target.model, text)
             } catch (e: AiProviderException) {
