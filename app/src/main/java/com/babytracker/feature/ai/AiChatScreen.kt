@@ -232,40 +232,76 @@ private fun AiMessageBubble(message: AiChatEntry) {
     val shapes = LocalAppShapes.current
     val typography = LocalAppTypographyStyle.current
     val isUser = message.role == AiChatRole.USER
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
-    ) {
-        Column(
-            Modifier
-                .widthIn(max = 340.dp)
-                .clip(RoundedCornerShape(shapes.large))
-                .background(if (isUser) colors.primary else colors.surfaceElevated)
-                .padding(spacing.md),
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
         ) {
-            Text(
-                text = message.content,
-                style = typography.bodyLarge,
-                color = if (isUser) colors.onPrimary else colors.textPrimary,
-            )
-            if (!isUser) {
-                Spacer(Modifier.height(spacing.sm))
+            Column(
+                Modifier
+                    .widthIn(max = 340.dp)
+                    .clip(RoundedCornerShape(shapes.large))
+                    .background(if (isUser) colors.primary else colors.surfaceElevated)
+                    .padding(spacing.md),
+            ) {
                 Text(
-                    text = if (message.references.isEmpty()) {
-                        AppStrings.aiNoRecentRecordReference
-                    } else {
-                        AppStrings.aiReferencePrefix + message.references.joinToString("、")
-                    },
-                    style = typography.label,
-                    color = colors.textSecondary,
+                    text = message.content,
+                    style = typography.bodyLarge,
+                    color = if (isUser) colors.onPrimary else colors.textPrimary,
                 )
-                Spacer(Modifier.height(spacing.xs))
-                Text(
-                    text = AppStrings.aiDisclaimer,
-                    style = typography.label,
-                    color = colors.textTertiary,
-                )
+                if (!isUser) {
+                    Spacer(Modifier.height(spacing.sm))
+                    Text(
+                        text = if (message.references.isEmpty()) {
+                            AppStrings.aiNoRecentRecordReference
+                        } else {
+                            AppStrings.aiReferencePrefix + message.references.joinToString("、")
+                        },
+                        style = typography.label,
+                        color = colors.textSecondary,
+                    )
+                    Spacer(Modifier.height(spacing.xs))
+                    Text(
+                        text = AppStrings.aiDisclaimer,
+                        style = typography.label,
+                        color = colors.textTertiary,
+                    )
+                }
             }
+        }
+        message.riskLevel?.let { riskLevel ->
+            Spacer(Modifier.height(spacing.sm))
+            AiRiskCard(riskLevel)
+        }
+    }
+}
+
+@Composable
+private fun AiRiskCard(riskLevel: AiRiskLevel) {
+    val colors = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    val accent = if (riskLevel == AiRiskLevel.ATTENTION) colors.warning else colors.error
+    val title = when (riskLevel) {
+        AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyTitle
+        AiRiskLevel.HIGH -> AppStrings.aiRiskHighTitle
+        AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionTitle
+    }
+    val message = when (riskLevel) {
+        AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyMessage
+        AiRiskLevel.HIGH -> AppStrings.aiRiskHighMessage
+        AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionMessage
+    }
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = colors.surfaceElevated,
+        borderColor = accent,
+        borderWidth = 1.dp,
+    ) {
+        Column(Modifier.padding(spacing.md)) {
+            Text(title, style = typography.titleMedium, color = accent)
+            Spacer(Modifier.height(spacing.xs))
+            Text(message, style = typography.bodyMedium, color = colors.textPrimary)
         }
     }
 }

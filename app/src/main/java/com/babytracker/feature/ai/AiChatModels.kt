@@ -15,6 +15,7 @@ data class AiChatEntry(
     val providerId: String? = null,
     val model: String? = null,
     val references: List<String> = emptyList(),
+    val riskLevel: AiRiskLevel? = null,
 )
 
 enum class AiChatError {
