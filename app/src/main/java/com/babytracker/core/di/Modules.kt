@@ -24,6 +24,7 @@ import com.babytracker.feature.auth.LoginViewModel
 import com.babytracker.feature.settings.SettingsViewModel
 import com.babytracker.feature.family.FamilyViewModel
 import com.babytracker.feature.ai.AiChatViewModel
+import com.babytracker.feature.ai.AiContextBuilder
 import com.babytracker.core.data.FamilyService
 import com.babytracker.core.sync.SyncSettings
 import com.babytracker.core.sync.SyncTrigger
@@ -60,7 +61,8 @@ val appModule = module {
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
-    viewModel { AiChatViewModel(get(), get(), get()) }
+    viewModel { AiChatViewModel(get(), get(), get(), get()) }
+    single { AiContextBuilder(get(), get(), get(), get(), get()) }
 }
 
 val databaseModule = module {

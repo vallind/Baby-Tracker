@@ -29,6 +29,7 @@ class AiChatViewModel(
     babyRepository: BabyRepository,
     private val configCoordinator: AiConfigCoordinator,
     private val providerClient: AiProviderClient,
+    private val contextBuilder: AiContextBuilder,
 ) : ViewModel() {
     private val selectedBabyId = MutableStateFlow(0)
     private val messageIds = AtomicLong(0)
@@ -149,21 +150,23 @@ class AiChatViewModel(
         val baby = snapshot.baby ?: return
         val babyIdAtRequest = selectedBabyId.value
         val optionId = snapshot.selectedOptionId
-        val requestMessages = buildList {
-            add(AiMessage(role = "system", content = systemPrompt(baby)))
-            snapshot.messages.takeLast(MAX_HISTORY_MESSAGES).forEach { entry ->
-                add(
-                    AiMessage(
-                        role = if (entry.role == AiChatRole.USER) "user" else "assistant",
-                        content = entry.content,
-                    ),
-                )
-            }
-        }
+        val currentQuestion = snapshot.messages.lastOrNull { it.role == AiChatRole.USER }?.content.orEmpty()
 
         requestJob?.cancel()
         requestJob = viewModelScope.launch {
             try {
+                val context = contextBuilder.build(baby.id, currentQuestion)
+                val requestMessages = buildList {
+                    add(AiMessage(role = "system", content = systemPrompt(baby, context.prompt)))
+                    snapshot.messages.takeLast(MAX_HISTORY_MESSAGES).forEach { entry ->
+                        add(
+                            AiMessage(
+                                role = if (entry.role == AiChatRole.USER) "user" else "assistant",
+                                content = entry.content,
+                            ),
+                        )
+                    }
+                }
                 val completion = providerClient.complete(requestMessages, optionId)
                 if (selectedBabyId.value != babyIdAtRequest) return@launch
                 _state.update {
@@ -174,6 +177,7 @@ class AiChatViewModel(
                             content = completion.text,
                             providerId = completion.providerId,
                             model = completion.model,
+                            references = context.references,
                         ),
                         isSending = false,
                         error = null,
@@ -208,7 +212,7 @@ class AiChatViewModel(
         }
     }
 
-    private fun systemPrompt(baby: Baby): String {
+    private fun systemPrompt(baby: Baby, recentContext: String): String {
         val age = DateUtils.safeParseDate(baby.birthDate)?.let(DateUtils::monthAge) ?: "月龄未知"
         val gender = when (baby.gender.lowercase()) {
             "male", "boy", "男" -> "男"
@@ -223,6 +227,7 @@ class AiChatViewModel(
             宝宝昵称：$safeName
             月龄：$age
             性别：$gender
+            ${if (recentContext.isBlank()) "本次未使用宝宝近期记录。" else "问题相关的近期记录摘要：\n$recentContext"}
         """.trimIndent()
     }
 

@@ -251,6 +251,16 @@ private fun AiMessageBubble(message: AiChatEntry) {
             if (!isUser) {
                 Spacer(Modifier.height(spacing.sm))
                 Text(
+                    text = if (message.references.isEmpty()) {
+                        AppStrings.aiNoRecentRecordReference
+                    } else {
+                        AppStrings.aiReferencePrefix + message.references.joinToString("、")
+                    },
+                    style = typography.label,
+                    color = colors.textSecondary,
+                )
+                Spacer(Modifier.height(spacing.xs))
+                Text(
                     text = AppStrings.aiDisclaimer,
                     style = typography.label,
                     color = colors.textTertiary,
