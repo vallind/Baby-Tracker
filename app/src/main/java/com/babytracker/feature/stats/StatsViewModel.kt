@@ -15,6 +15,8 @@ import java.time.temporal.ChronoUnit
 enum class StatsPeriod { DAY, WEEK, MONTH, YEAR }
 
 data class StatsUiState(
+    val isLoading: Boolean = true,
+    val errorMessage: String? = null,
     val period: StatsPeriod = StatsPeriod.WEEK,
     /** 当前展示周期的偏移量（0 = 本周/今日, -1 = 上一期, 1 = 下一期），由导航箭头控制 */
     val periodOffset: Int = 0,
@@ -40,7 +42,13 @@ data class StatsUiState(
     val sleepPoints: List<Float> = emptyList(),
     val heightPoints: List<Float> = emptyList(),
     val weightPoints: List<Float> = emptyList(),
-)
+) {
+    val hasAnyData: Boolean
+        get() = feedingCount > 0 ||
+            sleepMinutes > 0 ||
+            heightPoints.isNotEmpty() ||
+            weightPoints.isNotEmpty()
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StatsViewModel(
@@ -53,7 +61,12 @@ class StatsViewModel(
     val state: StateFlow<StatsUiState> = _state.asStateFlow()
 
     /** 触发器：babyId + period + offset 三元组 */
-    private data class Trigger(val babyId: Int, val period: StatsPeriod, val offset: Int)
+    private data class Trigger(
+        val babyId: Int,
+        val period: StatsPeriod,
+        val offset: Int,
+        val requestId: Int = 0,
+    )
 
     private val _trigger = MutableStateFlow<Trigger?>(null)
 
@@ -68,6 +81,31 @@ class StatsViewModel(
                 ) { feedings, sleeps, growths ->
                     aggregate(period, offset, feedings, sleeps, growths)
                 }
+                    .onStart {
+                        emit(
+                            _state.value.copy(
+                                isLoading = true,
+                                errorMessage = null,
+                                period = period,
+                                periodOffset = offset,
+                                dateRangeText = buildDateRangeText(
+                                    period,
+                                    periodStart(period, offset),
+                                    periodEnd(period, offset),
+                                ),
+                            ),
+                        )
+                    }
+                    .catch {
+                        emit(
+                            _state.value.copy(
+                                isLoading = false,
+                                errorMessage = "统计数据加载失败，请稍后重试",
+                                period = period,
+                                periodOffset = offset,
+                            ),
+                        )
+                    }
             }
             .distinctUntilChanged()
             .onEach { _state.value = it }
@@ -90,6 +128,11 @@ class StatsViewModel(
 
     fun loadData(babyId: Int, period: StatsPeriod = StatsPeriod.WEEK) {
         _trigger.value = Trigger(babyId, period, 0)
+    }
+
+    fun retry() {
+        val trigger = _trigger.value ?: return
+        _trigger.value = trigger.copy(requestId = trigger.requestId + 1)
     }
 
     // ── 聚合核心 ──
@@ -198,6 +241,8 @@ class StatsViewModel(
         val weightPoints = weightsInRange.map { it.value.toFloat() }
 
         return StatsUiState(
+            isLoading = false,
+            errorMessage = null,
             period = period,
             periodOffset = offset,
             dateRangeText = dateRangeText,

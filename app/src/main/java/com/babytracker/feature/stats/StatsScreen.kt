@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -30,8 +31,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.SegmentedControl
+import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
@@ -110,39 +113,77 @@ fun StatsScreen(navController: NavController) {
 
             Spacer(Modifier.height(spacing.md))
 
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.md),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                FeedingCard(
-                    count = state.feedingCount,
-                    breastFeedCount = state.breastFeedCount,
-                    formulaCount = state.formulaCount,
-                    formulaTotalMl = state.formulaTotalMl,
-                    compare = state.feedingCompare,
-                    points = state.feedingPoints,
-                )
-                SleepCard(
-                    minutes = state.sleepMinutes,
-                    compare = state.sleepCompare,
-                    points = state.sleepPoints,
-                )
-                HeightCard(
-                    value = state.height,
-                    compare = state.heightCompare,
-                    points = state.heightPoints,
-                )
-                WeightCard(
-                    value = state.weight,
-                    compare = state.weightCompare,
-                    points = state.weightPoints,
-                )
+            when {
+                state.isLoading -> StatsLoadingState()
+                state.errorMessage != null -> {
+                    EmptyState(
+                        emoji = "⚠️",
+                        title = "统计数据加载失败",
+                        subtitle = state.errorMessage.orEmpty(),
+                        actionText = "重新加载",
+                        onAction = viewModel::retry,
+                    )
+                }
+                !state.hasAnyData -> {
+                    EmptyState(
+                        emoji = "📊",
+                        title = "本周期暂无统计数据",
+                        subtitle = "完成喂养、睡眠或生长记录后，这里会显示对应趋势",
+                    )
+                }
+                else -> {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        FeedingCard(
+                            count = state.feedingCount,
+                            breastFeedCount = state.breastFeedCount,
+                            formulaCount = state.formulaCount,
+                            formulaTotalMl = state.formulaTotalMl,
+                            compare = state.feedingCompare,
+                            points = state.feedingPoints,
+                        )
+                        SleepCard(
+                            minutes = state.sleepMinutes,
+                            compare = state.sleepCompare,
+                            points = state.sleepPoints,
+                        )
+                        HeightCard(
+                            value = state.height,
+                            compare = state.heightCompare,
+                            points = state.heightPoints,
+                        )
+                        WeightCard(
+                            value = state.weight,
+                            compare = state.weightCompare,
+                            points = state.weightPoints,
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(80.dp))
         }
+    }
+}
+
+@Composable
+private fun StatsLoadingState() {
+    val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        AppCircularProgress()
+        Spacer(Modifier.height(spacing.md))
+        Text("正在加载统计数据", style = typography.bodyMedium, color = c.textSecondary)
     }
 }
 
@@ -235,7 +276,12 @@ private fun FeedingCard(
             }
         }
         Spacer(Modifier.height(12.dp))
-        MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.warning)
+        StatChartArea(
+            hasData = points.any { it > 0f },
+            emptyText = "本周期暂无喂养记录",
+        ) {
+            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.warning)
+        }
     }
 }
 
@@ -270,7 +316,12 @@ private fun SleepCard(
             }
         }
         Spacer(Modifier.height(12.dp))
-        MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.secondary)
+        StatChartArea(
+            hasData = points.any { it > 0f },
+            emptyText = "本周期暂无睡眠记录",
+        ) {
+            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.secondary)
+        }
     }
 }
 
@@ -303,7 +354,12 @@ private fun HeightCard(
             }
         }
         Spacer(Modifier.height(12.dp))
-        MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp))
+        StatChartArea(
+            hasData = points.isNotEmpty(),
+            emptyText = "本周期暂无身高记录",
+        ) {
+            MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp))
+        }
     }
 }
 
@@ -336,7 +392,34 @@ private fun WeightCard(
             }
         }
         Spacer(Modifier.height(12.dp))
-        MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp))
+        StatChartArea(
+            hasData = points.isNotEmpty(),
+            emptyText = "本周期暂无体重记录",
+        ) {
+            MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp))
+        }
+    }
+}
+
+@Composable
+private fun StatChartArea(
+    hasData: Boolean,
+    emptyText: String,
+    content: @Composable () -> Unit,
+) {
+    val c = LocalAppColors.current
+    val typography = LocalAppTypographyStyle.current
+    if (hasData) {
+        content()
+    } else {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Text(emptyText, style = typography.label, color = c.textTertiary)
+        }
     }
 }
 
@@ -392,7 +475,7 @@ fun MiniBarChart(
 ) {
     val shapes = LocalAppShapes.current
     Canvas(modifier) {
-        if (points.isEmpty()) return@Canvas
+        if (points.none { it > 0f }) return@Canvas
 
         val maxVal = points.max().coerceAtLeast(1f)
         val barCount = points.size
@@ -403,35 +486,16 @@ fun MiniBarChart(
         val barCornerRadius = shapes.extraSmall.toPx()
 
         points.forEachIndexed { i, v ->
-            val barHeight = (v / maxVal) * size.height
+            if (v <= 0f) return@forEachIndexed
+            val barHeight = ((v / maxVal).coerceIn(0f, 1f) * size.height)
             val x = i * (barWidth + gapWidth)
             val y = size.height - barHeight
-
-            val barPath = Path().apply {
-                moveTo(x, size.height)
-                lineTo(x, y + barCornerRadius)
-                arcTo(
-                    rect = androidx.compose.ui.geometry.Rect(x, y, x + barCornerRadius * 2, y + barCornerRadius * 2),
-                    startAngleDegrees = 180f,
-                    sweepAngleDegrees = 90f,
-                    forceMoveTo = false,
-                )
-                lineTo(x + barWidth - barCornerRadius, y)
-                arcTo(
-                    rect = androidx.compose.ui.geometry.Rect(
-                        x + barWidth - barCornerRadius * 2, y,
-                        x + barWidth, y + barCornerRadius * 2,
-                    ),
-                    startAngleDegrees = 270f,
-                    sweepAngleDegrees = 90f,
-                    forceMoveTo = false,
-                )
-                lineTo(x + barWidth, size.height)
-                close()
-            }
-            drawPath(
-                barPath,
+            val radius = minOf(barCornerRadius, barWidth / 2f, barHeight / 2f)
+            drawRoundRect(
                 color = barColor.copy(alpha = if (v == maxVal) 1f else 0.6f),
+                topLeft = Offset(x, y),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(radius, radius),
             )
         }
     }
@@ -455,8 +519,11 @@ fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
         val min = points.min()
         val range = (max - min).coerceAtLeast(1f)
         val stepX = size.width / (points.size - 1)
+        val pointRadius = 3.dp.toPx()
+        val chartHeight = (size.height - pointRadius * 2).coerceAtLeast(0f)
         val coords = points.mapIndexed { i, v ->
-            Offset(i * stepX, size.height - ((v - min) / range) * size.height)
+            val progress = ((v - min) / range).coerceIn(0f, 1f)
+            Offset(i * stepX, pointRadius + chartHeight * (1f - progress))
         }
         val areaPath = Path().apply {
             moveTo(coords.first().x, size.height)
