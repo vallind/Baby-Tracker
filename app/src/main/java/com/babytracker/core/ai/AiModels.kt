@@ -92,6 +92,12 @@ data class AiCompletion(
     val providerId: String,
     val model: String,
     val text: String,
+    val reasoningContent: String = "",
+)
+
+data class AiTextOutput(
+    val text: String = "",
+    val reasoningContent: String = "",
 )
 
 data class AiGenerationOptions(

@@ -3,6 +3,7 @@ package com.babytracker.core.ai.provider
 import com.babytracker.core.ai.AiCompletion
 import com.babytracker.core.ai.AiGenerationOptions
 import com.babytracker.core.ai.AiMessage
+import com.babytracker.core.ai.AiTextOutput
 import com.babytracker.core.ai.config.AiConfigCoordinator
 import com.babytracker.core.ai.config.AiCredentialDecryptException
 import com.babytracker.core.ai.config.AiDeviceKeyStore
@@ -21,7 +22,7 @@ class AiProviderClient(
         messages: List<AiMessage>,
         optionId: String? = null,
         generationOptions: AiGenerationOptions = AiGenerationOptions(),
-        onTextUpdate: suspend (String) -> Unit = {},
+        onTextUpdate: suspend (AiTextOutput) -> Unit = {},
     ): AiCompletion {
         require(messages.isNotEmpty()) { "AI 问题不能为空" }
         require(messages.all { it.content.isNotBlank() }) { "AI 消息内容不能为空" }
@@ -40,7 +41,7 @@ class AiProviderClient(
         messages: List<AiMessage>,
         optionId: String?,
         generationOptions: AiGenerationOptions,
-        onTextUpdate: suspend (String) -> Unit,
+        onTextUpdate: suspend (AiTextOutput) -> Unit,
     ): AiCompletion {
         val selectedId = optionId ?: bundle.config.defaultOption
         val option = bundle.config.options.firstOrNull { it.id == selectedId }
@@ -59,8 +60,8 @@ class AiProviderClient(
                 ?: error("AI 协议未实现：${provider.protocol}")
             val apiKey = deviceKeyStore.decrypt(credential.envelope)
             try {
-                onTextUpdate("")
-                val text = adapter.complete(
+                onTextUpdate(AiTextOutput())
+                val output = adapter.complete(
                     provider = provider,
                     model = target.model,
                     messages = messages,
@@ -76,7 +77,12 @@ class AiProviderClient(
                     apiKey = apiKey,
                     onTextUpdate = onTextUpdate,
                 )
-                return AiCompletion(provider.id, target.model, text)
+                return AiCompletion(
+                    providerId = provider.id,
+                    model = target.model,
+                    text = output.text,
+                    reasoningContent = output.reasoningContent,
+                )
             } catch (e: AiProviderException) {
                 currentCoroutineContext().ensureActive()
                 if (e.statusCode == 401) {

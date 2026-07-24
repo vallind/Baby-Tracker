@@ -3,6 +3,7 @@ package com.babytracker.core.ai.provider
 import com.babytracker.core.ai.AiMessage
 import com.babytracker.core.ai.AiGenerationOptions
 import com.babytracker.core.ai.AiProviderConfig
+import com.babytracker.core.ai.AiTextOutput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -26,8 +27,8 @@ interface AiProviderAdapter {
         maxOutputTokens: Int,
         options: AiGenerationOptions,
         apiKey: String,
-        onTextUpdate: suspend (String) -> Unit,
-    ): String
+        onTextUpdate: suspend (AiTextOutput) -> Unit,
+    ): AiTextOutput
 }
 
 class AiProviderException(

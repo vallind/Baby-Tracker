@@ -13,6 +13,7 @@ data class AiChatEntry(
     val id: Long,
     val role: AiChatRole,
     val content: String,
+    val reasoningContent: String = "",
     val providerId: String? = null,
     val model: String? = null,
     val references: List<String> = emptyList(),

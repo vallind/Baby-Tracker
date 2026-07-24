@@ -33,8 +33,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -84,7 +86,9 @@ fun AiChatScreen(navController: NavController) {
     LaunchedEffect(currentBabyId) {
         viewModel.selectBaby(currentBabyId)
     }
-    val lastMessageLength = state.messages.lastOrNull()?.content?.length ?: 0
+    val lastMessageLength = state.messages.lastOrNull()?.let {
+        it.content.length + it.reasoningContent.length
+    } ?: 0
     LaunchedEffect(
         state.messages.size,
         lastMessageLength,
@@ -320,20 +324,30 @@ private fun AiMessageBubble(
                     .background(if (isUser) colors.primary else colors.surfaceElevated)
                     .padding(spacing.md),
             ) {
-                if (!isUser && renderMarkdown) {
-                    AppMarkdownText(
-                        markdown = message.content,
-                        style = typography.bodyLarge,
-                        color = colors.textPrimary,
+                if (!isUser && message.reasoningContent.isNotBlank()) {
+                    AiReasoningBlock(
+                        reasoning = message.reasoningContent,
+                        isStreaming = isStreaming,
+                        renderMarkdown = renderMarkdown,
                     )
-                } else {
-                    Text(
-                        text = message.content,
-                        style = typography.bodyLarge,
-                        color = if (isUser) colors.onPrimary else colors.textPrimary,
-                    )
+                    if (message.content.isNotBlank()) Spacer(Modifier.height(spacing.sm))
                 }
-                if (!isUser && !isStreaming) {
+                if (message.content.isNotBlank()) {
+                    if (!isUser && renderMarkdown) {
+                        AppMarkdownText(
+                            markdown = message.content,
+                            style = typography.bodyLarge,
+                            color = colors.textPrimary,
+                        )
+                    } else {
+                        Text(
+                            text = message.content,
+                            style = typography.bodyLarge,
+                            color = if (isUser) colors.onPrimary else colors.textPrimary,
+                        )
+                    }
+                }
+                if (!isUser && !isStreaming && message.content.isNotBlank()) {
                     Spacer(Modifier.height(spacing.sm))
                     Text(
                         text = if (message.references.isEmpty()) {
@@ -360,6 +374,42 @@ private fun AiMessageBubble(
         message.riskLevel?.let { riskLevel ->
             Spacer(Modifier.height(spacing.sm))
             AiRiskCard(riskLevel)
+        }
+    }
+}
+
+@Composable
+private fun AiReasoningBlock(
+    reasoning: String,
+    isStreaming: Boolean,
+    renderMarkdown: Boolean,
+) {
+    var expanded by remember { mutableStateOf(isStreaming) }
+    val colors = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    AppTextButton(
+        onClick = { expanded = !expanded },
+        label = when {
+            isStreaming -> AppStrings.aiThinking
+            expanded -> AppStrings.aiHideReasoning
+            else -> AppStrings.aiShowReasoning
+        },
+    )
+    if (expanded) {
+        Spacer(Modifier.height(spacing.xs))
+        if (renderMarkdown) {
+            AppMarkdownText(
+                markdown = reasoning,
+                style = typography.bodyMedium,
+                color = colors.textSecondary,
+            )
+        } else {
+            Text(
+                text = reasoning,
+                style = typography.bodyMedium,
+                color = colors.textSecondary,
+            )
         }
     }
 }

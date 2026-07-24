@@ -253,7 +253,7 @@ class AiChatViewModel(
                         messages = snapshot.messages,
                         maxMessages = snapshot.preferences.contextRounds * 2 + 1,
                         maxCharacters = Int.MAX_VALUE,
-                    ).forEach { entry ->
+                    ).filter { it.content.isNotBlank() }.forEach { entry ->
                         add(
                             AiMessage(
                                 role = if (entry.role == AiChatRole.USER) "user" else "assistant",
@@ -266,9 +266,9 @@ class AiChatViewModel(
                     messages = requestMessages,
                     optionId = optionId,
                     generationOptions = snapshot.preferences.toGenerationOptions(),
-                ) { text ->
+                ) { output ->
                     if (selectedBabyId.value != babyIdAtRequest) return@complete
-                    if (text.isEmpty()) {
+                    if (output.text.isEmpty() && output.reasoningContent.isEmpty()) {
                         streamedEntryId?.let { entryId ->
                             _state.update { state ->
                                 state.copy(messages = state.messages.filterNot { it.id == entryId })
@@ -283,7 +283,8 @@ class AiChatViewModel(
                             val entry = AiChatEntry(
                                 id = entryId,
                                 role = AiChatRole.ASSISTANT,
-                                content = text,
+                                content = output.text,
+                                reasoningContent = output.reasoningContent,
                                 references = context.references,
                             )
                             val exists = state.messages.any { it.id == entryId }
@@ -303,6 +304,7 @@ class AiChatViewModel(
                         id = streamedEntryId ?: messageIds.incrementAndGet(),
                         role = AiChatRole.ASSISTANT,
                         content = completion.text,
+                        reasoningContent = completion.reasoningContent,
                         providerId = completion.providerId,
                         model = completion.model,
                         references = context.references,

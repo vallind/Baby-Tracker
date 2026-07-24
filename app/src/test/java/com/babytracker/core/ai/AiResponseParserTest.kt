@@ -43,7 +43,23 @@ class AiResponseParserTest {
             "你好",
             adapter.parseStreamDelta(
                 """{"choices":[{"delta":{"content":"你好"},"finish_reason":null}]}""",
-            ),
+            )?.text,
+        )
+    }
+
+    @Test
+    fun `compatible chat extracts reasoning from response and stream`() {
+        val adapter = OpenAiCompatibleChatAdapter(OkHttpClient())
+        val response = json.parseToJsonElement(
+            """{"choices":[{"message":{"role":"assistant","reasoning_content":"先分析","content":"最终回答"}}]}""",
+        ).jsonObject
+
+        assertEquals("先分析", adapter.parseResponse(response)?.reasoningContent)
+        assertEquals(
+            "继续分析",
+            adapter.parseStreamDelta(
+                """{"choices":[{"delta":{"reasoning_content":"继续分析"},"finish_reason":null}]}""",
+            )?.reasoningContent,
         )
     }
 
@@ -55,7 +71,23 @@ class AiResponseParserTest {
             "建议",
             adapter.parseStreamDelta(
                 """{"type":"response.output_text.delta","delta":"建议"}""",
-            ),
+            )?.text,
+        )
+    }
+
+    @Test
+    fun `responses extracts reasoning summary`() {
+        val adapter = OpenAiResponsesAdapter(OkHttpClient())
+        val response = json.parseToJsonElement(
+            """{"output":[{"type":"reasoning","summary":[{"type":"summary_text","text":"分析摘要"}]},{"type":"message","content":[{"type":"output_text","text":"回答"}]}]}""",
+        ).jsonObject
+
+        assertEquals("分析摘要", adapter.parseResponse(response)?.reasoningContent)
+        assertEquals(
+            "流式摘要",
+            adapter.parseStreamDelta(
+                """{"type":"response.reasoning_summary_text.delta","delta":"流式摘要"}""",
+            )?.reasoningContent,
         )
     }
 }

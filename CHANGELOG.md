@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.6.8] — 2026-07-24
+
+**AI 思考过程显示：**
+- 解析并保留 OpenAI 兼容协议返回的 `reasoning_content`，支持 DeepSeek 流式与非流式思考内容
+- 支持 Responses 协议的推理摘要，并按官方格式请求自动摘要
+- 回答生成时实时展示思考过程，完成后可独立展开或收起，不会混入最终回答和后续对话上下文
+- 修正 OpenAI 兼容协议的推理强度参数位置，新增两类协议的思考内容解析测试
+
 ### [1.6.7] — 2026-07-24
 
 **AI 流式回答显示修复：**
