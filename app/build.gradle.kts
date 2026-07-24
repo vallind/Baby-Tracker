@@ -120,3 +120,7 @@ implementation(libs.timber)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 }
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}

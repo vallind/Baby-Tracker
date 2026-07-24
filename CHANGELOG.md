@@ -13,6 +13,9 @@
 - 修复 `TableLogic.sortedData` 反射排序数字列被字符串化（"10" < "9"）的问题，改为数值优先比较
 - 修复 `FormLogic.errors` 以错误消息字符串自身作为 Map 键导致字段级错误查询无效的问题
 
+**构建与测试基础设施：**
+- 启用 Room `exportSchema = true` 并配置 `room.schemaLocation`，为后续迁移自动测试奠定基础；生成并提交 version 8 schema JSON
+
 ### [1.7.6] — 2026-07-24
 
 **统计页面 P0 可用性修复：**

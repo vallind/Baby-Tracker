@@ -16,7 +16,7 @@ import com.babytracker.core.database.entity.*
         DevelopmentAssessmentEntity::class, ReminderEntity::class,
         SyncMetadataEntity::class, SyncCursorEntity::class,
         AiConversationEntity::class, AiMessageEntity::class],
-    version = 8, exportSchema = false,
+    version = 8, exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun babyDao(): BabyDao
