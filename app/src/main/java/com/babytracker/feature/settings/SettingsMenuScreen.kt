@@ -1,6 +1,5 @@
 package com.babytracker.feature.settings
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -65,7 +64,8 @@ fun PreferenceSettingsScreen(navController: NavController) {
 fun DataSettingsScreen(navController: NavController) {
     val context = LocalContext.current
     val settingsVM: SettingsViewModel = koinViewModel()
-    val syncConfig by settingsVM.syncConfig.collectAsState()
+    val settings by settingsVM.settings.collectAsState()
+    val syncConfig = settings.sync
 
     SettingsMenuScaffold(
         title = "数据与同步",
@@ -105,12 +105,9 @@ fun DataSettingsScreen(navController: NavController) {
 @Composable
 fun SupportSettingsScreen(navController: NavController) {
     val context = LocalContext.current
-    val prefs = remember {
-        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-    }
-    var logCaptureEnabled by remember {
-        mutableStateOf(prefs.getBoolean("log_capture_enabled", false))
-    }
+    val settingsVM: SettingsViewModel = koinViewModel()
+    val settings by settingsVM.settings.collectAsState()
+    val logCaptureEnabled = settings.diagnostics.logCaptureEnabled
     val versionName = remember {
         try {
             context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
@@ -141,8 +138,13 @@ fun SupportSettingsScreen(navController: NavController) {
                     AppSwitch(
                         checked = logCaptureEnabled,
                         onCheckedChange = { enabled ->
-                            logCaptureEnabled = enabled
-                            prefs.edit().putBoolean("log_capture_enabled", enabled).apply()
+                            settingsVM.updateSettings { current ->
+                                current.copy(
+                                    diagnostics = current.diagnostics.copy(
+                                        logCaptureEnabled = enabled,
+                                    ),
+                                )
+                            }
                             val app = context.applicationContext as com.babytracker.BabyTrackerApp
                             app.appLogTree.enabled = enabled
                         },

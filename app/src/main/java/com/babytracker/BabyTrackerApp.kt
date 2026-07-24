@@ -1,7 +1,6 @@
 package com.babytracker
 
 import android.app.Application
-import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -14,6 +13,11 @@ import com.babytracker.core.di.databaseModule
 import com.babytracker.core.di.syncModule
 import com.babytracker.core.sync.SyncTrigger
 import com.babytracker.core.util.AppLogTree
+import com.babytracker.core.settings.SettingsStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import timber.log.Timber
@@ -29,8 +33,6 @@ class BabyTrackerApp : Application() {
         val crashLog = File(filesDir, "crash.log")
         try {
             appLogTree = AppLogTree(this)
-            appLogTree.enabled = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                .getBoolean("log_capture_enabled", false)
             Timber.plant(appLogTree)
         } catch (e: Throwable) {
             FileWriter(crashLog, true).use { it.append("Timber init failed: ${e.message}\n") }
@@ -41,6 +43,12 @@ class BabyTrackerApp : Application() {
                 androidContext(this@BabyTrackerApp)
                 modules(appModule, databaseModule, syncModule)
             }.koin
+
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                koin.get<SettingsStore>().settings.collect { settings ->
+                    appLogTree.enabled = settings.diagnostics.logCaptureEnabled
+                }
+            }
 
             Handler(Looper.getMainLooper()).post {
                 try {

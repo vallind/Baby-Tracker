@@ -1,6 +1,5 @@
 package com.babytracker.feature.settings
 
-import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,7 +23,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
@@ -68,16 +66,15 @@ import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.section.AppListItem
 import com.babytracker.navigation.Screen
 import com.babytracker.core.auth.AuthService
-import com.babytracker.core.sync.SyncState
-import com.babytracker.core.sync.RealtimeState
 import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
@@ -89,11 +86,11 @@ fun SettingsScreen(navController: NavController) {
     val authService: AuthService = koinInject()
     val displayAccount by authService.displayAccount.collectAsState()
     val nickname by authService.nickname.collectAsState()
-    val settingsVM: SettingsViewModel = koinViewModel()
+    val authState by authService.observeAuthState().collectAsState(initial = null)
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
 
-    val isLoggedIn by settingsVM.isLoggedIn.collectAsState()
+    val isLoggedIn = authState != null
     var showLogoutConfirm by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -398,14 +395,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
 
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
-    val c = LocalAppColors.current
-    val elev = LocalAppElevation.current
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = elev.level2,
-        containerColor = c.surface,
-        content = content,
-    )
+    AppCardGroup(content = content)
 }
 
 @Composable
@@ -422,39 +412,37 @@ fun SettingsDivider() {
 @Composable
 fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
     val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
-    Row(
-        Modifier.fillMaxWidth().height(if (subtitle != null) 64.dp else 56.dp).padding(horizontal = spacing.md).clickable(onClick = onClick),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(shapes.large))
-                .background(c.primaryContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(emoji, style = LocalAppTypography.current.titleMedium)
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(label, style = LocalAppTypography.current.bodyMedium, color = c.textPrimary)
-            if (subtitle != null) {
-                Text(subtitle, style = LocalAppTypography.current.bodySmall, color = c.textTertiary)
+    AppListItem(
+        leadingContent = {
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(shapes.large))
+                    .background(c.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(emoji, style = LocalAppTypography.current.titleMedium)
             }
-        }
-        if (trailing != null) {
-            trailing()
-        } else {
+        },
+        headlineContent = {
+            Text(label, style = LocalAppTypography.current.bodyMedium, color = c.textPrimary)
+        },
+        supportingContent = subtitle?.let {
+            {
+                Text(it, style = LocalAppTypography.current.bodySmall, color = c.textTertiary)
+            }
+        },
+        trailingContent = trailing ?: {
             Icon(
                 Icons.Default.ChevronRight,
                 contentDescription = null,
                 tint = c.textTertiary,
                 modifier = Modifier.size(18.dp),
             )
-        }
-    }
+        },
+        onClick = onClick,
+    )
 }
 
 @Composable

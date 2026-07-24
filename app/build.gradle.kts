@@ -14,8 +14,8 @@ android {
         applicationId = "com.babytracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 16
-        versionName = "1.7.4"
+        versionCode = 17
+        versionName = "1.7.5"
     }
 
     buildTypes {
@@ -44,6 +44,8 @@ dependencies {
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.datastore)
+    implementation(libs.serialization.json)
 
     // Desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)

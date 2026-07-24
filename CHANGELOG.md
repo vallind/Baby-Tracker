@@ -2,6 +2,15 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.5] — 2026-07-24
+
+**设置中心统一数据模型：**
+- 新增单一 `AppSettings` 聚合主题、同步、AI 与日志偏好，使用 kotlinx.serialization JSON 存入 Jetpack DataStore
+- 所有设置通过 DataStore `updateData` 原子变换更新，并从旧 SharedPreferences 一次性无损迁移
+- `SettingsViewModel` 精简为 `settings` 与 `updateSettings()`，同步执行和运行状态拆入独立 `SyncViewModel`
+- 一级、二级与三级设置菜单统一使用 `AppListItem` 槽位模式并嵌套在 `AppCardGroup` 中
+- 增加设置 JSON 往返和未知字段兼容测试；Android 应用版本更新为 1.7.5
+
 ### [1.7.4] — 2026-07-24
 
 **“我的”页面信息架构重构：**

@@ -35,6 +35,8 @@ coil = "2.7.0"
 
 # ── Storage ──
 documentfile = "1.0.1"
+datastore = "1.2.1"
+serialization = "1.11.0"
 
 # ── WorkManager ──
 workManager = "2.10.0"
@@ -64,6 +66,8 @@ core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx"
 core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 documentfile = { group = "androidx.documentfile", name = "documentfile", version.ref = "documentfile" }
+datastore = { group = "androidx.datastore", name = "datastore", version.ref = "datastore" }
+serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 
 # ── Lifecycle ──
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }

@@ -3,7 +3,6 @@ package com.babytracker.feature.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +15,7 @@ import com.babytracker.core.sync.SyncDelay
 import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
+import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -24,12 +24,14 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SyncSettingsScreen(navController: NavController) {
-    val vm: SettingsViewModel = koinViewModel()
-    val config by vm.syncConfig.collectAsState()
-    val connectionState by vm.connectionState.collectAsState()
-    val isOnline by vm.isOnline.collectAsState()
-    val syncState by vm.syncState.collectAsState()
-    val syncResult by vm.syncResult.collectAsState()
+    val settingsViewModel: SettingsViewModel = koinViewModel()
+    val syncViewModel: SyncViewModel = koinViewModel()
+    val settings by settingsViewModel.settings.collectAsState()
+    val config = settings.sync
+    val connectionState by syncViewModel.connectionState.collectAsState()
+    val isOnline by syncViewModel.isOnline.collectAsState()
+    val syncState by syncViewModel.syncState.collectAsState()
+    val syncResult by syncViewModel.syncResult.collectAsState()
 
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
@@ -59,7 +61,12 @@ fun SyncSettingsScreen(navController: NavController) {
                     emoji = "🔄",
                     label = "自动同步",
                     trailing = {
-                        Switch(checked = config.autoSync, onCheckedChange = { vm.updateAutoSync(it) })
+                        AppSwitch(
+                            checked = config.autoSync,
+                            onCheckedChange = { enabled ->
+                                settingsViewModel.updateSync { it.copy(autoSync = enabled) }
+                            },
+                        )
                     },
                 )
                 SettingsDivider()
@@ -84,7 +91,12 @@ fun SyncSettingsScreen(navController: NavController) {
                     emoji = "🚪",
                     label = "退出时同步",
                     trailing = {
-                        Switch(checked = config.syncOnExit, onCheckedChange = { vm.updateSyncOnExit(it) })
+                        AppSwitch(
+                            checked = config.syncOnExit,
+                            onCheckedChange = { enabled ->
+                                settingsViewModel.updateSync { it.copy(syncOnExit = enabled) }
+                            },
+                        )
                     },
                 )
                 SettingsDivider()
@@ -93,7 +105,12 @@ fun SyncSettingsScreen(navController: NavController) {
                     emoji = "📶",
                     label = "仅 Wi‑Fi",
                     trailing = {
-                        Switch(checked = config.wifiOnly, onCheckedChange = { vm.updateWifiOnly(it) })
+                        AppSwitch(
+                            checked = config.wifiOnly,
+                            onCheckedChange = { enabled ->
+                                settingsViewModel.updateSync { it.copy(wifiOnly = enabled) }
+                            },
+                        )
                     },
                 )
             }
@@ -106,7 +123,7 @@ fun SyncSettingsScreen(navController: NavController) {
                 label = if (syncing) "同步中..." else "立即同步",
                 onClick = {
                     syncing = true
-                    vm.manualSync()
+                    syncViewModel.manualSync()
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.sm),
             )
@@ -139,10 +156,19 @@ fun SyncSettingsScreen(navController: NavController) {
                 Text("同步延迟", style = typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
                 SyncDelay.entries.forEach { delay ->
                     Row(
-                        Modifier.fillMaxWidth().height(48.dp).clickable { vm.updateSyncDelay(delay); showDelaySheet = false },
+                        Modifier.fillMaxWidth().height(48.dp).clickable {
+                            settingsViewModel.updateSync { it.copy(syncDelay = delay) }
+                            showDelaySheet = false
+                        },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RadioButton(selected = config.syncDelay == delay, onClick = { vm.updateSyncDelay(delay); showDelaySheet = false })
+                        RadioButton(
+                            selected = config.syncDelay == delay,
+                            onClick = {
+                                settingsViewModel.updateSync { it.copy(syncDelay = delay) }
+                                showDelaySheet = false
+                            },
+                        )
                         Spacer(Modifier.width(12.dp))
                         Text(delay.label, style = typography.bodyLarge)
                     }
@@ -157,15 +183,32 @@ fun SyncSettingsScreen(navController: NavController) {
                 Text("后台同步", style = typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
                 BgInterval.entries.forEach { interval ->
                     Row(
-                        Modifier.fillMaxWidth().height(48.dp).clickable { vm.updateBgInterval(interval); showBgSheet = false },
+                        Modifier.fillMaxWidth().height(48.dp).clickable {
+                            settingsViewModel.updateSync { it.copy(bgInterval = interval) }
+                            showBgSheet = false
+                        },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RadioButton(selected = config.bgInterval == interval, onClick = { vm.updateBgInterval(interval); showBgSheet = false })
+                        RadioButton(
+                            selected = config.bgInterval == interval,
+                            onClick = {
+                                settingsViewModel.updateSync { it.copy(bgInterval = interval) }
+                                showBgSheet = false
+                            },
+                        )
                         Spacer(Modifier.width(12.dp))
                         Text(interval.label, style = typography.bodyLarge)
                     }
                 }
             }
         }
+    }
+}
+
+private fun SettingsViewModel.updateSync(
+    transform: (com.babytracker.core.sync.SyncConfig) -> com.babytracker.core.sync.SyncConfig,
+) {
+    updateSettings { current ->
+        current.copy(sync = transform(current.sync))
     }
 }

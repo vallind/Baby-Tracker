@@ -11,6 +11,7 @@ import com.babytracker.core.auth.AuthService
 import com.babytracker.core.data.FamilyService
 import com.babytracker.core.database.dao.SyncMetadataDao
 import com.babytracker.core.util.NetworkMonitor
+import com.babytracker.core.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -44,7 +45,7 @@ object PendingChangeNotifier {
 
 class SyncTrigger(
     private val syncMeta: SyncMetadataDao,
-    private val syncSettings: SyncSettings,
+    private val settingsStore: SettingsStore,
     private val syncEngine: SyncEngine,
     private val authService: AuthService,
     private val familyService: FamilyService,
@@ -67,12 +68,15 @@ class SyncTrigger(
     }
 
     fun start() {
-        Timber.tag("Sync").d("SyncTrigger start")
-        observeAuth()
-        observeFamily()
-        observeNetwork()
-        observeAutoTrigger()
-        observeBgInterval()
+        scope.launch {
+            settingsStore.awaitReady()
+            Timber.tag("Sync").d("SyncTrigger start")
+            observeAuth()
+            observeFamily()
+            observeNetwork()
+            observeAutoTrigger()
+            observeBgInterval()
+        }
     }
 
     private fun observeAuth() {
@@ -99,7 +103,7 @@ class SyncTrigger(
     }
 
     fun onAppBackgrounded() {
-        val config = syncSettings.config.value
+        val config = settingsStore.settings.value.sync
         if (!config.syncOnExit) return
         if (!shouldSync(config)) return
         scope.launch {
@@ -175,7 +179,7 @@ class SyncTrigger(
         Timber.tag("Sync").d("observeAutoTrigger start")
         scope.launch {
             PendingChangeNotifier.events.collect {
-                val config = syncSettings.config.value
+                val config = settingsStore.settings.value.sync
                 val fid = syncEngine.currentFamilyId
                 if (fid == null) return@collect
                 if (!config.autoSync) { Timber.tag("Sync").d("autoTrigger skip: autoSync off"); return@collect }
@@ -202,7 +206,7 @@ class SyncTrigger(
 
     private fun observeBgInterval() {
         scope.launch {
-            syncSettings.config.collect { config ->
+            settingsStore.settings.map { it.sync }.distinctUntilChanged().collect { config ->
                 scheduleBgSync(config)
             }
         }

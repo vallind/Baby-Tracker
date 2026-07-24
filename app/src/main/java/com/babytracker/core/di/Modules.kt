@@ -28,9 +28,10 @@ import com.babytracker.feature.ai.AiChatViewModel
 import com.babytracker.feature.ai.AiContextBuilder
 import com.babytracker.feature.ai.AiSettingsViewModel
 import com.babytracker.core.data.FamilyService
-import com.babytracker.core.sync.SyncSettings
 import com.babytracker.core.sync.SyncTrigger
 import com.babytracker.core.util.NetworkMonitor
+import com.babytracker.core.settings.SettingsStore
+import com.babytracker.feature.settings.SyncViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -39,6 +40,7 @@ import java.util.concurrent.TimeUnit
 
 val appModule = module {
     single<SharedPreferences> { androidContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
+    single { SettingsStore(androidContext(), get()) }
     single { ThemeController(get()) }
     single { BabyController(get(), get()) }
     single { BackupManager(get()) }
@@ -54,7 +56,6 @@ val appModule = module {
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get(), get()) }
     single<AiHistoryRepository> { AiHistoryRepositoryImpl(get()) }
-    single { SyncSettings(get()) }
     single { AiSettingsStore(get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get(), get()) }
@@ -63,7 +64,8 @@ val appModule = module {
     viewModel { ReminderViewModel(get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get()) }
+    viewModel { SyncViewModel(get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
     viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { AiSettingsViewModel(get(), get(), get()) }

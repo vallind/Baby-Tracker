@@ -5,22 +5,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
-import com.babytracker.designsystem.theme.LocalAppTypography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.section.ListItemDefaults
 import com.babytracker.designsystem.components.section.SectionHeaderDefaults as AppSectionHeaderDefaults
 
 /**
@@ -59,49 +54,47 @@ fun SectionHeader(
  *
  * 用法：
  *   AppListItem(
- *       icon = { Text("🍼") },
- *       title = "喂养",
- *       subtitle = "今天 5 次",
- *       trailing = { Text("14:30") },
+ *       leadingContent = { Text("🍼") },
+ *       headlineContent = { Text("喂养") },
+ *       supportingContent = { Text("今天 5 次") },
+ *       trailingContent = { Text("14:30") },
  *       onClick = { ... },
  *   )
  */
 @Composable
 fun AppListItem(
-    icon: @Composable (() -> Unit)? = null,
-    title: String,
-    subtitle: String? = null,
-    trailing: @Composable (() -> Unit)? = null,
+    headlineContent: @Composable () -> Unit,
+    leadingContent: @Composable (() -> Unit)? = null,
+    supportingContent: @Composable (() -> Unit)? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     minHeight: Dp = ListItemDefaults.minHeight(),
     horizontalPadding: Dp = ListItemDefaults.horizontalPadding(),
-    iconSize: Dp = ListItemDefaults.iconSize(),
-    titleSize: TextUnit = ListItemDefaults.titleSize(),
-    subtitleSize: TextUnit = ListItemDefaults.subtitleSize(),
     dividerAlpha: Float = ListItemDefaults.dividerAlpha(),
     showDivider: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxWidth()) {
         Row(
             modifier = modifier
                 .fillMaxWidth()
+                .heightIn(min = minHeight)
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                 .padding(horizontal = horizontalPadding, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (icon != null) {
-                icon()
+            if (leadingContent != null) {
+                leadingContent()
                 Spacer(Modifier.width(12.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(title, fontSize = titleSize, fontWeight = FontWeight.Medium, color = ListItemDefaults.titleColor())
-                if (subtitle != null) {
-                    Text(subtitle, fontSize = subtitleSize, color = ListItemDefaults.subtitleColor())
+                headlineContent()
+                if (supportingContent != null) {
+                    supportingContent()
                 }
             }
-            if (trailing != null) {
-                trailing()
+            if (trailingContent != null) {
+                trailingContent()
             }
         }
         if (showDivider) {
