@@ -2,6 +2,11 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.7] — 2026-07-24
+
+**同步引擎稳定性修复：**
+- 修复 `applyRemoteChange` 用 `OnConflictStrategy.REPLACE` 插入 sync_metadata 时静默删除已有行，导致正在进行的 push 持有旧 id 调用 markSynced 空匹配、pending 状态永久丢失的问题。改为先查存在性，有则 UPDATE 保留原行 id
+
 ### [1.7.6] — 2026-07-24
 
 **统计页面 P0 可用性修复：**

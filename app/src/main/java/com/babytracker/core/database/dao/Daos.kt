@@ -343,8 +343,30 @@ interface SyncMetadataDao {
     @Query("SELECT MAX(lastSyncAt) FROM sync_metadata")
     suspend fun getLastSyncAt(): Long?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entity: SyncMetadataEntity)
+
+    @Query("""
+        UPDATE sync_metadata SET
+            remoteUuid = :remoteUuid,
+            syncStatus = :syncStatus,
+            updatedAt = :updatedAt,
+            lastSyncAt = :lastSyncAt,
+            familyId = :familyId,
+            retryCount = 0,
+            nextRetryAt = 0,
+            lastError = NULL
+        WHERE tableName = :tableName AND localId = :localId
+    """)
+    suspend fun updateByTableAndId(
+        tableName: String,
+        localId: Int,
+        remoteUuid: String?,
+        syncStatus: String,
+        updatedAt: Long,
+        lastSyncAt: Long?,
+        familyId: String?,
+    )
 
     @Query("UPDATE sync_metadata SET syncStatus = 'synced', remoteUuid = :remoteUuid, updatedAt = :updatedAt, retryCount = 0, nextRetryAt = 0, lastError = NULL WHERE id = :id")
     suspend fun markSynced(id: Int, remoteUuid: String?, updatedAt: Long)
