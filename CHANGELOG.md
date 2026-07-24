@@ -5,7 +5,8 @@
 ### [1.7.3] — 2026-07-24
 
 **GitHub CI Paparazzi 下载修复：**
-- 为 `app.cash.paparazzi` 增加范围受限的 Maven Central 官方备用源，不改变其他依赖的仓库顺序
+- 将未发布的 Paparazzi `2.0.0-alpha05` 修正为 Maven Central 已发布的 `2.0.0-alpha04`
+- 移除无效版本引出的插件坐标映射和专用备用源，恢复标准 Plugin DSL 解析
 - 使用全新 Gradle 缓存验证插件标记、实现模块和测试运行时均可独立解析
 - Android 应用版本更新为 1.7.3
 
