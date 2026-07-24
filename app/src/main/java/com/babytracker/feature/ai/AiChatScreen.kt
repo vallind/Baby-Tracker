@@ -84,9 +84,17 @@ fun AiChatScreen(navController: NavController) {
     LaunchedEffect(currentBabyId) {
         viewModel.selectBaby(currentBabyId)
     }
-    LaunchedEffect(state.messages.size, state.isSending) {
+    val lastMessageLength = state.messages.lastOrNull()?.content?.length ?: 0
+    LaunchedEffect(
+        state.messages.size,
+        lastMessageLength,
+        state.isSending,
+        state.preferences.autoScroll,
+    ) {
         if (state.preferences.autoScroll && state.messages.isNotEmpty()) {
-            listState.animateScrollToItem(state.messages.lastIndex)
+            val typingCount = if (state.isSending && !state.hasStreamingAnswer) 1 else 0
+            val bottomAnchorIndex = state.messages.size + typingCount
+            listState.scrollToItem(bottomAnchorIndex)
         }
     }
 
@@ -138,11 +146,15 @@ fun AiChatScreen(navController: NavController) {
                     AiMessageBubble(
                         message = message,
                         renderMarkdown = state.preferences.renderMarkdown,
+                        isStreaming = state.isStreaming(message),
                         onCopy = copyAnswer,
                     )
                 }
-                if (state.isSending) {
+                if (state.isSending && !state.hasStreamingAnswer) {
                     item { AiTypingIndicator() }
+                }
+                item(key = "ai-chat-bottom-anchor") {
+                    Spacer(Modifier.height(1.dp))
                 }
             }
 
@@ -288,6 +300,7 @@ private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
 private fun AiMessageBubble(
     message: AiChatEntry,
     renderMarkdown: Boolean,
+    isStreaming: Boolean,
     onCopy: (String) -> Unit,
 ) {
     val colors = LocalAppColors.current
@@ -320,7 +333,7 @@ private fun AiMessageBubble(
                         color = if (isUser) colors.onPrimary else colors.textPrimary,
                     )
                 }
-                if (!isUser) {
+                if (!isUser && !isStreaming) {
                     Spacer(Modifier.height(spacing.sm))
                     Text(
                         text = if (message.references.isEmpty()) {

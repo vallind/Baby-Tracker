@@ -61,4 +61,10 @@ data class AiChatUiState(
             input.isNotBlank() &&
             input.length <= AiChatViewModel.MAX_INPUT_LENGTH &&
             !isSending
+
+    val hasStreamingAnswer: Boolean
+        get() = isSending && messages.lastOrNull()?.role == AiChatRole.ASSISTANT
+
+    fun isStreaming(message: AiChatEntry): Boolean =
+        hasStreamingAnswer && messages.lastOrNull()?.id == message.id
 }
