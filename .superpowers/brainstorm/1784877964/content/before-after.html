@@ -1,0 +1,168 @@
+<h2>AiMessageBubble 改进方案 — 视觉效果对比</h2>
+<p class="subtitle">左侧为当前，右侧为改进后。关键变化已标注。</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">当前 (Current)</div>
+    <div class="mockup-body" style="padding: 16px; text-align: left; font-family: sans-serif;">
+      <!-- Current User Message -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+        <div style="background: #4A6CF7; border-radius: 12px; padding: 12px; max-width: 280px;">
+          <div style="font-size: 14px; line-height: 1.5; color: #fff;">
+            宝宝最近睡眠怎么样？
+          </div>
+        </div>
+      </div>
+      <!-- Current AI Message -->
+      <div style="display: flex; margin-bottom: 12px;">
+        <div style="background: #E8E8EE; border-radius: 12px; padding: 12px; max-width: 280px;">
+          <div style="font-size: 11px; color: #888; margin-bottom: 4px; cursor: pointer;">
+            🤔 思考中...
+          </div>
+          <div style="font-size: 14px; line-height: 1.5; color: #222;">
+            宝宝这个月龄的睡眠总时长约 14-17 小时，你家宝宝目前 15 小时属于正常范围。
+          </div>
+          <div style="font-size: 11px; color: #999; margin-top: 8px; border-top: 1px solid #ddd; padding-top: 6px;">
+            📎 参考：3月15日-3月21日睡眠记录
+          </div>
+          <div style="font-size: 10px; color: #bbb; margin-top: 2px;">
+            ⚠️ 仅供参考，不构成医疗建议
+          </div>
+          <div style="margin-top: 6px;">
+            <span style="font-size: 11px; color: #666; cursor: pointer;">📋 复制</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding: 8px; background: #FEE2E2; border: 1px solid #EF4444; border-radius: 8px; font-size: 12px; color: #DC2626;">
+        🚨 高风险：请立即就医
+      </div>
+      <div style="margin-top: 8px; text-align: center; font-size: 11px; color: #999; padding: 4px;">
+        AI 正在回答...
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">改进后 (Proposed)</div>
+    <div class="mockup-body" style="padding: 16px; text-align: left; font-family: sans-serif;">
+      <!-- Improved User Message -->
+      <div style="display: flex; justify-content: flex-end; margin-bottom: 16px;">
+        <div style="max-width: 280px;">
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin-bottom: 4px;">
+            <span style="font-size: 12px; font-weight: 500; color: #555;">我</span>
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #4A6CF7; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px;">Y</div>
+          </div>
+          <div style="background: #4A6CF7; border-radius: 16px 16px 4px 16px; padding: 12px;">
+            <div style="font-size: 14px; line-height: 1.5; color: #fff;">
+              宝宝最近睡眠怎么样？
+            </div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 4px; margin-top: 4px;">
+            <span style="font-size: 10px; color: #bbb;">14:22</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Improved AI Message -->
+      <div style="display: flex; margin-bottom: 16px;">
+        <div style="max-width: 280px;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #10B981; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 8px;">🤖</div>
+            <span style="font-size: 12px; font-weight: 500; color: #555;">GPT-4o</span>
+            <span style="font-size: 10px; color: #999;">14:23</span>
+          </div>
+          <div style="background: #F0F0F5; border-radius: 16px 16px 16px 4px; padding: 12px;">
+            <!-- Reasoning block -->
+            <div style="background: #E8E8F0; border-radius: 8px; margin-bottom: 8px; overflow: hidden;">
+              <div style="display: flex; align-items: center; gap: 4px; padding: 6px 8px; cursor: pointer;">
+                <span style="font-size: 10px;">🧠</span>
+                <span style="font-size: 11px; color: #666; flex: 1;">思考了 3.2 秒</span>
+                <span style="font-size: 10px; color: #888;">▼</span>
+              </div>
+            </div>
+            <!-- Content -->
+            <div style="font-size: 14px; line-height: 1.5; color: #222;">
+              宝宝这个月龄的睡眠总时长约 14-17 小时，你家宝宝目前 15 小时属于正常范围。
+            </div>
+            <!-- References -->
+            <div style="font-size: 11px; color: #999; margin-top: 8px; border-top: 1px solid #ddd; padding-top: 6px;">
+              📎 3月15日-3月21日睡眠记录
+            </div>
+            <div style="font-size: 10px; color: #bbb; margin-top: 2px;">
+              ⚠️ 仅供参考，不构成医疗建议
+            </div>
+          </div>
+          <!-- Action Bar -->
+          <div style="display: flex; align-items: center; gap: 2px; margin-top: 4px; padding-left: 4px;">
+            <span style="font-size: 11px; color: #888; cursor: pointer; padding: 4px;" title="复制">📋</span>
+            <span style="font-size: 11px; color: #888; cursor: pointer; padding: 4px;" title="重新生成">🔄</span>
+            <span style="font-size: 11px; color: #888; cursor: pointer; padding: 4px;" title="删除">🗑️</span>
+            <span style="font-size: 10px; color: #bbb; margin-left: auto;">GPT-4o · 0.3s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Improved Streaming -->
+      <div style="display: flex; margin-bottom: 8px;">
+        <div style="max-width: 280px;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #10B981; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 8px;">🤖</div>
+            <span style="font-size: 12px; font-weight: 500; color: #555;">GPT-4o</span>
+          </div>
+          <div style="background: #F0F0F5; border-radius: 16px 16px 16px 4px; padding: 12px; display: flex; align-items: center; gap: 8px;">
+            <div class="placeholder" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981; animation: pulse 1s infinite;"></div>
+            <span style="font-size: 13px; color: #666;">正在回答...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Card -->
+      <div style="margin-top: 8px; padding: 10px; background: #FEE2E2; border: 1px solid #EF4444; border-radius: 8px; font-size: 12px; color: #DC2626;">
+        <div style="font-weight: 600; margin-bottom: 4px;">🚨 高风险：请立即就医</div>
+        <div style="font-size: 11px;">建议立即就医，不要延误。如情况紧急请拨打 120。</div>
+      </div>
+
+      <!-- Safety Status -->
+      <div style="margin-top: 8px; padding: 8px 10px; background: #FEF3C7; border-radius: 8px; font-size: 11px; color: #92400E;">
+        ⚠️ 回答已补充就医指引
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>改进点清单</h3>
+  <div class="cards">
+    <div class="card" onclick="toggleSelect(this)" data-choice="1">
+      <div class="card-body">
+        <h3>消息头部 + 头像</h3>
+        <p>AI 消息显示模型头像 + 名称 + 时间，用户消息显示昵称 + 头像，身份一目了然</p>
+      </div>
+    </div>
+    <div class="card" onclick="toggleSelect(this)" data-choice="2">
+      <div class="card-body">
+        <h3>气泡圆角改进</h3>
+        <p>用户气泡右圆角(16px)、AI 气泡左圆角(16px)，对话感更强</p>
+      </div>
+    </div>
+    <div class="card" onclick="toggleSelect(this)" data-choice="3">
+      <div class="card-body">
+        <h3>操作按钮栏</h3>
+        <p>每条 AI 消息底部的紧凑操作行：复制 / 重新生成 / 删除 + 模型耗时信息</p>
+      </div>
+    </div>
+    <div class="card" onclick="toggleSelect(this)" data-choice="4">
+      <div class="card-body">
+        <h3>推理计时 + 动画</h3>
+        <p>思考块显示实时计时，"正在回答" 改用脉冲动画点，更生动</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+</style>
