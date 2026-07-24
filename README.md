@@ -78,6 +78,10 @@ GitHub Actions 会在默认分支和 Pull Request 上自动执行：
 覆盖路径属于本机配置，请按 [Termux AAPT2 说明](docs/aapt2-termux-fix.md) 写入用户级
 `$HOME/.gradle/gradle.properties`，不要写入项目配置。
 
+日常开发从 `codex/<任务名>` 功能分支提交 Pull Request 到受保护的 `rerr`。本地优先运行
+相关测试或 Kotlin 编译，Pull Request 由 CI 完成全量测试、Lint 和 APK 构建；CI 通过后
+才能合并。模拟器验证仅在明确需要 UI 或真机流程验收时执行。
+
 ## 项目结构
 
 ```
