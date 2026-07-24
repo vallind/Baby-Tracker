@@ -21,7 +21,10 @@ private fun newUuid() = UUID.randomUUID().toString()
 
 /** 标记本地记录为待同步到 Supabase，同步固化家庭归属 */
 private suspend fun SyncMetadataDao.pendingChange(tableName: String, localId: Int, uuid: String?, updatedAt: Long, familyId: String? = null) {
-    insert(SyncMetadataEntity(tableName = tableName, localId = localId, remoteUuid = uuid, syncStatus = "pending", updatedAt = updatedAt, familyId = familyId))
+    val updated = updatePending(tableName, localId, uuid, updatedAt, familyId)
+    if (updated == 0) {
+        insert(SyncMetadataEntity(tableName = tableName, localId = localId, remoteUuid = uuid, syncStatus = "pending", updatedAt = updatedAt, familyId = familyId))
+    }
     PendingChangeNotifier.changed()
 }
 

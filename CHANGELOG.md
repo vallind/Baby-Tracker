@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.8] — 2026-07-24
+
+**同步修复：**
+- 修复 `pendingChange` 用 `REPLACE` 插入 sync_metadata 时静默变更行 id，导致 push 中 `markSynced` 空匹配、pending 状态丢失的问题。改为先 `updatePending` 更新已有行状态为 pending，无匹配再 INSERT
+- `applyRemoteChange` 落地远程变更时先查 `sync_metadata` 是否存在同 `(tableName, localId)` 行，有则 `updateByTableAndId` 保留原行 id，避免与 push 的 `markSynced` 冲突
+- `sync_metadata.insert` 改为 `IGNORE`，不再 `REPLACE`，防止行 id 被静默变更
+- 新增 `SyncTriggerTest` 14 项静态分析测试，验证所有 Repository 的增/改/删操作均调用 `pendingChange` 且 `insert` 使用 `IGNORE`
+
 ### [1.7.7] — 2026-07-24
 
 **同步引擎稳定性修复：**

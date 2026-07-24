@@ -457,18 +457,32 @@ class SyncEngine(
 
             // 远程版本更新（或本地无此记录）→ 写入本地
             val insertedId = dao.upsert(remoteRow)
-            // 记录同步元数据
-            syncMeta.insert(
-                SyncMetadataEntity(
+            // 记录同步元数据：先查已存在行，有则 UPDATE 保留原 id（避免 push 持有旧 id 导致 markSynced 空匹配）
+            val localId = insertedId.toInt()
+            val existingMeta = syncMeta.getByTableAndId(tableName, localId)
+            if (existingMeta != null) {
+                syncMeta.updateByTableAndId(
                     tableName = tableName,
-                    localId = insertedId.toInt(),
+                    localId = localId,
                     remoteUuid = remoteUuid,
                     syncStatus = "synced",
                     updatedAt = remoteUpdatedAt,
                     lastSyncAt = System.currentTimeMillis(),
                     familyId = currentFamilyId,
                 )
-            )
+            } else {
+                syncMeta.insert(
+                    SyncMetadataEntity(
+                        tableName = tableName,
+                        localId = localId,
+                        remoteUuid = remoteUuid,
+                        syncStatus = "synced",
+                        updatedAt = remoteUpdatedAt,
+                        lastSyncAt = System.currentTimeMillis(),
+                        familyId = currentFamilyId,
+                    )
+                )
+            }
             return true
         } catch (e: Exception) {
             Timber.tag("Sync").e(e, "apply remote failed table=%s uuid=%s", tableName, remoteUuid)
