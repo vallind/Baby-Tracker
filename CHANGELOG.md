@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.2] — 2026-07-24
+
+**GitHub CI 依赖解析修复：**
+- 将 Paparazzi 插件 ID 显式映射到 Maven Central 的插件实现模块，修复全新 GitHub Runner 无法解析插件标记的问题
+- 使用全新 Gradle 缓存验证插件可独立下载，不再由本机历史缓存掩盖依赖解析问题
+- Android 应用版本更新为 1.7.2
+
 ### [1.7.1] — 2026-07-24
 
 **Android 持续集成：**

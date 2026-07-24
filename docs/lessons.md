@@ -205,3 +205,15 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 - CPU 架构或设备相关的 Gradle 属性必须写入 `$HOME/.gradle/gradle.properties`。
 - 项目 `gradle.properties` 只能保存所有开发环境和 CI 都适用的配置。
 - 新增 CI 前必须检查项目配置中的绝对路径、代理和本机 SDK 覆盖项。
+
+---
+
+## 13. 本机构建成功不能证明 CI 能解析依赖
+
+**问题：** 本机 Gradle 缓存中已有 Paparazzi 插件，因此构建成功；GitHub Runner 使用全新缓存后却无法通过 Plugin DSL 解析插件标记。
+
+**规则：**
+
+- 新增或升级 Gradle 插件后，至少用一次空 `GRADLE_USER_HOME` 执行配置阶段验证。
+- Plugin DSL 标记解析不稳定时，在 `pluginManagement.resolutionStrategy` 中显式映射官方实现模块。
+- CI 首次失败应先看配置阶段和依赖解析日志，不能因本机测试通过就判断为 GitHub 网络抖动。
