@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 //  - 每个组件令牌有独立 default() 工厂，接收基础令牌参数
 //  - AppComponentTokens.default() 统一接收 colors/spacing/shapes/typography/
 //    opacity/motion/elevation/control，分发到各组件
-//  - 支持 derive {} 部分覆盖（TT-032）
+//  - TODO: 支持 derive {} 部分覆盖（TT-032）
 // ═══════════════════════════════════════════════════════════
 
 // —— TT-017 按钮 ——

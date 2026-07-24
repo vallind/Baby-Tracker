@@ -36,6 +36,8 @@ fun AppInput(
     label: String,
     placeholder: String? = null,
     isPassword: Boolean = false,
+    passwordVisible: Boolean = false,
+    onPasswordToggle: (() -> Unit)? = null,
     enabled: Boolean = true,
     isError: Boolean = false,
     errorMessage: String? = null,
@@ -62,8 +64,12 @@ fun AppInput(
         leadingIcon = leadingIcon,
         trailingIcon = if (isPassword) {
             {
-                IconButton(onClick = { /* TODO: 密码可见切换由外层管理 */ }) {
-                    Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(iconSize))
+                IconButton(onClick = { onPasswordToggle?.invoke() }) {
+                    Icon(
+                        if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (passwordVisible) "隐藏密码" else "显示密码",
+                        modifier = Modifier.size(iconSize),
+                    )
                 }
             }
         } else null,

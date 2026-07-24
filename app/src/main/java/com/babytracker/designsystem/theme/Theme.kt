@@ -263,7 +263,6 @@ fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.
 @Composable
 fun BabyTrackerTheme(
     theme: AppTheme = AppTheme.pure,
-    dynamicColor: Boolean = false,
     componentTokens: AppComponentTokens? = null,
     content: @Composable () -> Unit,
 ) {

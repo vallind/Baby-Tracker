@@ -16,6 +16,14 @@
 **构建与测试基础设施：**
 - 启用 Room `exportSchema = true` 并配置 `room.schemaLocation`，为后续迁移自动测试奠定基础；生成并提交 version 8 schema JSON
 
+**代码质量清理：**
+- 移除 `LoginScreen` 死代码（未使用的 `passwordVisible`/`focusManager` 及 4 个未使用 import）
+- 移除 `BabyTrackerTheme` 未使用的 `dynamicColor` 参数
+- 标记 `AppComponentTokens` 中待实现的 `derive {}` 注释为 TODO
+- 移除 `ButtonLogic` 未使用的 `isPressed` 公开暴露
+- 修复 `AppInput` 密码切换 TODO 壳，新增 `passwordVisible`/`onPasswordToggle` 参数
+- 修复 `AppFAB` icon-only 模式缺 `contentDescription` 的问题，新增可选参数
+
 ### [1.7.6] — 2026-07-24
 
 **统计页面 P0 可用性修复：**

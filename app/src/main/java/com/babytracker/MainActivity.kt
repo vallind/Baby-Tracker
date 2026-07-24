@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            BabyTrackerTheme(theme, dynamicColor = false) {
+            BabyTrackerTheme(theme) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     // ── 页面内容（底层）──
                     Surface(modifier = Modifier.fillMaxSize()) {

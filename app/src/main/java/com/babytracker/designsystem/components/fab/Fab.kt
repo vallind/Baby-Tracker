@@ -26,6 +26,7 @@ fun AppFAB(
     icon: ImageVector,
     onClick: () -> Unit,
     label: String? = null,
+    contentDescription: String? = null,
     size: Dp = FabDefaults.size(),
     iconSize: Dp = FabDefaults.iconSize(),
     cornerRadius: Dp = FabDefaults.cornerRadius(),
@@ -52,7 +53,7 @@ fun AppFAB(
             elevation = FloatingActionButtonDefaults.elevation(defaultElevation = elevation),
             modifier = modifier.size(size),
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(iconSize))
+            Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(iconSize))
         }
     }
 }

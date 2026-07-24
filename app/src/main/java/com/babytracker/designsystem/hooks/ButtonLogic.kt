@@ -27,7 +27,6 @@ class ButtonLogic(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _isPressed = MutableStateFlow(false)
-    val isPressed: StateFlow<Boolean> = _isPressed.asStateFlow()
 
     /**
      * 触发点击动作。若 isLoading 为 true 则忽略。
