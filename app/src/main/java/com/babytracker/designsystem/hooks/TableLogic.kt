@@ -24,6 +24,7 @@ data class PageConfig(
 class TableLogic<T : Any>(
     private val scope: CoroutineScope,
     initialData: List<T> = emptyList(),
+    private val idExtractor: ((T) -> String)? = null,
 ) {
     private val _data = MutableStateFlow(initialData)
     val data: StateFlow<List<T>> = _data.asStateFlow()
@@ -44,11 +45,21 @@ class TableLogic<T : Any>(
         get() {
             val s = _sort.value
             if (s.column.isEmpty()) return _data.value
-            return _data.value.sortedBy { item ->
-                val prop = item::class.members
-                    .firstOrNull { it.name == s.column }
-                prop?.call(item)?.toString() ?: ""
-            }.let { if (s.ascending) it else it.reversed() }
+            val comparator = Comparator<T> { a, b ->
+                val prop = a::class.members.firstOrNull { it.name == s.column }
+                val va = prop?.call(a)
+                val vb = prop?.call(b)
+                val cmp = when {
+                    va is Number && vb is Number -> (va.toDouble() - vb.toDouble()).toInt()
+                    va is Comparable<*> && vb is Comparable<*> -> {
+                        @Suppress("UNCHECKED_CAST")
+                        (va as Comparable<Any>).compareTo(vb as Any)
+                    }
+                    else -> (va?.toString() ?: "").compareTo(vb?.toString() ?: "", ignoreCase = true)
+                }
+                if (s.ascending) cmp else -cmp
+            }
+            return _data.value.sortedWith(comparator)
         }
 
     val totalPages: Int
@@ -81,7 +92,12 @@ class TableLogic<T : Any>(
     }
 
     fun selectAll() {
-        _selectedIds.value = _data.value.mapIndexed { index, _ -> index.toString() }.toSet()
+        val extractor = idExtractor
+        if (extractor != null) {
+            _selectedIds.value = _data.value.map(extractor).toSet()
+        } else {
+            _selectedIds.value = _data.value.mapIndexed { index, _ -> index.toString() }.toSet()
+        }
     }
 
     fun deselectAll() {

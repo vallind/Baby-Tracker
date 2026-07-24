@@ -45,7 +45,10 @@ class HomeViewModel(
                 ) { feedings, sleeps, diapers ->
                     val today = LocalDate.now().toString()
                     val todayFeedings = feedings.filter { it.timestamp.startsWith(today) }
-                    val todaySleeps = sleeps.filter { it.type == SleepType.NIGHT && it.startTime.startsWith(today) }
+                    val todaySleeps = sleeps.filter {
+                        (it.type == SleepType.NIGHT || it.type == SleepType.NAP) &&
+                        (it.startTime.startsWith(today) || it.endTime.startsWith(today))
+                    }
                     val nightSleepMin = todaySleeps.sumOf {
                         try { Duration.between(LocalDateTime.parse(it.startTime, DateTimeFormatter.ISO_DATE_TIME), LocalDateTime.parse(it.endTime, DateTimeFormatter.ISO_DATE_TIME)).toMinutes() } catch (_: Exception) { 0L }
                     }.toInt()

@@ -47,7 +47,7 @@ class FormLogic<F : Any>(
     suspend fun validate(): Boolean {
         if (validator == null) return true
         val errors = validator(_fields.value)
-        val errorMap = errors.associateWith { it }
+        val errorMap = if (errors.isEmpty()) emptyMap() else mapOf("form" to errors.joinToString("\n"))
         _errors.value = errorMap
         _isValid.value = errors.isEmpty()
         return errors.isEmpty()

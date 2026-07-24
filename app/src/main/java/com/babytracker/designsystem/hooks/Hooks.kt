@@ -56,12 +56,13 @@ fun <F : Any> rememberFormLogic(
 fun <T : Any> rememberTableLogic(
     scope: CoroutineScope? = null,
     initialData: List<T> = emptyList(),
+    idExtractor: ((T) -> String)? = null,
 ): TableLogic<T> {
     val s = scope ?: run {
         consoleWarn("rememberTableLogic: scope is null, using rememberCoroutineScope.")
         rememberCoroutineScope()
     }
-    return remember(s, initialData) { TableLogic(s, initialData) }
+    return remember(s, initialData, idExtractor) { TableLogic(s, initialData, idExtractor) }
 }
 
 /**

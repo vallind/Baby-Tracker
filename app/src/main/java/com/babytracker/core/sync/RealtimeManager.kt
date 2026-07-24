@@ -78,8 +78,8 @@ class RealtimeManager(
                     }.launchIn(scope)
                 }
 
-                withTimeout(10_000L) { ch.subscribe(blockUntilSubscribed = true) }
                 channel = ch
+                withTimeout(10_000L) { ch.subscribe(blockUntilSubscribed = true) }
                 _connectionState.value = RealtimeState.CONNECTED
             } catch (e: TimeoutCancellationException) {
                 Timber.tag("Sync").w("Realtime subscribe timed out")

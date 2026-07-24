@@ -6,6 +6,12 @@
 
 **同步引擎稳定性修复：**
 - 修复 `applyRemoteChange` 用 `OnConflictStrategy.REPLACE` 插入 sync_metadata 时静默删除已有行，导致正在进行的 push 持有旧 id 调用 markSynced 空匹配、pending 状态永久丢失的问题。改为先查存在性，有则 UPDATE 保留原行 id
+- 修复 `RealtimeManager` 超时后 `channel` 引用未保留导致失去 SDK 自动重连能力的问题
+
+**功能 Bug 修复：**
+- 修复首页睡眠统计漏掉午睡（SleepType.NAP）和跨午夜睡眠的问题
+- 修复 `TableLogic.sortedData` 反射排序数字列被字符串化（"10" < "9"）的问题，改为数值优先比较
+- 修复 `FormLogic.errors` 以错误消息字符串自身作为 Map 键导致字段级错误查询无效的问题
 
 ### [1.7.6] — 2026-07-24
 
