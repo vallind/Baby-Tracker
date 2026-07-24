@@ -210,10 +210,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 ## 13. 本机构建成功不能证明 CI 能解析依赖
 
-**问题：** 本机 Gradle 缓存中已有 Paparazzi 插件，因此构建成功；GitHub Runner 使用全新缓存后却无法通过 Plugin DSL 解析插件标记。
+**问题：** 项目加入了 Paparazzi 插件和依赖，但没有任何快照测试使用它。插件解析连续阻断 GitHub Runner，使普通单元测试、Lint 和构建都无法开始。
 
 **规则：**
 
+- 调整依赖版本前必须先从官方仓库或 Maven Central 元数据确认该版本真实发布，不能只以本机解析成功为依据。
 - 新增或升级 Gradle 插件后，至少用一次空 `GRADLE_USER_HOME` 执行配置阶段验证。
-- Plugin DSL 标记解析不稳定时，在 `pluginManagement.resolutionStrategy` 中显式映射官方实现模块。
+- 插件没有实际调用方或测试时，应直接移除，不能为了保留未使用依赖而不断增加仓库和坐标映射。
+- 失败的 CI 缓存可能保留依赖不存在的负缓存；需要备用仓库时应使用官方地址和 `content` 范围限制，不能把全部依赖切到未知镜像。
+- 地区性 Maven 镜像不能写入项目共享仓库列表；镜像返回 5xx 时可能使整个仓库失效并阻断 CI。国内开发环境应使用本机代理或用户级 Gradle 配置。
 - CI 首次失败应先看配置阶段和依赖解析日志，不能因本机测试通过就判断为 GitHub 网络抖动。

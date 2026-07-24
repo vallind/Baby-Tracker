@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.paparazzi)
 }
 
 android {
@@ -14,8 +13,8 @@ android {
         applicationId = "com.babytracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 14
-        versionName = "1.7.2"
+        versionCode = 15
+        versionName = "1.7.3"
     }
 
     buildTypes {
@@ -110,7 +109,6 @@ implementation(libs.timber)
 
     // Test
     testImplementation(libs.junit)
-    testImplementation(libs.paparazzi)
     androidTestImplementation(libs.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))

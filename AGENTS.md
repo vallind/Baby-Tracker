@@ -130,3 +130,43 @@ app/src/main/java/com/babytracker/
 | `docs/Palette组件库设计深度分析报告.md` | 设计系统审计报告 |
 | `docs/aapt2-termux-fix.md` | Termux AAPT2 兼容问题 |
 | `CHANGELOG.md` | 变更日志 |
+
+---
+
+## 十、GitHub CI 协作流程
+
+### 1. 分支与交付
+
+- `rerr` 是受保护的默认分支，日常开发使用 `codex/<任务名>` 功能分支。
+- 功能分支通过 Pull Request 合并到 `rerr`，不得把“本地构建成功”当作最终验收。
+- 推送分支、创建 PR 或合并属于外部变更，仅在用户明确要求后执行。
+
+### 2. 本地验证分级
+
+- 开发迭代期间只运行与改动直接相关的测试或编译任务，例如：
+  - `./gradlew testDebugUnitTest --tests "*AiContextBuilderTest"`
+  - `./gradlew compileDebugKotlin`
+- 提交前至少通过一次相关单元测试或 Kotlin 编译。
+- 默认不启动模拟器；只有用户明确要求时才执行模拟器验证。
+- 不在每次小改动后重复运行完整 Lint 和 APK 构建，完整验证交给 GitHub CI。
+
+### 3. CI 最终验收
+
+Pull Request 和 `rerr` 推送由 `.github/workflows/android-ci.yml` 自动执行：
+
+```bash
+./gradlew --no-daemon --continue testDebugUnitTest lintDebug assembleDebug
+```
+
+- CI 全部通过后，功能才能标记为“完成”。
+- CI 尚未运行时，状态必须表述为“本地验证通过，等待 CI”，不能直接宣称最终完成。
+- CI 成功产出的 Debug APK 用于后续人工体验验证。
+- CI 不修改代码、不生成提交，也不代替版本号和 CHANGELOG 规则。
+
+### 4. CI 失败处理
+
+1. 使用 GitHub 插件和 `gh` 读取失败运行、步骤和原始日志。
+2. 先报告失败检查、运行链接和第一处有效根因，再制定最小修复。
+3. 编译或测试失败只修改相关代码；网络或依赖解析失败不得顺手修改业务逻辑。
+4. 修复后先运行最相关的本地验证，再提交到原功能分支触发新 CI。
+5. 禁止只因本机缓存构建成功就忽略 GitHub 全新环境的失败。
