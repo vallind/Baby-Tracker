@@ -149,6 +149,7 @@ fun AiChatScreen(navController: NavController) {
                         AiQuickAnalysisSection(
                             state = state,
                             onSelect = viewModel::prepareAnalysis,
+                            onSelectPeriod = viewModel::selectAnalysisPeriod,
                         )
                     }
                     if (state.preferences.showRecommendedQuestions) {
@@ -174,6 +175,7 @@ fun AiChatScreen(navController: NavController) {
             state.analysisContext?.let { source ->
                 AiAnalysisContextBar(
                     source = source,
+                    period = state.analysisPeriod,
                     canRemove = !state.isSending,
                     onRemove = viewModel::removeAnalysisContext,
                 )
@@ -207,6 +209,7 @@ fun AiChatScreen(navController: NavController) {
 private fun AiQuickAnalysisSection(
     state: AiChatUiState,
     onSelect: (AiAnalysisSource) -> Unit,
+    onSelectPeriod: (AiAnalysisPeriod) -> Unit,
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
@@ -223,6 +226,29 @@ private fun AiQuickAnalysisSection(
             style = typography.bodyMedium,
             color = colors.textSecondary,
         )
+        Spacer(Modifier.height(spacing.sm))
+        Text(
+            text = AppStrings.aiAnalysisPeriod,
+            style = typography.label,
+            color = colors.textSecondary,
+        )
+        Spacer(Modifier.height(spacing.xs))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+        ) {
+            AiAnalysisPeriod.entries.forEach { period ->
+                val selected = state.analysisPeriod == period
+                AppChip(
+                    label = "${period.days} 天",
+                    backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
+                    textColor = if (selected) colors.onPrimary else colors.textSecondary,
+                    modifier = Modifier.clickable { onSelectPeriod(period) },
+                )
+            }
+        }
         Spacer(Modifier.height(spacing.sm))
         AiAnalysisCardRow(
             sources = listOf(AiAnalysisSource.SLEEP, AiAnalysisSource.FEEDING),
@@ -292,7 +318,7 @@ private fun AiAnalysisCard(
             )
             Spacer(Modifier.height(spacing.xs))
             Text(
-                text = analysisRange(source),
+                text = analysisRange(state.analysisPeriod),
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
             )
@@ -313,6 +339,7 @@ private fun AiAnalysisCard(
 @Composable
 private fun AiAnalysisContextBar(
     source: AiAnalysisSource,
+    period: AiAnalysisPeriod,
     canRemove: Boolean,
     onRemove: () -> Unit,
 ) {
@@ -342,7 +369,7 @@ private fun AiAnalysisContextBar(
                     color = colors.textSecondary,
                 )
                 Text(
-                    text = "${analysisTitle(source)} · ${analysisRange(source)}",
+                    text = "${analysisTitle(source)} · ${analysisRange(period)}",
                     style = typography.bodyMedium,
                     color = colors.textPrimary,
                 )
@@ -392,12 +419,8 @@ private fun analysisTitle(source: AiAnalysisSource): String = when (source) {
     AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisOverview
 }
 
-private fun analysisRange(source: AiAnalysisSource): String = when (source) {
-    AiAnalysisSource.SLEEP -> AppStrings.aiAnalysisSleepRange
-    AiAnalysisSource.FEEDING -> AppStrings.aiAnalysisFeedingRange
-    AiAnalysisSource.HEALTH -> AppStrings.aiAnalysisHealthRange
-    AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisOverviewRange
-}
+private fun analysisRange(period: AiAnalysisPeriod): String =
+    "最近 ${period.days} 天 · 对比前 ${period.days} 天"
 
 @Composable
 private fun AiBabySummary(state: AiChatUiState) {

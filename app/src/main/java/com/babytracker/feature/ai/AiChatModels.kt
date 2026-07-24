@@ -16,16 +16,25 @@ enum class AiAnalysisSource {
     OVERVIEW,
 }
 
+enum class AiAnalysisPeriod(val days: Long) {
+    DAYS_7(7),
+    DAYS_14(14),
+    DAYS_30(30),
+}
+
 enum class AiAnalysisUnavailableReason {
     DATA_DISABLED,
     NO_RECORDS,
 }
 
-internal fun analysisSuggestedQuestion(source: AiAnalysisSource): String = when (source) {
-    AiAnalysisSource.SLEEP -> "帮我分析最近的睡眠情况"
-    AiAnalysisSource.FEEDING -> "最近喂养记录有什么变化"
-    AiAnalysisSource.HEALTH -> "帮我整理近期健康情况"
-    AiAnalysisSource.OVERVIEW -> "综合解读宝宝的近期记录"
+internal fun analysisSuggestedQuestion(
+    source: AiAnalysisSource,
+    period: AiAnalysisPeriod,
+): String = when (source) {
+    AiAnalysisSource.SLEEP -> "对比最近${period.days}天与前${period.days}天的睡眠变化"
+    AiAnalysisSource.FEEDING -> "对比最近${period.days}天与前${period.days}天的喂养变化"
+    AiAnalysisSource.HEALTH -> "对比最近${period.days}天与前${period.days}天的健康记录"
+    AiAnalysisSource.OVERVIEW -> "综合对比宝宝最近${period.days}天的多类记录变化"
 }
 
 data class AiChatEntry(
@@ -77,6 +86,7 @@ data class AiChatUiState(
     val familyId: String? = null,
     val preferences: AiAssistantPreferences = AiAssistantPreferences(),
     val analysisContext: AiAnalysisSource? = null,
+    val analysisPeriod: AiAnalysisPeriod = AiAnalysisPeriod.DAYS_7,
     val availableAnalyses: Set<AiAnalysisSource> = emptySet(),
     val isAnalysisAvailabilityLoading: Boolean = false,
     val analysisUnavailableSource: AiAnalysisSource? = null,

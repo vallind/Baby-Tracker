@@ -7,6 +7,7 @@ import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.FeedingType
 import com.babytracker.core.domain.model.Growth
 import com.babytracker.core.domain.model.GrowthType
+import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.core.domain.model.Sleep
 import com.babytracker.core.domain.model.SleepType
 import java.time.LocalDateTime
@@ -80,10 +81,22 @@ class AiContextBuilderTest {
 
     @Test
     fun `快捷分析提供可编辑的建议问题`() {
-        assertEquals("帮我分析最近的睡眠情况", analysisSuggestedQuestion(AiAnalysisSource.SLEEP))
-        assertEquals("最近喂养记录有什么变化", analysisSuggestedQuestion(AiAnalysisSource.FEEDING))
-        assertEquals("帮我整理近期健康情况", analysisSuggestedQuestion(AiAnalysisSource.HEALTH))
-        assertEquals("综合解读宝宝的近期记录", analysisSuggestedQuestion(AiAnalysisSource.OVERVIEW))
+        assertEquals(
+            "对比最近7天与前7天的睡眠变化",
+            analysisSuggestedQuestion(AiAnalysisSource.SLEEP, AiAnalysisPeriod.DAYS_7),
+        )
+        assertEquals(
+            "对比最近14天与前14天的喂养变化",
+            analysisSuggestedQuestion(AiAnalysisSource.FEEDING, AiAnalysisPeriod.DAYS_14),
+        )
+        assertEquals(
+            "对比最近30天与前30天的健康记录",
+            analysisSuggestedQuestion(AiAnalysisSource.HEALTH, AiAnalysisPeriod.DAYS_30),
+        )
+        assertEquals(
+            "综合对比宝宝最近7天的多类记录变化",
+            analysisSuggestedQuestion(AiAnalysisSource.OVERVIEW, AiAnalysisPeriod.DAYS_7),
+        )
     }
 
     @Test
@@ -146,5 +159,82 @@ class AiContextBuilderTest {
 
         assertTrue(summary.contains("2026-07-22"))
         assertTrue(!summary.contains("2026-07-19"))
+    }
+
+    @Test
+    fun `睡眠周期对比严格拆分本期和前期`() {
+        val summary = summarizeSleepComparison(
+            records = listOf(
+                Sleep(
+                    babyId = 1,
+                    type = SleepType.NIGHT,
+                    startTime = "2026-07-22T22:00:00",
+                    endTime = "2026-07-23T04:00:00",
+                ),
+                Sleep(
+                    babyId = 1,
+                    type = SleepType.NAP,
+                    startTime = "2026-07-15T10:00:00",
+                    endTime = "2026-07-15T11:00:00",
+                ),
+                Sleep(
+                    babyId = 1,
+                    type = SleepType.NAP,
+                    startTime = "2026-07-01T10:00:00",
+                    endTime = "2026-07-01T13:00:00",
+                ),
+            ),
+            now = now,
+            days = 7,
+        )
+
+        assertTrue(summary.contains("本期共1次、合计6小时"))
+        assertTrue(summary.contains("前期共1次、合计1小时"))
+        assertTrue(!summary.contains("3小时"))
+    }
+
+    @Test
+    fun `周期对比仅以前期记录不能激活分析`() {
+        val summary = summarizeFeedingComparison(
+            records = listOf(
+                Feeding(
+                    babyId = 1,
+                    type = FeedingType.FORMULA,
+                    amountMl = 120,
+                    timestamp = "2026-07-12T08:00:00",
+                ),
+            ),
+            now = now,
+            days = 7,
+        )
+
+        assertTrue(summary.endsWith("：无记录"))
+    }
+
+    @Test
+    fun `健康周期对比保留两期分类和记录`() {
+        val summary = summarizeHealthComparison(
+            records = listOf(
+                HealthRecord(
+                    babyId = 1,
+                    category = "症状",
+                    description = "轻微咳嗽",
+                    recordDate = "2026-07-22T08:00:00",
+                ),
+                HealthRecord(
+                    babyId = 1,
+                    category = "体温",
+                    description = "体温正常",
+                    recordDate = "2026-07-12T08:00:00",
+                ),
+            ),
+            now = now,
+            days = 7,
+        )
+
+        assertTrue(summary.contains("本期共1条"))
+        assertTrue(summary.contains("轻微咳嗽"))
+        assertTrue(summary.contains("前期共1条"))
+        assertTrue(summary.contains("体温正常"))
     }
 }

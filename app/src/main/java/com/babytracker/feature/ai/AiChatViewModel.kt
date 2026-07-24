@@ -166,7 +166,11 @@ class AiChatViewModel(
                         )
                     }
                     if (dependencies.prerequisite == AiChatPrerequisite.READY && baby != null) {
-                        refreshAnalysisAvailability(baby.id, dependencies.preferences)
+                        refreshAnalysisAvailability(
+                            baby.id,
+                            dependencies.preferences,
+                            _state.value.analysisPeriod,
+                        )
                     }
             }
         }
@@ -241,6 +245,28 @@ class AiChatViewModel(
         }
     }
 
+    fun selectAnalysisPeriod(period: AiAnalysisPeriod) {
+        val current = _state.value
+        if (current.analysisPeriod == period || current.isSending) return
+        analysisPreparationJob?.cancel()
+        val source = current.analysisContext
+        _state.update {
+            it.copy(
+                analysisPeriod = period,
+                input = source?.let { selected -> analysisSuggestedQuestion(selected, period) }
+                    ?: it.input,
+                availableAnalyses = emptySet(),
+                isAnalysisAvailabilityLoading = true,
+                analysisUnavailableSource = null,
+                analysisUnavailableReason = null,
+            )
+        }
+        current.baby?.let { baby ->
+            refreshAnalysisAvailability(baby.id, current.preferences, period)
+        }
+        if (source != null) prepareAnalysis(source)
+    }
+
     fun prepareAnalysis(source: AiAnalysisSource) {
         val snapshot = _state.value
         val baby = snapshot.baby ?: return
@@ -263,6 +289,7 @@ class AiChatViewModel(
                     question = "",
                     preferences = snapshot.preferences,
                     analysisSource = source,
+                    analysisPeriod = snapshot.analysisPeriod,
                 )
                 if (selectedBabyId.value != babyIdAtRequest ||
                     _state.value.familyId != familyIdAtRequest
@@ -273,7 +300,7 @@ class AiChatViewModel(
                     if (context.hasRecords) {
                         it.copy(
                             analysisContext = source,
-                            input = analysisSuggestedQuestion(source),
+                            input = analysisSuggestedQuestion(source, snapshot.analysisPeriod),
                             analysisUnavailableSource = null,
                             analysisUnavailableReason = null,
                         )
@@ -360,6 +387,7 @@ class AiChatViewModel(
                     question = currentQuestion,
                     preferences = snapshot.preferences,
                     analysisSource = snapshot.analysisContext,
+                    analysisPeriod = snapshot.analysisPeriod,
                 )
                 if (snapshot.analysisContext != null && !context.hasRecords) {
                     _state.update { state ->
@@ -506,6 +534,7 @@ class AiChatViewModel(
     private fun refreshAnalysisAvailability(
         babyId: Int,
         preferences: AiAssistantPreferences,
+        period: AiAnalysisPeriod,
     ) {
         analysisAvailabilityJob?.cancel()
         val babyIdAtRequest = selectedBabyId.value
@@ -513,7 +542,7 @@ class AiChatViewModel(
         _state.update { it.copy(isAnalysisAvailabilityLoading = true) }
         analysisAvailabilityJob = viewModelScope.launch {
             try {
-                val available = contextBuilder.availableAnalyses(babyId, preferences)
+                val available = contextBuilder.availableAnalyses(babyId, preferences, period)
                 if (selectedBabyId.value == babyIdAtRequest &&
                     _state.value.familyId == familyIdAtRequest
                 ) {
