@@ -155,12 +155,16 @@ app/src/main/java/com/babytracker/
 
 ### 3. CI 最终验收
 
-Pull Request 和 `rerr` 推送由 `.github/workflows/android-ci.yml` 自动执行：
+Pull Request 由 `.github/workflows/android-ci.yml` 在独立 Runner 中并行执行：
 
 ```bash
-./gradlew --no-daemon --continue testDebugUnitTest lintDebug assembleDebug
+./gradlew --no-daemon testDebugUnitTest
+./gradlew --no-daemon lintDebug
+./gradlew --no-daemon assembleDebug
 ```
 
+- “单元测试、Lint 与构建”汇总检查保持为 `rerr` 的必需检查，只有三个并行任务全部成功才通过。
+- 合并到 `rerr` 后不重复执行同一组完整任务，Pull Request CI 是合并前唯一验收。
 - CI 全部通过后，功能才能标记为“完成”。
 - CI 尚未运行时，状态必须表述为“本地验证通过，等待 CI”，不能直接宣称最终完成。
 - CI 成功产出的 Debug APK 用于后续人工体验验证。

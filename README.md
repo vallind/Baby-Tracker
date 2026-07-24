@@ -68,13 +68,16 @@ Gradients.progress(c)       // 进度条渐变
 ./gradlew lint
 ```
 
-GitHub Actions 会在默认分支和 Pull Request 上自动执行：
+GitHub Actions 会在 Pull Request 上使用三个独立 Runner 并行执行：
 
 ```bash
-./gradlew --no-daemon --continue testDebugUnitTest lintDebug assembleDebug
+./gradlew --no-daemon testDebugUnitTest
+./gradlew --no-daemon lintDebug
+./gradlew --no-daemon assembleDebug
 ```
 
-验证失败时上传测试与 Lint 报告；成功时提供保留 7 天的 Debug APK。Termux 的 AAPT2
+三个任务全部成功后汇总检查才通过并允许 Auto-merge；合并到 `rerr` 后不重复构建。
+验证失败时上传对应测试或 Lint 报告；构建成功时提供保留 7 天的 Debug APK。Termux 的 AAPT2
 覆盖路径属于本机配置，请按 [Termux AAPT2 说明](docs/aapt2-termux-fix.md) 写入用户级
 `$HOME/.gradle/gradle.properties`，不要写入项目配置。
 

@@ -8,6 +8,8 @@
 - 默认创建 Ready PR 并启用 GitHub 原生 Squash Auto-merge，CI 与分支保护条件满足后自动合并
 - Draft PR 仅用于明确要求暂不合并的工作，转为 Ready 后才能进入自动合并
 - 所有 Pull Request 均运行必需检查，避免纯文档变更因缺少 CI 状态而无法自动合并
+- 单元测试、Lint 与 Debug 构建拆分到三个 Runner 并行执行，通过汇总检查维持现有分支保护
+- 移除合并到 `rerr` 后的重复完整构建，缩短 Auto-merge 等待时间并减少 Actions 消耗
 - Android 应用版本更新为 1.7.4
 
 ### [1.7.3] — 2026-07-24
