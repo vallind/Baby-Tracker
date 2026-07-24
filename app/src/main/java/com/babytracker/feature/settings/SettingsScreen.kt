@@ -84,42 +84,20 @@ import org.koin.compose.koinInject
 fun SettingsScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    val themeCtrl: ThemeController = koinInject()
     val authService: AuthService = koinInject()
     val displayAccount by authService.displayAccount.collectAsState()
     val nickname by authService.nickname.collectAsState()
     val settingsVM: SettingsViewModel = koinViewModel()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
-    var showPicker by remember { mutableStateOf(false) }
 
-    val syncStatusText by settingsVM.syncStatusText.collectAsState()
-    val syncState by settingsVM.syncState.collectAsState()
     val isLoggedIn by settingsVM.isLoggedIn.collectAsState()
-    val syncResult by settingsVM.syncResult.collectAsState()
-    val syncConfig by settingsVM.syncConfig.collectAsState()
     var showLogoutConfirm by remember { mutableStateOf(false) }
     var showNicknameDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
-    val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-    var logCaptureEnabled by remember { mutableStateOf(prefs.getBoolean("log_capture_enabled", false)) }
-
-    val versionName = remember {
-        try {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
-        } catch (_: Exception) { "1.0.0" }
-    }
-
-    LaunchedEffect(syncResult) {
-        syncResult?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            settingsVM.clearSyncResult()
-        }
-    }
 
     AppScaffold(
         topBar = {
@@ -158,83 +136,57 @@ fun SettingsScreen(navController: NavController) {
 
             Spacer(Modifier.height(12.dp))
 
-            FunctionGrid(
-                items = listOf(
-                    FunctionGridItem("👶", "宝宝管理", onClick = { navController.navigate(Screen.BabyManagement.route) }),
-                    FunctionGridItem("⭐", "我的收藏", onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() }),
-                    FunctionGridItem("📤", "数据导出", onClick = { navController.navigate(Screen.Backup.route) }),
-                    FunctionGridItem("🔔", "提醒设置", onClick = { navController.navigate(Screen.Reminder.route) }),
-                ),
-            )
+            SettingsSectionTitle("宝宝与家庭")
+            SettingsCard {
+                SettingsRow(
+                    emoji = "👶",
+                    label = "宝宝管理",
+                    subtitle = "资料、成长信息与宝宝切换",
+                    onClick = { navController.navigate(Screen.BabyManagement.route) },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    emoji = "👨‍👩‍👧",
+                    label = "家庭与账号",
+                    subtitle = if (isLoggedIn) "成员管理与账号信息" else "登录后与家人共享记录",
+                    onClick = {
+                        navController.navigate(
+                            if (isLoggedIn) Screen.Family.route else Screen.Login.route
+                        )
+                    },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    emoji = "🔔",
+                    label = "提醒设置",
+                    subtitle = "喂养、睡眠与护理提醒",
+                    onClick = { navController.navigate(Screen.Reminder.route) },
+                )
+            }
 
             Spacer(Modifier.height(12.dp))
 
-            SettingsSectionTitle("设置")
+            SettingsSectionTitle("更多设置")
             SettingsCard {
                 SettingsRow(
                     emoji = "🎨",
-                    label = "主题模式",
-                    subtitle = when (themeCtrl.currentTheme.name) {
-                        "pure" -> "纯净蓝"
-                        "aurora" -> "极光紫"
-                        "warm" -> "暖阳粉"
-                        "sunny" -> "阳光黄"
-                        "night" -> "暗夜深"
-                        "morandi" -> "莫兰迪"
-                        else -> "跟随系统"
-                    },
-                    onClick = { showPicker = true },
-                )
-                SettingsDivider()
-                SettingsRow(
-                    emoji = "🔄",
-                    label = "同步设置",
-                    subtitle = if (syncConfig.autoSync) "已开启 / 延迟 ${syncConfig.syncDelay.label}" else "已关闭",
-                    onClick = { navController.navigate(Screen.SyncSettings.route) },
-                )
-                SettingsDivider()
-                SettingsRow(
-                    emoji = "✨",
-                    label = AppStrings.aiSettings,
-                    subtitle = "模型、宝宝数据与回答偏好",
-                    onClick = { navController.navigate(Screen.AiSettings.route) },
+                    label = "使用偏好",
+                    subtitle = "主题与 AI 助手",
+                    onClick = { navController.navigate(Screen.PreferenceSettings.route) },
                 )
                 SettingsDivider()
                 SettingsRow(
                     emoji = "🔒",
-                    label = "隐私设置",
-                    onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() },
+                    label = "数据与同步",
+                    subtitle = "云同步、备份与隐私",
+                    onClick = { navController.navigate(Screen.DataSettings.route) },
                 )
                 SettingsDivider()
                 SettingsRow(
                     emoji = "❓",
-                    label = "帮助与反馈",
-                    onClick = { Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show() },
-                )
-                SettingsDivider()
-                SettingsRow(
-                    emoji = "📋",
-                    label = "日志记录",
-                    subtitle = if (logCaptureEnabled) "抓取中" else "已关闭",
-                    trailing = {
-                        Switch(
-                            checked = logCaptureEnabled,
-                            onCheckedChange = { enabled ->
-                                logCaptureEnabled = enabled
-                                prefs.edit().putBoolean("log_capture_enabled", enabled).apply()
-                                val app = context.applicationContext as com.babytracker.BabyTrackerApp
-                                app.appLogTree.enabled = enabled
-                            },
-                        )
-                    },
-                    onClick = { navController.navigate(Screen.LogViewer.route) },
-                )
-                SettingsDivider()
-                SettingsRow(
-                    emoji = "ℹ️",
-                    label = "关于我们",
-                    subtitle = "版本 $versionName",
-                    onClick = { },
+                    label = "帮助与关于",
+                    subtitle = "问题反馈、运行日志与版本信息",
+                    onClick = { navController.navigate(Screen.SupportSettings.route) },
                 )
             }
 
@@ -253,53 +205,8 @@ fun SettingsScreen(navController: NavController) {
                 }
             }
 
-            if (isLoggedIn) {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = spacing.md)
-                        .padding(bottom = spacing.lg),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when {
-                                    syncState == SyncState.SYNCING || syncState == SyncState.PUSHING || syncState == SyncState.PULLING -> c.primary
-                                    settingsVM.connectionState.collectAsState().value == RealtimeState.CONNECTED -> c.success
-                                    settingsVM.connectionState.collectAsState().value == RealtimeState.ERROR -> c.error
-                                    else -> c.textTertiary
-                                }
-                            ),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        syncStatusText,
-                        color = c.textTertiary,
-                        style = typography.labelSmall,
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        if (syncConfig.autoSync) "同步设置 >" else "手动同步",
-                        color = c.primary,
-                        style = typography.labelSmall,
-                        modifier = Modifier.clickable {
-                            if (syncConfig.autoSync) navController.navigate(Screen.SyncSettings.route)
-                            else settingsVM.manualSync()
-                        },
-                    )
-                }
-            }
-
             Spacer(Modifier.height(spacing.md))
         }
-    }
-
-    if (showPicker) {
-        ThemePickerSheet(themeCtrl = themeCtrl, onDismiss = { showPicker = false })
     }
 
     AppConfirmDialog(
@@ -421,66 +328,6 @@ private fun UserInfoCard(
                     tint = c.textTertiary,
                     modifier = Modifier.size(20.dp),
                 )
-            }
-        }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  常用功能宫格
-// ═══════════════════════════════════════════════════════════
-
-private data class FunctionGridItem(
-    val emoji: String,
-    val label: String,
-    val onClick: () -> Unit,
-)
-
-@Composable
-private fun FunctionGrid(items: List<FunctionGridItem>) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    val elev = LocalAppElevation.current
-
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = elev.level2,
-        containerColor = c.surface,
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = spacing.sm, vertical = spacing.md),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            items.forEach { item ->
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(onClick = item.onClick)
-                        .padding(vertical = spacing.xs),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(
-                        Modifier
-                            .size(48.dp)
-                            .clip(RoundedCornerShape(shapes.large))
-                            .background(c.primaryContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            item.emoji,
-                            style = LocalAppTypography.current.titleLarge,
-                        )
-                    }
-                    Spacer(Modifier.height(spacing.sm))
-                    Text(
-                        item.label,
-                        style = LocalAppTypography.current.labelSmall,
-                        color = c.textSecondary,
-                    )
-                }
             }
         }
     }

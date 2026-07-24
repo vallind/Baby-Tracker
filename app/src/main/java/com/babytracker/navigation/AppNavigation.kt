@@ -22,6 +22,9 @@ import com.babytracker.feature.settings.BabyManagementScreen
 import com.babytracker.feature.settings.BackupScreen
 import com.babytracker.feature.settings.LogViewerScreen
 import com.babytracker.feature.settings.SyncSettingsScreen
+import com.babytracker.feature.settings.PreferenceSettingsScreen
+import com.babytracker.feature.settings.DataSettingsScreen
+import com.babytracker.feature.settings.SupportSettingsScreen
 import com.babytracker.feature.message.MessageScreen
 import com.babytracker.feature.development.DevelopmentAssessmentScreen
 import com.babytracker.feature.reminder.ReminderScreen
@@ -41,6 +44,9 @@ sealed class Screen(val route: String) {
     object Diaper : Screen("/diaper")
     object Stats : Screen("/stats")
     object Settings : Screen("/settings")
+    object PreferenceSettings : Screen("/settings/preferences")
+    object DataSettings : Screen("/settings/data")
+    object SupportSettings : Screen("/settings/support")
     object BabyManagement : Screen("/settings/babies")
     object BabyProfile : Screen("/settings/baby/profile")
     object Backup : Screen("/settings/backup")
@@ -69,6 +75,9 @@ fun AppNavigation() {
         instantComposable(Screen.Diaper.route) { DiaperListScreen(navController) }
         instantComposable(Screen.Stats.route) { StatsScreen(navController) }
         instantComposable(Screen.Settings.route) { SettingsScreen(navController) }
+        instantComposable(Screen.PreferenceSettings.route) { PreferenceSettingsScreen(navController) }
+        instantComposable(Screen.DataSettings.route) { DataSettingsScreen(navController) }
+        instantComposable(Screen.SupportSettings.route) { SupportSettingsScreen(navController) }
         instantComposable(Screen.BabyManagement.route) { BabyManagementScreen(navController) }
         instantComposable(Screen.BabyProfile.route) { BabyProfileScreen(navController) }
         instantComposable(Screen.Backup.route) { BackupScreen(navController) }
