@@ -10,6 +10,12 @@ pluginManagement {
         }
     }
     repositories {
+        maven {
+            url = uri("https://repo1.maven.org/maven2")
+            content {
+                includeGroup("app.cash.paparazzi")
+            }
+        }
         maven { url = uri("https://maven.aliyun.com/repository/public") }
         google()
         mavenCentral()
@@ -20,6 +26,12 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        maven {
+            url = uri("https://repo1.maven.org/maven2")
+            content {
+                includeGroup("app.cash.paparazzi")
+            }
+        }
         maven { url = uri("https://maven.aliyun.com/repository/public") }
         google()
         mavenCentral()

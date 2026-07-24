@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.3] — 2026-07-24
+
+**GitHub CI Paparazzi 下载修复：**
+- 为 `app.cash.paparazzi` 增加范围受限的 Maven Central 官方备用源，不改变其他依赖的仓库顺序
+- 使用全新 Gradle 缓存验证插件标记、实现模块和测试运行时均可独立解析
+- Android 应用版本更新为 1.7.3
+
 ### [1.7.2] — 2026-07-24
 
 **GitHub CI 依赖解析修复：**

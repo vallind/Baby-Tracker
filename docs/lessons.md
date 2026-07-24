@@ -216,4 +216,5 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 - 新增或升级 Gradle 插件后，至少用一次空 `GRADLE_USER_HOME` 执行配置阶段验证。
 - Plugin DSL 标记解析不稳定时，在 `pluginManagement.resolutionStrategy` 中显式映射官方实现模块。
+- 失败的 CI 缓存可能保留依赖不存在的负缓存；需要备用仓库时应使用官方地址和 `content` 范围限制，不能把全部依赖切到未知镜像。
 - CI 首次失败应先看配置阶段和依赖解析日志，不能因本机测试通过就判断为 GitHub 网络抖动。
