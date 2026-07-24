@@ -9,6 +9,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 data class LogEntry(
     val timestamp: Long,
@@ -20,17 +23,25 @@ data class LogEntry(
 object LogBuffer {
     private const val MAX_ENTRIES = 1000
     private val buffer = ConcurrentLinkedQueue<LogEntry>()
+    private val _entries = MutableSharedFlow<List<LogEntry>>(replay = 1, extraBufferCapacity = 1)
+    val entries: SharedFlow<List<LogEntry>> = _entries.asSharedFlow()
+
+    init { _entries.tryEmit(emptyList()) }
 
     fun push(entry: LogEntry) {
         buffer.add(entry)
         while (buffer.size > MAX_ENTRIES) {
             buffer.poll()
         }
+        _entries.tryEmit(buffer.toList())
     }
 
     fun getEntries(): List<LogEntry> = buffer.toList()
 
-    fun clear() { buffer.clear() }
+    fun clear() {
+        buffer.clear()
+        _entries.tryEmit(emptyList())
+    }
 }
 
 class AppLogTree(private val context: Context) : Timber.Tree() {

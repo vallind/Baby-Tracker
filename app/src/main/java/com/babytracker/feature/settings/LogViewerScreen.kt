@@ -39,6 +39,7 @@ import com.babytracker.BabyTrackerApp
 import com.babytracker.core.util.LogBuffer
 import com.babytracker.core.util.LogEntry
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import kotlinx.coroutines.flow.collectLatest
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -47,7 +48,6 @@ import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -80,11 +80,10 @@ fun LogViewerScreen(navController: NavController) {
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            logs = LogBuffer.getEntries()
-            if (autoScroll && logs.isNotEmpty()) {
-                listState.animateScrollToItem(logs.size - 1)
+        LogBuffer.entries.collectLatest { entries ->
+            logs = entries
+            if (autoScroll && entries.isNotEmpty()) {
+                listState.animateScrollToItem(entries.size - 1)
             }
         }
     }

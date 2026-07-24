@@ -23,6 +23,8 @@
 - 移除 `ButtonLogic` 未使用的 `isPressed` 公开暴露
 - 修复 `AppInput` 密码切换 TODO 壳，新增 `passwordVisible`/`onPasswordToggle` 参数
 - 修复 `AppFAB` icon-only 模式缺 `contentDescription` 的问题，新增可选参数
+- 删除完全死代码 `AppLayers.kt`（Z 轴层级系统，零调用）
+- `LogBuffer` 新增 `entries: SharedFlow`，`LogViewerScreen` 从每秒轮询改为 Flow 驱动
 
 ### [1.7.6] — 2026-07-24
 
