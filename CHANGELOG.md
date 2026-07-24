@@ -7,6 +7,7 @@
 **GitHub CI Paparazzi 下载修复：**
 - 移除没有任何快照测试使用、却阻断 GitHub Runner 配置阶段的 Paparazzi 插件与依赖
 - 清理对应的版本目录项、插件映射和 CI 空报告路径，不影响现有单元测试、Lint 与 Debug 构建
+- 移除项目级阿里云 Maven 镜像，避免镜像 502 导致 GitHub Runner 禁用仓库并中断官方依赖解析
 - Android 应用版本更新为 1.7.3
 
 ### [1.7.2] — 2026-07-24
