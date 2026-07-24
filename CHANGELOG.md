@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.1] — 2026-07-24
+
+**Android 持续集成：**
+- 新增 GitHub Actions，在默认分支、Pull Request 和手动触发时执行单元测试、Lint 与 Debug 构建
+- 使用官方 Gradle 缓存，失败时上传测试和 Lint 报告，成功时提供保留 7 天的 Debug APK
+- 移除项目级 Termux AAPT2 绝对路径，改为仅在 Termux 用户级 Gradle 配置中覆盖
+- 补充 CI 与 Termux 构建说明；Android 应用版本更新为 1.7.1
+
 ### [1.7.0] — 2026-07-24
 
 **AI 助手 V2 第一阶段：**

@@ -193,3 +193,15 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 - 辅助类别只能丰富已经可用的分析，不能单独激活专项入口。
 - 综合概览可以由任意已启用类别的有效记录激活。
 - 快捷入口只保存分析类型；发送前必须按当前家庭和当前宝宝重新读取记录，禁止缓存业务摘要。
+
+---
+
+## 12. 设备专用 Gradle 路径不能提交到项目配置
+
+**问题：** Termux 需要通过 `android.aapt2FromMavenOverride` 使用 ARM64 AAPT2，但该绝对路径在 Windows、macOS 和 GitHub Actions 中不存在，会让跨平台构建直接失败。
+
+**规则：**
+
+- CPU 架构或设备相关的 Gradle 属性必须写入 `$HOME/.gradle/gradle.properties`。
+- 项目 `gradle.properties` 只能保存所有开发环境和 CI 都适用的配置。
+- 新增 CI 前必须检查项目配置中的绝对路径、代理和本机 SDK 覆盖项。

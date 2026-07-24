@@ -23,8 +23,9 @@ chmod +x $PREFIX/bin/aapt2
 # 2. 验证
 aapt2 version
 
-# 3. 确保 gradle.properties 中有 aapt2 覆盖路径
-echo "android.aapt2FromMavenOverride=$PREFIX/bin/aapt2" >> gradle.properties
+# 3. 将覆盖路径写入 Termux 用户级配置，不要提交到项目
+mkdir -p "$HOME/.gradle"
+echo "android.aapt2FromMavenOverride=$PREFIX/bin/aapt2" >> "$HOME/.gradle/gradle.properties"
 
 # 4. 编译验证
 ./gradlew assembleDebug
@@ -45,6 +46,12 @@ aapt2 link -o /dev/null \
 | `failed to load include path` | Termux 系统 aapt2 版本过旧 | 替换为 ReVanced 预编译版 |
 | `Daemon startup failed` | AGP 自带的 aapt2 是 x86_64，无法在 AArch64 上运行 | `aapt2FromMavenOverride` 强制使用本地 aapt2 |
 | `syntax error: unexpected '('` | glibc aapt2 在 Termux (bionic libc) 上无法运行 | 同上的 override 方案 |
+
+## 为什么使用用户级配置
+
+`android.aapt2FromMavenOverride` 是设备和 CPU 架构相关的本机路径。若写入项目
+`gradle.properties`，Windows、macOS 和 GitHub Actions 会尝试访问 Termux 路径并导致构建失败。
+因此项目配置不保存该属性，只有 Termux 环境在 `$HOME/.gradle/gradle.properties` 中覆盖。
 
 ## SDK 版本管理
 

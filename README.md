@@ -2,6 +2,8 @@
 
 Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koin + Room。
 
+[![Android CI](https://github.com/vallind/Baby-Tracker/actions/workflows/android-ci.yml/badge.svg)](https://github.com/vallind/Baby-Tracker/actions/workflows/android-ci.yml)
+
 ## 功能
 
 | 模块 | 说明 |
@@ -65,6 +67,16 @@ Gradients.progress(c)       // 进度条渐变
 ./gradlew assembleRelease   # 启用 R8 + 资源压缩
 ./gradlew lint
 ```
+
+GitHub Actions 会在默认分支和 Pull Request 上自动执行：
+
+```bash
+./gradlew --no-daemon --continue testDebugUnitTest lintDebug assembleDebug
+```
+
+验证失败时上传测试与 Lint 报告；成功时提供保留 7 天的 Debug APK。Termux 的 AAPT2
+覆盖路径属于本机配置，请按 [Termux AAPT2 说明](docs/aapt2-termux-fix.md) 写入用户级
+`$HOME/.gradle/gradle.properties`，不要写入项目配置。
 
 ## 项目结构
 
