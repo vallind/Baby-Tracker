@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.4] — 2026-07-24
+
+**Pull Request 自动合并工作流：**
+- 默认创建 Ready PR 并启用 GitHub 原生 Squash Auto-merge，CI 与分支保护条件满足后自动合并
+- Draft PR 仅用于明确要求暂不合并的工作，转为 Ready 后才能进入自动合并
+- 所有 Pull Request 均运行必需检查，避免纯文档变更因缺少 CI 状态而无法自动合并
+- Android 应用版本更新为 1.7.4
+
 ### [1.7.3] — 2026-07-24
 
 **GitHub CI Paparazzi 下载修复：**

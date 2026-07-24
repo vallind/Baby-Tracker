@@ -140,6 +140,9 @@ app/src/main/java/com/babytracker/
 - `rerr` 是受保护的默认分支，日常开发使用 `codex/<任务名>` 功能分支。
 - 功能分支通过 Pull Request 合并到 `rerr`，不得把“本地构建成功”当作最终验收。
 - 推送分支、创建 PR 或合并属于外部变更，仅在用户明确要求后执行。
+- 用户要求“推送并创建 PR”时，默认创建 Ready PR；只有用户明确要求暂不合并时才创建 Draft PR。
+- Ready PR 创建后立即执行 `gh pr merge --auto --squash`，由 GitHub 在所有保护条件满足后自动合并。
+- Draft PR 不能合并；需要自动合并时必须先执行 `gh pr ready <PR编号>`，再启用 Auto-merge。
 
 ### 2. 本地验证分级
 
@@ -162,6 +165,8 @@ Pull Request 和 `rerr` 推送由 `.github/workflows/android-ci.yml` 自动执�
 - CI 尚未运行时，状态必须表述为“本地验证通过，等待 CI”，不能直接宣称最终完成。
 - CI 成功产出的 Debug APK 用于后续人工体验验证。
 - CI 不修改代码、不生成提交，也不代替版本号和 CHANGELOG 规则。
+- 所有 Pull Request（包括仅修改 Markdown 的 PR）都必须运行必需检查，避免 Auto-merge 因缺少检查而永久等待。
+- CI 失败时 Auto-merge 保持排队，修复提交仍推送到原功能分支；CI 重新通过后无需人工再次点击合并。
 
 ### 4. CI 失败处理
 
