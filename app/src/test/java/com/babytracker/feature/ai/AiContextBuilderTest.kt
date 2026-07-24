@@ -51,6 +51,42 @@ class AiContextBuilderTest {
     }
 
     @Test
+    fun `快捷分析遵循总开关和对应分类开关`() {
+        assertTrue(
+            !isAnalysisSourceEnabled(
+                AiAnalysisSource.SLEEP,
+                AiAssistantPreferences(useRecentRecords = false),
+            ),
+        )
+        assertTrue(
+            !isAnalysisSourceEnabled(
+                AiAnalysisSource.HEALTH,
+                AiAssistantPreferences(useHealthRecords = false),
+            ),
+        )
+        assertTrue(
+            isAnalysisSourceEnabled(
+                AiAnalysisSource.OVERVIEW,
+                AiAssistantPreferences(
+                    useSleepRecords = false,
+                    useFeedingRecords = true,
+                    useDiaperRecords = false,
+                    useGrowthRecords = false,
+                    useHealthRecords = false,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `快捷分析提供可编辑的建议问题`() {
+        assertEquals("帮我分析最近的睡眠情况", analysisSuggestedQuestion(AiAnalysisSource.SLEEP))
+        assertEquals("最近喂养记录有什么变化", analysisSuggestedQuestion(AiAnalysisSource.FEEDING))
+        assertEquals("帮我整理近期健康情况", analysisSuggestedQuestion(AiAnalysisSource.HEALTH))
+        assertEquals("综合解读宝宝的近期记录", analysisSuggestedQuestion(AiAnalysisSource.OVERVIEW))
+    }
+
+    @Test
     fun `喂养摘要排除时间范围外记录`() {
         val records = listOf(
             Feeding(

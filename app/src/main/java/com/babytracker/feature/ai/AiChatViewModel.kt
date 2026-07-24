@@ -49,6 +49,8 @@ class AiChatViewModel(
     val state: StateFlow<AiChatUiState> = _state.asStateFlow()
 
     private var requestJob: Job? = null
+    private var analysisAvailabilityJob: Job? = null
+    private var analysisPreparationJob: Job? = null
 
     init {
         val babyFlow = selectedBabyId.flatMapLatest { babyId ->
@@ -101,12 +103,21 @@ class AiChatViewModel(
                     val mustStop = dependencies.prerequisite == AiChatPrerequisite.DISABLED ||
                         dependencies.prerequisite == AiChatPrerequisite.NOT_LOGGED_IN ||
                         scopeChanged
-                    if (mustStop) requestJob?.cancel()
+                    if (mustStop) {
+                        requestJob?.cancel()
+                        analysisAvailabilityJob?.cancel()
+                        analysisPreparationJob?.cancel()
+                    }
                     _state.update { current ->
                         val selected = dependencies.defaultModels[dependencies.familyId]
                             ?.takeIf { id -> options.any { it.id == id } }
                             ?: current.selectedOptionId?.takeIf { id -> options.any { it.id == id } }
                             ?: runtime.bundle?.config?.defaultOption
+                        val contextDisabled = current.analysisContext != null &&
+                            !isAnalysisSourceEnabled(
+                                current.analysisContext,
+                                dependencies.preferences,
+                            )
                         current.copy(
                             baby = baby,
                             modelOptions = options,
@@ -124,6 +135,27 @@ class AiChatViewModel(
                             },
                             input = if (mustStop) "" else current.input,
                             isSending = if (mustStop) false else current.isSending,
+                            analysisContext = if (mustStop || contextDisabled) {
+                                null
+                            } else {
+                                current.analysisContext
+                            },
+                            availableAnalyses = if (mustStop) emptySet() else current.availableAnalyses,
+                            isAnalysisAvailabilityLoading = false,
+                            analysisUnavailableSource = if (mustStop) {
+                                null
+                            } else if (contextDisabled) {
+                                current.analysisContext
+                            } else {
+                                current.analysisUnavailableSource
+                            },
+                            analysisUnavailableReason = if (mustStop) {
+                                null
+                            } else if (contextDisabled) {
+                                AiAnalysisUnavailableReason.DATA_DISABLED
+                            } else {
+                                current.analysisUnavailableReason
+                            },
                             error = if (options.isEmpty() && runtime.errorMessage != null) {
                                 AiChatError.CONFIG_UNAVAILABLE
                             } else if (current.error == AiChatError.CONFIG_UNAVAILABLE) {
@@ -133,13 +165,23 @@ class AiChatViewModel(
                             },
                         )
                     }
+                    if (dependencies.prerequisite == AiChatPrerequisite.READY && baby != null) {
+                        refreshAnalysisAvailability(baby.id, dependencies.preferences)
+                    }
             }
         }
         viewModelScope.launch {
             settingsStore.clearConversationRequests.collect {
                 stop()
                 _state.update { state ->
-                    state.copy(messages = emptyList(), input = "", error = null)
+                    state.copy(
+                        messages = emptyList(),
+                        input = "",
+                        error = null,
+                        analysisContext = null,
+                        analysisUnavailableSource = null,
+                        analysisUnavailableReason = null,
+                    )
                 }
             }
         }
@@ -148,6 +190,8 @@ class AiChatViewModel(
     fun selectBaby(babyId: Int) {
         if (selectedBabyId.value == babyId) return
         requestJob?.cancel()
+        analysisAvailabilityJob?.cancel()
+        analysisPreparationJob?.cancel()
         selectedBabyId.value = babyId
         _state.update {
             it.copy(
@@ -155,6 +199,11 @@ class AiChatViewModel(
                 input = "",
                 isSending = false,
                 error = null,
+                analysisContext = null,
+                availableAnalyses = emptySet(),
+                isAnalysisAvailabilityLoading = true,
+                analysisUnavailableSource = null,
+                analysisUnavailableReason = null,
             )
         }
     }
@@ -170,6 +219,8 @@ class AiChatViewModel(
                 } else {
                     it.error
                 },
+                analysisUnavailableSource = null,
+                analysisUnavailableReason = null,
             )
         }
     }
@@ -187,6 +238,73 @@ class AiChatViewModel(
     fun refreshConfig() {
         viewModelScope.launch {
             configCoordinator.refreshNow()
+        }
+    }
+
+    fun prepareAnalysis(source: AiAnalysisSource) {
+        val snapshot = _state.value
+        val baby = snapshot.baby ?: return
+        if (!isAnalysisSourceEnabled(source, snapshot.preferences)) {
+            _state.update {
+                it.copy(
+                    analysisUnavailableSource = source,
+                    analysisUnavailableReason = AiAnalysisUnavailableReason.DATA_DISABLED,
+                )
+            }
+            return
+        }
+        val babyIdAtRequest = selectedBabyId.value
+        val familyIdAtRequest = snapshot.familyId
+        analysisPreparationJob?.cancel()
+        analysisPreparationJob = viewModelScope.launch {
+            try {
+                val context = contextBuilder.build(
+                    babyId = baby.id,
+                    question = "",
+                    preferences = snapshot.preferences,
+                    analysisSource = source,
+                )
+                if (selectedBabyId.value != babyIdAtRequest ||
+                    _state.value.familyId != familyIdAtRequest
+                ) {
+                    return@launch
+                }
+                _state.update {
+                    if (context.hasRecords) {
+                        it.copy(
+                            analysisContext = source,
+                            input = analysisSuggestedQuestion(source),
+                            analysisUnavailableSource = null,
+                            analysisUnavailableReason = null,
+                        )
+                    } else {
+                        it.copy(
+                            analysisUnavailableSource = source,
+                            analysisUnavailableReason = AiAnalysisUnavailableReason.NO_RECORDS,
+                        )
+                    }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Timber.tag("AI").w(error, "读取快捷分析上下文失败 source=%s", source)
+                if (selectedBabyId.value == babyIdAtRequest &&
+                    _state.value.familyId == familyIdAtRequest
+                ) {
+                    _state.update {
+                        it.copy(
+                            analysisUnavailableSource = source,
+                            analysisUnavailableReason = AiAnalysisUnavailableReason.NO_RECORDS,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    fun removeAnalysisContext() {
+        _state.update {
+            if (it.isSending) it else it.copy(analysisContext = null)
         }
     }
 
@@ -237,7 +355,26 @@ class AiChatViewModel(
         requestJob = viewModelScope.launch {
             var streamedEntryId: Long? = null
             try {
-                val context = contextBuilder.build(baby.id, currentQuestion, snapshot.preferences)
+                val context = contextBuilder.build(
+                    babyId = baby.id,
+                    question = currentQuestion,
+                    preferences = snapshot.preferences,
+                    analysisSource = snapshot.analysisContext,
+                )
+                if (snapshot.analysisContext != null && !context.hasRecords) {
+                    _state.update { state ->
+                        state.copy(
+                            messages = state.messages.dropLastWhile {
+                                it.role == AiChatRole.USER && it.content == currentQuestion
+                            },
+                            input = currentQuestion,
+                            isSending = false,
+                            analysisUnavailableSource = snapshot.analysisContext,
+                            analysisUnavailableReason = AiAnalysisUnavailableReason.NO_RECORDS,
+                        )
+                    }
+                    return@launch
+                }
                 val requestMessages = buildList {
                     add(
                         AiMessage(
@@ -362,6 +499,45 @@ class AiChatViewModel(
                 }
             } finally {
                 requestJob = null
+            }
+        }
+    }
+
+    private fun refreshAnalysisAvailability(
+        babyId: Int,
+        preferences: AiAssistantPreferences,
+    ) {
+        analysisAvailabilityJob?.cancel()
+        val babyIdAtRequest = selectedBabyId.value
+        val familyIdAtRequest = _state.value.familyId
+        _state.update { it.copy(isAnalysisAvailabilityLoading = true) }
+        analysisAvailabilityJob = viewModelScope.launch {
+            try {
+                val available = contextBuilder.availableAnalyses(babyId, preferences)
+                if (selectedBabyId.value == babyIdAtRequest &&
+                    _state.value.familyId == familyIdAtRequest
+                ) {
+                    _state.update {
+                        it.copy(
+                            availableAnalyses = available,
+                            isAnalysisAvailabilityLoading = false,
+                        )
+                    }
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Timber.tag("AI").w(error, "读取快捷分析可用状态失败")
+                if (selectedBabyId.value == babyIdAtRequest &&
+                    _state.value.familyId == familyIdAtRequest
+                ) {
+                    _state.update {
+                        it.copy(
+                            availableAnalyses = emptySet(),
+                            isAnalysisAvailabilityLoading = false,
+                        )
+                    }
+                }
             }
         }
     }

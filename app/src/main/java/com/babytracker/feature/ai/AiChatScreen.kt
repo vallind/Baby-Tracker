@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -143,8 +144,16 @@ fun AiChatScreen(navController: NavController) {
                 ),
                 verticalArrangement = Arrangement.spacedBy(LocalAppSpacing.current.sm),
             ) {
-                if (state.messages.isEmpty() && state.preferences.showRecommendedQuestions) {
-                    item { AiWelcomeCard(onQuestion = viewModel::updateInput) }
+                if (state.messages.isEmpty()) {
+                    item {
+                        AiQuickAnalysisSection(
+                            state = state,
+                            onSelect = viewModel::prepareAnalysis,
+                        )
+                    }
+                    if (state.preferences.showRecommendedQuestions) {
+                        item { AiWelcomeCard(onQuestion = viewModel::updateInput) }
+                    }
                 }
                 items(state.messages, key = { it.id }) { message ->
                     AiMessageBubble(
@@ -162,6 +171,21 @@ fun AiChatScreen(navController: NavController) {
                 }
             }
 
+            state.analysisContext?.let { source ->
+                AiAnalysisContextBar(
+                    source = source,
+                    canRemove = !state.isSending,
+                    onRemove = viewModel::removeAnalysisContext,
+                )
+            }
+            val unavailableReason = state.analysisUnavailableReason
+            val unavailableSource = state.analysisUnavailableSource
+            if (unavailableReason != null && unavailableSource != null) {
+                AiAnalysisUnavailableBanner(
+                    source = unavailableSource,
+                    reason = unavailableReason,
+                )
+            }
             state.error?.takeUnless { it == AiChatError.CONFIG_UNAVAILABLE }?.let { error ->
                 AiErrorBanner(
                     error = error,
@@ -177,6 +201,202 @@ fun AiChatScreen(navController: NavController) {
             )
         }
     }
+}
+
+@Composable
+private fun AiQuickAnalysisSection(
+    state: AiChatUiState,
+    onSelect: (AiAnalysisSource) -> Unit,
+) {
+    val spacing = LocalAppSpacing.current
+    val colors = LocalAppColors.current
+    val typography = LocalAppTypographyStyle.current
+    Column {
+        Text(
+            text = AppStrings.aiQuickAnalysis,
+            style = typography.titleMedium,
+            color = colors.textPrimary,
+        )
+        Spacer(Modifier.height(spacing.xs))
+        Text(
+            text = AppStrings.aiQuickAnalysisSubtitle,
+            style = typography.bodyMedium,
+            color = colors.textSecondary,
+        )
+        Spacer(Modifier.height(spacing.sm))
+        AiAnalysisCardRow(
+            sources = listOf(AiAnalysisSource.SLEEP, AiAnalysisSource.FEEDING),
+            state = state,
+            onSelect = onSelect,
+        )
+        Spacer(Modifier.height(spacing.sm))
+        AiAnalysisCardRow(
+            sources = listOf(AiAnalysisSource.HEALTH, AiAnalysisSource.OVERVIEW),
+            state = state,
+            onSelect = onSelect,
+        )
+    }
+}
+
+@Composable
+private fun AiAnalysisCardRow(
+    sources: List<AiAnalysisSource>,
+    state: AiChatUiState,
+    onSelect: (AiAnalysisSource) -> Unit,
+) {
+    val spacing = LocalAppSpacing.current
+    Row(Modifier.fillMaxWidth()) {
+        sources.forEachIndexed { index, source ->
+            if (index > 0) Spacer(Modifier.width(spacing.sm))
+            AiAnalysisCard(
+                source = source,
+                state = state,
+                onClick = { onSelect(source) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AiAnalysisCard(
+    source: AiAnalysisSource,
+    state: AiChatUiState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val spacing = LocalAppSpacing.current
+    val colors = LocalAppColors.current
+    val typography = LocalAppTypographyStyle.current
+    val enabled = isAnalysisSourceEnabled(source, state.preferences)
+    val status = when {
+        state.isAnalysisAvailabilityLoading -> AppStrings.aiAnalysisLoading
+        !enabled -> AppStrings.aiAnalysisDataDisabled
+        source in state.availableAnalyses -> AppStrings.aiAnalysisAvailable
+        else -> AppStrings.aiAnalysisNoRecords
+    }
+    val selected = state.analysisContext == source
+    AppCard(
+        modifier = modifier
+            .heightIn(min = 96.dp)
+            .clickable(onClick = onClick),
+        containerColor = if (selected) colors.primaryContainer else colors.surfaceElevated,
+        borderColor = if (selected) colors.primary else colors.outline,
+        borderWidth = 1.dp,
+    ) {
+        Column(Modifier.padding(spacing.md)) {
+            Text(
+                text = analysisTitle(source),
+                style = typography.titleMedium,
+                color = colors.textPrimary,
+            )
+            Spacer(Modifier.height(spacing.xs))
+            Text(
+                text = analysisRange(source),
+                style = typography.bodyMedium,
+                color = colors.textSecondary,
+            )
+            Spacer(Modifier.height(spacing.xs))
+            Text(
+                text = status,
+                style = typography.label,
+                color = if (source in state.availableAnalyses) {
+                    colors.primary
+                } else {
+                    colors.textTertiary
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AiAnalysisContextBar(
+    source: AiAnalysisSource,
+    canRemove: Boolean,
+    onRemove: () -> Unit,
+) {
+    val spacing = LocalAppSpacing.current
+    val colors = LocalAppColors.current
+    val typography = LocalAppTypographyStyle.current
+    AppCard(
+        modifier = Modifier
+            .padding(horizontal = spacing.md, vertical = spacing.xs)
+            .fillMaxWidth(),
+        containerColor = colors.primaryContainer,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = spacing.md, end = spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = spacing.sm),
+            ) {
+                Text(
+                    text = AppStrings.aiAnalysisContext,
+                    style = typography.label,
+                    color = colors.textSecondary,
+                )
+                Text(
+                    text = "${analysisTitle(source)} · ${analysisRange(source)}",
+                    style = typography.bodyMedium,
+                    color = colors.textPrimary,
+                )
+            }
+            AppTextButton(
+                onClick = onRemove,
+                label = AppStrings.aiAnalysisRemove,
+                enabled = canRemove,
+            )
+        }
+    }
+}
+
+@Composable
+private fun AiAnalysisUnavailableBanner(
+    source: AiAnalysisSource,
+    reason: AiAnalysisUnavailableReason,
+) {
+    val spacing = LocalAppSpacing.current
+    val colors = LocalAppColors.current
+    val typography = LocalAppTypographyStyle.current
+    val message = if (reason == AiAnalysisUnavailableReason.DATA_DISABLED) {
+        AppStrings.aiAnalysisEnableRecords
+    } else {
+        when (source) {
+            AiAnalysisSource.SLEEP -> AppStrings.aiAnalysisNoSleepRecords
+            AiAnalysisSource.FEEDING -> AppStrings.aiAnalysisNoFeedingRecords
+            AiAnalysisSource.HEALTH -> AppStrings.aiAnalysisNoHealthRecords
+            AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisNoOverviewRecords
+        }
+    }
+    Text(
+        text = message,
+        style = typography.bodyMedium,
+        color = colors.warning,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.warning.copy(alpha = 0.1f))
+            .padding(horizontal = spacing.md, vertical = spacing.sm),
+    )
+}
+
+private fun analysisTitle(source: AiAnalysisSource): String = when (source) {
+    AiAnalysisSource.SLEEP -> AppStrings.aiAnalysisSleep
+    AiAnalysisSource.FEEDING -> AppStrings.aiAnalysisFeeding
+    AiAnalysisSource.HEALTH -> AppStrings.aiAnalysisHealth
+    AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisOverview
+}
+
+private fun analysisRange(source: AiAnalysisSource): String = when (source) {
+    AiAnalysisSource.SLEEP -> AppStrings.aiAnalysisSleepRange
+    AiAnalysisSource.FEEDING -> AppStrings.aiAnalysisFeedingRange
+    AiAnalysisSource.HEALTH -> AppStrings.aiAnalysisHealthRange
+    AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisOverviewRange
 }
 
 @Composable

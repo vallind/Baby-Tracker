@@ -33,6 +33,7 @@ enum class AiQuestionCategory {
 data class AiContextResult(
     val prompt: String,
     val references: List<String>,
+    val hasRecords: Boolean = true,
 )
 
 class AiContextBuilder(
@@ -46,7 +47,14 @@ class AiContextBuilder(
         babyId: Int,
         question: String,
         preferences: AiAssistantPreferences,
+        analysisSource: AiAnalysisSource? = null,
     ): AiContextResult {
+        if (analysisSource != null) {
+            if (!isAnalysisSourceEnabled(analysisSource, preferences)) {
+                return AiContextResult("", emptyList(), hasRecords = false)
+            }
+            return buildAnalysisContext(babyId, analysisSource, preferences)
+        }
         val category = classifyAiQuestion(question)
         if (!isAiContextEnabled(category, preferences)) return AiContextResult("", emptyList())
         val now = LocalDateTime.now()
@@ -89,6 +97,97 @@ class AiContextBuilder(
             ).toContextResult()
         }
     }
+
+    suspend fun availableAnalyses(
+        babyId: Int,
+        preferences: AiAssistantPreferences,
+    ): Set<AiAnalysisSource> = AiAnalysisSource.entries
+        .filterTo(mutableSetOf()) { source ->
+            isAnalysisSourceEnabled(source, preferences) &&
+                buildAnalysisContext(babyId, source, preferences).hasRecords
+        }
+
+    private suspend fun buildAnalysisContext(
+        babyId: Int,
+        source: AiAnalysisSource,
+        preferences: AiAssistantPreferences,
+    ): AiContextResult {
+        val now = LocalDateTime.now()
+        return when (source) {
+            AiAnalysisSource.SLEEP -> {
+                val sleep = summarizeSleep(sleepRepository.watchByBaby(babyId).first(), now)
+                val parts = mutableListOf(
+                    sleep to "最近7天睡眠",
+                )
+                if (preferences.useFeedingRecords) {
+                    parts += summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now) to
+                        "最近3天喂养"
+                }
+                parts.toContextResult(requiredSummary = sleep)
+            }
+            AiAnalysisSource.FEEDING -> {
+                val feeding = summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now)
+                val parts = mutableListOf(
+                    feeding to "最近3天喂养",
+                )
+                if (preferences.useGrowthRecords) {
+                    parts += summarizeGrowth(growthRepository.watchByBaby(babyId).first(), now) to
+                        "最近90天生长"
+                }
+                parts.toContextResult(requiredSummary = feeding)
+            }
+            AiAnalysisSource.HEALTH -> listOf(
+                summarizeHealth(healthRepository.watchByBaby(babyId).first(), now) to
+                    "最近30天健康记录",
+            ).toContextResult()
+            AiAnalysisSource.OVERVIEW -> buildList {
+                if (preferences.useSleepRecords) {
+                    add(
+                        summarizeSleep(sleepRepository.watchByBaby(babyId).first(), now) to
+                            "最近7天睡眠",
+                    )
+                }
+                if (preferences.useFeedingRecords) {
+                    add(
+                        summarizeFeeding(feedingRepository.watchByBaby(babyId).first(), now) to
+                            "最近3天喂养",
+                    )
+                }
+                if (preferences.useDiaperRecords) {
+                    add(
+                        summarizeDiaper(diaperRepository.watchByBaby(babyId).first(), now) to
+                            "最近3天尿布",
+                    )
+                }
+                if (preferences.useGrowthRecords) {
+                    add(
+                        summarizeGrowth(growthRepository.watchByBaby(babyId).first(), now) to
+                            "最近90天生长",
+                    )
+                }
+                if (preferences.useHealthRecords) {
+                    add(
+                        summarizeHealth(healthRepository.watchByBaby(babyId).first(), now) to
+                            "最近30天健康记录",
+                    )
+                }
+            }.toContextResult()
+        }
+    }
+}
+
+internal fun isAnalysisSourceEnabled(
+    source: AiAnalysisSource,
+    preferences: AiAssistantPreferences,
+): Boolean = preferences.useRecentRecords && when (source) {
+    AiAnalysisSource.SLEEP -> preferences.useSleepRecords
+    AiAnalysisSource.FEEDING -> preferences.useFeedingRecords
+    AiAnalysisSource.HEALTH -> preferences.useHealthRecords
+    AiAnalysisSource.OVERVIEW -> preferences.useSleepRecords ||
+        preferences.useFeedingRecords ||
+        preferences.useDiaperRecords ||
+        preferences.useGrowthRecords ||
+        preferences.useHealthRecords
 }
 
 internal fun isAiContextEnabled(
@@ -103,9 +202,13 @@ internal fun isAiContextEnabled(
     AiQuestionCategory.HEALTH -> preferences.useHealthRecords
 }
 
-private fun List<Pair<String, String>>.toContextResult() = AiContextResult(
+private fun List<Pair<String, String>>.toContextResult(
+    requiredSummary: String? = null,
+) = AiContextResult(
     prompt = joinToString("\n") { it.first },
     references = map { it.second },
+    hasRecords = requiredSummary?.let { !it.endsWith("：无记录") }
+        ?: any { !it.first.endsWith("：无记录") },
 )
 
 internal fun classifyAiQuestion(question: String): AiQuestionCategory {
