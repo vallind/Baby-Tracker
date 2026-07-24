@@ -10,7 +10,6 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 enum class StatsPeriod { DAY, WEEK, MONTH, YEAR }
 
@@ -137,6 +136,23 @@ class StatsViewModel(
 
     // ── 聚合核心 ──
 
+    private fun inRange(timestamp: String, rangeStart: LocalDateTime, rangeEnd: LocalDateTime): Boolean {
+        val t = try { LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return false }
+        return !t.isBefore(rangeStart) && t.isBefore(rangeEnd)
+    }
+
+    private fun sleepDurationMinutes(sleep: Sleep): Long {
+        val st = try { LocalDateTime.parse(sleep.startTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return 0L }
+        val et = try { LocalDateTime.parse(sleep.endTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return 0L }
+        return Duration.between(st, et).toMinutes().coerceAtLeast(0)
+    }
+
+    private fun latestGrowth(growths: List<Growth>, type: GrowthType, rangeStart: LocalDateTime, rangeEnd: LocalDateTime): Pair<Float, List<Float>> {
+        val filtered = growths.filter { it.type == type && inRange(it.measuredAt, rangeStart, rangeEnd) }.sortedBy { it.measuredAt }
+        val raw = filtered.lastOrNull()?.value?.toFloat() ?: -1f
+        return raw to filtered.map { it.value.toFloat() }
+    }
+
     private fun aggregate(
         period: StatsPeriod,
         offset: Int,
@@ -144,30 +160,16 @@ class StatsViewModel(
         sleeps: List<Sleep>,
         growths: List<Growth>,
     ): StatsUiState {
-        val now = LocalDateTime.now()
-        val fmt = DateTimeFormatter.ISO_DATE_TIME
-        fun safeParse(dt: String) = try { LocalDateTime.parse(dt, fmt) } catch (_: Exception) { null }
-
-        // 计算当前展示窗口 [start, end)
         val start = periodStart(period, offset)
         val end = periodEnd(period, offset)
-
-        // 日期范围文案
         val dateRangeText = buildDateRangeText(period, start, end)
 
-        // 计算上一周期窗口（用于对比）
         val prevStart = periodStart(period, offset - 1)
         val prevEnd = periodEnd(period, offset - 1)
 
-        // ── 喂养：统计次数，按天分桶用于柱状图 ──
-        val feedingInRange = feedings.filter {
-            val t = safeParse(it.timestamp) ?: return@filter false
-            !t.isBefore(start) && t.isBefore(end)
-        }
-        val feedingPrevInRange = feedings.filter {
-            val t = safeParse(it.timestamp) ?: return@filter false
-            !t.isBefore(prevStart) && t.isBefore(prevEnd)
-        }
+        // ── 喂养 ──
+        val feedingInRange = feedings.filter { inRange(it.timestamp, start, end) }
+        val feedingPrevInRange = feedings.filter { inRange(it.timestamp, prevStart, prevEnd) }
         val feedingCount = feedingInRange.size
         val breastFeedCount = feedingInRange.count { it.type == FeedingType.BREAST }
         val formulaCount = feedingInRange.count { it.type == FeedingType.FORMULA }
@@ -178,67 +180,30 @@ class StatsViewModel(
         val feedingPoints = bucketByDay(period, feedingInRange, start, bucketCount) { 1f }
         val sleepPoints = bucketByDay(
             period,
-            sleeps.filter {
-                val st = safeParse(it.startTime) ?: return@filter false
-                !st.isBefore(start) && st.isBefore(end)
-            },
+            sleeps.filter { inRange(it.startTime, start, end) },
             start,
             bucketCount,
-        ) { s ->
-            val st = safeParse(s.startTime) ?: return@bucketByDay 0f
-            val et = safeParse(s.endTime) ?: return@bucketByDay 0f
-            Duration.between(st, et).toMinutes().coerceAtLeast(0).toFloat() / 60f
-        }
+        ) { s -> sleepDurationMinutes(s).toFloat() / 60f }
 
-        // ── 睡眠：累计分钟数 ──
-        val sleepMinutes = sleeps.filter {
-            val st = safeParse(it.startTime) ?: return@filter false
-            !st.isBefore(start) && st.isBefore(end)
-        }.sumOf { s ->
-            val st = safeParse(s.startTime) ?: return@sumOf 0L
-            val et = safeParse(s.endTime) ?: return@sumOf 0L
-            Duration.between(st, et).toMinutes().coerceAtLeast(0)
-        }
-        val sleepPrevMinutes = sleeps.filter {
-            val st = safeParse(it.startTime) ?: return@filter false
-            !st.isBefore(prevStart) && st.isBefore(prevEnd)
-        }.sumOf { s ->
-            val st = safeParse(s.startTime) ?: return@sumOf 0L
-            val et = safeParse(s.endTime) ?: return@sumOf 0L
-            Duration.between(st, et).toMinutes().coerceAtLeast(0)
-        }
-        // 睡眠对比：分钟差换算为小时展示
+        // ── 睡眠 ──
+        val sleepMinutes = sleeps.filter { inRange(it.startTime, start, end) }.sumOf { sleepDurationMinutes(it) }
+        val sleepPrevMinutes = sleeps.filter { inRange(it.startTime, prevStart, prevEnd) }.sumOf { sleepDurationMinutes(it) }
         val sleepDiffHours = if (sleepMinutes == 0L && sleepPrevMinutes == 0L) 0L
-        else (sleepMinutes - sleepPrevMinutes + 30) / 60 // 四舍五入取整
+        else (sleepMinutes - sleepPrevMinutes + 30) / 60
         val sleepCompare = buildCompare(sleepDiffHours, "时")
 
-        // ── 身高：取最近一条 ──
-        val heightsInRange = growths
-            .filter { it.type == GrowthType.HEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(start) && t.isBefore(end) } == true }
-            .sortedBy { it.measuredAt }
-        val heightsPrev = growths
-            .filter { it.type == GrowthType.HEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(prevStart) && t.isBefore(prevEnd) } == true }
-            .sortedBy { it.measuredAt }
-        val heightRaw = heightsInRange.lastOrNull()?.value?.toFloat() ?: -1f
+        // ── 身高/体重 ──
+        val (heightRaw, heightPoints) = latestGrowth(growths, GrowthType.HEIGHT, start, end)
+        val (heightPrevRaw, _) = latestGrowth(growths, GrowthType.HEIGHT, prevStart, prevEnd)
         val height = if (heightRaw < 0) "--" else "${(heightRaw * 10).toInt() / 10.0}cm"
-        val heightPrevRaw = heightsPrev.lastOrNull()?.value?.toFloat() ?: -1f
         val heightCompare = if (heightRaw < 0 || heightPrevRaw < 0) ""
         else buildCompare(((heightRaw - heightPrevRaw) * 10).toInt() / 10f, "cm")
-        val heightPoints = heightsInRange.map { it.value.toFloat() }
 
-        // ── 体重 ──
-        val weightsInRange = growths
-            .filter { it.type == GrowthType.WEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(start) && t.isBefore(end) } == true }
-            .sortedBy { it.measuredAt }
-        val weightsPrev = growths
-            .filter { it.type == GrowthType.WEIGHT && safeParse(it.measuredAt)?.let { t -> !t.isBefore(prevStart) && t.isBefore(prevEnd) } == true }
-            .sortedBy { it.measuredAt }
-        val weightRaw = weightsInRange.lastOrNull()?.value?.toFloat() ?: -1f
+        val (weightRaw, weightPoints) = latestGrowth(growths, GrowthType.WEIGHT, start, end)
+        val (weightPrevRaw, _) = latestGrowth(growths, GrowthType.WEIGHT, prevStart, prevEnd)
         val weight = if (weightRaw < 0) "--" else "${(weightRaw * 10).toInt() / 10.0}kg"
-        val weightPrevRaw = weightsPrev.lastOrNull()?.value?.toFloat() ?: -1f
         val weightCompare = if (weightRaw < 0 || weightPrevRaw < 0) ""
         else buildCompare(((weightRaw - weightPrevRaw) * 10).toInt() / 10f, "kg")
-        val weightPoints = weightsInRange.map { it.value.toFloat() }
 
         return StatsUiState(
             isLoading = false,

@@ -25,6 +25,7 @@
 - 修复 `AppFAB` icon-only 模式缺 `contentDescription` 的问题，新增可选参数
 - 删除完全死代码 `AppLayers.kt`（Z 轴层级系统，零调用）
 - `LogBuffer` 新增 `entries: SharedFlow`，`LogViewerScreen` 从每秒轮询改为 Flow 驱动
+- `StatsViewModel.aggregate` 提取 `inRange` / `sleepDurationMinutes` / `latestGrowth` 辅助函数，消除非局部返回和 7 处重复 `safeParse`，从 127 行减至 70 行
 
 ### [1.7.6] — 2026-07-24
 
