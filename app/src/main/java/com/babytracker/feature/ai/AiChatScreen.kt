@@ -177,7 +177,11 @@ fun AiChatScreen(navController: NavController) {
                         message = message,
                         renderMarkdown = state.preferences.renderMarkdown,
                         isStreaming = state.isStreaming(message),
+                        canRevise = state.canReviseLastAnswer &&
+                            state.messages.lastOrNull()?.id == message.id,
                         onCopy = copyAnswer,
+                        onRegenerate = viewModel::regenerateLastAnswer,
+                        onEditQuestion = viewModel::editLastQuestion,
                     )
                 }
                 if (state.isSending && !state.hasStreamingAnswer) {
@@ -211,6 +215,7 @@ fun AiChatScreen(navController: NavController) {
                     onRetry = viewModel::retry,
                 )
             }
+            AiHistorySaveStatusBanner(state.historySaveStatus)
             AiComposer(
                 state = state,
                 onInputChange = viewModel::updateInput,
@@ -734,13 +739,17 @@ private fun AiMessageBubble(
     message: AiChatEntry,
     renderMarkdown: Boolean,
     isStreaming: Boolean,
+    canRevise: Boolean,
     onCopy: (String) -> Unit,
+    onRegenerate: () -> Unit,
+    onEditQuestion: () -> Unit,
 ) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
     val typography = LocalAppTypographyStyle.current
     val isUser = message.role == AiChatRole.USER
+    var answerBasisExpanded by remember(message.id) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth(),
@@ -793,25 +802,33 @@ private fun AiMessageBubble(
                 }
                 if (!isUser && !isStreaming && message.content.isNotBlank()) {
                     Spacer(Modifier.height(spacing.sm))
-                    Text(
-                        text = if (message.references.isEmpty()) {
-                            AppStrings.aiNoRecentRecordReference
-                        } else {
-                            AppStrings.aiReferencePrefix + message.references.joinToString("、")
-                        },
-                        style = typography.label,
-                        color = colors.textSecondary,
-                    )
-                    Spacer(Modifier.height(spacing.xs))
-                    Text(
-                        text = AppStrings.aiDisclaimer,
-                        style = typography.label,
-                        color = colors.textTertiary,
-                    )
                     AppTextButton(
-                        onClick = { onCopy(message.content) },
-                        label = AppStrings.aiCopy,
+                        onClick = { answerBasisExpanded = !answerBasisExpanded },
+                        label = if (answerBasisExpanded) {
+                            AppStrings.aiHideAnswerBasis
+                        } else {
+                            AppStrings.aiShowAnswerBasis
+                        },
                     )
+                    if (answerBasisExpanded) {
+                        AiAnswerBasis(message.references)
+                    }
+                    Row {
+                        AppTextButton(
+                            onClick = { onCopy(message.content) },
+                            label = AppStrings.aiCopy,
+                        )
+                        if (canRevise) {
+                            AppTextButton(
+                                onClick = onEditQuestion,
+                                label = AppStrings.aiEditQuestion,
+                            )
+                            AppTextButton(
+                                onClick = onRegenerate,
+                                label = AppStrings.aiRegenerate,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -819,6 +836,49 @@ private fun AiMessageBubble(
             Spacer(Modifier.height(spacing.sm))
             AiRiskCard(riskLevel)
         }
+    }
+}
+
+@Composable
+private fun AiAnswerBasis(references: List<String>) {
+    val colors = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypographyStyle.current
+    Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+        Text(
+            text = AppStrings.aiRecordFacts,
+            style = typography.label,
+            color = colors.textPrimary,
+        )
+        Text(
+            text = if (references.isEmpty()) {
+                AppStrings.aiNoRecentRecordReference
+            } else {
+                AppStrings.aiReferencePrefix + references.joinToString("、")
+            },
+            style = typography.label,
+            color = colors.textSecondary,
+        )
+        Text(
+            text = AppStrings.aiInference,
+            style = typography.label,
+            color = colors.textPrimary,
+        )
+        Text(
+            text = AppStrings.aiInferenceNotice,
+            style = typography.label,
+            color = colors.textSecondary,
+        )
+        Text(
+            text = AppStrings.aiActionAdvice,
+            style = typography.label,
+            color = colors.textPrimary,
+        )
+        Text(
+            text = AppStrings.aiDisclaimer,
+            style = typography.label,
+            color = colors.textTertiary,
+        )
     }
 }
 
@@ -929,6 +989,33 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
             AppTextButton(onClick = onRetry, label = AppStrings.aiRetry)
         }
     }
+}
+
+@Composable
+private fun AiHistorySaveStatusBanner(status: AiHistorySaveStatus) {
+    if (status == AiHistorySaveStatus.IDLE) return
+    val colors = LocalAppColors.current
+    val text = when (status) {
+        AiHistorySaveStatus.IDLE -> return
+        AiHistorySaveStatus.SAVING -> AppStrings.aiHistorySaving
+        AiHistorySaveStatus.SAVED -> AppStrings.aiHistorySaved
+        AiHistorySaveStatus.FAILED -> AppStrings.aiHistorySaveFailed
+    }
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = LocalAppSpacing.current.md,
+                vertical = LocalAppSpacing.current.xs,
+            ),
+        style = LocalAppTypographyStyle.current.label,
+        color = if (status == AiHistorySaveStatus.FAILED) {
+            colors.error
+        } else {
+            colors.textSecondary
+        },
+    )
 }
 
 @Composable

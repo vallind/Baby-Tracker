@@ -62,6 +62,13 @@ enum class AiChatError {
     UNKNOWN,
 }
 
+enum class AiHistorySaveStatus {
+    IDLE,
+    SAVING,
+    SAVED,
+    FAILED,
+}
+
 enum class AiChatPrerequisite {
     READY,
     DISABLED,
@@ -97,6 +104,7 @@ data class AiChatUiState(
     val conversations: List<AiConversationSummary> = emptyList(),
     val historyQuery: String = "",
     val isHistoryLoading: Boolean = false,
+    val historySaveStatus: AiHistorySaveStatus = AiHistorySaveStatus.IDLE,
 ) {
     val canSend: Boolean
         get() = prerequisite == AiChatPrerequisite.READY &&
@@ -106,6 +114,12 @@ data class AiChatUiState(
 
     val hasStreamingAnswer: Boolean
         get() = isSending && messages.lastOrNull()?.role == AiChatRole.ASSISTANT
+
+    val canReviseLastAnswer: Boolean
+        get() = !isSending &&
+            messages.size >= 2 &&
+            messages.last().role == AiChatRole.ASSISTANT &&
+            messages[messages.lastIndex - 1].role == AiChatRole.USER
 
     fun isStreaming(message: AiChatEntry): Boolean =
         hasStreamingAnswer && messages.lastOrNull()?.id == message.id

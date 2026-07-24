@@ -92,6 +92,53 @@ class AiConversationHistoryTest {
         assertEquals(conversations, filterAiConversations(conversations, "  "))
     }
 
+    @Test
+    fun `重新生成只移除最后一个完整回答`() {
+        val messages = listOf(
+            entry(1, AiChatRole.USER, "第一个问题"),
+            entry(2, AiChatRole.ASSISTANT, "第一个回答"),
+            entry(3, AiChatRole.USER, "第二个问题"),
+            entry(4, AiChatRole.ASSISTANT, "第二个回答"),
+        )
+
+        val retained = conversationAfterRemovingLastAnswer(messages)
+
+        assertEquals(listOf(1L, 2L, 3L), retained?.map { it.id })
+    }
+
+    @Test
+    fun `缺少完整问答轮次时不能重新生成`() {
+        val messages = listOf(entry(1, AiChatRole.USER, "尚未回答的问题"))
+
+        assertEquals(null, conversationAfterRemovingLastAnswer(messages))
+    }
+
+    @Test
+    fun `编辑最后问题会移除该轮问题和回答`() {
+        val messages = listOf(
+            entry(1, AiChatRole.USER, "保留的问题"),
+            entry(2, AiChatRole.ASSISTANT, "保留的回答"),
+            entry(3, AiChatRole.USER, "需要修改的问题"),
+            entry(4, AiChatRole.ASSISTANT, "需要替换的回答"),
+        )
+
+        val edit = conversationForEditingLastQuestion(messages)
+
+        assertEquals("需要修改的问题", edit?.question)
+        assertEquals(listOf(1L, 2L), edit?.retainedMessages?.map { it.id })
+    }
+
+    @Test
+    fun `生成中禁止编辑或重新生成最后回答`() {
+        val messages = listOf(
+            entry(1, AiChatRole.USER, "问题"),
+            entry(2, AiChatRole.ASSISTANT, "流式回答"),
+        )
+
+        assertTrue(!AiChatUiState(messages = messages, isSending = true).canReviseLastAnswer)
+        assertTrue(AiChatUiState(messages = messages, isSending = false).canReviseLastAnswer)
+    }
+
     private fun entry(id: Long, role: AiChatRole, content: String) =
         AiChatEntry(id = id, role = role, content = content)
 

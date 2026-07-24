@@ -33,6 +33,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -56,6 +58,7 @@ class AiChatViewModel(
     private var analysisPreparationJob: Job? = null
     private var historyJob: Job? = null
     private var historyScope: Pair<String, Int>? = null
+    private val historySaveMutex = Mutex()
 
     init {
         val babyFlow = selectedBabyId.flatMapLatest { babyId ->
@@ -211,6 +214,7 @@ class AiChatViewModel(
                 conversations = emptyList(),
                 historyQuery = "",
                 isHistoryLoading = true,
+                historySaveStatus = AiHistorySaveStatus.IDLE,
             )
         }
     }
@@ -356,6 +360,7 @@ class AiChatViewModel(
                 analysisUnavailableReason = null,
                 conversationId = null,
                 conversationTitle = null,
+                historySaveStatus = AiHistorySaveStatus.IDLE,
             )
         }
     }
@@ -408,6 +413,7 @@ class AiChatViewModel(
                         analysisUnavailableReason = null,
                         conversationId = conversation.id,
                         conversationTitle = conversation.title,
+                        historySaveStatus = AiHistorySaveStatus.IDLE,
                     )
                 }
             } catch (error: Exception) {
@@ -456,6 +462,36 @@ class AiChatViewModel(
         if (current.isSending || current.messages.lastOrNull()?.role != AiChatRole.USER) return
         _state.update { it.copy(isSending = true, error = null) }
         startCompletion()
+    }
+
+    fun regenerateLastAnswer() {
+        val current = _state.value
+        if (!current.canReviseLastAnswer) return
+        val retainedMessages = conversationAfterRemovingLastAnswer(current.messages) ?: return
+        _state.update {
+            it.copy(
+                messages = retainedMessages,
+                isSending = true,
+                error = null,
+            )
+        }
+        startCompletion()
+    }
+
+    fun editLastQuestion() {
+        val current = _state.value
+        if (!current.canReviseLastAnswer) return
+        val edit = conversationForEditingLastQuestion(current.messages) ?: return
+        _state.update {
+            it.copy(
+                messages = edit.retainedMessages,
+                input = edit.question,
+                error = null,
+                analysisUnavailableSource = null,
+                analysisUnavailableReason = null,
+            )
+        }
+        viewModelScope.launch { persistConversationSafely(_state.value) }
     }
 
     fun stop() {
@@ -679,29 +715,48 @@ class AiChatViewModel(
     private suspend fun persistConversationSafely(snapshot: AiChatUiState): Long? {
         val familyId = snapshot.familyId ?: return snapshot.conversationId
         val babyId = snapshot.baby?.id ?: return snapshot.conversationId
-        if (snapshot.messages.isEmpty()) return snapshot.conversationId
-        return try {
-            historyRepository.saveConversation(
-                conversationId = snapshot.conversationId,
-                familyId = familyId,
-                babyId = babyId,
-                title = aiConversationTitle(snapshot.messages),
-                messages = snapshot.messages.map { message ->
-                    AiStoredMessage(
-                        role = if (message.role == AiChatRole.USER) "user" else "assistant",
-                        content = message.content,
-                        reasoningContent = message.reasoningContent,
-                        providerId = message.providerId,
-                        model = message.model,
-                        references = message.references,
-                        riskLevel = message.riskLevel?.name,
-                        safetyStatus = message.safetyStatus?.name,
-                    )
-                },
-            )
-        } catch (error: Exception) {
-            Timber.tag("AI").e(error, "保存本地 AI 会话失败")
-            snapshot.conversationId
+        return historySaveMutex.withLock {
+            if (snapshot.messages.isEmpty() && snapshot.conversationId == null) {
+                return@withLock snapshot.conversationId
+            }
+            updateHistorySaveStatus(snapshot, AiHistorySaveStatus.SAVING)
+            try {
+                historyRepository.saveConversation(
+                    conversationId = snapshot.conversationId,
+                    familyId = familyId,
+                    babyId = babyId,
+                    title = aiConversationTitle(snapshot.messages),
+                    messages = snapshot.messages.map { message ->
+                        AiStoredMessage(
+                            role = if (message.role == AiChatRole.USER) "user" else "assistant",
+                            content = message.content,
+                            reasoningContent = message.reasoningContent,
+                            providerId = message.providerId,
+                            model = message.model,
+                            references = message.references,
+                            riskLevel = message.riskLevel?.name,
+                            safetyStatus = message.safetyStatus?.name,
+                        )
+                    },
+                ).also {
+                    updateHistorySaveStatus(snapshot, AiHistorySaveStatus.SAVED)
+                }
+            } catch (error: Exception) {
+                Timber.tag("AI").e(error, "保存本地 AI 会话失败")
+                updateHistorySaveStatus(snapshot, AiHistorySaveStatus.FAILED)
+                snapshot.conversationId
+            }
+        }
+    }
+
+    private fun updateHistorySaveStatus(
+        snapshot: AiChatUiState,
+        status: AiHistorySaveStatus,
+    ) {
+        if (_state.value.familyId == snapshot.familyId &&
+            _state.value.baby?.id == snapshot.baby?.id
+        ) {
+            _state.update { it.copy(historySaveStatus = status) }
         }
     }
 

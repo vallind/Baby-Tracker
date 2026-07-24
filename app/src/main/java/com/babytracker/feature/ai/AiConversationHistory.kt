@@ -54,3 +54,28 @@ internal fun filterAiConversations(
             it.preview.contains(keyword, ignoreCase = true)
     }
 }
+
+internal fun conversationAfterRemovingLastAnswer(
+    messages: List<AiChatEntry>,
+): List<AiChatEntry>? {
+    if (messages.size < 2) return null
+    if (messages.last().role != AiChatRole.ASSISTANT) return null
+    if (messages[messages.lastIndex - 1].role != AiChatRole.USER) return null
+    return messages.dropLast(1)
+}
+
+data class AiQuestionEdit(
+    val question: String,
+    val retainedMessages: List<AiChatEntry>,
+)
+
+internal fun conversationForEditingLastQuestion(
+    messages: List<AiChatEntry>,
+): AiQuestionEdit? {
+    val questionIndex = messages.indexOfLast { it.role == AiChatRole.USER }
+    if (questionIndex < 0) return null
+    return AiQuestionEdit(
+        question = messages[questionIndex].content,
+        retainedMessages = messages.take(questionIndex),
+    )
+}
