@@ -2,6 +2,7 @@ package com.babytracker.feature.ai
 
 import com.babytracker.core.ai.AiModelOption
 import com.babytracker.core.ai.settings.AiAssistantPreferences
+import com.babytracker.core.data.repository.AiConversationSummary
 import com.babytracker.core.domain.model.Baby
 
 enum class AiChatRole {
@@ -91,6 +92,11 @@ data class AiChatUiState(
     val isAnalysisAvailabilityLoading: Boolean = false,
     val analysisUnavailableSource: AiAnalysisSource? = null,
     val analysisUnavailableReason: AiAnalysisUnavailableReason? = null,
+    val conversationId: Long? = null,
+    val conversationTitle: String? = null,
+    val conversations: List<AiConversationSummary> = emptyList(),
+    val historyQuery: String = "",
+    val isHistoryLoading: Boolean = false,
 ) {
     val canSend: Boolean
         get() = prerequisite == AiChatPrerequisite.READY &&
@@ -103,4 +109,7 @@ data class AiChatUiState(
 
     fun isStreaming(message: AiChatEntry): Boolean =
         hasStreamingAnswer && messages.lastOrNull()?.id == message.id
+
+    val filteredConversations: List<AiConversationSummary>
+        get() = filterAiConversations(conversations, historyQuery)
 }

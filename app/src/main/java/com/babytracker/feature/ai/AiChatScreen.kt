@@ -29,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,9 +51,11 @@ import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.markdown.AppMarkdownText
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
@@ -64,6 +69,9 @@ import com.babytracker.navigation.Screen
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun AiChatScreen(navController: NavController) {
@@ -76,6 +84,8 @@ fun AiChatScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember(snackbarHostState) { AppSnackbar(snackbarHostState) }
+    var showHistory by remember { mutableStateOf(false) }
+    var deletingConversationId by remember { mutableStateOf<Long?>(null) }
     val copyAnswer: (String) -> Unit = { answer ->
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText(AppStrings.aiAssistant, answer))
@@ -109,6 +119,12 @@ fun AiChatScreen(navController: NavController) {
                 title = AppStrings.aiAssistant,
                 onBack = { navController.popBackStack() },
                 actions = {
+                    IconButton(onClick = { showHistory = true }) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = AppStrings.aiHistory,
+                        )
+                    }
                     IconButton(onClick = { navController.navigate(Screen.AiSettings.route) }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -203,7 +219,177 @@ fun AiChatScreen(navController: NavController) {
             )
         }
     }
+
+    AiHistorySheet(
+        show = showHistory,
+        state = state,
+        onDismiss = { showHistory = false },
+        onQueryChange = viewModel::updateHistoryQuery,
+        onNewConversation = {
+            viewModel.newConversation()
+            showHistory = false
+        },
+        onLoadConversation = { conversationId ->
+            viewModel.loadConversation(conversationId)
+            showHistory = false
+        },
+        onDeleteConversation = { conversationId ->
+            deletingConversationId = conversationId
+        },
+    )
+
+    AppConfirmDialog(
+        show = deletingConversationId != null,
+        title = AppStrings.aiHistoryDeleteTitle,
+        message = AppStrings.aiHistoryDeleteMessage,
+        onConfirm = {
+            deletingConversationId?.let(viewModel::deleteConversation)
+            deletingConversationId = null
+        },
+        onDismiss = { deletingConversationId = null },
+    )
 }
+
+@Composable
+private fun AiHistorySheet(
+    show: Boolean,
+    state: AiChatUiState,
+    onDismiss: () -> Unit,
+    onQueryChange: (String) -> Unit,
+    onNewConversation: () -> Unit,
+    onLoadConversation: (Long) -> Unit,
+    onDeleteConversation: (Long) -> Unit,
+) {
+    val spacing = LocalAppSpacing.current
+    val colors = LocalAppColors.current
+    val typography = LocalAppTypographyStyle.current
+    AppBottomSheet(show = show, onDismiss = onDismiss) {
+        Text(
+            text = AppStrings.aiHistory,
+            style = typography.titleLarge,
+            color = colors.textPrimary,
+            modifier = Modifier.padding(horizontal = spacing.md),
+        )
+        Spacer(Modifier.height(spacing.xs))
+        Text(
+            text = AppStrings.aiHistoryLocalNotice,
+            style = typography.bodyMedium,
+            color = colors.textSecondary,
+            modifier = Modifier.padding(horizontal = spacing.md),
+        )
+        Spacer(Modifier.height(spacing.sm))
+        AppInput(
+            value = state.historyQuery,
+            onValueChange = onQueryChange,
+            label = AppStrings.aiHistorySearch,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.md),
+        )
+        Spacer(Modifier.height(spacing.sm))
+        PrimaryButton(
+            onClick = onNewConversation,
+            label = AppStrings.aiHistoryNewChat,
+            icon = Icons.Default.Add,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = spacing.md),
+        )
+        Spacer(Modifier.height(spacing.sm))
+        val conversations = state.filteredConversations
+        if (state.isHistoryLoading) {
+            Text(
+                text = AppStrings.aiAnalysisLoading,
+                style = typography.bodyMedium,
+                color = colors.textSecondary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(spacing.lg),
+            )
+        } else if (conversations.isEmpty()) {
+            Text(
+                text = if (state.historyQuery.isBlank()) {
+                    AppStrings.aiHistoryEmpty
+                } else {
+                    AppStrings.aiHistoryNoMatch
+                },
+                style = typography.bodyMedium,
+                color = colors.textSecondary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(spacing.lg),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 480.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = spacing.md,
+                    vertical = spacing.xs,
+                ),
+                verticalArrangement = Arrangement.spacedBy(spacing.sm),
+            ) {
+                items(conversations, key = { it.id }) { conversation ->
+                    AppCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onLoadConversation(conversation.id) },
+                        containerColor = if (state.conversationId == conversation.id) {
+                            colors.primaryContainer
+                        } else {
+                            colors.surfaceElevated
+                        },
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = spacing.md, top = spacing.sm, bottom = spacing.sm),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = conversation.title,
+                                    style = typography.titleMedium,
+                                    color = colors.textPrimary,
+                                )
+                                if (conversation.preview.isNotBlank()) {
+                                    Spacer(Modifier.height(spacing.xs))
+                                    Text(
+                                        text = conversation.preview.replace(
+                                            Regex("[\\r\\n]+"),
+                                            " ",
+                                        ).take(80),
+                                        style = typography.bodyMedium,
+                                        color = colors.textSecondary,
+                                        maxLines = 2,
+                                    )
+                                }
+                                Spacer(Modifier.height(spacing.xs))
+                                Text(
+                                    text = formatAiHistoryTime(conversation.updatedAt),
+                                    style = typography.label,
+                                    color = colors.textTertiary,
+                                )
+                            }
+                            IconButton(onClick = { onDeleteConversation(conversation.id) }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = AppStrings.aiHistoryDeleteTitle,
+                                    tint = colors.danger,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(spacing.md))
+    }
+}
+
+private fun formatAiHistoryTime(timestamp: Long): String =
+    SimpleDateFormat("MM-dd HH:mm", Locale.getDefault()).format(Date(timestamp))
 
 @Composable
 private fun AiQuickAnalysisSection(

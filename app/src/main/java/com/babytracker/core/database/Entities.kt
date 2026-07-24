@@ -223,6 +223,74 @@ data class ReminderEntity(
     val deletedAt: Long? = null,
 )
 
+/**
+ * AI 本地会话。会话同时绑定家庭和宝宝，禁止跨作用域读取。
+ * 该表仅保存在本机，不加入 Supabase 同步。
+ */
+@Entity(
+    tableName = "ai_conversations",
+    foreignKeys = [
+        ForeignKey(
+            entity = BabyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["baby_id"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [
+        Index(value = ["family_id", "baby_id", "updated_at"]),
+        Index(value = ["baby_id"]),
+    ],
+)
+data class AiConversationEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @ColumnInfo(name = "family_id") val familyId: String,
+    @ColumnInfo(name = "baby_id") val babyId: Int,
+    val title: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+)
+
+/**
+ * AI 本地消息。思考内容只用于历史展示，不会进入后续模型上下文。
+ */
+@Entity(
+    tableName = "ai_messages",
+    foreignKeys = [
+        ForeignKey(
+            entity = AiConversationEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["conversation_id"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("conversation_id")],
+)
+data class AiMessageEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @ColumnInfo(name = "conversation_id") val conversationId: Long,
+    val role: String,
+    val content: String,
+    @ColumnInfo(name = "reasoning_content") val reasoningContent: String = "",
+    @ColumnInfo(name = "provider_id") val providerId: String? = null,
+    val model: String? = null,
+    @ColumnInfo(name = "references_json") val referencesJson: String = "[]",
+    @ColumnInfo(name = "risk_level") val riskLevel: String? = null,
+    @ColumnInfo(name = "safety_status") val safetyStatus: String? = null,
+    val position: Int,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+)
+
+data class AiConversationSummaryEntity(
+    val id: Long,
+    @ColumnInfo(name = "family_id") val familyId: String,
+    @ColumnInfo(name = "baby_id") val babyId: Int,
+    val title: String,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    val preview: String?,
+)
+
 // ============================================================
 // Supabase 同步元数据表 —— 跟踪每条记录的同步状态
 // ============================================================

@@ -53,6 +53,7 @@ val appModule = module {
     single<MessageRepository> { MessageRepositoryImpl(get()) }
     single<DevelopmentAssessmentRepository> { DevelopmentAssessmentRepositoryImpl(get(), get(), get()) }
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get(), get()) }
+    single<AiHistoryRepository> { AiHistoryRepositoryImpl(get()) }
     single { SyncSettings(get()) }
     single { AiSettingsStore(get()) }
     viewModel { StatsViewModel(get(), get(), get(), get()) }
@@ -64,7 +65,7 @@ val appModule = module {
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
-    viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { AiSettingsViewModel(get(), get(), get()) }
     single { AiContextBuilder(get(), get(), get(), get(), get()) }
 }
@@ -84,6 +85,7 @@ val databaseModule = module {
     single { get<AppDatabase>().reminderDao() }
     single { get<AppDatabase>().syncMetadataDao() }
     single { get<AppDatabase>().syncCursorDao() }
+    single { get<AppDatabase>().aiHistoryDao() }
 }
 
 // ── Supabase 同步模块 ──

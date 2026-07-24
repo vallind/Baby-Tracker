@@ -16,6 +16,8 @@ import com.babytracker.core.ai.settings.AiSettingsStore
 import com.babytracker.core.ai.settings.AiThinkingMode
 import com.babytracker.core.auth.AuthService
 import com.babytracker.core.data.FamilyService
+import com.babytracker.core.data.repository.AiHistoryRepository
+import com.babytracker.core.data.repository.AiStoredMessage
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.util.DateUtils
@@ -42,6 +44,7 @@ class AiChatViewModel(
     private val settingsStore: AiSettingsStore,
     authService: AuthService,
     familyService: FamilyService,
+    private val historyRepository: AiHistoryRepository,
 ) : ViewModel() {
     private val selectedBabyId = MutableStateFlow(0)
     private val messageIds = AtomicLong(0)
@@ -51,6 +54,8 @@ class AiChatViewModel(
     private var requestJob: Job? = null
     private var analysisAvailabilityJob: Job? = null
     private var analysisPreparationJob: Job? = null
+    private var historyJob: Job? = null
+    private var historyScope: Pair<String, Int>? = null
 
     init {
         val babyFlow = selectedBabyId.flatMapLatest { babyId ->
@@ -163,8 +168,11 @@ class AiChatViewModel(
                             } else {
                                 current.error
                             },
+                            conversationId = if (mustStop) null else current.conversationId,
+                            conversationTitle = if (mustStop) null else current.conversationTitle,
                         )
                     }
+                    observeHistory(dependencies.familyId, baby?.id)
                     if (dependencies.prerequisite == AiChatPrerequisite.READY && baby != null) {
                         refreshAnalysisAvailability(
                             baby.id,
@@ -176,17 +184,7 @@ class AiChatViewModel(
         }
         viewModelScope.launch {
             settingsStore.clearConversationRequests.collect {
-                stop()
-                _state.update { state ->
-                    state.copy(
-                        messages = emptyList(),
-                        input = "",
-                        error = null,
-                        analysisContext = null,
-                        analysisUnavailableSource = null,
-                        analysisUnavailableReason = null,
-                    )
-                }
+                newConversation()
             }
         }
     }
@@ -208,6 +206,11 @@ class AiChatViewModel(
                 isAnalysisAvailabilityLoading = true,
                 analysisUnavailableSource = null,
                 analysisUnavailableReason = null,
+                conversationId = null,
+                conversationTitle = null,
+                conversations = emptyList(),
+                historyQuery = "",
+                isHistoryLoading = true,
             )
         }
     }
@@ -335,6 +338,98 @@ class AiChatViewModel(
         }
     }
 
+    fun updateHistoryQuery(value: String) {
+        _state.update { it.copy(historyQuery = value) }
+    }
+
+    fun newConversation() {
+        requestJob?.cancel()
+        requestJob = null
+        _state.update {
+            it.copy(
+                messages = emptyList(),
+                input = "",
+                isSending = false,
+                error = null,
+                analysisContext = null,
+                analysisUnavailableSource = null,
+                analysisUnavailableReason = null,
+                conversationId = null,
+                conversationTitle = null,
+            )
+        }
+    }
+
+    fun loadConversation(conversationId: Long) {
+        val snapshot = _state.value
+        val familyId = snapshot.familyId ?: return
+        val babyId = snapshot.baby?.id ?: return
+        requestJob?.cancel()
+        requestJob = null
+        viewModelScope.launch {
+            try {
+                val conversation = historyRepository.loadConversation(
+                    conversationId = conversationId,
+                    familyId = familyId,
+                    babyId = babyId,
+                ) ?: return@launch
+                if (_state.value.familyId != familyId || selectedBabyId.value != babyId) {
+                    return@launch
+                }
+                val entries = conversation.messages.map { message ->
+                    AiChatEntry(
+                        id = messageIds.incrementAndGet(),
+                        role = if (message.role == "user") {
+                            AiChatRole.USER
+                        } else {
+                            AiChatRole.ASSISTANT
+                        },
+                        content = message.content,
+                        reasoningContent = message.reasoningContent,
+                        providerId = message.providerId,
+                        model = message.model,
+                        references = message.references,
+                        riskLevel = message.riskLevel?.let {
+                            runCatching { AiRiskLevel.valueOf(it) }.getOrNull()
+                        },
+                        safetyStatus = message.safetyStatus?.let {
+                            runCatching { AiAnswerSafetyStatus.valueOf(it) }.getOrNull()
+                        },
+                    )
+                }
+                _state.update {
+                    it.copy(
+                        messages = entries,
+                        input = "",
+                        isSending = false,
+                        error = null,
+                        analysisContext = null,
+                        analysisUnavailableSource = null,
+                        analysisUnavailableReason = null,
+                        conversationId = conversation.id,
+                        conversationTitle = conversation.title,
+                    )
+                }
+            } catch (error: Exception) {
+                Timber.tag("AI").e(error, "加载本地 AI 会话失败")
+            }
+        }
+    }
+
+    fun deleteConversation(conversationId: Long) {
+        val snapshot = _state.value
+        val familyId = snapshot.familyId ?: return
+        val babyId = snapshot.baby?.id ?: return
+        viewModelScope.launch {
+            try {
+                historyRepository.deleteConversation(conversationId, familyId, babyId)
+                if (_state.value.conversationId == conversationId) newConversation()
+            } catch (error: Exception) {
+                Timber.tag("AI").e(error, "删除本地 AI 会话失败")
+            }
+        }
+    }
+
     fun send() {
         val current = _state.value
         val question = current.input.trim()
@@ -367,6 +462,7 @@ class AiChatViewModel(
         requestJob?.cancel()
         requestJob = null
         _state.update { it.copy(isSending = false) }
+        viewModelScope.launch { persistConversationSafely(_state.value) }
     }
 
     private fun startCompletion() {
@@ -402,6 +498,18 @@ class AiChatViewModel(
                         )
                     }
                     return@launch
+                }
+                val savedConversationId = persistConversationSafely(snapshot)
+                if (savedConversationId != null &&
+                    selectedBabyId.value == babyIdAtRequest &&
+                    _state.value.familyId == snapshot.familyId
+                ) {
+                    _state.update {
+                        it.copy(
+                            conversationId = savedConversationId,
+                            conversationTitle = aiConversationTitle(snapshot.messages),
+                        )
+                    }
                 }
                 val requestMessages = buildList {
                     add(
@@ -492,6 +600,7 @@ class AiChatViewModel(
                         error = null,
                     )
                 }
+                persistConversationSafely(_state.value)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: AiProviderException) {
@@ -528,6 +637,71 @@ class AiChatViewModel(
             } finally {
                 requestJob = null
             }
+        }
+    }
+
+    private fun observeHistory(familyId: String?, babyId: Int?) {
+        val nextScope = if (familyId != null && babyId != null) familyId to babyId else null
+        if (historyScope == nextScope) return
+        historyScope = nextScope
+        historyJob?.cancel()
+        _state.update {
+            it.copy(
+                conversations = emptyList(),
+                isHistoryLoading = nextScope != null,
+            )
+        }
+        if (nextScope == null) return
+        historyJob = viewModelScope.launch {
+            try {
+                historyRepository.watchConversations(nextScope.first, nextScope.second)
+                    .collect { conversations ->
+                        if (historyScope == nextScope) {
+                            _state.update {
+                                it.copy(
+                                    conversations = conversations,
+                                    isHistoryLoading = false,
+                                )
+                            }
+                        }
+                    }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                Timber.tag("AI").e(error, "读取本地 AI 会话列表失败")
+                if (historyScope == nextScope) {
+                    _state.update { it.copy(isHistoryLoading = false) }
+                }
+            }
+        }
+    }
+
+    private suspend fun persistConversationSafely(snapshot: AiChatUiState): Long? {
+        val familyId = snapshot.familyId ?: return snapshot.conversationId
+        val babyId = snapshot.baby?.id ?: return snapshot.conversationId
+        if (snapshot.messages.isEmpty()) return snapshot.conversationId
+        return try {
+            historyRepository.saveConversation(
+                conversationId = snapshot.conversationId,
+                familyId = familyId,
+                babyId = babyId,
+                title = aiConversationTitle(snapshot.messages),
+                messages = snapshot.messages.map { message ->
+                    AiStoredMessage(
+                        role = if (message.role == AiChatRole.USER) "user" else "assistant",
+                        content = message.content,
+                        reasoningContent = message.reasoningContent,
+                        providerId = message.providerId,
+                        model = message.model,
+                        references = message.references,
+                        riskLevel = message.riskLevel?.name,
+                        safetyStatus = message.safetyStatus?.name,
+                    )
+                },
+            )
+        } catch (error: Exception) {
+            Timber.tag("AI").e(error, "保存本地 AI 会话失败")
+            snapshot.conversationId
         }
     }
 

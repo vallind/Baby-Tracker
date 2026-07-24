@@ -14,8 +14,9 @@ import com.babytracker.core.database.entity.*
         GrowthEntity::class, VaccinationEntity::class, HealthRecordEntity::class,
         DiaperEntity::class, BackupConfigEntity::class, MessageEntity::class,
         DevelopmentAssessmentEntity::class, ReminderEntity::class,
-        SyncMetadataEntity::class, SyncCursorEntity::class],
-    version = 7, exportSchema = false,
+        SyncMetadataEntity::class, SyncCursorEntity::class,
+        AiConversationEntity::class, AiMessageEntity::class],
+    version = 8, exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun babyDao(): BabyDao
@@ -31,6 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun reminderDao(): ReminderDao
     abstract fun syncMetadataDao(): SyncMetadataDao
     abstract fun syncCursorDao(): SyncCursorDao
+    abstract fun aiHistoryDao(): AiHistoryDao
 
     companion object {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -187,11 +189,76 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS ai_conversations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        family_id TEXT NOT NULL,
+                        baby_id INTEGER NOT NULL,
+                        title TEXT NOT NULL,
+                        created_at INTEGER NOT NULL,
+                        updated_at INTEGER NOT NULL,
+                        FOREIGN KEY(baby_id) REFERENCES babies(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS
+                    index_ai_conversations_family_id_baby_id_updated_at
+                    ON ai_conversations(family_id, baby_id, updated_at)
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_ai_conversations_baby_id
+                    ON ai_conversations(baby_id)
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS ai_messages (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        conversation_id INTEGER NOT NULL,
+                        role TEXT NOT NULL,
+                        content TEXT NOT NULL,
+                        reasoning_content TEXT NOT NULL,
+                        provider_id TEXT,
+                        model TEXT,
+                        references_json TEXT NOT NULL,
+                        risk_level TEXT,
+                        safety_status TEXT,
+                        position INTEGER NOT NULL,
+                        created_at INTEGER NOT NULL,
+                        FOREIGN KEY(conversation_id)
+                            REFERENCES ai_conversations(id) ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_ai_messages_conversation_id
+                    ON ai_messages(conversation_id)
+                    """.trimIndent(),
+                )
+            }
+        }
+
         @Volatile private var instance: AppDatabase? = null
         fun get(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(context, AppDatabase::class.java, "babytracker.db")
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(
+                        MIGRATION_1_2,
+                        MIGRATION_2_3,
+                        MIGRATION_3_4,
+                        MIGRATION_4_5,
+                        MIGRATION_5_6,
+                        MIGRATION_6_7,
+                        MIGRATION_7_8,
+                    )
                     .build().also { instance = it }
             }
         }

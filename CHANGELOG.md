@@ -2,6 +2,15 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.2] — 2026-07-24
+
+**AI 助手 V2 第三阶段：**
+- 新增本地 AI 会话历史，支持继续对话、搜索、删除和开始新对话
+- Room 数据库升级到 8，新增会话与消息表，并保留已有宝宝和业务记录
+- 会话按家庭与宝宝双重隔离，只保存在本机，不加入 Supabase 同步或 Realtime
+- 保存回答、思考内容、模型信息、引用范围与安全状态，思考内容不进入后续模型上下文
+- 补充标题生成和历史搜索测试；Android 应用版本更新为 1.7.2
+
 ### [1.7.1] — 2026-07-24
 
 **AI 助手 V2 第二阶段：**

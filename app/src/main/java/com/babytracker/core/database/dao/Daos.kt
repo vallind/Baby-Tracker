@@ -223,6 +223,102 @@ interface ReminderDao {
     suspend fun delete(entity: ReminderEntity)
 }
 
+@Dao
+interface AiHistoryDao {
+    @Query(
+        """
+        SELECT c.*,
+            (
+                SELECT content
+                FROM ai_messages
+                WHERE conversation_id = c.id
+                ORDER BY position DESC
+                LIMIT 1
+            ) AS preview
+        FROM ai_conversations c
+        WHERE c.family_id = :familyId AND c.baby_id = :babyId
+        ORDER BY c.updated_at DESC
+        """,
+    )
+    fun watchConversations(
+        familyId: String,
+        babyId: Int,
+    ): Flow<List<AiConversationSummaryEntity>>
+
+    @Query(
+        """
+        SELECT * FROM ai_conversations
+        WHERE id = :conversationId
+          AND family_id = :familyId
+          AND baby_id = :babyId
+        LIMIT 1
+        """,
+    )
+    suspend fun getConversation(
+        conversationId: Long,
+        familyId: String,
+        babyId: Int,
+    ): AiConversationEntity?
+
+    @Query(
+        """
+        SELECT * FROM ai_messages
+        WHERE conversation_id = :conversationId
+        ORDER BY position ASC
+        """,
+    )
+    suspend fun getMessages(conversationId: Long): List<AiMessageEntity>
+
+    @Insert
+    suspend fun insertConversation(entity: AiConversationEntity): Long
+
+    @Query(
+        """
+        UPDATE ai_conversations
+        SET title = :title, updated_at = :updatedAt
+        WHERE id = :conversationId
+          AND family_id = :familyId
+          AND baby_id = :babyId
+        """,
+    )
+    suspend fun updateConversation(
+        conversationId: Long,
+        familyId: String,
+        babyId: Int,
+        title: String,
+        updatedAt: Long,
+    ): Int
+
+    @Insert
+    suspend fun insertMessages(messages: List<AiMessageEntity>)
+
+    @Query("DELETE FROM ai_messages WHERE conversation_id = :conversationId")
+    suspend fun deleteMessages(conversationId: Long)
+
+    @Query(
+        """
+        DELETE FROM ai_conversations
+        WHERE id = :conversationId
+          AND family_id = :familyId
+          AND baby_id = :babyId
+        """,
+    )
+    suspend fun deleteConversation(
+        conversationId: Long,
+        familyId: String,
+        babyId: Int,
+    ): Int
+
+    @Transaction
+    suspend fun replaceMessages(
+        conversationId: Long,
+        messages: List<AiMessageEntity>,
+    ) {
+        deleteMessages(conversationId)
+        if (messages.isNotEmpty()) insertMessages(messages)
+    }
+}
+
 // ============================================================
 // Supabase 同步元数据 Dao
 // ============================================================
