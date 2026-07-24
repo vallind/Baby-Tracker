@@ -3,7 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.paparazzi)
 }
 
 android {
@@ -110,7 +109,6 @@ implementation(libs.timber)
 
     // Test
     testImplementation(libs.junit)
-    testImplementation(libs.paparazzi)
     androidTestImplementation(libs.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(platform(libs.compose.bom))
