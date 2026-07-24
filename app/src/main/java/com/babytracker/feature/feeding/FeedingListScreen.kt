@@ -432,6 +432,17 @@ fun FeedingFormDialog(
     val timerDisplay = String.format("%02d:%02d", elapsed / 60, elapsed % 60)
 
     val buildEntity = {
+        if (timerRunning) {
+            timerRunning = false
+            durationMin = (elapsed / 60).toString()
+            feedingDateTime = java.time.Instant.ofEpochMilli(timerStartMs)
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+            prefs.edit()
+                .putBoolean("feeding_timer_running", false)
+                .remove("feeding_timer_form_start_time")
+                .apply()
+        }
         if (isEdit) {
             editEntity.copy(
                 type = FeedingType.fromRaw(type),

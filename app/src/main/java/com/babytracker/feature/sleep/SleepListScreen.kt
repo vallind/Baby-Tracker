@@ -463,6 +463,14 @@ fun SleepFormDialog(
     val timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
     val buildEntity = {
+        if (timerRunning) {
+            timerRunning = false
+            endTime = LocalDateTime.now().format(timeFormatter)
+            prefs.edit()
+                .putBoolean("sleep_timer_running", false)
+                .remove("sleep_timer_form_start_time")
+                .apply()
+        }
         if (isEdit) {
             editEntity.copy(
                 type = SleepType.fromRaw(selectedType),

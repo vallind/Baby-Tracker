@@ -27,6 +27,9 @@
 - `LogBuffer` 新增 `entries: SharedFlow`，`LogViewerScreen` 从每秒轮询改为 Flow 驱动
 - `StatsViewModel.aggregate` 提取 `inRange` / `sleepDurationMinutes` / `latestGrowth` 辅助函数，消除非局部返回和 7 处重复 `safeParse`，从 127 行减至 70 行
 
+**喂奶/睡眠计时器优化：**
+- 喂奶和睡眠表单点击保存时自动结束计时并填入时长/结束时间，无需手动点"结束计时"
+
 ### [1.7.6] — 2026-07-24
 
 **统计页面 P0 可用性修复：**
