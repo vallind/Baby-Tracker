@@ -145,6 +145,8 @@ object AppStrings {
     const val aiReferencePrefix = "本次参考："
     const val aiNoRecentRecordReference = "本次未使用宝宝近期记录"
     const val aiDisclaimer = "AI 回答仅供育儿参考，不能替代医生诊断。"
+    const val aiSafetySupplemented = "已补充本地安全提示"
+    const val aiSafetyBlocked = "原回答未通过本地安全校验"
     const val aiThinking = "正在思考…"
     const val aiShowReasoning = "查看思考过程"
     const val aiHideReasoning = "收起思考过程"

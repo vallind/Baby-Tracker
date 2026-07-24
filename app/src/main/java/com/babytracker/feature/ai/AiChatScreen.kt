@@ -332,6 +332,21 @@ private fun AiMessageBubble(
                     )
                     if (message.content.isNotBlank()) Spacer(Modifier.height(spacing.sm))
                 }
+                if (!isUser && message.safetyStatus != null) {
+                    Text(
+                        text = when (message.safetyStatus) {
+                            AiAnswerSafetyStatus.SUPPLEMENTED -> AppStrings.aiSafetySupplemented
+                            AiAnswerSafetyStatus.BLOCKED -> AppStrings.aiSafetyBlocked
+                        },
+                        style = typography.label,
+                        color = if (message.safetyStatus == AiAnswerSafetyStatus.BLOCKED) {
+                            colors.error
+                        } else {
+                            colors.warning
+                        },
+                    )
+                    Spacer(Modifier.height(spacing.sm))
+                }
                 if (message.content.isNotBlank()) {
                     if (!isUser && renderMarkdown) {
                         AppMarkdownText(

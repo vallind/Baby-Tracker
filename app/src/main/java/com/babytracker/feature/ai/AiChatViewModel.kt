@@ -231,6 +231,7 @@ class AiChatViewModel(
         val optionId = snapshot.selectedOptionId
         val currentQuestion = snapshot.messages.lastOrNull { it.role == AiChatRole.USER }?.content.orEmpty()
         val riskLevel = snapshot.messages.lastOrNull { it.role == AiChatRole.USER }?.riskLevel
+        val bufferForSafety = shouldBufferAiAnswer(currentQuestion, riskLevel)
 
         requestJob?.cancel()
         requestJob = viewModelScope.launch {
@@ -268,6 +269,8 @@ class AiChatViewModel(
                     generationOptions = snapshot.preferences.toGenerationOptions(),
                 ) { output ->
                     if (selectedBabyId.value != babyIdAtRequest) return@complete
+                    // 健康问题先完整校验再展示，避免流式内容绕过本地安全层。
+                    if (bufferForSafety) return@complete
                     if (output.text.isEmpty() && output.reasoningContent.isEmpty()) {
                         streamedEntryId?.let { entryId ->
                             _state.update { state ->
@@ -299,15 +302,19 @@ class AiChatViewModel(
                     }
                 }
                 if (selectedBabyId.value != babyIdAtRequest) return@launch
+                val safetyResult = validateAiAnswer(completion.text, riskLevel)
                 _state.update {
                     val entry = AiChatEntry(
                         id = streamedEntryId ?: messageIds.incrementAndGet(),
                         role = AiChatRole.ASSISTANT,
-                        content = completion.text,
-                        reasoningContent = completion.reasoningContent,
+                        content = safetyResult.content,
+                        reasoningContent = completion.reasoningContent
+                            .takeUnless { safetyResult.status == AiAnswerSafetyStatus.BLOCKED }
+                            .orEmpty(),
                         providerId = completion.providerId,
                         model = completion.model,
                         references = context.references,
+                        safetyStatus = safetyResult.status,
                     )
                     val exists = it.messages.any { message -> message.id == entry.id }
                     it.copy(
