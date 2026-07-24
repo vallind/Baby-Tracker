@@ -216,6 +216,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 - 调整依赖版本前必须先从官方仓库或 Maven Central 元数据确认该版本真实发布，不能只以本机解析成功为依据。
 - 新增或升级 Gradle 插件后，至少用一次空 `GRADLE_USER_HOME` 执行配置阶段验证。
-- 只有确认版本和插件标记均已发布后，才能把问题归因于 Plugin DSL；不要用坐标映射掩盖不存在的版本。
+- 版本已发布但 Plugin DSL 标记未发布时，可在 `pluginManagement.resolutionStrategy` 中将插件 ID 显式映射到官方实现模块。
+- 显式坐标映射只能解决插件标记缺失，不能让不存在的实现版本变得可用。
 - 失败的 CI 缓存可能保留依赖不存在的负缓存；需要备用仓库时应使用官方地址和 `content` 范围限制，不能把全部依赖切到未知镜像。
 - CI 首次失败应先看配置阶段和依赖解析日志，不能因本机测试通过就判断为 GitHub 网络抖动。
