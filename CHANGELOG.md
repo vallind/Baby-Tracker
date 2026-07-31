@@ -2,6 +2,15 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.8.0] — 2026-07-31
+
+**精致感重塑示范（设置页）：**
+- 设置页主屏 6 行从 emoji 文本改为矢量图标（ChildCare/People/Notifications/Palette/Cloud/HelpOutline），保留 40dp 主色容器
+- 行标题升级为 titleMedium(16sp)、副标题升级为 bodyMedium(13sp)，用户卡显示名升级 titleLarge(18sp)
+- 分组间距 12dp → 20dp、页面顶部 12dp → 16dp，均走间距令牌
+- 主屏排版全部收敛到 AppTypography 7 级单源，消除 M3 BabyTrackerTypography 混用
+- 新增页面私有 `SettingsIconRow`，共享 `SettingsRow` 保持不动（风格验证后再统一迁移）
+
 ### [1.7.8] — 2026-07-24
 
 **同步修复：**

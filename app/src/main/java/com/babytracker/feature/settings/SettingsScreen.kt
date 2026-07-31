@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -46,6 +47,7 @@ import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.PrimaryButton
@@ -56,6 +58,7 @@ import com.babytracker.designsystem.components.dialog.DialogDefaults
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.designsystem.theme.AppTheme
 import com.babytracker.designsystem.theme.ThemeController
@@ -112,7 +115,7 @@ fun SettingsScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.md),
         ) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.md))
 
             UserInfoCard(
                 babyName = baby?.name ?: "未设置",
@@ -131,19 +134,20 @@ fun SettingsScreen(navController: NavController) {
                 } else null,
             )
 
-            Spacer(Modifier.height(12.dp))
+            // 页面级语义间距（分组间的呼吸感，不在 AppSpacing 内）
+            Spacer(Modifier.height(20.dp))
 
             SettingsSectionTitle("宝宝与家庭")
             SettingsCard {
-                SettingsRow(
-                    emoji = "👶",
+                SettingsIconRow(
+                    icon = Icons.Default.ChildCare,
                     label = "宝宝管理",
                     subtitle = "资料、成长信息与宝宝切换",
                     onClick = { navController.navigate(Screen.BabyManagement.route) },
                 )
                 SettingsDivider()
-                SettingsRow(
-                    emoji = "👨‍👩‍👧",
+                SettingsIconRow(
+                    icon = Icons.Default.People,
                     label = "家庭与账号",
                     subtitle = if (isLoggedIn) "成员管理与账号信息" else "登录后与家人共享记录",
                     onClick = {
@@ -153,34 +157,35 @@ fun SettingsScreen(navController: NavController) {
                     },
                 )
                 SettingsDivider()
-                SettingsRow(
-                    emoji = "🔔",
+                SettingsIconRow(
+                    icon = Icons.Default.Notifications,
                     label = "提醒设置",
                     subtitle = "喂养、睡眠与护理提醒",
                     onClick = { navController.navigate(Screen.Reminder.route) },
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            // 页面级语义间距（分组间的呼吸感，不在 AppSpacing 内）
+            Spacer(Modifier.height(20.dp))
 
             SettingsSectionTitle("更多设置")
             SettingsCard {
-                SettingsRow(
-                    emoji = "🎨",
+                SettingsIconRow(
+                    icon = Icons.Default.Palette,
                     label = "使用偏好",
                     subtitle = "主题与 AI 助手",
                     onClick = { navController.navigate(Screen.PreferenceSettings.route) },
                 )
                 SettingsDivider()
-                SettingsRow(
-                    emoji = "🔒",
+                SettingsIconRow(
+                    icon = Icons.Default.Cloud,
                     label = "数据与同步",
                     subtitle = "云同步、备份与隐私",
                     onClick = { navController.navigate(Screen.DataSettings.route) },
                 )
                 SettingsDivider()
-                SettingsRow(
-                    emoji = "❓",
+                SettingsIconRow(
+                    icon = Icons.AutoMirrored.Filled.HelpOutline,
                     label = "帮助与关于",
                     subtitle = "问题反馈、运行日志与版本信息",
                     onClick = { navController.navigate(Screen.SupportSettings.route) },
@@ -279,7 +284,7 @@ private fun UserInfoCard(
             ) {
                 Text(
                     displayName.take(1).ifEmpty { "?" },
-                    style = LocalAppTypography.current.headlineSmall,
+                    style = LocalAppTypographyStyle.current.headline,
                     fontWeight = FontWeight.Bold,
                     color = c.onPrimary,
                 )
@@ -291,8 +296,7 @@ private fun UserInfoCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = displayName,
-                        style = LocalAppTypography.current.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        style = LocalAppTypographyStyle.current.titleLarge,
                         color = c.textPrimary,
                     )
                     if (isLoggedIn && onEditNickname != null) {
@@ -312,7 +316,7 @@ private fun UserInfoCard(
                     text = if (isLoggedIn && displayAccount != null) {
                         if (nickname != null) "账号: ${displayAccount.take(8)}…" else "ID: ${displayAccount.take(8)}…"
                     } else "点击登录账号",
-                    style = LocalAppTypography.current.bodySmall,
+                    style = LocalAppTypographyStyle.current.bodyMedium,
                     color = c.textTertiary,
                     maxLines = 1,
                 )
@@ -340,7 +344,7 @@ private fun SettingsSectionTitle(title: String) {
     val spacing = LocalAppSpacing.current
     Text(
         title,
-        style = LocalAppTypography.current.labelMedium,
+        style = LocalAppTypographyStyle.current.label,
         color = c.textSecondary,
         modifier = Modifier.padding(bottom = spacing.sm),
     )
@@ -431,6 +435,58 @@ fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing
         supportingContent = subtitle?.let {
             {
                 Text(it, style = LocalAppTypography.current.bodySmall, color = c.textTertiary)
+            }
+        },
+        trailingContent = trailing ?: {
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = c.textTertiary,
+                modifier = Modifier.size(18.dp),
+            )
+        },
+        onClick = onClick,
+    )
+}
+
+/**
+ * 设置行（图标版）— 精致感示范：
+ * 矢量图标 + titleMedium 行标题 + bodyMedium 副标题。
+ * 共享 SettingsRow 保持不动，等风格验证后统一迁移。
+ */
+@Composable
+private fun SettingsIconRow(
+    icon: ImageVector,
+    label: String,
+    subtitle: String? = null,
+    trailing: @Composable (() -> Unit)? = null,
+    onClick: () -> Unit = {},
+) {
+    val c = LocalAppColors.current
+    val shapes = LocalAppShapes.current
+    AppListItem(
+        leadingContent = {
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(shapes.large))
+                    .background(c.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = c.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        },
+        headlineContent = {
+            Text(label, style = LocalAppTypographyStyle.current.titleMedium, color = c.textPrimary)
+        },
+        supportingContent = subtitle?.let {
+            {
+                Text(it, style = LocalAppTypographyStyle.current.bodyMedium, color = c.textSecondary)
             }
         },
         trailingContent = trailing ?: {
