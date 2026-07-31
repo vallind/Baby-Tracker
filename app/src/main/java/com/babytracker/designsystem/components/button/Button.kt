@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.ButtonDefaults as AppButtonDefaults
+import com.babytracker.designsystem.components.pressScale
 import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
@@ -44,7 +45,7 @@ fun PrimaryButton(
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(cornerRadius),
-        modifier = modifier.height(height),
+        modifier = if (enabled) modifier.height(height).pressScale() else modifier.height(height),
         colors = ButtonDefaults.buttonColors(
             containerColor = AppButtonDefaults.containerColor(),
             contentColor = AppButtonDefaults.contentColor(),
@@ -80,7 +81,7 @@ fun SecondaryButton(
         onClick = onClick,
         enabled = enabled,
         shape = RoundedCornerShape(cornerRadius),
-        modifier = modifier.height(height),
+        modifier = if (enabled) modifier.height(height).pressScale() else modifier.height(height),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = Color.Transparent,
             contentColor = color,
@@ -111,7 +112,7 @@ fun AppTextButton(
     TextButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier,
+        modifier = if (enabled) modifier.pressScale() else modifier,
         colors = ButtonDefaults.textButtonColors(
             contentColor = color,
             disabledContentColor = AppButtonDefaults.disabledContentColor(),

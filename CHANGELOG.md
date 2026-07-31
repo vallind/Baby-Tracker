@@ -2,6 +2,16 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.9.0] — 2026-07-31
+
+**精致感重塑 · 色彩基座 + 动效：**
+- 色彩基座中性化：6 主题背景/顶栏统一中性灰阶，主题色只保留在按钮/图标/选中态等强调位置（Apple HIG 克制原则）
+- `ThemeColors.derive` 默认背景固定中性灰阶（亮 #F5F7FA / 暗 #121212），清理 aurora/warm/sunny/morandi 的显式彩色背景
+- AppBar 亮色容器改为页面同色，移除彩色顶栏；首页顶部渐变灰调化；首页 AI 入口卡/宝宝头像中性化
+- 新增 `Modifier.pressScale()` 按压反馈（按下 0.97 缩放 + 弹簧回弹），应用于按钮/列表项/可点击卡片
+- `AppCard` 新增 `onClick` 参数（可点击卡片，内置按压反馈，向后兼容）
+- 数字跳动动画改为弹簧曲线；恢复页面转场（主 tab 淡入淡出 150ms、层级页滑动转场）
+
 ### [1.8.0] — 2026-07-31
 
 **精致感重塑示范（设置页）：**

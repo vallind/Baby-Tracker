@@ -2,6 +2,7 @@ package com.babytracker.designsystem.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -55,7 +56,7 @@ fun AnimatedListItem(
 fun animateNumber(target: Int): Int {
     val animated by animateIntAsState(
         targetValue = target,
-        animationSpec = tween(durationMillis = 600),
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 350f),
         label = "number",
     )
     return animated

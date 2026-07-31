@@ -113,11 +113,11 @@ private fun AiAssistantEntryCard(navController: NavController) {
     val typography = LocalAppTypographyStyle.current
     val shapes = LocalAppShapes.current
     AppCard(
+        onClick = { navController.navigate(Screen.AiAssistant.route) },
         modifier = Modifier
             .padding(horizontal = spacing.md)
-            .fillMaxWidth()
-            .clickable { navController.navigate(Screen.AiAssistant.route) },
-        containerColor = colors.primaryContainer,
+            .fillMaxWidth(),
+        containerColor = colors.bgHover,
     ) {
         Row(
             Modifier.padding(spacing.md),
@@ -194,7 +194,7 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                 Modifier
                     .size(82.dp)
                     .clip(RoundedCornerShape(shapes.full))
-                    .background(c.primaryContainer),
+                    .background(c.bgHover),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("👶", style = typography.display)

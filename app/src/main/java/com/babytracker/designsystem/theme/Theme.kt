@@ -91,7 +91,8 @@ data class ThemeColors(
             }
 
             val resolvedPrimaryLight = primaryLight ?: primary.mix(white, 0.88f)
-            val resolvedBg = bg ?: if (isDark) Color(0xFF12121F) else resolvedPrimaryLight
+            // 中性基座：背景固定中性灰阶，不再随主色染色（Apple HIG 克制原则）
+            val resolvedBg = bg ?: if (isDark) Color(0xFF121212) else Color(0xFFF5F7FA)
             val resolvedCard = card ?: if (isDark) Color(0xFF1E1E32) else white
             val resolvedPageBg = pageBg ?: resolvedBg
             val resolvedAccent = accent ?: Color(0xFFFFA500)
@@ -150,16 +151,16 @@ data class AppTheme(
         val pure = AppTheme("pure", ThemeColors.derive(primary = Color(0xFF4285F4)))
 
         val aurora = AppTheme("aurora", ThemeColors.derive(
-            primary = Color(0xFF7C6CF0), bg = Color.White, pageBg = Color(0xFFF8F5FF),
+            primary = Color(0xFF7C6CF0),
             accent = Color(0xFFFCD34D),
         ))
 
         val warm = AppTheme("warm", ThemeColors.derive(
-            primary = Color(0xFFFF8A80), bg = Color(0xFFFFFBF7),
+            primary = Color(0xFFFF8A80),
         ))
 
         val sunny = AppTheme("sunny", ThemeColors.derive(
-            primary = Color(0xFFF5A623), bg = Color(0xFFFFFAF0),
+            primary = Color(0xFFF5A623),
             accent = Color(0xFFE67A2E),
         ))
 
@@ -168,7 +169,7 @@ data class AppTheme(
         ))
 
         val morandi = AppTheme("morandi", ThemeColors.derive(
-            primary = Color(0xFFB0BEC5), bg = Color(0xFFFAFAFA),
+            primary = Color(0xFFB0BEC5),
             accent = Color(0xFFD0A878),
         ))
 

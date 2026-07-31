@@ -1,6 +1,11 @@
 package com.babytracker.navigation
 
 import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.*
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
@@ -65,48 +70,64 @@ sealed class Screen(val route: String) {
 fun AppNavigation() {
     val navController = rememberNavController()
     NavHost(navController, startDestination = Screen.Home.route) {
-        instantComposable(Screen.Home.route) { HomeScreen(navController) }
-        instantComposable(Screen.Timeline.route) { TimelineScreen(navController) }
-        instantComposable(Screen.Feeding.route) { FeedingListScreen(navController) }
-        instantComposable(Screen.Sleep.route) { SleepListScreen(navController) }
-        instantComposable(Screen.Growth.route) { GrowthScreen(navController) }
-        instantComposable(Screen.Vaccination.route) { VaccinationListScreen(navController) }
-        instantComposable(Screen.Health.route) { HealthScreen(navController) }
-        instantComposable(Screen.Diaper.route) { DiaperListScreen(navController) }
-        instantComposable(Screen.Stats.route) { StatsScreen(navController) }
-        instantComposable(Screen.Settings.route) { SettingsScreen(navController) }
-        instantComposable(Screen.PreferenceSettings.route) { PreferenceSettingsScreen(navController) }
-        instantComposable(Screen.DataSettings.route) { DataSettingsScreen(navController) }
-        instantComposable(Screen.SupportSettings.route) { SupportSettingsScreen(navController) }
-        instantComposable(Screen.BabyManagement.route) { BabyManagementScreen(navController) }
-        instantComposable(Screen.BabyProfile.route) { BabyProfileScreen(navController) }
-        instantComposable(Screen.Backup.route) { BackupScreen(navController) }
-        instantComposable(Screen.LogViewer.route) { LogViewerScreen(navController) }
-        instantComposable(Screen.SyncSettings.route) { SyncSettingsScreen(navController) }
-        instantComposable(Screen.Family.route) { FamilyPage(navController) }
-        instantComposable(Screen.Message.route) { MessageScreen(navController) }
-        instantComposable(Screen.DevelopmentAssessment.route) { DevelopmentAssessmentScreen(navController) }
-        instantComposable(Screen.Reminder.route) { ReminderScreen(navController) }
-        instantComposable(Screen.Login.route) { LoginScreen(navController) }
-        instantComposable(Screen.AiAssistant.route) { AiChatScreen(navController) }
-        instantComposable(Screen.AiSettings.route) { AiSettingsScreen(navController) }
+        fadeComposable(Screen.Home.route) { HomeScreen(navController) }
+        fadeComposable(Screen.Timeline.route) { TimelineScreen(navController) }
+        fadeComposable(Screen.Feeding.route) { FeedingListScreen(navController) }
+        fadeComposable(Screen.Sleep.route) { SleepListScreen(navController) }
+        fadeComposable(Screen.Growth.route) { GrowthScreen(navController) }
+        fadeComposable(Screen.Vaccination.route) { VaccinationListScreen(navController) }
+        fadeComposable(Screen.Health.route) { HealthScreen(navController) }
+        fadeComposable(Screen.Diaper.route) { DiaperListScreen(navController) }
+        fadeComposable(Screen.Stats.route) { StatsScreen(navController) }
+        fadeComposable(Screen.Settings.route) { SettingsScreen(navController) }
+        slideComposable(Screen.PreferenceSettings.route) { PreferenceSettingsScreen(navController) }
+        slideComposable(Screen.DataSettings.route) { DataSettingsScreen(navController) }
+        slideComposable(Screen.SupportSettings.route) { SupportSettingsScreen(navController) }
+        slideComposable(Screen.BabyManagement.route) { BabyManagementScreen(navController) }
+        slideComposable(Screen.BabyProfile.route) { BabyProfileScreen(navController) }
+        slideComposable(Screen.Backup.route) { BackupScreen(navController) }
+        slideComposable(Screen.LogViewer.route) { LogViewerScreen(navController) }
+        slideComposable(Screen.SyncSettings.route) { SyncSettingsScreen(navController) }
+        slideComposable(Screen.Family.route) { FamilyPage(navController) }
+        fadeComposable(Screen.Message.route) { MessageScreen(navController) }
+        slideComposable(Screen.DevelopmentAssessment.route) { DevelopmentAssessmentScreen(navController) }
+        slideComposable(Screen.Reminder.route) { ReminderScreen(navController) }
+        slideComposable(Screen.Login.route) { LoginScreen(navController) }
+        slideComposable(Screen.AiAssistant.route) { AiChatScreen(navController) }
+        slideComposable(Screen.AiSettings.route) { AiSettingsScreen(navController) }
     }
 }
 
 /**
- * 无动画 composable 封装：切页面立即显示，不等待过渡动画。
- * 解决默认 fade 动画在低端设备或复杂页面上的卡顿问题。
+ * 淡入淡出转场 — 主 tab 级页面切换（Apple 克制风格，150ms）。
  */
-private fun NavGraphBuilder.instantComposable(
+private fun NavGraphBuilder.fadeComposable(
     route: String,
     content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
 ) {
     composable(
         route = route,
-        enterTransition = { null },
-        exitTransition = { null },
-        popEnterTransition = { null },
-        popExitTransition = { null },
+        enterTransition = { fadeIn(tween(150)) },
+        exitTransition = { fadeOut(tween(150)) },
+        popEnterTransition = { fadeIn(tween(150)) },
+        popExitTransition = { fadeOut(tween(150)) },
+        content = content,
+    )
+}
+
+/**
+ * 滑动转场 — 层级 push 页面（淡入 + 轻微右滑入，pop 反向）。
+ */
+private fun NavGraphBuilder.slideComposable(
+    route: String,
+    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
+) {
+    composable(
+        route = route,
+        enterTransition = { fadeIn(tween(150)) + slideInHorizontally(tween(150)) { it / 16 } },
+        exitTransition = { fadeOut(tween(150)) },
+        popEnterTransition = { fadeIn(tween(150)) + slideInHorizontally(tween(150)) { -it / 16 } },
+        popExitTransition = { fadeOut(tween(150)) + slideOutHorizontally(tween(150)) { it / 16 } },
         content = content,
     )
 }

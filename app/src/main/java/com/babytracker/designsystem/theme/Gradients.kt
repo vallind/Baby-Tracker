@@ -37,9 +37,9 @@ object Gradients {
 
     // —— 宝宝追踪专属渐变 ——
 
-    /** 首页顶部背景渐变（浅蓝 → 更浅蓝，营造柔和氛围） */
+    /** 首页顶部背景渐变（主色极淡染 → 页面背景，克制的色彩氛围） */
     fun pageHeader(c: AppColors): Brush = Brush.verticalGradient(
-        colors = listOf(c.primaryContainer, c.pageBackground),
+        colors = listOf(c.bgHover, c.pageBackground),
     )
 
     /** 今日概览卡片渐变（蓝 → 浅蓝，强调今日数据） */

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.components.pressScale
 import com.babytracker.designsystem.components.section.SectionHeaderDefaults as AppSectionHeaderDefaults
 
 /**
@@ -79,7 +80,7 @@ fun AppListItem(
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(min = minHeight)
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .then(if (onClick != null) Modifier.pressScale().clickable(onClick = onClick) else Modifier)
                 .padding(horizontal = horizontalPadding, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

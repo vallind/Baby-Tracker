@@ -504,7 +504,8 @@ data class AppBarTokens(
             titleSize = typography.titleLarge.fontSize,
             titleWeight = FontWeight.SemiBold,
             backIconSize = 22.dp,
-            containerColor = if (darkTheme) colors.pageBackground else colors.primaryContainer,
+            // 中性基座：顶栏与页面同色，无彩色顶栏（Apple 风格）；iconColor 保留主色作强调
+            containerColor = colors.pageBackground,
             titleColor = colors.textPrimary,
             iconColor = colors.primary,
         )
