@@ -498,7 +498,6 @@ data class AppBarTokens(
             colors: AppColors,
             typography: AppTypography,
             control: AppControlTokens,
-            darkTheme: Boolean = false,
         ): AppBarTokens = AppBarTokens(
             height = 56.dp,
             titleSize = typography.titleLarge.fontSize,
@@ -927,7 +926,7 @@ data class AppComponentTokens(
             pagination = PaginationTokens.default(colors, shapes),
             slider = SliderTokens.default(colors),
             rate = RateTokens.default(colors),
-            appBar = AppBarTokens.default(colors, typography, control, darkTheme),
+            appBar = AppBarTokens.default(colors, typography, control),
             chip = ChipTokens.default(colors, shapes, typography),
             fab = FabTokens.default(colors, control, elevation),
             bottomBar = BottomBarTokens.default(colors, typography),
