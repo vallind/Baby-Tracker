@@ -1,105 +1,50 @@
 # Room + Supabase 架构实现文档
 
-> 版本：v1.0 / 更新日期：2026-06-29  
-> 项目：BabyTracker Android App
-
----
-
-## 目录
-
-1. [架构总览](#架构总览)
-2. [Room 本地数据库](#room-本地数据库)
-3. [Supabase 云端集成](#supabase-云端集成)
-4. [双向同步引擎](#双向同步引擎)
-5. [Realtime 实时监听](#realtime-实时监听)
-6. [认证模块](#认证模块)
-7. [家庭共享](#家庭共享)
-8. [数据流全景图](#数据流全景图)
+> 最后更新：2026-08-08 · 对应版本：1.7.11 · 项目：BabyTracker Android App
 
 ---
 
 ## 架构总览
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│  UI Layer (Jetpack Compose Screen + ViewModel + Domain)      │
-├──────────────────────────────────────────────────────────────┤
-│  Repository Layer (Entity ↔ Domain 映射 + SyncMeta 写入)    │
-├──────────────────────┬───────────────────────────────────────┤
-│   Room (SQLite)      │   Supabase (PostgreSQL)               │
-│   ┌─────────────┐    │   ┌──────────────────────────────┐    │
-│   │ 12 Entities │    │   │ Postgrest REST API            │    │
-│   │ 12 DAOs     │◄──►│   │ Auth (Email/Pwd)             │    │
-│   │ AppDatabase │    │   │ Realtime (WebSocket)          │    │
-│   │ v6, 5 Migr. │    │   │ Storage (avatars/attachments) │    │
-│   └─────────────┘    │   └──────────────────────────────┘    │
-├──────────────────────┴───────────────────────────────────────┤
-│  SyncEngine: push() + pull() + fullSync()                    │
-│  RealtimeManager: WebSocket 变更监听 → 写入 Room             │
-│  AuthService: 登录/注册/登出，本地优先不强制登录               │
-│  FamilyService: 家庭创建/加入/成员管理（纯 Supabase）          │
-└──────────────────────────────────────────────────────────────┘
-```
+UI（Compose + ViewModel）→ Repository（Entity↔Domain 映射 + SyncMeta 写入）→ Room(SQLite) ◄──► Supabase（Postgrest / Auth / Realtime / Storage）。同步链路：`SyncEngine`(push/pull) + `RealtimeManager` + `AuthService` + `FamilyService`。
 
 **核心设计原则**：
 - **Local-First（本地优先）**：所有读写首先经过 Room SQLite，UI 不直连 Supabase
-- **登录可选**：未登录时所有数据存本地，登录后开启云同步和家庭协作
+- **登录可选、同步受限**：未登录时纯本地使用；云同步/Realtime 从 1.5.18 起要求**已验证用户 + 家庭成员关系**（`verifiedFamilyForSync`），比"登录即可同步"更严
 - **软删除**：所有业务表用 `deletedAt` 标记删除，不做物理删除
 - **LWW 冲突解决**：比较 `updatedAt`（epoch milli），时间戳较新的覆盖
+- **messages 不参与同步**（1.5.11）：站内信为 App 级私有数据，仅存本机
 
 ---
 
 ## Room 本地数据库
 
-### 数据库文件
+### 数据库文件（`core/database/AppDatabase.kt`）
 
 | 属性 | 值 |
 |------|-----|
-| 文件路径 | `core/database/AppDatabase.kt` |
-| 文件名 | `babytracker.db` |
-| 当前版本 | **6** |
-| Schema 导出 | 关闭 |
-| 单例模式 | `@Volatile` + `synchronized` 双重检查锁 |
+| 文件名 | `babytracker.db`；当前版本 **8**，Schema 导出 **开启**（`exportSchema = true`） |
+| 单例模式 | `@Volatile` + `synchronized` 双重检查锁；迁移 `MIGRATION_1_2` ~ `MIGRATION_7_8` 共 **7 个**（AppDatabase.kt:253-261） |
+### 15 张实体表
 
-### 12 张实体表
-
-| # | 表名 | 实体类 | 主键 | 外键 | 说明 |
-|---|------|--------|------|------|------|
-| 1 | `babies` | `BabyEntity` | `id: Int` auto | — | 宝宝基本信息 |
-| 2 | `feedings` | `FeedingEntity` | `id: Int` auto | `baby_id` | 喂养记录 |
-| 3 | `sleeps` | `SleepEntity` | `id: Int` auto | `baby_id` | 睡眠记录 |
-| 4 | `growths` | `GrowthEntity` | `id: Int` auto | `baby_id` | 生长记录 |
-| 5 | `vaccinations` | `VaccinationEntity` | `id: Int` auto | `baby_id` | 疫苗记录 |
-| 6 | `health_records` | `HealthRecordEntity` | `id: Int` auto | `baby_id` | 健康记录 |
-| 7 | `diapers` | `DiaperEntity` | `id: Int` auto | `baby_id` | 尿布记录 |
-| 8 | `messages` | `MessageEntity` | `id: Long` auto | — | 消息中心（App 级） |
-| 9 | `development_assessments` | `DevelopmentAssessmentEntity` | `id: Int` auto | `baby_id` (CASCADE) | 发育评估 |
-| 10 | `reminders` | `ReminderEntity` | `id: Int` auto | `baby_id` (CASCADE) | 提醒中心 |
-| 11 | `backup_config` | `BackupConfigEntity` | `id: Int` auto | — | WebDAV 备份配置 |
-| 12 | `sync_metadata` | `SyncMetadataEntity` | `id: Int` auto | — | 同步元数据 |
+| # | 表名 | 主键 | 说明 |
+|---|------|------|------|
+| 1 | `babies` | `id: Int` auto | 宝宝基本信息，含 `familyId` 家庭隔离字段 |
+| 2-7 | `feedings` / `sleeps` / `growths` / `vaccinations` / `health_records` / `diapers` | `id: Int` auto | 六张宝宝记录表 |
+| 8 | `backup_config` | `id: Int` auto | WebDAV 备份配置（单条，REPLACE） |
+| 9 | `messages` | `id: Long` auto | 消息中心（App 级，**不参与同步**） |
+| 10 | `development_assessments` | `id: Int` auto | 发育评估，FK `baby_id` (CASCADE) |
+| 11 | `reminders` | `id: Int` auto | 提醒中心，FK `baby_id` (CASCADE) |
+| 12 | `sync_metadata` | `id: Int` auto | 同步元数据（不参与同步） |
+| 13 | `sync_cursors` | 复合 PK `(familyId, tableName)` | 每家庭每表同步游标（v7 起） |
+| 14 | `ai_conversations` | `id: Long` auto | AI 会话（v8 起，**仅本机不同步**），FK `baby_id` |
+| 15 | `ai_messages` | `id: Long` auto | AI 消息（v8 起，**仅本机不同步**），FK `conversation_id` |
 
 ### 同步三件套（Supabase 兼容字段）
 
-除 `BackupConfigEntity` 外，所有业务实体都包含：
+除 `backup_config`、`sync_metadata`、`sync_cursors`、`ai_*` 外，9 张参与同步的业务实体都包含：`uuid: String?`（客户端生成）、`updatedAt: Long`（epoch milli）、`deletedAt: Long?`（非空 = 已软删除）。`BabyEntity` 额外含 `familyId: String?`（离线未选家庭时可为空）。
 
-```kotlin
-val uuid: String? = null       // Supabase 云端 UUID
-val updatedAt: Long = 0L       // 最后更新时间戳（epoch milli）
-val deletedAt: Long? = null    // 软删除时间戳，非空 = 已删除
-```
-
-### 字段类型约定
-
-| 数据类型 | Room 类型 | 说明 |
-|---------|----------|------|
-| 主键（业务表） | `Int` autoGenerate | 自增整数 |
-| 主键（messages） | `Long` autoGenerate | 长整型 |
-| 时间戳 | `Long` | epoch millisecond |
-| 日期字符串 | `String` | ISO 格式 |
-| 布尔值 | `Boolean` | Room 映射为 INTEGER 0/1 |
-| 外键 | `Int` | 与 `BabyEntity.id` 类型一致 |
-
-**无 TypeConverter**：所有字段使用 Room 原生支持的类型。
+**字段类型约定**：业务表主键 `Int` auto；`messages` / `ai_*` 主键 `Long` auto；时间戳一律 `Long`（epoch milli）；日期字符串 `String`（ISO）；布尔 `Boolean`；外键 `Int` 与 `BabyEntity.id` 一致。**无 TypeConverter**，全部使用 Room 原生类型。
 
 ### 迁移历史
 
@@ -107,141 +52,88 @@ val deletedAt: Long? = null    // 软删除时间戳，非空 = 已删除
 |------|------|------|
 | `MIGRATION_1_2` | 1→2 | 创建 `diapers` 表 |
 | `MIGRATION_2_3` | 2→3 | 创建 `messages` 表 |
-| `MIGRATION_3_4` | 3→4 | 创建 `development_assessments` 表，含外键 + 索引 |
-| `MIGRATION_4_5` | 4→5 | 创建 `reminders` 表，含外键 + 索引 |
-| `MIGRATION_5_6` | 5→6 | **Supabase 同步改造**：为 10 张表添加 `uuid`/`updatedAt`/`deletedAt` 列；创建 `sync_metadata` 表 |
+| `MIGRATION_3_4` / `MIGRATION_4_5` | 3→4 / 4→5 | 创建 `development_assessments` / `reminders`（含外键 + 索引） |
+| `MIGRATION_5_6` | 5→6 | **Supabase 同步改造**：10 张表加 `uuid`/`updatedAt`/`deletedAt`；创建旧版 `sync_metadata`（6 字段） |
+| `MIGRATION_6_7` | 6→7 | `babies` 加 `familyId`；重建 `sync_metadata`（新列 `familyId`/`retryCount`/`nextRetryAt`/`lastError`，按 `(tableName, localId)` 去重迁移 + 唯一索引）；**删除 messages 存量同步记录**；创建 `sync_cursors` |
+| `MIGRATION_7_8` | 7→8 | 创建 `ai_conversations` / `ai_messages` 两表（含索引），仅本机 |
 
-### 12 个 DAO 接口
+### 14 个 DAO 接口（`core/database/dao/Daos.kt`）
 
-所有 DAO 定义在 `core/database/dao/Daos.kt`（单文件）。
-
-**统一接口模式**（10 张业务表 DAO）：
-
-| 方法 | 返回 | 说明 |
-|------|------|------|
-| `watchByBaby(babyId)` | `Flow<List<Entity>>` | 按宝宝 ID 监听列表 |
-| `getById(id)` | `Entity?` | 按本地 ID 查单条 |
-| `getByUuid(uuid)` | `Entity?` | 按 Supabase UUID 查单条 |
-| `softDeleteByUuid(uuid, deletedAt, updatedAt)` | — | 按 UUID 软删除 |
-| `insert(entity)` | `Long` | 插入，返回 rowId |
-| `update(entity)` | — | 更新 |
-| `delete(entity)` | — | 物理删除 |
+**统一接口模式**（9 张同步业务表 DAO）：`watchByBaby(babyId)`（过滤 `deletedAt IS NULL`）/ `getById` / `getByUuid` / `softDeleteByUuid(uuid, deletedAt, updatedAt)` / `insert` / `update` / `delete`。
 
 **特殊 DAO**：
-- `MessageDao`：使用 `Long` 主键，提供 `markRead`/`markAllRead`
-- `VaccinationDao`：查询按 `status = 'pending'` 优先排序
-- `ReminderDao`：区分 `watchPending`/`watchHistory`
-- `BackupConfigDao`：单条记录，`REPLACE` 策略
-- `SyncMetadataDao`：同步状态管理（见下方）
+- `MessageDao`：`Long` 主键，`markRead(id)` / `markAllRead()`
+- `VaccinationDao`：查询按 `CASE WHEN status = 'pending'` 优先排序；`ReminderDao`：`watchPending` / `watchHistory`
+- `BackupConfigDao`：单条记录，`@Insert(onConflict = REPLACE)`
+- `BabyDao`：额外 `watchByFamily(familyId)` / `watchUnscoped()`（家庭隔离）
+- `AiHistoryDao`：AI 会话/消息 CRUD，`replaceMessages` 事务内先删后插
+- `SyncMetadataDao` / `SyncCursorDao`：见下
 
-### SyncMetadataDao
+### SyncMetadataDao（1.7.8 重构后）
 
 ```kotlin
-@Dao
-interface SyncMetadataDao {
-    suspend fun getPendingChanges(): List<SyncMetadataEntity>    // 获取所有 pending 变更
-    suspend fun getByTableAndId(tableName, localId): Entity?     // 按表+ID 查同步状态
-    suspend fun getLastSyncAt(): Long?                           // 获取上次同步时间（增量锚点）
-    suspend fun insert(entity): Unit                             // REPLACE 策略
-    suspend fun markSynced(id, remoteUuid, updatedAt): Unit      // 标记已同步
-    suspend fun markConflict(id, updatedAt): Unit                // 标记冲突
-    suspend fun updateLastSyncAt(lastSyncAt): Unit               // 更新全局同步时间戳
-    suspend fun clearLastSyncAt(): Unit                          // 清除（全量拉取用）
-    suspend fun getByRemoteUuid(tableName, remoteUuid): Entity?  // 按云端 UUID 反查
-}
+getPendingChanges(familyId, now)              // pending 且 nextRetryAt <= now，按 updatedAt 升序
+pendingCount(familyId) / getByTableAndId(tableName, localId)
+insert(entity)                                // @Insert(onConflict = IGNORE)
+markSynced(id, remoteUuid, updatedAt)         // 重置 retryCount/nextRetryAt/lastError
+markRetry(id, nextRetryAt, error)             // retryCount+1，指数退避；≥5 次置 conflict
+getByRemoteUuid(tableName, remoteUuid) / updatePending(...)   // 反查 / 复用既有行
+updateByTableAndId(tableName, localId, remoteUuid, syncStatus, updatedAt, lastSyncAt, familyId)
 ```
 
-### SyncMetadataEntity 字段
+> 已删除（1.7.11）：`getLastSyncAt` / `updateLastSyncAt` / `clearLastSyncAt`（增量锚点改为 `sync_cursors`）；已删除（1.7.8）：`markConflict`（改为 `markRetry` 指数退避）。
+
+**SyncMetadataEntity（11 字段 + 唯一索引 `(tableName, localId)`）**：
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `id` | `Int` auto | 主键 |
-| `tableName` | `String` | 表名："feedings", "sleeps", ... |
-| `localId` | `Int` | Room 表的本地 id |
+| `tableName` / `localId` | `String` / `Int` | 表名 + Room 本地 id |
 | `remoteUuid` | `String?` | Supabase 的 UUID |
 | `syncStatus` | `String` | `pending` / `synced` / `conflict` |
-| `updatedAt` | `Long` | 记录更新时间戳 |
-| `lastSyncAt` | `Long?` | 全局上次同步时间戳 |
+| `updatedAt` / `lastSyncAt` | `Long` / `Long?` | 记录更新时间戳 / 上次落库时间戳 |
+| `familyId` / `retryCount` / `nextRetryAt` / `lastError` | — | 家庭隔离 / 失败次数（≥5 → conflict）/ 退避时间窗 / 失败原因 |
+
+**SyncCursorDao**：`get(familyId, tableName)` / `set(SyncCursorEntity)`（REPLACE）/ `clear(familyId)`。
 
 ---
 
 ## Supabase 云端集成
 
-### 客户端初始化
-
-**文件**：`core/sync/SupabaseProvider.kt`
+### 客户端初始化（`core/sync/SupabaseProvider.kt`）
 
 ```kotlin
-object SupabaseProvider {
-    val client: SupabaseClient by lazy {
-        createSupabaseClient(SUPABASE_URL, SUPABASE_KEY) {
-            install(Postgrest)       // REST API
-            install(Auth) {
-                autoLoadFromStorage = true      // 启动自动恢复登录态
-                alwaysAutoRefresh = true        // token 过期自动刷新
-            }
-            install(Realtime)        // WebSocket
-            install(Storage)         // 文件存储（头像/附件）
-        }
+val client: SupabaseClient by lazy {
+    createSupabaseClient(PROJECT_URL, PUBLIC_API_KEY) {
+        install(Postgrest)                     // REST API
+        install(Auth) { autoLoadFromStorage = true; alwaysAutoRefresh = true }
+        install(Realtime)                      // WebSocket
+        install(Storage)                       // 文件存储（头像/附件）
     }
 }
 ```
 
-**关键设计**：
-- `lazy` 延迟初始化，全局单例
-- Auth 配置 `autoLoadFromStorage = true`：App 重启自动恢复登录态
-- Auth 配置 `alwaysAutoRefresh = true`：access token 过期自动刷新
-- 安装了 **4 个模块**：Postgrest、Auth、Realtime、Storage
+`lazy` 延迟初始化，全局单例；安装 **4 个模块**：Postgrest、Auth、Realtime、Storage。只存放客户端可公开的 anon key，严禁放置 service_role / secret key。
 
-### 依赖版本
+### 依赖版本（gradle/libs.versions.toml）
 
 | 依赖 | 版本 |
 |------|------|
-| Supabase BOM | `3.6.0`（`io.github.jan-tennert.supabase:bom`） |
-| Ktor Client | `3.5.1`（Supabase 底层 HTTP 引擎） |
+| Supabase BOM | `3.6.0`（`io.github.jan-tennert.supabase:bom`）；依赖：`postgrest` / `realtime` / `auth` / `storage` |
+| Ktor Client | `3.5.1`（`ktor-client-android` / `ktor-client-okhttp`，Supabase 底层 HTTP 引擎） |
 
-**build.gradle.kts**：
-```kotlin
-implementation(platform(libs.supabase.bom))
-implementation(libs.supabase.postgrest)
-implementation(libs.supabase.realtime)
-implementation(libs.supabase.auth)
-implementation(libs.supabase.storage)
-implementation(libs.ktor.client.android)
-implementation(libs.ktor.client.okhttp)
-```
-
-### Koin DI 模块
-
-**文件**：`core/di/Modules.kt`
+### Koin DI 模块（`core/di/Modules.kt`）
 
 ```kotlin
 val syncModule = module {
     single { SupabaseProvider.client }
     single { AuthService(get(), get()) }
+    single { FamilyService(get(), get()) }          // SupabaseClient + SharedPreferences（Modules.kt:97）
     single { SyncEngine(get(), get()) }
     single { RealtimeManager(get(), get(), get()) }
-    single { FamilyService(get()) }
+    // + SyncTrigger、OkHttpClient、AI 配置链路
 }
-
-val databaseModule = module {
-    single { AppDatabase.get(androidContext()) }
-    single { get<AppDatabase>().babyDao() }
-    // ... 所有 12 个 DAO
-}
-
-val appModule = module {
-    single<SharedPreferences> { ... }
-    single<BabyRepository> { BabyRepositoryImpl(get(), get(), get()) }
-    // ... 10 个 Repository + 10 个 ViewModel
-}
-
-// Application 入口
-class BabyTrackerApp : Application() {
-    override fun onCreate() {
-        startKoin { modules(appModule, databaseModule, syncModule) }
-    }
-}
+// databaseModule：AppDatabase.get(androidContext()) + 14 个 DAO 全部注册（babyDao ~ aiHistoryDao）
 ```
 
 ---
@@ -254,135 +146,96 @@ class BabyTrackerApp : Application() {
 
 | 策略 | 说明 |
 |------|------|
-| **上行 Push** | 扫描 `sync_metadata.syncStatus = 'pending'` → Entity→JSON → Postgrest `upsert`（onConflict=uuid） |
-| **下行 Pull** | 根据 `lastSyncAt` 增量拉取 → `applyRemoteChange()` 写入 Room |
-| **冲突解决** | **LWW**（Last-Write-Wins）：比较 `updatedAt`，新的覆盖旧的 |
-| **家庭隔离** | pull 时添加 `family_id` 过滤，push 时自动注入 `family_id` |
+| **上行 Push** | 扫描 pending 且已过退避期的记录 → Entity→JSON → **先远端 LWW 预检**，远端较新则拉回，否则 `upsert`（onConflict=uuid） |
+| **下行 Pull** | **`sync_version` 游标分页**（每家庭每表），500 行/页，**整页成功才推进游标** |
+| **冲突解决** | **LWW**：比较 `updatedAt`，新的覆盖旧的 |
+| **失败退避** | `markRetry`：`(1L shl retryCount) * 5s` 指数退避，连续失败 ≥5 次置 `conflict` |
+| **家庭隔离** | pull 按 `family_id` 过滤，push 时 `injectFamilyId()` 注入 |
+
+**同步启动门禁**（SyncTrigger / SyncWorker）：`authService.verifiedUserId() != null` 且 `sessionState.verifiedFamilyForSync?.id != null`，否则直接跳过。
 
 ### Push 流程
 
 ```
-1. 读取 sync_metadata 中 syncStatus = 'pending' 的记录
-2. 对每条 pending 记录：
-   a. 通过 tableName 获取 EntityDao
-   b. 按 localId 加载 Room Entity
-   c. entityToJson() 序列化为 JSON
-   d. injectFamilyId() 注入 family_id
-   e. Postgrest upsert（onConflict = "uuid"）
-   f. markSynced() 更新 sync_metadata
-3. 异常时 markConflict() 标记冲突
-4. 全部完成后 updateLastSyncAt()
+1. fid = currentFamilyId，为空直接返回
+2. getPendingChanges(fid, now) 取未过退避期的 pending 记录
+3. 每条记录：a. 取 EntityDao + 按 localId 加载 Room Entity
+             b. entityToJson() + injectFamilyId() 注入 family_id
+             c. 有 remoteUuid 时先 SELECT 预检（eq uuid + eq family_id）：
+                远端存在且 remoteUpdatedAt >= localUpdatedAt → applyRemoteChange() 拉回，不覆盖
+                否则 → upsert（onConflict = "uuid"）；无 remoteUuid → insert
+             d. markSynced()（重置 retryCount/nextRetryAt/lastError）
+4. 单条异常 → markRetry(退避时间窗, 错误信息)，继续下一条
 ```
 
 ### Pull 流程
 
 ```
-1. 读取 lastSyncAt 增量锚点
-2. 对每张业务表执行：
-   a. Postgrest SELECT WHERE family_id = currentFamilyId AND updatedAt >= lastSyncAt
-   b. 对每行远程数据调用 applyRemoteChange()
-3. updateLastSyncAt()
+1. 逐表处理（syncedTables，9 张）：
+   a. pageCursor = syncCursor.get(fid, tableName) ?: 0
+   b. SELECT WHERE family_id = fid AND sync_version > pageCursor，ORDER BY sync_version ASC，LIMIT 500
+   c. 逐行 applyRemoteChange()；整页全部成功才 committedSyncCursor() 推进游标
+   d. 拉满 500 行继续下一页；超时(30s)/异常记入 failures
 ```
+
+> 全量重拉：`resetLastSync()` = `syncCursor.clear(fid)`（旧版 `clearLastSyncAt` 已删除）。
 
 ### applyRemoteChange() — 远程变更写入本地
 
 ```
-1. 按 remoteUuid 查找本地记录
-2. 比较 updatedAt（LWW）：
-   - 本地更新 → 忽略远程
-   - 远程更新或本地不存在 → 写入 Room
-3. 插入 sync_metadata（syncStatus = "synced"）
+1. 按 remoteUuid 查本地记录，比较 updatedAt（LWW）：本地更新 → 忽略
+2. 远程更新或本地不存在 → dao.upsert(json)（按 uuid 查本地：存在则 update 保留原 id，否则 insert）
+3. 写 sync_metadata：先 getByTableAndId 查既有行（1.7.7 起"先查后改"）：
+   有 → updateByTableAndId（保留原 id，避免 push 持有旧 id 空匹配）；无 → insert("synced")
 ```
-
 ### Entity ↔ JSON 转换
 
-SyncEngine 内部维护 10 张表的双向转换逻辑：
+- push 方向：`babyId(Int)` → `babyUuid(String)`（子表引用云端宝宝 UUID）；pull 方向：`resolveLocalBabyId(uuid)` 反查本地 `baby_id`
+- 所有 JSON 解析统一用 `jsonStr()`（`(json[x] as? JsonPrimitive)?.content`），避免 `JsonNull.toString()` 产生字符串 "null"（lessons.md #6）
 
-```
-entityToJson():  BabyEntity → { "uuid": "...", "name": "...", ... }
-                注意：babyId(Int) → babyUuid(String) 映射
-
-parseXxx():      JsonObject → XxxEntity (id=0, babyId 通过 uuid 反查)
-```
-
-### 状态管理
+### 状态与辅助
 
 ```kotlin
 enum class SyncState { IDLE, SYNCING, PUSHING, PULLING }
-val syncState: StateFlow<SyncState>  // 供 UI 展示同步状态
+val syncState: StateFlow<SyncState>
+suspend fun fullSync(): SyncRunResult          // push + pull（fullSyncMutex / pushPullMutex 互斥）
+suspend fun markExistingPending(): List<SyncFailure>   // 存量数据首次同步标记
+suspend fun claimUnscopedData(familyId: String): Int   // 无归属宝宝归入当前家庭
+private class EntityDao<T>(val getById: suspend (Int) -> T?,  // 按本地 ID 查
+    val getByUuid: suspend (String) -> T?,                    // 按 UUID 查
+    val upsert: suspend (JsonObject) -> Long)                 // 写入 Room；1.7.11 已删 updateLocal
 ```
 
-### 内部辅助类
-
-```kotlin
-private class EntityDao<T>(
-    val getById: suspend (Int) -> T?,        // 按本地 ID 查
-    val getByUuid: suspend (String) -> T?,    // 按 UUID 查
-    val upsert: suspend (JsonObject) -> Long, // 写入 Room
-    val updateLocal: suspend (T) -> Unit,     // 更新本地记录
-)
-```
+> `markExistingPending()` 开头会 `DELETE FROM sync_metadata WHERE tableName='messages'`，兜底清理 messages 同步痕迹（lessons.md #3）。
 
 ---
 
-## Repository 层（数据仓库）
+## Repository 层
 
 **文件**：`core/data/repository/Repositories.kt`
 
 ### 统一操作模式
 
-每个 Repository 的 CRUD 操作都遵循同一模式：
-
 ```kotlin
-// 插入
-override suspend fun insert(entity: Domain): Long {
-    val e = entity.copy(uuid = entity.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
-    val id = dao.insert(e)
-    syncMeta.insert(SyncMetadataEntity(
-        tableName = "table_name",
-        localId = id.toInt(),
-        remoteUuid = e.uuid,
-        syncStatus = "pending",
-        updatedAt = e.updatedAt,
-    ))
-    return id
-}
-
-// 更新
-override suspend fun update(entity: Domain) {
-    val e = entity.copy(updatedAt = nowEpoch).toEntity()
-    dao.update(e)
-    syncMeta.insert(SyncMetadataEntity(/* ... */))
-}
-
-// 删除（软删除）
-override suspend fun delete(entity: Domain) {
-    val e = entity.copy(deletedAt = nowEpoch, updatedAt = nowEpoch).toEntity()
-    dao.update(e)
-    syncMeta.insert(SyncMetadataEntity(/* ... */))
-}
+val e = entity.copy(uuid = entity.uuid ?: newUuid(), updatedAt = nowEpoch).toEntity()
+val id = dao.insert(e)
+val updated = syncMeta.updatePending("feedings", id.toInt(), e.uuid, e.updatedAt, currentFamilyId)
+if (updated == 0) syncMeta.insert(SyncMetadataEntity(/* status = pending */))  // 无既有行才插
 ```
 
 ### 关键设计决策
 
-1. **每次写操作同时更新 `sync_metadata`**：自动标记为 `pending`，同步引擎稍后推送
-2. **UUID 在客户端生成**：`UUID.randomUUID().toString()`，不上线也能有全局唯一键
-3. **软删除不物理删除**：`deletedAt` 标记，Room DAO 用 `update()` 而非 `delete()`
-4. **宝宝级联软删除**：`BabyRepository.delete()` 同时软删除该宝宝下的 8 张子表（feedings/sleeps/growths/...）
+1. **每次写操作同时更新 `sync_metadata`**：优先 `updatePending` 复用既有行（IGNORE 策略防重复）
+2. **UUID 在客户端生成**：`UUID.randomUUID()`，不上线也有全局唯一键
+3. **软删除不物理删除**：`deletedAt` 标记，DAO 用 `update()` 而非 `delete()`；`BabyRepository.delete()` 级联软删除 8 张子表
+4. **messages 例外**：`MessageRepositoryImpl(get())` 只注入 MessageDao，**不写 sync_metadata**（1.5.11 消息中心退出云同步）
 
-### Entity ↔ Domain 映射
-
-**文件**：`core/data/mapper/Mappers.kt`
+### Entity ↔ Domain 映射（`core/data/mapper/Mappers.kt`）
 
 ```
-Room Entity  ←→  Domain Model
-  (Long)           (LocalDateTime)   ← 时间类型转换
-  (String)         (Enum)            ← 枚举类型转换
+Room Entity ←→ Domain Model：(Long) ↔ (LocalDateTime) 时间转换（如 MessageEntity.createTime）
+                             (String) ↔ (Enum) 枚举转换（如 FeedingEntity.type ↔ FeedingType）
 ```
-
-例如：
-- `MessageEntity.createTime: Long` ↔ `AppMessage.createTime: LocalDateTime`
-- `FeedingEntity.type: String` ↔ `Feeding.type: FeedingType`（枚举）
 
 ---
 
@@ -390,61 +243,35 @@ Room Entity  ←→  Domain Model
 
 **文件**：`core/sync/RealtimeManager.kt`
 
-### 工作原理
-
 ```
 Supabase PostgreSQL ──WebSocket──> RealtimeManager
-                                       │
-                            ┌──────────┼──────────┐
-                            │          │          │
-                         INSERT     UPDATE     DELETE
-                            │          │          │
-                            ▼          ▼          ▼
-                      applyRemote    applyRemote   softDelete
-                      Change()       Change()      Local()
-                            │          │          │
-                            └──────────┼──────────┘
-                                       ▼
-                                  Room SQLite
-                                       │
-                                       ▼
-                                  Flow 触发 UI 刷新
+    INSERT/UPDATE → applyRemoteChange()（LWW 写入 Room）   DELETE → softDeleteLocal()（按 uuid 软删除）
+    SELECT → 忽略   family_members → 发射 familyMembersChanged（不写 Room）
+                        │ ▼ Room SQLite → Flow 触发 UI 刷新
 ```
 
-### 订阅范围
+### 订阅范围（RealtimeManager.kt:66-70）
 
-监听 11 张表（10 张业务表 + 1 张 `family_members`）：
+监听 **9 张业务表 + 1 张 `family_members`**，**无 `messages`**：
 
 ```kotlin
-val tables = listOf(
-    "babies", "feedings", "sleeps", "growths", "vaccinations",
-    "health_records", "diapers", "messages", "development_assessments", "reminders",
-    "family_members",  // 仅通知 ViewModel 刷新，不写入 Room
-)
+val tables = listOf("babies", "feedings", "sleeps", "growths", "vaccinations",
+    "health_records", "diapers", "development_assessments", "reminders",
+    "family_members")  // 仅通知 ViewModel 刷新，不写入 Room
 ```
 
-### 事件处理
+每张表都带 `filter("family_id", EQ, familyId)`，非当前家庭的事件会被丢弃。
 
-| 事件 | 处理方式 |
-|------|---------|
-| `INSERT` / `UPDATE` | `syncEngine.applyRemoteChange(tableName, record)` → LWW 写入 Room |
-| `DELETE` | `softDeleteLocal(tableName, uuid, now)` → 按 UUID 软删除 |
-| `SELECT` | 忽略 |
-| `family_members` 变更 | 发射 `familyMembersChanged` SharedFlow 通知 ViewModel |
-
-### 状态管理
+### 状态与频道管理
 
 ```kotlin
 enum class RealtimeState { DISCONNECTED, CONNECTING, CONNECTED, ERROR }
-val connectionState: StateFlow<RealtimeState>
-val familyMembersChanged: SharedFlow<Unit>  // 家庭成员变更事件
+val connectionState: StateFlow<RealtimeState>; val familyMembersChanged: SharedFlow<Unit>
 ```
 
-### 频道管理
-
-- **切换家庭时**：先 `disconnect()` 断开旧频道，再 `subscribeAll()` 建立新频道
-- **频道名称**：`"db-changes"`
-- **连接方式**：`blockUntilSubscribed = true`（阻塞直到建立连接）
+- **切换家庭/重新订阅时**：`subscribeAll()` 内部**先 `disconnect()` 再建新频道**（先取消旧 changeJobs、unsubscribe，避免订阅冲突和 RLS 上下文过期）
+- **频道名称**：`"db-changes-$familyId"`（按家庭隔离）
+- **连接方式**：`ch.subscribe(blockUntilSubscribed = true)`，`withTimeout(10_000L)` 超时降级为 DISCONNECTED
 
 ---
 
@@ -455,47 +282,32 @@ val familyMembersChanged: SharedFlow<Unit>  // 家庭成员变更事件
 ### 设计原则
 
 ```
-登录为可选操作，本地优先：
-  - 未登录 → App 完全本地使用，数据存 Room
-  - 已登录 → 开启 Supabase 云同步 + 家庭共享
+登录可选、本地优先：未登录 → 纯本地；已登录 → 云同步 + 家庭共享
+双轨登录态：currentUser（session 合并 SP 缓存，断网回退，UI 用）；verifiedUser（仅会话确认，云同步只能用该值，1.5.18 起）
 ```
 
 ### 账户体系
 
 ```
-用户输入账户名 "zhangsan"
-        │
-        ▼
-  toEmail() 拼接虚拟域名
-        │
-        ▼
-  "zhangsan@baby-tracker.app"
-        │
-        ▼
-  Supabase Email Auth
-        │
-        ▼
-  signUpWith(Email) / signInWith(Email)
+账户名 "zhangsan" → toEmail() 拼接虚拟域名 → "zhangsan@baby-tracker.app"
+  → Supabase Email Auth → signUpWith(Email) / signInWith(Email)
 ```
 
 ### API
 
 | 方法 | 说明 |
 |------|------|
-| `signUp(account, password)` | 注册（自动拼接虚拟域名） |
-| `signIn(account, password)` | 登录 |
-| `signOut()` | 登出（清除 SharedPreferences + Supabase 会话） |
-| `isLoggedIn()` | 是否已登录 |
-| `currentUserId()` | 当前用户 ID |
-| `setNickname(name)` | 设置用户昵称（本地 SP） |
-| `observeAuthState()` | 监听 Supabase Auth 状态流 |
+| `signUp(account, password)` / `signIn(account, password)` | 注册/登录（自动拼接虚拟域名，返回 `Result<UserInfo>`） |
+| `signOut()` | 登出（清除 Supabase 会话 + SharedPreferences） |
+| `isLoggedIn()` / `hasCachedSession()` | 是否已登录（缓存态）/ SP 是否有缓存记录（离线兜底） |
+| `currentUserId()` / `verifiedUserId()` | 当前用户 ID（缓存态）/ 仅会话确认的用户 ID（**同步门禁用**） |
+| `setNickname(name)` / `clearNickname()` | 设置/清除昵称（本地 SP） |
+| `observeAuthState()` / `observeVerifiedAuthState()` | 监听登录状态（缓存合并流 / 已验证流） |
 
 ### 状态持久化
 
-| 存储层 | 内容 | 用途 |
-|--------|------|------|
-| Supabase Auth 内置 | `access_token` / `refresh_token` | `autoLoadFromStorage` + `alwaysAutoRefresh` |
-| SharedPreferences | `auth_logged_in` / `auth_display_account` / `auth_nickname` | 双重保障 + UI 展示 |
+- Supabase Auth 内置：`access_token` / `refresh_token`（`autoLoadFromStorage` + `alwaysAutoRefresh`）
+- SharedPreferences：`auth_logged_in` / `auth_user_id` / `auth_display_account` / `auth_nickname`（双重保障 + UI 展示）
 
 ### 关键配置
 
@@ -510,48 +322,37 @@ val familyMembersChanged: SharedFlow<Unit>  // 家庭成员变更事件
 ### 数据模型
 
 ```kotlin
-@Serializable
-data class Family(
-    val id: String,           // UUID
-    val name: String,         // 家庭名称
-    val inviteCode: String,   // 6 位邀请码（客户端生成）
-)
-
-@Serializable
-data class FamilyMember(
-    val familyId: String,
-    val userId: String,
-    val role: String,         // "owner" / "admin" / "member"
-    val joinedAt: String?,
-)
+data class Family(val id: String = "", val name: String = "",
+    @SerialName("invite_code") val inviteCode: String = "",
+    @SerialName("created_by") val createdBy: String? = null)
+data class FamilyMember(@SerialName("family_id") val familyId: String = "",
+    @SerialName("user_id") val userId: String = "",
+    val role: String = "member",               // "owner" / "member"
+    @SerialName("joined_at") val joinedAt: String? = null)
 ```
-
 ### 设计要点
 
-- **数据仅存于 Supabase**，不在 Room 本地存储
+- **数据仅存于 Supabase**，不在 Room 本地存储；SP 缓存只负责离线展示，**不能驱动同步**
+- **RLS**：业务表策略为 `is_family_member(family_id)`（服务端 SQL），所有请求必须携带合法 `family_id`
+- **加入家庭**通过 `SECURITY DEFINER` 函数绕过 RLS：`client.postgrest.rpc("join_family", mapOf("invite_code" to code))`（FamilyService.kt:203）
 - **邀请码客户端生成**：`SecureRandom` 生成 6 位大写字母+数字
-- **加入家庭**通过 `SECURITY DEFINER` 函数绕过 RLS：
-  ```kotlin
-  client.postgrest.rpc("join_family", parameters = mapOf("invite_code" to code))
-  ```
+- **同步门禁 `verifiedFamilyForSync`**：`sessionVerified && families 包含当前选中家庭` 才返回家庭 ID，否则同步/Realtime 不启动（SyncWorker.kt:26-32、SyncTrigger.kt:123）
 
-### API
+### API 与状态
 
 | 方法 | 说明 |
 |------|------|
-| `createFamily(name)` | 创建家庭 + 将自己设为 owner |
-| `joinFamily(inviteCode)` | 通过邀请码加入 |
-| `loadMyFamilies()` | 获取当前用户的所有家庭 |
-| `selectFamily(family)` | 切换当前家庭 |
-| `getFamilyMembers(familyId)` | 获取家庭成员列表 |
-
-### 状态
-
+| `createFamily(name)` | 创建家庭 + 写入 `family_members`(owner) + 选中 |
+| `joinFamily(inviteCode)` | RPC `join_family` 通过邀请码加入（忽略大小写匹配） |
+| `refreshForUser(userId)` | 用已验证会话刷新家庭列表（1.7.11 起；旧 `loadMyFamilies()` 已删除），请求版本号防过期覆盖 |
+| `selectFamily(family)` / `selectLocalMode()` | 切换家庭 / 本地模式 |
+| `getFamilyMembers(familyId)` | 获取家庭成员（要求已验证成员关系） |
+| `restoreCachedForUser(userId)` / `clearSession()` | 恢复账号专属缓存 / 清空会话状态 |
 ```kotlin
-val myFamilies: StateFlow<List<Family>>      // 我的家庭列表
-val currentFamily: StateFlow<Family?>         // 当前选中的家庭
+val sessionState: StateFlow<FamilySessionState>   // 唯一来源
+val myFamilies: StateFlow<List<Family>>           // 派生
+val currentFamily: StateFlow<Family?>             // activeFamily（本地模式下为 null）
 ```
-
 ---
 
 ## 数据流全景图
@@ -559,72 +360,34 @@ val currentFamily: StateFlow<Family?>         // 当前选中的家庭
 ### 完整数据写入链路
 
 ```
-用户操作 (Screen)
-    │
-    ▼
-ViewModel.CRUD
-    │
-    ▼
-Repository.insert/update/delete()
-    ├── 1. 生成 UUID（如有需要）
-    ├── 2. 设置 updatedAt = System.currentTimeMillis()
-    ├── 3. Domain → Entity 转换（Mapper）
-    ├── 4. Room DAO insert/update
-    └── 5. syncMeta.insert(status = "pending")
-            │
-            ▼
-      SyncEngine.push()
-            │
-            ▼
-      Supabase upsert
-            │
-            ▼
-      syncMeta.markSynced()
+用户操作 (Screen) → ViewModel.CRUD → Repository.insert/update/delete()
+    ├── 1. 生成 UUID（如有需要）  2. updatedAt = now  3. Domain → Entity（Mapper）  4. Room DAO 写入
+    └── 5. syncMeta.updatePending()/insert(status = "pending") → SyncEngine.push()（LWW 预检 → upsert）→ markSynced()
 ```
 
 ### 云端变更接收链路
 
 ```
 另一设备写入 Supabase
-    │
     ├─── 方式 1：Realtime WebSocket 实时推送 ───┐
-    │                                           │
-    │    RealtimeManager.handleRealtimeChange() │
-    │              │                             │
-    │              ▼                             │
-    │    SyncEngine.applyRemoteChange()         │
-    │              │                             │
-    │              ▼                             │
-    │         Room SQLite                       │
-    │              │                             │
-    │              ▼                             │
-    │         Flow → UI                         │
-    │                                           │
-    ├─── 方式 2：定时 SyncEngine.pull() ────────┘
+    │    RealtimeManager → SyncEngine.applyRemoteChange()（LWW） → Room → Flow → UI
+    └─── 方式 2：定时/手动 SyncEngine.pull() ────┘（sync_version 游标分页，500 行/页，整页成功才推进）
 ```
 
-### 现有同步数据映射
+### 同步数据映射
 
-| Room 表 | 同步字段 | 同步方向 | 家庭隔离 |
-|---------|---------|---------|---------|
-| `babies` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `feedings` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `sleeps` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `growths` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `vaccinations` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `health_records` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `diapers` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `messages` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `development_assessments` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `reminders` | uuid, updatedAt, deletedAt | 双向 | family_id |
-| `backup_config` | — | 不同步 | — |
-| `sync_metadata` | — | 不同步 | — |
-
+| Room 表 | 同步方向 | 家庭隔离 | 说明 |
+|---------|---------|---------|------|
+| `babies` | 双向 | family_id + 本地 familyId | 本地额外 `watchUnscoped` 支持 |
+| 其余 8 张业务表（feedings ~ reminders） | 双向 | family_id | 经宝宝归属家庭 |
+| `messages` | **不同步**（1.5.11） | — | 本地私有；不订阅 Realtime、不写 pending、迁移时清理存量 |
+| `backup_config` / `sync_metadata` / `sync_cursors` | 不同步 | — | 本机配置 / 同步引擎内部状态 |
+| `ai_conversations` / `ai_messages` | **不同步**（v8） | — | 仅本机；按 (family, baby) 隔离 |
 ### 文件索引
 
 | 模块 | 文件路径 |
 |------|---------|
-| **Entities** | `core/database/entity/Entities.kt` |
+| **Entities** | `core/database/Entities.kt`（无 entity/ 子目录） |
 | **DAOs** | `core/database/dao/Daos.kt` |
 | **AppDatabase** | `core/database/AppDatabase.kt` |
 | **Mappers** | `core/data/mapper/Mappers.kt` |
@@ -633,5 +396,6 @@ Repository.insert/update/delete()
 | **SupabaseProvider** | `core/sync/SupabaseProvider.kt` |
 | **SyncEngine** | `core/sync/SyncEngine.kt` |
 | **RealtimeManager** | `core/sync/RealtimeManager.kt` |
+| **SyncTrigger / SyncWorker** | `core/sync/SyncTrigger.kt`、`core/sync/SyncWorker.kt` |
 | **AuthService** | `core/auth/AuthService.kt` |
 | **FamilyService** | `core/data/FamilyService.kt` |

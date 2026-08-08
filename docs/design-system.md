@@ -1,5 +1,7 @@
 # 设计系统详细文档
 
+> 最后更新：2026-08-08 · 对应版本：1.7.11
+>
 > 从 AGENTS.md 拆分，供需要深入了解设计系统时查阅。
 
 ## 令牌驱动架构
@@ -30,9 +32,9 @@
 ## derive() 模式
 
 ```kotlin
-AppColors.derive(primary) → HSL 色相位移，自动重算所有 39 个字段
-AppComponentTokens.default(colors) → 从 AppColors 自动派生组件令牌颜色
-tokens.derive { field = value } → 部分覆盖语法糖
+AppColors.derive(primary) → HSL 色相位移，自动重算所有 39 个字段（✅ 已实现）
+AppComponentTokens.default(colors) → 从 AppColors 自动派生组件令牌颜色（✅ 已实现）
+tokens.derive { field = value } → 部分覆盖语法糖（⏳ TODO，TT-032，尚未实现，需逐个字段手动覆盖）
 ```
 
 ## 组件用法速查
@@ -40,12 +42,29 @@ tokens.derive { field = value } → 部分覆盖语法糖
 ```kotlin
 AppCard { Text("内容") }                          // 替代 Card + shadow + shape + CardDefaults 样板
 AppTopBar(title = "标题", onBack = { ... })       // 替代 CenterAlignedTopAppBar
-PrimaryButton(onClick = { ... }, label = "保存")   // 主按钮
-PaiButton("保存", onClick = { ... })               // 简化工厂
-AppConfirmDialog(show, onConfirm, onDismiss)       // 替代 AlertDialog 样板
-snackbar.showUndo(onUndo = { repo.insert(r) })    // 替代 showSnackbar + ActionPerformed 样板
+PrimaryButton(onClick = { ... }, label = "保存")   // 主按钮（支持 containerColor/contentColor 覆盖）
+SecondaryButton(label = "取消", onClick = { ... }) // 次按钮（描边，支持 color 参数）
+AppTextButton(label = "复制", icon = Icons.Default.ContentCopy) // 文本按钮（支持 icon）
+AppDialog(show, title, content = { ... }, confirmEnabled, onConfirm, onDismiss) // 表单/自定义内容对话框
+AppConfirmDialog(show, onConfirm, onDismiss)       // 确认类对话框
+AppFormSheet(show, onSave, ...)                    // 表单底部弹层
+AppBottomSheet(show = true, onDismiss = { ... })   // 通用底部弹层
+AppActionSheet(show, actions = listOf("编辑" to {...})) // 操作选择弹层
+AppInput(value, onValueChange, label)               // 替代 OutlinedTextField
+AppIconButton(icon = Icons.Default.Add, onClick = { ... }) // 图标按钮（支持 tint）
+AppRadioButton(selected, onClick)                  // 单选按钮
+AppSwitch(checked, onCheckedChange)                // 开关
+AppSlider(value, onValueChange)                    // 滑块
+AppCircularProgress()                              // 加载指示器
+AppChip / AppFilterChip(label, selected, onClick)  // 标签/筛选胶囊
+AppListItem(emoji, label, onClick)                 // 列表项
 AppMarkdownText(markdown = content)                // 安全渲染文本 Markdown，不加载远程图片或执行 HTML
+DateTimeCascadeDialog(...)                          // 级联日期时间选择（含 dateOnly 模式）
+RecordCard(record, ...)                             // 记录卡片（左滑删除 + Snackbar 撤销）
+snackbar.showUndo(onUndo = { repo.update(r) })     // 替代 showSnackbar + ActionPerformed 样板（撤销=恢复软删除行）
 ```
+
+> 完整组件/令牌清单与对应关系以代码为准（`designsystem/components/`、`AppComponentTokens.kt`）。
 
 ## Logic 模式（纯 Kotlin，可 JVM 单测）
 

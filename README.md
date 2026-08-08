@@ -1,68 +1,65 @@
 # 宝宝记录 — Baby Tracker (Android)
 
-Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koin + Room。
+Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koin + Room + Supabase 家庭同步。
 
 ## 功能
 
 | 模块 | 说明 |
 |---|---|
-| 首页 | 渐变宝宝头部 · 今日概览（数字动画）· 最近记录 · 功能宫格 |
-| 喂养 | 时间轴样式 · 左时间+彩色圆点+右卡片 · 长按触觉反馈删除 · leadingIcon+校验 |
-| 睡眠 | 蓝渐变顶卡 · 今日夜间睡眠 · 进度条渐变 · 双向 clamp |
-| 生长 | 圆角 Tab · Canvas 折线图 · 渐变填充 · 动态 Y 轴刻度 · WHO 参考虚线 |
-| 疫苗 | 接种计划/记录双 Tab · 一键生成接种计划 · DatePicker |
-| 健康 | 列表式 · emoji + 标题 + 日期 · DatePicker · 空状态引导 |
-| 统计 | 4 个卡片 + 迷你趋势线 |
-| 我的 | 80dp 头像 · 功能区/系统区 · 主题切换 · 备份 |
+| 首页 | 宝宝头部 · 今日概览（数字动画）· 最近记录 · 功能宫格 |
+| 喂养/睡眠/尿布 | 时间轴样式 · 计时器（自动填入时长）· 左滑删除 + 撤销 |
+| 生长 | 圆角 Tab · Canvas 折线图 · WHO 参考虚线 |
+| 疫苗 | 接种计划/记录双 Tab · 一键生成计划 · 四态状态胶囊 |
+| 健康/发育/提醒 | 分类记录 · 发育评估 · 提醒中心 |
+| 统计 | 日/周/月/年周期 · 对比 · 柱状图/折线图 |
+| AI 助手 | 多供应商（OpenAI Responses / 兼容协议）· 流式回答 · 思考过程 · 本地会话历史 · 快捷分析 · 安全校验层 |
+| 家庭共享 | 创建/加入家庭（邀请码 RPC）· 成员管理 · 宝宝数据云同步 |
+| 同步 | 手动/自动/退后台/周期（WorkManager）· Realtime 增量 · sync_version 游标 · 重试退避 |
+| 消息中心 | 互动/系统/服务通知分类（仅本机，不同步） |
+| 设置 | 主题（6 套 + 自定义主色）· 同步策略 · 备份（本地/SAF/WebDAV）· 日志查看器 |
 
 ## 设计系统
 
+`designsystem/` 自建设计系统：
+
 ```kotlin
-// DesignTokens.kt 统一管理几何常量
-DT.pageMargin = 20
-DT.cardGap = 16
-DT.cardRadius = 8
-DT.buttonRadius = 8
-DT.iconSize = 22
-DT.iconBgSize = 40
-DT.appBarHeight = 56
+// AppTokens.kt — 核心语义令牌
+AppColors.light()/dark()          // 39 字段，AppColors.derive(primary) 自动派生
+LocalAppSpacing.current           // 0/2/4/8/16/24/32/48 间距令牌
+LocalAppShapes.current            // 圆角令牌 + radiusScale 全局缩放
 
-// Theme.kt — M3 Shapes 层级
-small      = 16dp  // 列表 Card
-medium     = 20dp  // 容器 Card
-large      = 28dp  // 弹窗
-extraLarge = 32dp
+// AppComponentTokens.kt — 组件令牌（21+ 种）
+AppComponentTokens.default(colors) // 从 AppColors 自动派生组件颜色
 
-// Gradients.kt — 渐变 Brush 工具
-Gradients.primary(c)        // 主色横向渐变
-Gradients.primarySoft(c)    // 主色到背景的纵向渐变（首页头部）
-Gradients.chartArea(c)      // 图表下方填充渐变
-Gradients.progress(c)       // 进度条渐变
+// 组件（designsystem/components/）
+AppCard / AppTopBar / PrimaryButton / AppInput / AppDialog /
+AppConfirmDialog / AppBottomSheet / AppIconButton / AppRadioButton /
+AppSwitch / AppChip / AppSlider / RecordCard / AppMarkdownText ...
 ```
 
-6 套主题（纯净/极光/暖阳/阳光黄/暗夜/莫兰迪）+ 自定义主色。AppBar 统一使用 `primaryContainer` 主题色化。
+6 套主题（纯净/极光/暖阳/阳光黄/暗夜/莫兰迪）+ 自定义主色。业务代码禁止直接使用原生 M3 组件（见 AGENTS.md 红线与 docs/design-system.md）。
 
 ## 技术栈
 
 | 层面 | 选型 |
-|---|---|---|
+|---|---|
 | UI | Jetpack Compose + Material 3 |
 | 启动屏 | androidx.core:core-splashscreen 1.2.0 |
-| 导航 | Navigation Compose 2.9.1 |
-| 数据库 | Room 2.8.4 + KSP 2.3.9 |
+| 导航 | Navigation Compose 2.9.1（25+ 路由，无动画跳转） |
+| 数据库 | Room 2.8.4 + KSP 2.3.9（version 8，15 张表，exportSchema 开启） |
 | DI | Koin 4.2.1（ViewModel 用 `viewModel { }` + `koinViewModel()`） |
 | 架构 | MVVM + ViewModel + StateFlow |
-| 异步 | Kotlin Coroutines 1.11.0 + Flow |
-| 网络 | Retrofit 3.0.0 + OkHttp 5.4.0 |
+| 异步 | Kotlin Coroutines + Flow |
+| 网络 | Retrofit 3.0.0 + OkHttp 5.4.0（WebDAV）+ Supabase Kotlin BOM 3.6.0 |
 | 图片 | Coil 2.7.0 |
-| 构建 | Gradle 9.5.1 + AGP 9.2.1, Java 21, SDK 36 |
-| 发布 | R8 minify + resource shrinking + 自定义 ProGuard 规则 |
+| 构建 | Gradle + AGP, Java 17, compileSdk 36, minSdk 24 |
 
 ## 构建
 
 ```bash
 ./gradlew assembleDebug
-./gradlew assembleRelease   # 启用 R8 + 资源压缩
+./gradlew testDebugUnitTest   # 单元测试（改动后必跑）
+./gradlew assembleRelease     # 启用 R8 + 资源压缩
 ./gradlew lint
 ```
 
@@ -70,35 +67,29 @@ Gradients.progress(c)       // 进度条渐变
 
 ```
 app/src/main/java/com/babytracker/
-├── BabyTrackerApp.kt
-├── MainActivity.kt              # SplashScreen 安装
-├── core/
-│   ├── theme/                   # DT + 6 主题 + ThemeController + Gradients
-│   ├── database/                # Room 实体 + DAO + AppDatabase
-│   ├── di/Modules.kt            # Koin 模块（viewModel { } 注册）
-│   ├── backup/BackupManager.kt  # 备份管理器
-│   └── util/                    # DateUtils (含 safeParse) + VaccineSchedule + BabyController
-├── data/
-│   ├── repository/Repositories.kt  # 7 个 Repository 接口 + 实现
-│   └── database/mapper/Mappers.kt  # Entity ↔ Domain Model 映射（占位）
-├── domain/
-│   └── model/Models.kt          # Domain Model + 枚举（占位）
-└── ui/
-    ├── navigation/              # 路由
-    ├── home/                    # 首页
-    ├── feeding/                 # 喂养
-    ├── sleep/                   # 睡眠
-    ├── growth/                  # 生长
-    ├── vaccination/             # 疫苗
-    ├── health/                  # 健康
-    ├── stats/                   # 统计
-    ├── settings/                # 设置
-    └── components/              # EmptyState / HapticExtensions / BabyIllustration
+├── designsystem/             # 设计系统：主题令牌 + 组件 + Hooks + AppStrings
+├── core/                     # 业务基础设施
+│   ├── ai/                   # AI 配置/供应商适配/安全校验
+│   ├── auth/                 # 登录（AuthService）
+│   ├── backup/               # 备份（BackupManager）
+│   ├── database/             # Room（Entities/Daos/AppDatabase v8）
+│   ├── data/                 # Repository + FamilyService
+│   ├── di/                   # Koin Modules
+│   ├── domain/               # Domain Models
+│   ├── settings/             # AppSettings（DataStore）
+│   ├── sync/                 # SyncEngine/SyncTrigger/RealtimeManager/SyncWorker
+│   └── util/                 # 工具类
+├── feature/                  # 16 个业务模块（home/feeding/sleep/diaper/growth/
+│                             #   vaccination/health/stats/timeline/message/
+│                             #   development/reminder/settings/ai/auth/family）
+└── navigation/               # AppNavigation.kt（25 条路由）
 ```
+
+详细索引见 `docs/project-structure.md`。
 
 ## 数据库
 
-8 张 Room 实体表：babies, feedings, sleeps, growths, vaccinations, health_records, diapers, backup_config。DAO 通过 Flow 暴露数据。
+Room version 8，15 张 @Entity：9 张同步业务表（babies/feedings/sleeps/growths/vaccinations/health_records/diapers/development_assessments/reminders）+ messages（仅本机）+ backup_config + sync_metadata（10 业务字段 + 唯一索引）+ sync_cursors + ai_conversations/ai_messages（仅本机）。
 
 ## 许可
 

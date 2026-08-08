@@ -4,6 +4,16 @@
 
 ### [1.8.0] — 2026-08-08
 
+**文档体系修订（全部文档增加版本日期头，对齐代码实际状态）：**
+- 重写 `docs/sync-architecture.md`：游标分页机制（sync_version 替代 lastSyncAt）、9 张同步表（messages 摘除）、sync_metadata 10 字段 + 唯一索引、markRetry 指数退避、push 远端 LWW 预检、家庭驱动链（替代 ensureFamily）、1.7.7~1.7.11 修复项
+- 重写 `docs/room-supabase-architecture.md`：v8/15 实体/14 DAO/7 迁移/exportSchema、INSERT IGNORE、频道名 db-changes-$familyId、loadMyFamilies 已删、messages 不参与同步
+- 重写 `docs/data-architecture.md`：v8/15 表清单（补 sync_cursors + AI 两表）、"待实施多家庭改造"整节标注已落地
+- 重写 `docs/architecture.md`：25 条路由、12 ViewModel、游标机制、RLS 表清单
+- 修订 `docs/project-structure.md`：16 模块、25+ 路由、15 表、Java 17、derive TODO 标注
+- 修订 `docs/design-system.md`：derive{} 标注未实现（TT-032）、组件速查补全、showUndo 语义修正
+- 修订 `README.md`：功能表补 AI/家庭/同步、目录结构、数据库、测试命令
+- 所有文档统一加 `> 最后更新：2026-08-08 · 对应版本：1.7.11` 头，防止再次漂移
+
 **AGENTS.md 修订（依据 agents.md 开放规范与 Claude Code 写作建议）：**
 - 精简目录结构章节，改为指向 docs/project-structure.md，消除文档漂移
 - 开发命令补充 `testDebugUnitTest`，新增测试纪律章节（何时必写测试、禁止镜像测试、已知盲区清单）
