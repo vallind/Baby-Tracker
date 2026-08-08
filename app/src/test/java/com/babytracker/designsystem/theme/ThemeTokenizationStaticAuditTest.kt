@@ -22,8 +22,14 @@ class ThemeTokenizationStaticAuditTest {
         root.walkTopDown().filter { it.name.endsWith("Defaults.kt") }.toList()
     }
 
+    // 防呆（lessons #14）：walkTopDown 对不存在的路径静默返回空流，必须断言扫描命中文件数 > 0，防止路径漂移后审计假绿
+    private fun assertScanNonEmpty(files: List<File>, scanDesc: String) {
+        assert(files.isNotEmpty()) { "静态审计扫描为空：$scanDesc 路径可能已漂移，审计已失效" }
+    }
+
     @Test
     fun `all Defaults files should reference LocalAppComponentTokens`() {
+        assertScanNonEmpty(defaultsFiles, "components Defaults 目录")
         val violations = defaultsFiles.filterNot { file ->
             file.readText().contains("LocalAppComponentTokens")
         }
@@ -35,6 +41,7 @@ class ThemeTokenizationStaticAuditTest {
 
     @Test
     fun `Defaults should not directly reference Color constants`() {
+        assertScanNonEmpty(defaultsFiles, "components Defaults 目录")
         val suspicious = listOf(
             "Color.Black" to "hardcoded Color.Black",
             "Color.White" to "hardcoded Color.White",
@@ -57,6 +64,7 @@ class ThemeTokenizationStaticAuditTest {
 
     @Test
     fun `Defaults should not import LocalAppColors`() {
+        assertScanNonEmpty(defaultsFiles, "components Defaults 目录")
         val violations = defaultsFiles.filter { file ->
             file.readText().contains("import.*LocalAppColors".toRegex())
         }
@@ -83,9 +91,12 @@ class ThemeTokenizationStaticAuditTest {
             "import androidx.compose.material3.ColorScheme",
             "import androidx.compose.material3.Shapes",
         )
-        val violations = root.walkTopDown()
+        val scannedFiles = root.walkTopDown()
             .filter { it.isFile && it.name.endsWith(".kt") }
             .filterNot { it.path.contains("/designsystem/theme/") }
+            .toList()
+        assertScanNonEmpty(scannedFiles, "组件层与 feature 层 .kt 文件")
+        val violations = scannedFiles
             .filter { file ->
                 val text = file.readText()
                 m3TokenImports.any { text.contains(it) } ||
@@ -93,7 +104,6 @@ class ThemeTokenizationStaticAuditTest {
                     text.contains("MaterialTheme.colorScheme") ||
                     text.contains("MaterialTheme.shapes")
             }
-            .toList()
         assert(violations.isEmpty()) {
             "组件层暴露 M3 令牌/主题类型（token 只允许在 theme 层桥接 M3）:\n" +
                 violations.joinToString("\n") { it.path }
