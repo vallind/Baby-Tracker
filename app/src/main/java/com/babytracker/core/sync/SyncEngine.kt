@@ -77,7 +77,6 @@ class SyncEngine(
                 if (existing != null) { db.babyDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.babyDao().insert(parsed)
             },
-            updateLocal = { entity -> db.babyDao().update(entity as BabyEntity) },
         )
         "feedings" -> EntityDao(
             getById = { id -> db.feedingDao().getById(id) },
@@ -88,7 +87,6 @@ class SyncEngine(
                 if (existing != null) { db.feedingDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.feedingDao().insert(parsed)
             },
-            updateLocal = { entity -> db.feedingDao().update(entity as FeedingEntity) },
         )
         "sleeps" -> EntityDao(
             getById = { id -> db.sleepDao().getById(id) },
@@ -99,7 +97,6 @@ class SyncEngine(
                 if (existing != null) { db.sleepDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.sleepDao().insert(parsed)
             },
-            updateLocal = { entity -> db.sleepDao().update(entity as SleepEntity) },
         )
         "growths" -> EntityDao(
             getById = { id -> db.growthDao().getById(id) },
@@ -110,7 +107,6 @@ class SyncEngine(
                 if (existing != null) { db.growthDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.growthDao().insert(parsed)
             },
-            updateLocal = { entity -> db.growthDao().update(entity as GrowthEntity) },
         )
         "vaccinations" -> EntityDao(
             getById = { id -> db.vaccinationDao().getById(id) },
@@ -121,7 +117,6 @@ class SyncEngine(
                 if (existing != null) { db.vaccinationDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.vaccinationDao().insert(parsed)
             },
-            updateLocal = { entity -> db.vaccinationDao().update(entity as VaccinationEntity) },
         )
         "health_records" -> EntityDao(
             getById = { id -> db.healthRecordDao().getById(id) },
@@ -132,7 +127,6 @@ class SyncEngine(
                 if (existing != null) { db.healthRecordDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.healthRecordDao().insert(parsed)
             },
-            updateLocal = { entity -> db.healthRecordDao().update(entity as HealthRecordEntity) },
         )
         "diapers" -> EntityDao(
             getById = { id -> db.diaperDao().getById(id) },
@@ -143,7 +137,6 @@ class SyncEngine(
                 if (existing != null) { db.diaperDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.diaperDao().insert(parsed)
             },
-            updateLocal = { entity -> db.diaperDao().update(entity as DiaperEntity) },
         )
         "development_assessments" -> EntityDao(
             getById = { id -> db.developmentAssessmentDao().getById(id) },
@@ -154,7 +147,6 @@ class SyncEngine(
                 if (existing != null) { db.developmentAssessmentDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.developmentAssessmentDao().insert(parsed)
             },
-            updateLocal = { entity -> db.developmentAssessmentDao().update(entity as DevelopmentAssessmentEntity) },
         )
         "reminders" -> EntityDao(
             getById = { id -> db.reminderDao().getById(id) },
@@ -165,7 +157,6 @@ class SyncEngine(
                 if (existing != null) { db.reminderDao().update(parsed.copy(id = existing.id)); existing.id.toLong() }
                 else db.reminderDao().insert(parsed)
             },
-            updateLocal = { entity -> db.reminderDao().update(entity as ReminderEntity) },
         )
         else -> null
     }
@@ -219,8 +210,8 @@ class SyncEngine(
                             }
                             .decodeList<JsonObject>()
                             .firstOrNull()
-                        val localUpdatedAt = payload["updatedAt"]?.toString()?.toLongOrNull() ?: meta.updatedAt
-                        val remoteUpdatedAt = remote?.get("updatedAt")?.toString()?.toLongOrNull() ?: Long.MIN_VALUE
+                        val localUpdatedAt = (payload["updatedAt"] as? JsonPrimitive)?.content?.toLongOrNull() ?: meta.updatedAt
+                        val remoteUpdatedAt = (remote?.get("updatedAt") as? JsonPrimitive)?.content?.toLongOrNull() ?: Long.MIN_VALUE
                         if (remote != null && remoteUpdatedAt >= localUpdatedAt) {
                             check(applyRemoteChange(meta.tableName, remote)) { "远程较新记录写入本地失败" }
                         } else {
@@ -288,7 +279,7 @@ class SyncEngine(
                                 var pageApplied = 0
                                 for (row in result) {
                                     check(applyRemoteChange(tableName, row)) { "远程记录写入本地失败" }
-                                    maxVersion = maxOf(maxVersion, row["sync_version"]?.toString()?.toLongOrNull() ?: 0L)
+                                    maxVersion = maxOf(maxVersion, (row["sync_version"] as? JsonPrimitive)?.content?.toLongOrNull() ?: 0L)
                                     pageApplied++
                                 }
                                 val committedCursor = committedSyncCursor(pageCursor, maxVersion, allApplied = true)
@@ -830,7 +821,6 @@ private class EntityDao<T>(
     val getById: suspend (Int) -> T?,
     val getByUuid: suspend (String) -> T?,
     val upsert: suspend (JsonObject) -> Long,
-    val updateLocal: suspend (T) -> Unit,
 )
 
 data class SyncFailure(

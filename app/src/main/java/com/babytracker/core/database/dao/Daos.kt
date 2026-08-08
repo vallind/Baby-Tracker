@@ -150,9 +150,6 @@ interface DiaperDao {
 
 @Dao
 interface MessageDao {
-    @Query("SELECT * FROM messages WHERE type = :type AND deletedAt IS NULL ORDER BY createTime DESC")
-    fun watchByType(type: String): Flow<List<MessageEntity>>
-
     @Query("SELECT * FROM messages WHERE deletedAt IS NULL ORDER BY createTime DESC")
     fun watchAll(): Flow<List<MessageEntity>>
 
@@ -331,17 +328,8 @@ interface SyncMetadataDao {
     @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending' AND familyId = :familyId")
     suspend fun pendingCount(familyId: String): Int
 
-    @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending'")
-    fun watchPendingCount(): Flow<Int>
-
-    @Query("SELECT COUNT(*) FROM sync_metadata WHERE syncStatus = 'pending' AND familyId = :familyId")
-    fun watchPendingCountByFamily(familyId: String): Flow<Int>
-
     @Query("SELECT * FROM sync_metadata WHERE tableName = :tableName AND localId = :localId LIMIT 1")
     suspend fun getByTableAndId(tableName: String, localId: Int): SyncMetadataEntity?
-
-    @Query("SELECT MAX(lastSyncAt) FROM sync_metadata")
-    suspend fun getLastSyncAt(): Long?
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(entity: SyncMetadataEntity)
@@ -358,13 +346,6 @@ interface SyncMetadataDao {
         WHERE id = :id
     """)
     suspend fun markRetry(id: Int, nextRetryAt: Long, error: String?)
-
-    @Query("UPDATE sync_metadata SET lastSyncAt = :lastSyncAt")
-    suspend fun updateLastSyncAt(lastSyncAt: Long)
-
-    /** 清除全局 lastSyncAt 时间戳，使下次 pull 执行全量拉取（用于切换/加入家庭时同步历史数据） */
-    @Query("UPDATE sync_metadata SET lastSyncAt = NULL")
-    suspend fun clearLastSyncAt()
 
     /** 按 remoteUuid 查找同步元数据 */
     @Query("SELECT * FROM sync_metadata WHERE remoteUuid = :remoteUuid AND tableName = :tableName LIMIT 1")

@@ -210,11 +210,6 @@ class FamilyService(
         family
     }
 
-    suspend fun loadMyFamilies(): List<Family> {
-        val userId = client.auth.currentUserOrNull()?.id ?: return emptyList()
-        return refreshForUser(userId)
-    }
-
     suspend fun getFamilyMembers(familyId: String): List<FamilyMember> {
         check(_sessionState.value.verifiedFamilyForSync?.id == familyId) { "家庭成员关系尚未验证" }
         return client.postgrest.from("family_members")

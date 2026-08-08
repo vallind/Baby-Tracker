@@ -353,7 +353,6 @@ class DiaperRepositoryImpl(
 // —— 消息中心 —— Repository 返回 Domain Model（AppMessage），内部做 Entity↔Domain 映射
 
 interface MessageRepository {
-    fun watchByType(type: MessageType): Flow<List<AppMessage>>
     fun watchAll(): Flow<List<AppMessage>>
     fun watchUnreadCount(): Flow<Int>
     suspend fun insert(message: AppMessage): Long
@@ -363,9 +362,6 @@ interface MessageRepository {
 }
 
 class MessageRepositoryImpl(private val dao: MessageDao) : MessageRepository {
-    override fun watchByType(type: MessageType): Flow<List<AppMessage>> =
-        dao.watchByType(MessageType.raw(type)).map { list -> list.map { it.toDomain() } }
-
     override fun watchAll(): Flow<List<AppMessage>> =
         dao.watchAll().map { list -> list.map { it.toDomain() } }
 

@@ -18,18 +18,21 @@ data class LogEntry(
     val level: Char,
     val tag: String,
     val message: String,
+    /** 入缓冲区的递增序号，作为列表 key 保证唯一（同一毫秒完全相同的日志不再碰撞） */
+    val seq: Long = 0,
 )
 
 object LogBuffer {
     private const val MAX_ENTRIES = 1000
     private val buffer = ConcurrentLinkedQueue<LogEntry>()
+    private var nextSeq = 0L
     private val _entries = MutableSharedFlow<List<LogEntry>>(replay = 1, extraBufferCapacity = 1)
     val entries: SharedFlow<List<LogEntry>> = _entries.asSharedFlow()
 
     init { _entries.tryEmit(emptyList()) }
 
     fun push(entry: LogEntry) {
-        buffer.add(entry)
+        buffer.add(entry.copy(seq = nextSeq++))
         while (buffer.size > MAX_ENTRIES) {
             buffer.poll()
         }

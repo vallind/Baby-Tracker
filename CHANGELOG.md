@@ -2,6 +2,17 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.11] — 2026-08-08
+
+**低风险修复与死代码清理：**
+- 修复日志查看器 LazyColumn key 碰撞（同一毫秒完全相同的日志会触发 IllegalArgumentException 崩溃）：LogEntry 新增递增序号 seq，列表 key 改为按序号
+- 修复 push 的 LWW 比较与 pull 游标推进对 updatedAt/sync_version 的 JSON 解析脆弱性，统一 JsonPrimitive 安全读取，避免远端返回字符串时 LWW 退化为本地无条件覆盖
+- 删除 SyncEngine EntityDao 从未被调用的 updateLocal 字段（9 张表共 9 处 lambda）
+- 删除已迁移到 sync_cursors 表的旧游标 DAO 方法（watchPendingCount/watchPendingCountByFamily/getLastSyncAt/updateLastSyncAt/clearLastSyncAt）
+- 删除无调用方的 MessageRepository.watchByType/MessageDao.watchByType、FamilyService.loadMyFamilies
+
+**验证：** `assembleDebug` 与 `testDebugUnitTest` 全部通过；Android 应用版本更新为 1.7.11
+
 ### [1.7.10] — 2026-08-08
 
 **同步稳定性修复：**

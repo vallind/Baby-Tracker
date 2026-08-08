@@ -97,7 +97,7 @@ fun LogViewerScreen(navController: NavController) {
             }
     }
 
-    fun entryKey(e: LogEntry) = "${e.timestamp}-${e.level}-${e.tag}-${e.message}"
+    fun entryKey(e: LogEntry) = "log-${e.seq}"
 
     fun copyText(text: String, label: String) {
         val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
