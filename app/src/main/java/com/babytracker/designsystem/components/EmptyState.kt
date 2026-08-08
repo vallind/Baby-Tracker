@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,7 +40,8 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(emoji, fontSize = EmptyStateDefaults.emojiSize())
+        // 主题 emoji 纯装饰，对读屏静默；title/subtitle 保持可朗读
+        Text(emoji, fontSize = EmptyStateDefaults.emojiSize(), modifier = Modifier.clearAndSetSemantics {})
         Spacer(Modifier.height(16.dp))
         Text(
             title,

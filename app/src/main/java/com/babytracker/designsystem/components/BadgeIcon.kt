@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,6 +43,8 @@ fun BadgeIcon(
                     fontSize = if (count > 99) 9.sp else 11.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
+                    // 角标数字对读屏无意义，静默处理
+                    modifier = Modifier.clearAndSetSemantics {},
                 )
             }
         }

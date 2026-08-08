@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,7 +34,8 @@ fun BabyIllustration(
     val bgColor = color ?: c.primaryContainer
 
     Box(
-        modifier = Modifier.size(size.dp),
+        // 纯装饰插图，整块对读屏静默，避免 emoji 逐个朗读
+        modifier = Modifier.size(size.dp).clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
         Box(
