@@ -20,6 +20,7 @@ data class AppSettings(
 @Serializable
 data class AppearanceSettings(
     val themeName: String = "pure",
+    val density: String = "comfortable",
 )
 
 @Serializable

@@ -13,6 +13,7 @@ import com.babytracker.core.ai.settings.AiSettingsStore
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.core.database.AppDatabase
 import com.babytracker.designsystem.theme.ThemeController
+import com.babytracker.designsystem.theme.DensityController
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.*
 import com.babytracker.feature.stats.StatsViewModel
@@ -42,6 +43,7 @@ val appModule = module {
     single<SharedPreferences> { androidContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
     single { SettingsStore(androidContext(), get()) }
     single { ThemeController(get()) }
+    single { DensityController(get()) }
     single { BabyController(get(), get()) }
     single { BackupManager(androidContext(), get()) }
     single { NetworkMonitor(androidContext()) }

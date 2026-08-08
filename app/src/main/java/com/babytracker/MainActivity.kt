@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.babytracker.designsystem.theme.BabyTrackerTheme
+import com.babytracker.designsystem.theme.DensityController
 import com.babytracker.designsystem.theme.ThemeController
 import com.babytracker.designsystem.theme.toColorScheme
 import com.babytracker.navigation.AppNavigation
@@ -27,6 +28,7 @@ import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
     private val themeController: ThemeController by inject()
+    private val densityController: DensityController by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -34,6 +36,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val theme = themeController.currentTheme
+            val density = densityController.currentDensity
             val darkTheme = theme.name == "night"
             val colorScheme = theme.toColorScheme(isDark = darkTheme)
             // 状态栏颜色跟随 primaryLight（所有页面顶部区域统一使用此颜色）
@@ -46,7 +49,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            BabyTrackerTheme(theme) {
+            BabyTrackerTheme(theme, density = density) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     // ── 页面内容（底层）──
                     Surface(modifier = Modifier.fillMaxSize()) {
