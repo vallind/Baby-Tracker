@@ -1,0 +1,69 @@
+# POC 配置：detekt 1.23 移除 @ActiveByDefault 语义 —— 独立 config 文件会整体替换默认配置，
+# 规则集/规则未显式列出的一律不激活（ruleset 级 active 不会级联到规则），必须逐条列出。
+# 叠加默认配置（buildUponDefaultConfig）可免手写，但全量默认规则在 Termux 上分析 184 个文件
+# 超 20 分钟不结束，故 POC 采用显式枚举（实测 ~9 秒跑完）。后续 Task 4/5 在此增删规则。
+
+build:
+  maxIssues: 0
+
+# 命名规则集整体关闭：存量代码大量类名不符合 detekt 默认命名规范，与业务命名约定冲突
+naming:
+  active: false
+
+# potential-bugs 规则集：显式列出默认激活的规则（对齐 1.23.8 默认配置）
+potential-bugs:
+  active: true
+  AvoidReferentialEquality:
+    active: true
+    forbiddenTypePatterns:
+      - 'kotlin.String'
+  DoubleMutabilityForCollection:
+    active: true
+    mutableTypes:
+      - 'kotlin.collections.MutableList'
+      - 'kotlin.collections.MutableMap'
+      - 'kotlin.collections.MutableSet'
+  EqualsAlwaysReturnsTrueOrFalse:
+    active: true
+  EqualsWithHashCodeExist:
+    active: true
+  ExplicitGarbageCollectionCall:
+    active: true
+  HasPlatformType:
+    active: true
+  IgnoredReturnValue:
+    active: true
+  ImplicitDefaultLocale:
+    active: true
+  InvalidRange:
+    active: true
+  IteratorHasNextCallsNextMethod:
+    active: true
+  IteratorNotThrowingNoSuchElementException:
+    active: true
+  MapGetWithNotNullAssertionOperator:
+    active: true
+  UnnecessaryNotNullOperator:
+    active: true
+  UnnecessarySafeCall:
+    active: true
+  UnreachableCatchBlock:
+    active: true
+  UnreachableCode:
+    active: true
+  UnsafeCallOnNullableType:
+    active: true
+  UnsafeCast:
+    active: true
+  UnusedUnaryOperator:
+    active: true
+  UselessPostfixExpression:
+    active: true
+  WrongEqualsTypeParameter:
+    active: true
+
+# 自定义规则集（detekt-rules 模块，POC 验证 ServiceLoader 链路）
+baby-tracker-rules:
+  active: true
+  AppComponentName:
+    active: true

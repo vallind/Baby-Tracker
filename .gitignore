@@ -20,3 +20,7 @@ out/
 *.log
 *.hprof
 MyApp.zip
+
+# Kotlin 构建缓存（Termux/KGP 2.x 生成）
+.kotlin
+/detekt-rules/build

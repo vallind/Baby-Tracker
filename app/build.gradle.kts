@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.paparazzi)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -119,10 +120,22 @@ implementation(libs.timber)
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+
+    // Detekt 自定义规则（POC 验证）
+    detektPlugins(project(":detekt-rules"))
 }
 
 ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
+}
+
+// —— Detekt 静态分析（POC 接入，配置见 config/detekt/detekt.yml）——
+detekt {
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    // 只报告不阻断：存量代码大量告警，后续 Task 4/5 定义规则后再收紧
+    // 不用 buildUponDefaultConfig：全量默认规则在 Termux 上分析过慢（>20 分钟），
+    // 改用显式枚举规则（见 config/detekt/detekt.yml 注释，实测 ~9 秒）
+    ignoreFailures = true
 }
 
 // —— 令牌审计门禁：themeTokenAudit（共享 TokenAuditChecker，双路复用）——
