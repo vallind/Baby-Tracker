@@ -1,6 +1,6 @@
 # 项目结构与模块索引
 
-> 最后更新：2026-08-08 · 对应版本：1.7.11
+> 最后更新：2026-08-08 · 对应版本：1.8.0
 >
 > 从 AGENTS.md 拆分，供需要定位代码时查阅。
 
@@ -9,7 +9,7 @@
 ```
 app/src/main/java/com/babytracker/
 ├── designsystem/                # 设计系统（主题令牌 + 可复用组件 + Hooks + i18n）
-│   ├── theme/                   # AppTokens（核心令牌）/ AppComponentTokens（组件令牌）/ Theme.kt
+│   ├── theme/                   # AppTokens（核心令牌）/ AppComponentTokens（组件令牌）/ AppDensity 密度体系（含 DensityController.kt）/ Theme.kt
 │   ├── components/              # 可复用组件（26 个目录 + 根级组件，含 Defaults）
 │   ├── hooks/                   # useDebounce/useState/useLatestState + Logic 类
 │   ├── i18n/                    # AppStrings
@@ -30,9 +30,20 @@ app/src/main/java/com/babytracker/
 │   ├── home/feeding/sleep/diaper/growth/
 │   ├── vaccination/health/stats/timeline/
 │   ├── message/development/reminder/settings/
+│   │   └── settings/            # SettingsMenuScreen（使用偏好：界面密度入口）/ SettingsScreen（DensityPickerSheet/ThemePickerSheet）/ SettingsViewModel
 │   └── ai/auth/family/
 └── navigation/                  # 导航（AppNavigation.kt，sealed class Screen 25+ 路由）
 ```
+
+设计系统相关测试（`app/src/test/java/com/babytracker/designsystem/`）：
+
+```
+designsystem/
+├── theme/                       # DensityTokensTest / ComponentTokensStateAuditTest / ThemeTokenizationStaticAuditTest / TypographyTokensTest
+└── components/                  # A11ySemanticsAuditTest（自定义可交互组件语义静态审计）
+```
+
+无障碍基线文档：`docs/a11y-baseline.md`（组件语义承诺表 + 装饰隔离 + 审计说明）。
 
 ## 核心模块索引
 
@@ -44,7 +55,8 @@ app/src/main/java/com/babytracker/
 | 生长图表 | `feature/growth/GrowthScreen.kt`（Canvas + WHO 参考线） |
 | 疫苗计划 | `core/util/VaccineSchedule.kt`（21 条预设） |
 | 核心令牌 | `designsystem/theme/AppTokens.kt` — AppColors(39字段)/Spacing/Shapes/Elevation/Opacity/Motion/Typography |
-| 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 33 种组件令牌（derive{} 部分覆盖为 TODO，未实现） |
+| 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 33 种组件令牌（derive{} 部分覆盖为 TODO，未实现）；AppDensityTokens 为非组件令牌（见 design-system.md） |
+| 密度/无障碍 | `designsystem/theme/DensityController.kt` + `DensityPickerSheet`（`feature/settings/SettingsScreen.kt`）；`docs/a11y-baseline.md` |
 | 组件库 | `designsystem/components/`（26 个组件目录 + 根级组件，含 Defaults） |
 | 国际化 | `designsystem/i18n/AppStrings.kt` |
 | Hooks/Logic | `designsystem/hooks/Hooks.kt` + `ButtonLogic.kt`/`FormLogic.kt`/`TableLogic.kt` |

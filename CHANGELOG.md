@@ -16,6 +16,12 @@
 - 审计测试扩展：静态审计新增「新组件 Defaults 应被 AppComponentTokens 覆盖」与「组件层不应导入 M3 令牌与主题类型」两条规则，修复头部注释漂移
 - 文档同步：design-system.md 令牌清单/组件速查/Typography 12 级更新，AGENTS.md 组件映射行更新
 
+**设计系统升级 P2（密度变体 + 无障碍语义基线 + 令牌测试）：**
+- 密度变体：新增 AppDensity 三档（紧凑 0.85x / 舒适 1.0x / 宽松 1.15x，控件 medium 档 48dp 基准 ±8dp），LocalAppDensity 默认舒适档，设置页「界面密度」可切换（DensityPickerSheet），AppSpacing.scaled 缩放注入 + AppControlTokens.densityAdjusted 控件高度调整，全组件零迁移生效；AppSettings.appearance.density 持久化 + DensityController（仿 ThemeController）注册
+- 无障碍语义基线：自定义可交互组件 semantics 补齐（SegmentedControl Role.Tab/selected、RecordCard customActions、AppRate/AppLabeledSlider contentDescription、TimePickerLogic 滚轮 selected 合并、DateTimeCascade 日历日期格 Role.Button+selected、FAB/BottomNav 图标去重不重复朗读），装饰组件读屏隔离（BabyIllustration/BadgeIcon/EmptyState emoji 等 clearAndSetSemantics），新增 docs/a11y-baseline.md 与 A11ySemanticsAuditTest
+- 令牌测试：新增 ComponentTokensStateAuditTest（暗色差异 + 状态色完整性）
+- 文案迁移：返回/密码提示走 AppStrings（AppTopBar 返回、AppInput 密码可见性）
+
 **测试盲区补齐（按 AGENTS.md 测试纪律）：**
 - 提取 StatsViewModel 聚合逻辑为 internal 顶层纯函数（aggregateStats 及 8 个辅助函数），新增 `StatsLogicTest` 14 项：周期边界（周日起始/月初/年初/翻页）、跨午夜睡眠时长、反向睡眠钳制、解析失败睡眠、喂养计数与图表桶一致性回归（1.7.10）、周/日分桶落点、对比文案、最新生长值、空数据
 - 提取 TimelineViewModel 记录映射为 internal 顶层函数 `toTimelineItems`，重写 `TimelineViewModelTest` 调用生产代码（消除镜像测试），并新增短时间戳 substring 越界回归测试（1.7.9）

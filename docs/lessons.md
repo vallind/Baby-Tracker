@@ -224,3 +224,30 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 **规则：** 单测里引用源码路径一律用模块相对路径 `src/main/...`（不要带 `app/` 前缀）；静态审计测试必须自带"扫描到文件数 > 0"的断言，防止路径漂移后静默空转。
 
+---
+
+## 15. 无障碍语义双读：stateDescription 与子节点 selected 的合并陷阱
+
+**现象：** SegmentedControl 给选中段同时声明了 `stateDescription = label`，TalkBack 把 label 朗读两遍（内部 Text 已朗读一遍，见 commit df6a447 移除该行）；TimePickerLogic 滚轮的 `selected` 语义直接挂在容器上，TalkBack 把"选中态"和内部 Text 拆成两个节点朗读，无法完整理解当前项。
+
+**原因：**
+
+- 自定义可交互组件内部**已有可见文本节点**时，再叠 `stateDescription`/`contentDescription` 描述同一内容必然双读。
+- `semantics { selected = ... }` 默认不合并子节点语义，选中态属于容器、文本属于子节点，读屏焦点被拆开。
+
+**规则：**
+
+- 组件内部已有 Text 朗读内容时，不要再声明描述同一文本的 `stateDescription`/`contentDescription`，让内部 Text 承担朗读。
+- 选中态语义需要与内部文本合并为单一读屏节点时，用 `semantics(mergeDescendants = true) { selected = ... }`（滚轮/日历日期格模式）。
+- 错误写法：`.semantics { selected = isSelected }`（子节点文本分离）；正确写法：`.semantics(mergeDescendants = true) { selected = isSelected }`。
+
+---
+
+## 16. customActions 必须与触屏行为一致
+
+**现象：** RecordCard 的读屏自定义删除动作直接调用 `onDelete()`，而触屏滑动删除会先弹确认对话框（删除不可恢复）；读屏用户绕过确认即删除（commit df6a447 修复：customActions 改为只置 showConfirm，与触屏滑动路径一致）。
+
+**原因：** 只考虑"读屏用户也能删除"，没对齐触屏路径的中间确认环节，两类用户操作权限不一致。
+
+**规则：** 给自定义可交互组件暴露 `customActions` 时，动作内容必须与触屏手势行为**完全一致**（含确认/撤销等中间步骤）；修改触屏行为时同步检查 customActions 是否仍对齐，避免读屏用户走"捷径"。
+

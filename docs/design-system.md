@@ -1,6 +1,6 @@
 # 设计系统详细文档
 
-> 最后更新：2026-08-08 · 对应版本：1.7.11
+> 最后更新：2026-08-08 · 对应版本：1.8.0
 >
 > 从 AGENTS.md 拆分，供需要深入了解设计系统时查阅。
 
@@ -11,8 +11,8 @@
   显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
 
 三层令牌：
-  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 39字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens）
-  designsystem/theme/AppComponentTokens.kt  — 组件令牌（33 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/EmptyState）
+  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 39字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
+  designsystem/theme/AppComponentTokens.kt  — 组件令牌（33 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/EmptyState；AppDensityTokens 为非组件令牌，不在计数内）
   designsystem/util/AppDefaults.kt          — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
 
 Typography 自建 12 级：displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall（禁止直接使用 M3 Typography，仅 theme 层桥接）
@@ -68,6 +68,26 @@ snackbar.showUndo(onUndo = { repo.update(r) })     // 替代 showSnackbar + Acti
 ```
 
 > 完整组件/令牌清单与对应关系以代码为准（`designsystem/components/`、`AppComponentTokens.kt`）。
+
+## 密度变体（AppDensity）
+
+页面级密度三档，全项目零组件迁移即可生效：
+
+| 档位 | key | label | spacingScale | controlHeightDelta（仅 medium 档） |
+|---|---|---|---|---|
+| 紧凑 | `compact` | 紧凑 | 0.85f | -8dp（48 → 40dp） |
+| 舒适（默认） | `comfortable` | 舒适 | 1.0f | 0dp（48dp） |
+| 宽松 | `large` | 宽松 | 1.15f | +8dp（48 → 56dp） |
+
+- 定义于 `designsystem/theme/AppTokens.kt`：`AppDensity` 枚举（含 `fromKey` 解析，未知 key 回退舒适档）+ `AppDensity.tokens` 扩展属性映射三档数值；`AppDensityTokens` 是**非组件令牌**（间距缩放系数 + 控件高度调整量），不进入 `AppComponentTokens` 聚合，不影响组件令牌 33 个聚合字段计数。
+- `LocalAppDensity`（`staticCompositionLocalOf`，默认舒适档）暴露当前密度，`BabyTrackerTheme(density = ...)` 读取后统一缩放。
+- **缩放机制（零迁移）**：
+  1. `AppSpacing().scaled(spacingScale)` — 全量间距令牌按系数缩放（`none` 不缩放），注入 `LocalAppSpacing`；
+  2. `AppControlTokens.densityAdjusted(density)` — 仅调整 medium 档控件高度（±8dp），注入 `LocalAppControl`；
+  3. 全部组件自动生效，无需逐组件改动；组件若需按密度区分，用枚举参数（如 `density: AppDensity`），不新增函数。
+- **存储与切换**：`AppSettings.appearance.density`（DataStore 持久化）；`DensityController`（`designsystem/theme/DensityController.kt`，仿 ThemeController：订阅设置流 + `mutableStateOf` + `switchDensity`）以 `single` 注册进 `core/di/Modules.kt`。
+- **设置页入口**：`feature/settings/SettingsMenuScreen.kt`（使用偏好）「界面密度」（📐）→ `DensityPickerSheet`（`SettingsScreen.kt` 内，AppBottomSheet 三选一卡片，label 走 AppStrings.densityLabel）。
+- 密度相关回归：`DensityTokensTest`（缩放/三档数值/fromKey/densityAdjusted 4 项）。
 
 ## Logic 模式（纯 Kotlin，可 JVM 单测）
 

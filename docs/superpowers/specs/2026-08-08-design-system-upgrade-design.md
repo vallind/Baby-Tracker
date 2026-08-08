@@ -90,6 +90,8 @@
 - UI：设置页新增「界面密度」入口（三选一，复用 ThemePickerSheet 形态模式）。
 - 组件 API：任何组件若需按密度区分，用枚举参数（如 `density: AppDensity`），不新增函数。
 
+> **实现偏差标注（Task 8 回填）：** 三档具体数值落地为 `compact 0.85f / comfortable 1.0f / large 1.15f`（spacingScale）+ `controlHeightDelta ±8dp`（AppTokens.kt:390-392）。控件高度实际实现比计划更保守：`AppControlTokens.densityAdjusted(density)` **仅调整 medium 档高度**（48dp 基准 → 40/48/56dp，不按 spec 的 44dp 舒适档），small/large 档保持基准值（DensityTokensTest 断言）。存储字段实际落在 `AppSettings.appearance.density`（DataStore 聚合设置，非独立 SettingsStore 字段）。
+
 ### 4.2 无障碍语义基线
 
 - 盘点 63 个组件分两类处理：
@@ -98,12 +100,16 @@
 - 新增 `docs/a11y-baseline.md` 基线文档。
 - 审计测试新增断言：可交互组件必须含 semantics。
 
+> **实现偏差标注（Task 8 回填）：** 实际实现按「M3 内置锚点 / 自定义显式承诺 / 装饰隔离」三类落位（详见 docs/a11y-baseline.md）。两点与计划有出入：① SegmentedControl 未加 `stateDescription`（与内部 Text 双读，实现时移除以避免重复朗读，commit df6a447/0a921d5）；② 自定义组件语义实际覆盖 SegmentedControl（Role.Tab+selected）、RecordCard（customActions）、AppRate/AppLabeledSlider（contentDescription）、TimePickerLogic 滚轮与 DateTimeCascade 日历（selected）、FAB/BottomNav（图标 contentDescription=null 防双读）。审计测试落地为 `A11ySemanticsAuditTest`（静态断言 8 处组件语义）。
+
 ### 4.3 暗色 / 状态令牌测试
 
 新增 `ComponentTokensStateAuditTest`：
 
 - **暗色差异**：`AppComponentTokens.default(colors, darkTheme = true/false)` 下关键 container/content 色对必须存在差异或显式不变，且符合可读性预期。
 - **状态色完整性**：含状态色字段的令牌组（Button/Input/Select 等）必须派生齐全（disabled/hover/focus/error 无 `Color.Unspecified`）。
+
+> **实现偏差标注（Task 8 回填）：** 测试形态与计划一致，共 3 项断言：暗色差异 2 项（按钮禁用容器色与主容器色恒定、对话框与输入框容器色）+ 状态色完整性 1 项。另新增 `DensityTokensTest` 4 项覆盖 4.1 密度缩放纯函数。
 
 ## 五、统一签名约定（新组件 + 收敛组件）
 
