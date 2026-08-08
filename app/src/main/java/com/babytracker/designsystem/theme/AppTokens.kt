@@ -189,14 +189,26 @@ data class AppShapes(
     fun scaled(base: Dp): Dp = base * radiusScale
 }
 
-// —— 排版令牌（5 组 7 级） ——
+// —— 排版令牌（自建 15 级，Task 3 收口为 12 级） ——
 @Immutable
 data class AppTypography(
+    val displayLarge: TextStyle = TextStyle(
+        fontSize = 40.sp, lineHeight = 48.sp, fontWeight = FontWeight.Bold,
+    ),
     val display: TextStyle = TextStyle(
         fontSize = 32.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold,
     ),
+    val headlineLarge: TextStyle = TextStyle(
+        fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold,
+    ),
     val headline: TextStyle = TextStyle(
         fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold,
+    ),
+    val headlineMedium: TextStyle = TextStyle(
+        fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold,
+    ),
+    val headlineSmall: TextStyle = TextStyle(
+        fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold,
     ),
     val titleLarge: TextStyle = TextStyle(
         fontSize = 18.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold,
@@ -204,14 +216,26 @@ data class AppTypography(
     val titleMedium: TextStyle = TextStyle(
         fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium,
     ),
+    val titleSmall: TextStyle = TextStyle(
+        fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
+    ),
     val bodyLarge: TextStyle = TextStyle(
         fontSize = 15.sp, lineHeight = 22.sp, fontWeight = FontWeight.Normal,
     ),
     val bodyMedium: TextStyle = TextStyle(
         fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Normal,
     ),
+    val bodySmall: TextStyle = TextStyle(
+        fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Normal,
+    ),
     val label: TextStyle = TextStyle(
         fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium,
+    ),
+    val labelMedium: TextStyle = TextStyle(
+        fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium,
+    ),
+    val labelSmall: TextStyle = TextStyle(
+        fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium,
     ),
 )
 
