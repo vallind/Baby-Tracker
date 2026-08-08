@@ -141,7 +141,7 @@
 
 - 每阶段收尾必跑：`./gradlew assembleDebug`、`./gradlew testDebugUnitTest`（全绿）、`./gradlew lint`（涉及 Compose/资源/Manifest/API 时）。
 - 新增逻辑补测试：
-  - P1：AppTypography 15 级字段全量/数值一致性测试（含新增 8 级插值断言）、3 个新组件的静态审计断言（纳入审计检查器）、AppButton 变体视觉差异断言（Paparazzi 如可行）、58 处调用方迁移后编译通过即回归验证。
+  - P1：AppTypography 12 级字段全量/数值一致性测试、3 个新组件的静态审计断言（纳入审计检查器）、AppButton 变体视觉差异断言（Paparazzi 如可行）、58 处调用方迁移后编译通过即回归验证。
   - P2：密度缩放纯函数测试、暗色/状态令牌测试（4.3）、a11y 审计断言。
   - P3：检查器单测（拦截样本 + 白名单样本，含"禁止 import M3 Typography"规则）。
 - 禁止镜像测试：测试必须调用生产代码。
