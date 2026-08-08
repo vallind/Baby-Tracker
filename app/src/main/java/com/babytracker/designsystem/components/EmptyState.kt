@@ -1,17 +1,20 @@
 package com.babytracker.designsystem.components
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import com.babytracker.designsystem.theme.LocalAppTypography
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.theme.LocalAppTypography
 
 /**
  * 统一空状态组件。所有列表页为空时调用此组件，避免散落各处的 "无数据" 文案。
@@ -36,26 +39,24 @@ fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(emoji, fontSize = 56.sp)
+        Text(emoji, fontSize = EmptyStateDefaults.emojiSize())
         Spacer(Modifier.height(16.dp))
         Text(
             title,
             style = LocalAppTypography.current.titleMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = EmptyStateDefaults.titleColor(),
         )
         Spacer(Modifier.height(8.dp))
         Text(
             subtitle,
             style = LocalAppTypography.current.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = EmptyStateDefaults.subtitleColor(),
             textAlign = TextAlign.Center,
         )
         if (actionText != null && onAction != null) {
             Spacer(Modifier.height(20.dp))
-            Button(onClick = onAction, shape = MaterialTheme.shapes.small) {
-                Text(actionText)
-            }
+            AppButton(label = actionText, onClick = onAction)
         }
     }
 }

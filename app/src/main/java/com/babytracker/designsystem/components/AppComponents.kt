@@ -48,6 +48,7 @@ package com.babytracker.designsystem.components
 // BottomNavBar       底部导航              (bottomnav/)
 // CountdownChip      倒计时标签
 // EmptyState         空状态
+// EmptyStateDefaults 空状态令牌读取（TT-036）
 // SkeletonLoader     骨架屏               (skeleton/)
 
 // —— 交互组件 ——

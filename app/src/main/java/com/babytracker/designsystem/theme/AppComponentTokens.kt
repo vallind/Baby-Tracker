@@ -406,6 +406,24 @@ data class SnackbarHostTokens(
     }
 }
 
+// —— TT-036 空状态 ——
+@Immutable
+data class EmptyStateTokens(
+    val emojiSize: TextUnit,
+    val titleColor: Color,
+    val subtitleColor: Color,
+    val actionSpacing: Dp,
+) {
+    companion object {
+        fun default(colors: AppColors, spacing: AppSpacing): EmptyStateTokens = EmptyStateTokens(
+            emojiSize = 56.sp,
+            titleColor = colors.onSurface,
+            subtitleColor = colors.textSecondary,
+            actionSpacing = spacing.lg,
+        )
+    }
+}
+
 // —— TT-027 进度/骨架屏 ——
 @Immutable
 data class ProgressTokens(
@@ -953,6 +971,7 @@ data class AppComponentTokens(
     val dateTimeCascade: DateTimeCascadeTokens,
     val sheet: SheetTokens,
     val segmentedControl: SegmentedControlTokens,
+    val emptyState: EmptyStateTokens,
 ) {
     companion object {
         fun default(
@@ -998,6 +1017,7 @@ data class AppComponentTokens(
             dateTimeCascade = DateTimeCascadeTokens.default(colors, shapes),
             sheet = SheetTokens.default(colors, shapes),
             segmentedControl = SegmentedControlTokens.default(colors, shapes, typography),
+            emptyState = EmptyStateTokens.default(colors, spacing),
         )
     }
 }
