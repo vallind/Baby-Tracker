@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.babytracker.designsystem.components.input.InputDefaults
+import com.babytracker.designsystem.i18n.AppStrings
 
 /**
  * 统一输入框组件 — 对标 Palette TextField，消费 AppComponentTokens.input
@@ -67,7 +68,7 @@ fun AppInput(
                 IconButton(onClick = { onPasswordToggle?.invoke() }) {
                     Icon(
                         if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "隐藏密码" else "显示密码",
+                        contentDescription = if (passwordVisible) AppStrings.hidePassword else AppStrings.showPassword,
                         modifier = Modifier.size(iconSize),
                     )
                 }

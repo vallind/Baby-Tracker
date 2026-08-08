@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.topbar.TopBarDefaults
+import com.babytracker.designsystem.i18n.AppStrings
 
 /**
  * 统一导航栏组件 — 对标 Palette AppBar 组件，消费 AppComponentTokens.appBar
@@ -54,7 +55,7 @@ fun AppTopBar(
                 IconButton(onClick = onBack) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "返回",
+                        contentDescription = AppStrings.back,
                         modifier = Modifier.size(backIconSize),
                         tint = TopBarDefaults.iconColor(),
                     )

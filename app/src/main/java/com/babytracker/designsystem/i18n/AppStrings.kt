@@ -37,6 +37,8 @@ object AppStrings {
     const val pleaseSelect = "请选择"
     const val pleaseInput = "请输入"
     const val required = "必填"
+    const val showPassword = "显示密码"
+    const val hidePassword = "隐藏密码"
 
     // —— 确认/提示 ——
     const val confirmDelete = "确认删除"
