@@ -311,6 +311,8 @@ Expected: 无输出（有残留则回 Task 2 补迁移，不进入本任务）
 
 AppTokens.kt 中删除 `display`、`headline`、`label` 三个字段定义，并把注释改为 `// —— 排版令牌（自建 12 级） ——`。
 
+⚠️ **AppComponentTokens 的 3 处 `typography.label` 引用必须同步迁移**（Task 2 review 发现，删除 label 后编译必挂）：`AppComponentTokens.kt:348、532、858` 的 `fontSize = typography.label.fontSize` → `fontSize = typography.labelMedium.fontSize`（数值同为 12sp，视觉不变）。同时确认 `typography.headline`/`typography.display` 在 AppComponentTokens 中无引用（Task 2 review 已核实无）。
+
 - [ ] **Step 3: 恢复严格测试断言**
 
 `TypographyTokensTest.kt` 两个测试改为 12 字段清单（去掉 `t.display`/`t.headline`/`t.label`），顺序断言维持 `>=`（bodySmall 12sp 与 labelMedium 12sp 同为 12sp，允许相等），两端极值 `assertEquals(40f, ordered.first())` / `assertEquals(11f, ordered.last())` 不变。
@@ -323,7 +325,7 @@ Expected: 全绿
 - [ ] **Step 5: 提交**
 
 ```bash
-git add app/src/main/java/com/babytracker/designsystem/theme/AppTokens.kt app/src/test/java/com/babytracker/designsystem/theme/TypographyTokensTest.kt
+git add app/src/main/java/com/babytracker/designsystem/theme/AppTokens.kt app/src/main/java/com/babytracker/designsystem/theme/AppComponentTokens.kt app/src/test/java/com/babytracker/designsystem/theme/TypographyTokensTest.kt
 git commit -m "Typography 收口为自建 12 级，删除裸字段与 LocalAppTypographyStyle，禁暴露 M3 类型"
 ```
 
