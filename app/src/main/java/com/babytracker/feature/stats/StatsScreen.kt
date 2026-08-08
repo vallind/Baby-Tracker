@@ -39,7 +39,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import org.koin.compose.koinInject
 
@@ -47,7 +47,7 @@ import org.koin.compose.koinInject
 fun StatsScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val viewModel: StatsViewModel = org.koin.androidx.compose.koinViewModel()
     val state by viewModel.state.collectAsState()
 
@@ -174,7 +174,7 @@ fun StatsScreen(navController: NavController) {
 private fun StatsLoadingState() {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -197,7 +197,7 @@ private fun DateRangeNav(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Row(
         Modifier
             .fillMaxWidth()
@@ -245,7 +245,7 @@ private fun FeedingCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val showBreast = breastFeedCount > 0
     val showFormula = formulaCount > 0
     StatCardFrame(modifier) {
@@ -257,7 +257,7 @@ private fun FeedingCard(
             Column {
                 StatCardIcon("🍼", c.warning)
                 Spacer(Modifier.height(spacing.sm))
-                Text("喂养", style = typography.label, color = c.textTertiary)
+                Text("喂养", style = typography.labelMedium, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
                 if (showBreast && showFormula) {
@@ -294,7 +294,7 @@ private fun SleepCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val hours = minutes / 60
     val mins = minutes % 60
     StatCardFrame(modifier) {
@@ -306,7 +306,7 @@ private fun SleepCard(
             Column {
                 StatCardIcon("🌙", c.secondary)
                 Spacer(Modifier.height(spacing.sm))
-                Text("睡眠时长", style = typography.label, color = c.textTertiary)
+                Text("睡眠时长", style = typography.labelMedium, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text("${hours}时${mins}分", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
@@ -334,7 +334,7 @@ private fun HeightCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -344,7 +344,7 @@ private fun HeightCard(
             Column {
                 StatCardIcon("📏", c.primary)
                 Spacer(Modifier.height(spacing.sm))
-                Text("身高增长", style = typography.label, color = c.textTertiary)
+                Text("身高增长", style = typography.labelMedium, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
@@ -372,7 +372,7 @@ private fun WeightCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -382,7 +382,7 @@ private fun WeightCard(
             Column {
                 StatCardIcon("⚖️", c.success)
                 Spacer(Modifier.height(spacing.sm))
-                Text("体重增长", style = typography.label, color = c.textTertiary)
+                Text("体重增长", style = typography.labelMedium, color = c.textTertiary)
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
@@ -408,7 +408,7 @@ private fun StatChartArea(
     content: @Composable () -> Unit,
 ) {
     val c = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     if (hasData) {
         content()
     } else {
@@ -418,7 +418,7 @@ private fun StatChartArea(
                 .height(52.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
-            Text(emptyText, style = typography.label, color = c.textTertiary)
+            Text(emptyText, style = typography.labelMedium, color = c.textTertiary)
         }
     }
 }
@@ -441,7 +441,7 @@ private fun StatCardFrame(
 @Composable
 private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifier) {
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Box(
         modifier
             .size(spacing.xl)
@@ -457,11 +457,11 @@ private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifi
 private fun StatCompareLabel(compare: String) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val isPositive = compare.startsWith("+")
     Text(
         compare,
-        style = typography.label,
+        style = typography.labelMedium,
         color = if (isPositive) c.success else c.textSecondary,
         modifier = Modifier.padding(top = spacing.xs),
     )

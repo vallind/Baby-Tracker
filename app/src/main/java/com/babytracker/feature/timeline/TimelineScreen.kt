@@ -21,7 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -53,7 +53,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun TimelineScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     val viewModel: TimelineViewModel = koinViewModel()
     val babyCtrl: BabyController = koinInject()
@@ -190,7 +190,7 @@ fun TimelineScreen(navController: NavController) {
                                 ) {
                                     Text(
                                         text = DateUtils.relativeDate(date),
-                                        style = typography.label,
+                                        style = typography.labelMedium,
                                         color = c.textSecondary,
                                     )
                                     Spacer(Modifier.width(6.dp))
@@ -202,7 +202,7 @@ fun TimelineScreen(navController: NavController) {
                                     ) {
                                         Text(
                                             "${records.size}次",
-                                            style = typography.label,
+                                            style = typography.labelMedium,
                                             color = c.textTertiary,
                                         )
                                     }
@@ -253,14 +253,14 @@ fun TimelineScreen(navController: NavController) {
                                         )
                                         Text(
                                             record.subtitle,
-                                            style = typography.label,
+                                            style = typography.labelMedium,
                                             color = c.textSecondary,
                                         )
                                     }
                                     if (record.time.isNotEmpty()) {
                                         Text(
                                             record.time,
-                                            style = typography.label,
+                                            style = typography.labelMedium,
                                             color = c.textTertiary,
                                         )
                                     }
@@ -282,7 +282,7 @@ fun TimelineScreen(navController: NavController) {
             Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.sm)) {
                 Text(
                     "选择记录类型",
-                    style = typography.headline,
+                    style = typography.headlineMedium,
                     modifier = Modifier.padding(bottom = spacing.md),
                 )
                 val types = listOf(

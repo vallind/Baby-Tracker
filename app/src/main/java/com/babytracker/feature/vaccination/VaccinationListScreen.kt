@@ -29,7 +29,6 @@ import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -163,7 +162,7 @@ fun VaccinationListScreen(navController: NavController) {
                     ) {
                         Text(
                             label,
-                            style = LocalAppTypographyStyle.current.titleMedium,
+                            style = LocalAppTypography.current.titleMedium,
                             fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
                             color = if (active) c.primary else c.textSecondary,
                         )
@@ -206,7 +205,7 @@ fun VaccinationListScreen(navController: NavController) {
                     ) {
                         Text(
                             pill.label,
-                            style = LocalAppTypographyStyle.current.bodyMedium,
+                            style = LocalAppTypography.current.bodyMedium,
                             fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
                             color = if (active) Color.White else c.textSecondary,
                         )
@@ -262,7 +261,7 @@ fun VaccinationListScreen(navController: NavController) {
                         item {
                             Text(
                                 "以上计划根据国家免疫规划制定，具体接种时间请遵医嘱。",
-                                style = LocalAppTypographyStyle.current.label,
+                                style = LocalAppTypography.current.labelMedium,
                                 color = c.textTertiary,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
@@ -352,7 +351,7 @@ private fun VaccinationCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     vaccination.name,
-                    style = LocalAppTypographyStyle.current.titleMedium,
+                    style = LocalAppTypography.current.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = c.textPrimary,
                 )
@@ -360,7 +359,7 @@ private fun VaccinationCard(
                     Spacer(Modifier.width(spacing.sm))
                     Text(
                         vaccination.dose,
-                        style = LocalAppTypographyStyle.current.bodyMedium,
+                        style = LocalAppTypography.current.bodyMedium,
                         color = c.textSecondary,
                     )
                 }
@@ -373,7 +372,7 @@ private fun VaccinationCard(
                 ) {
                     Text(
                         tagLabel,
-                        style = LocalAppTypographyStyle.current.label,
+                        style = LocalAppTypography.current.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = tagColor,
                     )
@@ -383,11 +382,11 @@ private fun VaccinationCard(
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (ageText.isNotBlank()) {
-                        Text(ageText, style = LocalAppTypographyStyle.current.bodyMedium, color = c.textSecondary)
+                        Text(ageText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
                     }
                     Spacer(Modifier.weight(1f))
                     if (dateText.isNotBlank()) {
-                        Text(dateText, style = LocalAppTypographyStyle.current.bodyMedium, color = c.textSecondary)
+                        Text(dateText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
                     }
                 }
             }

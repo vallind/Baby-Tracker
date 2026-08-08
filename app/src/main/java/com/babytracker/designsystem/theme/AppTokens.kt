@@ -361,5 +361,4 @@ val LocalAppElevation = staticCompositionLocalOf { AppElevation() }
 val LocalAppOpacity = staticCompositionLocalOf { AppOpacity() }
 val LocalAppMotion = staticCompositionLocalOf { AppMotion() }
 val LocalAppShapes = staticCompositionLocalOf { AppShapes() }
-val LocalAppTypographyStyle = staticCompositionLocalOf { AppTypography() }
 val LocalAppControl = staticCompositionLocalOf { AppControlTokens() }

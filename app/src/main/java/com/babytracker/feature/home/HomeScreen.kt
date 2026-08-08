@@ -19,7 +19,7 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.core.util.DateUtils
@@ -110,7 +110,7 @@ fun HomeScreen(navController: NavController) {
 private fun AiAssistantEntryCard(navController: NavController) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     AppCard(
         modifier = Modifier
@@ -130,7 +130,7 @@ private fun AiAssistantEntryCard(navController: NavController) {
                     .background(colors.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("✨", style = typography.headline)
+                Text("✨", style = typography.headlineMedium)
             }
             Spacer(Modifier.width(spacing.md))
             Column(Modifier.weight(1f)) {
@@ -147,7 +147,7 @@ private fun AiAssistantEntryCard(navController: NavController) {
 private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     Box(
         Modifier
@@ -166,7 +166,7 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         baby.name,
-                        style = typography.headline,
+                        style = typography.headlineMedium,
                         color = c.textPrimary,
                     )
                     Spacer(Modifier.width(spacing.sm))
@@ -197,7 +197,7 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("👶", style = typography.display)
+                Text("👶", style = typography.displayLarge)
             }
         }
     }
@@ -207,7 +207,7 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
 fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formulaTotalMl: Int, sleepHours: String, diaperCount: Int) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
     val animatedBreast by androidx.compose.animation.core.animateIntAsState(targetValue = breastFeedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "breast")
     val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
@@ -247,21 +247,21 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
 fun RowScope.TextStatCell(value: String, unit: String, label: String) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Column(
         Modifier.weight(1f),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(value, style = typography.headline, color = c.primary)
+            Text(value, style = typography.headlineMedium, color = c.primary)
             if (unit.isNotEmpty()) {
                 Spacer(Modifier.width(spacing.xxs))
-                Text(unit, style = typography.label, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.xxs))
+                Text(unit, style = typography.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.xxs))
             }
         }
         Spacer(Modifier.height(spacing.xs))
-        Text(label, style = typography.label, color = c.textTertiary)
+        Text(label, style = typography.labelMedium, color = c.textTertiary)
     }
 }
 
@@ -311,7 +311,7 @@ private fun FeatureGridItem(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     val tint = if (useAccent) c.warning else c.primary
     Column(
@@ -337,10 +337,10 @@ private fun FeatureGridItem(
                 .background(tint.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(item.emoji, style = typography.headline)
+            Text(item.emoji, style = typography.headlineMedium)
         }
         Spacer(Modifier.height(6.dp))
-        Text(item.label, style = typography.label, color = c.textPrimary)
+        Text(item.label, style = typography.labelMedium, color = c.textPrimary)
     }
 }
 
@@ -354,7 +354,7 @@ private data class FeatureGridItemData(
 fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     AppCard(
         modifier = Modifier.padding(horizontal = spacing.md).fillMaxWidth(),
@@ -384,7 +384,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 if (showDates) {
                     Text(
                         date,
-                        style = typography.label,
+                        style = typography.labelMedium,
                         color = c.textSecondary,
                         modifier = Modifier.padding(top = if (isFirst) spacing.none else 12.dp, bottom = spacing.xs),
                     )
@@ -405,7 +405,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
 private fun TimelineRecordRow(item: Any) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     Row(Modifier.fillMaxWidth().padding(vertical = spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         // 时间轴小圆点（primary 色）
@@ -422,9 +422,9 @@ private fun TimelineRecordRow(item: Any) {
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), style = typography.bodyLarge, color = c.textPrimary)
-                    Text(if (item.type == FeedingType.BREAST) "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", style = typography.label, color = c.textSecondary)
+                    Text(if (item.type == FeedingType.BREAST) "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", style = typography.labelMedium, color = c.textSecondary)
                 }
-                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.label, color = c.textTertiary)
+                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)
             }
             is Sleep -> {
                 Text(if (item.type == SleepType.NIGHT) "🌙" else "☀️", style = typography.titleLarge)
@@ -438,20 +438,20 @@ private fun TimelineRecordRow(item: Any) {
                                 LocalDateTime.parse(item.endTime, DateTimeFormatter.ISO_DATE_TIME),
                             )
                         ),
-                        style = typography.label,
+                        style = typography.labelMedium,
                         color = c.textSecondary,
                     )
                 }
-                Text(item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.label, color = c.textTertiary)
+                Text(item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)
             }
             is Diaper -> {
                 Text("🧷", style = typography.titleLarge)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text("换尿布", style = typography.bodyLarge, color = c.textPrimary)
-                    Text(DateUtils.diaperTypeLabel(com.babytracker.core.domain.model.DiaperType.raw(item.type)), style = typography.label, color = c.textSecondary)
+                    Text(DateUtils.diaperTypeLabel(com.babytracker.core.domain.model.DiaperType.raw(item.type)), style = typography.labelMedium, color = c.textSecondary)
                 }
-                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.label, color = c.textTertiary)
+                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)
             }
         }
     }

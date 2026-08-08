@@ -29,7 +29,6 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.card.AppCard
@@ -89,7 +88,7 @@ private fun categorySummary(category: String, items: List<HealthRecord>): String
 fun HealthScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val healthRepo: HealthRepository = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -217,7 +216,7 @@ private fun HealthCategorySummaryCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     AppCard(
         elevation = 2.dp,
         containerColor = c.surface,
@@ -266,7 +265,7 @@ private fun VaccinationSummaryCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
     AppCard(
         elevation = 2.dp,
@@ -313,7 +312,7 @@ private fun ExpandedCategoryItems(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val sorted = remember(items) { items.sortedByDescending { it.recordDate } }
     Column(Modifier.padding(horizontal = spacing.md)) {
         sorted.forEachIndexed { i, r ->
@@ -331,15 +330,15 @@ private fun ExpandedCategoryItems(
                         val dateText = try {
                             DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
                         } catch (_: Exception) { r.recordDate.take(10) }
-                        Text(dateText, style = typography.label, color = c.textSecondary)
+                        Text(dateText, style = typography.labelMedium, color = c.textSecondary)
                     }
                     if (!r.doctorName.isNullOrBlank()) {
                         Spacer(Modifier.height(spacing.xs))
-                        Text("👨‍⚕️ ${r.doctorName}", style = typography.label, color = c.textSecondary)
+                        Text("👨‍⚕️ ${r.doctorName}", style = typography.labelMedium, color = c.textSecondary)
                     }
                     if (!r.note.isNullOrBlank()) {
                         Spacer(Modifier.height(spacing.xxs))
-                        Text(r.note, style = typography.label, color = c.textSecondary, maxLines = 2)
+                        Text(r.note, style = typography.labelMedium, color = c.textSecondary, maxLines = 2)
                     }
                 }
             }

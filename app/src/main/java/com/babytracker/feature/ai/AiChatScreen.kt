@@ -61,7 +61,7 @@ import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.navigation.Screen
@@ -256,7 +256,7 @@ private fun AiHistorySheet(
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     AppBottomSheet(show = show, onDismiss = onDismiss) {
         Text(
             text = AppStrings.aiHistory,
@@ -362,7 +362,7 @@ private fun AiHistorySheet(
                                 Spacer(Modifier.height(spacing.xs))
                                 Text(
                                     text = formatAiHistoryTime(conversation.updatedAt),
-                                    style = typography.label,
+                                    style = typography.labelMedium,
                                     color = colors.textTertiary,
                                 )
                             }
@@ -387,7 +387,7 @@ private fun AiQuickAnalysisSection(
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Column {
         Text(
             text = AppStrings.aiQuickAnalysis,
@@ -403,7 +403,7 @@ private fun AiQuickAnalysisSection(
         Spacer(Modifier.height(spacing.sm))
         Text(
             text = AppStrings.aiAnalysisPeriod,
-            style = typography.label,
+            style = typography.labelMedium,
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(spacing.xs))
@@ -467,7 +467,7 @@ private fun AiAnalysisCard(
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val enabled = isAnalysisSourceEnabled(source, state.preferences)
     val status = when {
         state.isAnalysisAvailabilityLoading -> AppStrings.aiAnalysisLoading
@@ -499,7 +499,7 @@ private fun AiAnalysisCard(
             Spacer(Modifier.height(spacing.xs))
             Text(
                 text = status,
-                style = typography.label,
+                style = typography.labelMedium,
                 color = if (source in state.availableAnalyses) {
                     colors.primary
                 } else {
@@ -519,7 +519,7 @@ private fun AiAnalysisContextBar(
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     AppCard(
         modifier = Modifier
             .padding(horizontal = spacing.md, vertical = spacing.xs)
@@ -539,7 +539,7 @@ private fun AiAnalysisContextBar(
             ) {
                 Text(
                     text = AppStrings.aiAnalysisContext,
-                    style = typography.label,
+                    style = typography.labelMedium,
                     color = colors.textSecondary,
                 )
                 Text(
@@ -564,7 +564,7 @@ private fun AiAnalysisUnavailableBanner(
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val message = if (reason == AiAnalysisUnavailableReason.DATA_DISABLED) {
         AppStrings.aiAnalysisEnableRecords
     } else {
@@ -600,7 +600,7 @@ private fun analysisRange(period: AiAnalysisPeriod): String =
 private fun AiBabySummary(state: AiChatUiState) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val baby = state.baby
     AppCard(
         modifier = Modifier
@@ -640,7 +640,7 @@ private fun AiModelSelector(
 ) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Column(Modifier.padding(horizontal = spacing.md)) {
         when {
             state.prerequisite != AiChatPrerequisite.READY -> Row(
@@ -696,7 +696,7 @@ private fun prerequisiteMessage(prerequisite: AiChatPrerequisite): String = when
 private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(spacing.md)) {
             Text(AppStrings.aiWelcome, style = typography.bodyLarge, color = colors.textPrimary)
@@ -730,7 +730,7 @@ private fun AiMessageBubble(
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val isUser = message.role == AiChatRole.USER
     var answerBasisExpanded by remember(message.id) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
@@ -759,7 +759,7 @@ private fun AiMessageBubble(
                             AiAnswerSafetyStatus.SUPPLEMENTED -> AppStrings.aiSafetySupplemented
                             AiAnswerSafetyStatus.BLOCKED -> AppStrings.aiSafetyBlocked
                         },
-                        style = typography.label,
+                        style = typography.labelMedium,
                         color = if (message.safetyStatus == AiAnswerSafetyStatus.BLOCKED) {
                             colors.error
                         } else {
@@ -826,11 +826,11 @@ private fun AiMessageBubble(
 private fun AiAnswerBasis(references: List<String>) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
         Text(
             text = AppStrings.aiRecordFacts,
-            style = typography.label,
+            style = typography.labelMedium,
             color = colors.textPrimary,
         )
         Text(
@@ -839,27 +839,27 @@ private fun AiAnswerBasis(references: List<String>) {
             } else {
                 AppStrings.aiReferencePrefix + references.joinToString("、")
             },
-            style = typography.label,
+            style = typography.labelMedium,
             color = colors.textSecondary,
         )
         Text(
             text = AppStrings.aiInference,
-            style = typography.label,
+            style = typography.labelMedium,
             color = colors.textPrimary,
         )
         Text(
             text = AppStrings.aiInferenceNotice,
-            style = typography.label,
+            style = typography.labelMedium,
             color = colors.textSecondary,
         )
         Text(
             text = AppStrings.aiActionAdvice,
-            style = typography.label,
+            style = typography.labelMedium,
             color = colors.textPrimary,
         )
         Text(
             text = AppStrings.aiDisclaimer,
-            style = typography.label,
+            style = typography.labelMedium,
             color = colors.textTertiary,
         )
     }
@@ -874,7 +874,7 @@ private fun AiReasoningBlock(
     var expanded by remember { mutableStateOf(isStreaming) }
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     AppTextButton(
         onClick = { expanded = !expanded },
         label = when {
@@ -905,7 +905,7 @@ private fun AiReasoningBlock(
 private fun AiRiskCard(riskLevel: AiRiskLevel) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val accent = if (riskLevel == AiRiskLevel.ATTENTION) colors.warning else colors.error
     val title = when (riskLevel) {
         AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyTitle
@@ -935,7 +935,7 @@ private fun AiRiskCard(riskLevel: AiRiskLevel) {
 private fun AiTypingIndicator() {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     Text(
         text = AppStrings.aiAnswering,
         style = typography.bodyMedium,
@@ -948,7 +948,7 @@ private fun AiTypingIndicator() {
 private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> Unit) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val message = when (error) {
         AiChatError.INPUT_TOO_LONG -> AppStrings.aiInputTooLong
         AiChatError.CONFIG_UNAVAILABLE -> AppStrings.aiConfigUnavailable
@@ -992,7 +992,7 @@ private fun AiHistorySaveStatusBanner(status: AiHistorySaveStatus) {
                 horizontal = LocalAppSpacing.current.md,
                 vertical = LocalAppSpacing.current.xs,
             ),
-        style = LocalAppTypographyStyle.current.label,
+        style = LocalAppTypography.current.labelMedium,
         color = if (status == AiHistorySaveStatus.FAILED) {
             colors.error
         } else {

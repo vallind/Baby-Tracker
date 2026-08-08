@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.babytracker.designsystem.theme.LocalAppTypography
 
 /**
  * TDesign 风格时间选择器对话框 — 滚轮式时/分选择。
@@ -115,7 +116,7 @@ fun TimePickerDialog(
                 ) {
                     Text(
                         "小时",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = LocalAppTypography.current.labelSmall,
                         color = tokens.unselectedTextColor(),
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
@@ -134,7 +135,7 @@ fun TimePickerDialog(
 
                 Text(
                     ":",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    style = LocalAppTypography.current.headlineMedium.copy(fontWeight = FontWeight.Bold),
                     color = tokens.separatorColor(),
                     modifier = Modifier.padding(horizontal = 8.dp),
                 )
@@ -146,7 +147,7 @@ fun TimePickerDialog(
                 ) {
                     Text(
                         "分钟",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = LocalAppTypography.current.labelSmall,
                         color = tokens.unselectedTextColor(),
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
@@ -197,7 +198,7 @@ private fun TimePickerToolbar(
             }
             Text(
                 title,
-                style = MaterialTheme.typography.titleMedium,
+                style = LocalAppTypography.current.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
             TextButton(onClick = onConfirm) {

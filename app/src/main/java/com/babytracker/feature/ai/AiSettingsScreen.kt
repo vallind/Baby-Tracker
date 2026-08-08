@@ -37,7 +37,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.feature.settings.SettingsCard
 import com.babytracker.feature.settings.SettingsDivider
 import com.babytracker.feature.settings.SettingsRow
@@ -204,7 +204,7 @@ fun AiSettingsScreen(navController: NavController) {
                         )
                         Text(
                             text = String.format("%.1f", preferences.temperatureTenths / 10f),
-                            style = LocalAppTypographyStyle.current.bodyMedium,
+                            style = LocalAppTypography.current.bodyMedium,
                             color = LocalAppColors.current.textSecondary,
                             modifier = Modifier.padding(
                                 start = spacing.md,
@@ -354,7 +354,7 @@ fun AiSettingsScreen(navController: NavController) {
 private fun AiSettingsSectionTitle(title: String) {
     Text(
         text = title,
-        style = LocalAppTypographyStyle.current.label,
+        style = LocalAppTypography.current.labelMedium,
         color = LocalAppColors.current.textSecondary,
         modifier = Modifier.padding(top = LocalAppSpacing.current.lg, bottom = LocalAppSpacing.current.sm),
     )
@@ -401,13 +401,13 @@ private fun AiChoiceSetting(
     Column(Modifier.fillMaxWidth().padding(horizontal = spacing.md, vertical = spacing.sm)) {
         Text(
             text = "$emoji  $label",
-            style = LocalAppTypographyStyle.current.bodyLarge,
+            style = LocalAppTypography.current.bodyLarge,
             color = colors.textPrimary,
         )
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                style = LocalAppTypographyStyle.current.bodyMedium,
+                style = LocalAppTypography.current.bodyMedium,
                 color = colors.textSecondary,
                 modifier = Modifier.padding(top = spacing.xs),
             )
@@ -416,7 +416,7 @@ private fun AiChoiceSetting(
         if (options.isEmpty()) {
             Text(
                 text = AppStrings.aiConfigUnavailable,
-                style = LocalAppTypographyStyle.current.bodyMedium,
+                style = LocalAppTypography.current.bodyMedium,
                 color = colors.textSecondary,
             )
         } else {

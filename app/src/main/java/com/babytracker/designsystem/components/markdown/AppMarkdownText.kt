@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 
 /**
  * 安全文本 Markdown 渲染组件。
@@ -39,13 +39,13 @@ import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 fun AppMarkdownText(
     markdown: String,
     modifier: Modifier = Modifier,
-    style: TextStyle = LocalAppTypographyStyle.current.bodyLarge,
+    style: TextStyle = LocalAppTypography.current.bodyLarge,
     color: Color = LocalAppColors.current.textPrimary,
 ) {
     val blocks = remember(markdown) { parseMarkdown(markdown) }
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
 
     Column(
         modifier = modifier,

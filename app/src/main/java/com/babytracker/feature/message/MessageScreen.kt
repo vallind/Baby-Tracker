@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -77,7 +77,7 @@ fun MessageScreen(navController: NavController) {
                     val canMarkAll = state.totalUnread > 0
                     Text(
                         "全部已读",
-                        style = LocalAppTypographyStyle.current.bodyLarge,
+                        style = LocalAppTypography.current.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = if (canMarkAll) c.primary else c.textTertiary,
                         modifier = Modifier
@@ -185,12 +185,12 @@ private fun CategoryOverviewBar(
                     Column {
                         Text(
                             cat.emoji,
-                            style = LocalAppTypographyStyle.current.titleLarge,
+                            style = LocalAppTypography.current.titleLarge,
                         )
                         Spacer(Modifier.height(spacing.xs))
                         Text(
                             cat.label,
-                            style = LocalAppTypographyStyle.current.bodyMedium,
+                            style = LocalAppTypography.current.bodyMedium,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                             color = if (selected) Color.White else c.textPrimary,
                         )
@@ -207,7 +207,7 @@ private fun CategoryOverviewBar(
                         ) {
                             Text(
                                 if (unread > 99) "99+" else unread.toString(),
-                                style = LocalAppTypographyStyle.current.label,
+                                style = LocalAppTypography.current.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = if (selected) Color.White else Color.White,
                             )
@@ -248,7 +248,7 @@ private fun MessageCard(
                 ) {
                     Text(
                         message.title,
-                        style = LocalAppTypographyStyle.current.bodyLarge,
+                        style = LocalAppTypography.current.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = c.textPrimary,
                         maxLines = 1,
@@ -258,14 +258,14 @@ private fun MessageCard(
                     Spacer(Modifier.width(spacing.sm))
                     Text(
                         relativeTime(message.createTime),
-                        style = LocalAppTypographyStyle.current.label,
+                        style = LocalAppTypography.current.labelMedium,
                         color = c.textTertiary,
                     )
                 }
                 Spacer(Modifier.height(spacing.xs))
                 Text(
                     message.content,
-                    style = LocalAppTypographyStyle.current.bodyMedium,
+                    style = LocalAppTypography.current.bodyMedium,
                     color = c.textSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -284,7 +284,7 @@ private fun MessageCard(
                             .background(c.danger),
                     )
                 } else {
-                    Text("已读", style = LocalAppTypographyStyle.current.label, color = c.textTertiary)
+                    Text("已读", style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
                 }
                 Icon(
                     Icons.Default.Close,
@@ -320,7 +320,7 @@ private fun MessageLeadingIcon(message: AppMessage) {
             ) {
                 Text(
                     initial,
-                    style = LocalAppTypographyStyle.current.titleLarge,
+                    style = LocalAppTypography.current.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                 )

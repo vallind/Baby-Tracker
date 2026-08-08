@@ -27,7 +27,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -44,7 +44,7 @@ import org.koin.androidx.compose.koinViewModel
 fun FamilyPage(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val vm: FamilyViewModel = koinViewModel()
     val uiState by vm.uiState.collectAsState()
     val context = LocalContext.current
@@ -199,7 +199,7 @@ private fun LocalDataView(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     AppCard(modifier = Modifier.fillMaxWidth(), elevation = 1.dp) {
         Column(Modifier.padding(spacing.lg)) {
             Text("本机数据", style = typography.titleMedium)
@@ -228,11 +228,11 @@ private fun LocalDataView(
 private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
 
     Box(Modifier.fillMaxWidth().padding(vertical = 60.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("👨‍👩‍👧", style = typography.display)
+            Text("👨‍👩‍👧", style = typography.displayLarge)
             Spacer(Modifier.height(spacing.md))
             Text(
                 "创建或加入家庭\n与家人共享宝宝的成长记录",
@@ -259,7 +259,7 @@ private fun FamilyDetailView(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     val context = LocalContext.current
 
@@ -277,12 +277,12 @@ private fun FamilyDetailView(
                         .background(Gradients.primary(c)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("👨‍👩‍👧", style = typography.headline)
+                    Text("👨‍👩‍👧", style = typography.headlineMedium)
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text(family.name, style = typography.titleMedium)
-                    Text("${members.size} 位成员", style = typography.label, color = c.textSecondary)
+                    Text("${members.size} 位成员", style = typography.labelMedium, color = c.textSecondary)
                 }
             }
 
@@ -298,7 +298,7 @@ private fun FamilyDetailView(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("邀请码", style = typography.label, color = c.textSecondary)
+                    Text("邀请码", style = typography.labelMedium, color = c.textSecondary)
                     Text(family.inviteCode, style = typography.titleLarge, letterSpacing = 4.sp, color = c.primary)
                 }
                 AppTextButton(
@@ -319,7 +319,7 @@ private fun FamilyDetailView(
 
     // 成员列表
     if (members.isNotEmpty()) {
-        Text("家庭成员", style = typography.label, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
+        Text("家庭成员", style = typography.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
         AppCard(
             modifier = Modifier.fillMaxWidth(),
             elevation = 1.dp,
@@ -353,7 +353,7 @@ private fun FamilyDetailView(
                             )
                             Text(
                                 if (member.role == "owner") "创建者" else "成员",
-                                style = typography.label,
+                                style = typography.labelMedium,
                                 color = c.textSecondary,
                             )
                         }

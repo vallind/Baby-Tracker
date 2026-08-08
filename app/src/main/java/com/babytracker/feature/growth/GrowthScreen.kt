@@ -46,7 +46,6 @@ import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.PrimaryButton
@@ -63,7 +62,7 @@ import java.time.format.DateTimeFormatter
 fun GrowthScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypographyStyle.current
+    val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     val growthRepo: GrowthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -225,7 +224,7 @@ fun GrowthScreen(navController: NavController) {
                                     ) {
                                         Text(
                                             valText,
-                                            style = typography.display,
+                                            style = typography.displayLarge,
                                             fontWeight = FontWeight.Bold,
                                             color = c.textPrimary,
                                         )

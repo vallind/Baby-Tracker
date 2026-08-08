@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.sheet.SheetDefaults as AppSheetDefaults
 import com.babytracker.designsystem.theme.LocalAppColors
 
@@ -59,7 +60,7 @@ fun AppFormSheet(
             // 标题
             Text(
                 title,
-                style = MaterialTheme.typography.headlineSmall,
+                style = LocalAppTypography.current.headlineSmall,
                 color = c.textPrimary,
             )
             Spacer(Modifier.height(16.dp))

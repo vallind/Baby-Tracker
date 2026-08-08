@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import com.babytracker.designsystem.theme.LocalAppTypography
 
 @Composable
 fun TimePickerLogic(
@@ -161,7 +161,7 @@ fun TimePickerLogic(
                 ) {
                     Text(
                         text = "%02d".format(v),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = LocalAppTypography.current.titleLarge,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         color = if (isSelected) selectedTextColor else unselectedTextColor,
                         textAlign = TextAlign.Center,

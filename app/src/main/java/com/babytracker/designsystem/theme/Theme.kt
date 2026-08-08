@@ -183,22 +183,21 @@ data class AppTheme(
 // ═══════════════════════════════════════════════════════════
 
 val LocalThemeColors = compositionLocalOf { AppTheme.pure.colors }
-val LocalAppTypography = compositionLocalOf { BabyTrackerTypography }
+val LocalAppTypography = compositionLocalOf { AppTypography() }
 
-val BabyTrackerTypography = Typography(
-    displayLarge = TextStyle(fontSize = 57.sp, lineHeight = 64.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.25).sp),
-    displayMedium = TextStyle(fontSize = 45.sp, lineHeight = 52.sp, fontWeight = FontWeight.Bold),
-    displaySmall = TextStyle(fontSize = 36.sp, lineHeight = 44.sp, fontWeight = FontWeight.Bold),
-    headlineLarge = TextStyle(fontSize = 32.sp, lineHeight = 40.sp, fontWeight = FontWeight.SemiBold),
-    headlineMedium = TextStyle(fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold),
-    headlineSmall = TextStyle(fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
-    titleLarge = TextStyle(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
-    titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium),
+// 内部 M3 Typography：数值与自建 AppTypography 保持一致，
+// 仅提供给 MaterialTheme 内部使用，不对外暴露 M3 Typography 类型
+private val internalMaterialTypography = Typography(
+    displayLarge = TextStyle(fontSize = 40.sp, lineHeight = 48.sp, fontWeight = FontWeight.Bold),
+    headlineLarge = TextStyle(fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold),
+    headlineMedium = TextStyle(fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
+    headlineSmall = TextStyle(fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
+    titleLarge = TextStyle(fontSize = 18.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold),
+    titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium),
     titleSmall = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
-    bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 20.sp),
+    bodyLarge = TextStyle(fontSize = 15.sp, lineHeight = 22.sp),
+    bodyMedium = TextStyle(fontSize = 13.sp, lineHeight = 18.sp),
     bodySmall = TextStyle(fontSize = 12.sp, lineHeight = 16.sp),
-    labelLarge = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
     labelMedium = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
     labelSmall = TextStyle(fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
 )
@@ -347,14 +346,13 @@ fun BabyTrackerTheme(
         LocalAppOpacity provides tokensOpacity,
         LocalAppMotion provides tokensMotion,
         LocalAppShapes provides tokensShapes,
-        LocalAppTypographyStyle provides tokensTypography,
         LocalAppControl provides tokensControl,
         LocalAppComponentTokens provides resolvedTokens,
-        LocalAppTypography provides BabyTrackerTypography,
+        LocalAppTypography provides tokensTypography,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = BabyTrackerTypography,
+            typography = internalMaterialTypography,
             shapes = BabyTrackerShapes,
             content = content,
         )

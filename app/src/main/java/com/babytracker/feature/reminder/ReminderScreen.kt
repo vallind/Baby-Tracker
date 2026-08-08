@@ -27,7 +27,6 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -196,7 +195,7 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
             ) {
                 Text(
                     if (t == ReminderTab.PENDING) "待办提醒" else "历史提醒",
-                    style = LocalAppTypographyStyle.current.bodyLarge,
+                    style = LocalAppTypography.current.bodyLarge,
                     fontWeight = if (tab == t) FontWeight.Bold else FontWeight.Normal,
                     color = if (tab == t) c.primary else c.textSecondary,
                 )
@@ -236,13 +235,13 @@ private fun PendingReminderCard(
                 .background(typeColor.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
+            Text(emoji, style = LocalAppTypography.current.titleLarge)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 reminder.title,
-                style = LocalAppTypographyStyle.current.bodyLarge,
+                style = LocalAppTypography.current.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = c.textPrimary,
                 maxLines = 1,
@@ -252,7 +251,7 @@ private fun PendingReminderCard(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     reminder.description,
-                    style = LocalAppTypographyStyle.current.label,
+                    style = LocalAppTypography.current.labelMedium,
                     color = c.textSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -262,7 +261,7 @@ private fun PendingReminderCard(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     reminder.repeatRule,
-                    style = LocalAppTypographyStyle.current.label,
+                    style = LocalAppTypography.current.labelMedium,
                     color = c.textTertiary,
                 )
             }
@@ -281,14 +280,14 @@ private fun PendingReminderCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         countdown,
-                        style = LocalAppTypographyStyle.current.bodyMedium,
+                        style = LocalAppTypography.current.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = if (overdue) c.danger else c.primary,
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
                         DateUtils.formatDate(reminder.dueDate),
-                        style = LocalAppTypographyStyle.current.label,
+                        style = LocalAppTypography.current.labelMedium,
                         color = c.textTertiary,
                     )
                 }
@@ -335,22 +334,22 @@ private fun HistoryReminderCard(
                 .background(typeColor.copy(alpha = 0.10f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
+            Text(emoji, style = LocalAppTypography.current.titleLarge)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 reminder.title,
-                style = LocalAppTypographyStyle.current.bodyLarge,
+                style = LocalAppTypography.current.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = c.textSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(2.dp))
-            Text(doneText, style = LocalAppTypographyStyle.current.label, color = c.textTertiary)
+            Text(doneText, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
         }
-        Text("\u2705", style = LocalAppTypographyStyle.current.titleLarge)
+        Text("\u2705", style = LocalAppTypography.current.titleLarge)
     }
 }
 

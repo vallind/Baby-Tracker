@@ -26,7 +26,6 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppTypographyStyle
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -255,7 +254,7 @@ private fun BabyHeader(baby: Baby) {
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("\uD83D\uDC76", style = LocalAppTypographyStyle.current.display)
+                Text("\uD83D\uDC76", style = LocalAppTypography.current.displayLarge)
             }
             Spacer(Modifier.width(spacing.md))
             Column {
@@ -319,14 +318,14 @@ private fun AssessmentItemCard(
                         .background(bgColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(emoji, style = LocalAppTypographyStyle.current.titleLarge)
+                    Text(emoji, style = LocalAppTypography.current.titleLarge)
                 }
                 Spacer(Modifier.width(12.dp))
                 Row(
                     Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(title, style = LocalAppTypographyStyle.current.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                    Text(title, style = LocalAppTypography.current.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
                     Spacer(Modifier.width(10.dp))
                     Box(
                         Modifier
@@ -334,14 +333,14 @@ private fun AssessmentItemCard(
                             .background(statusColor.copy(alpha = 0.12f))
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
-                        Text(scoreLabel(score), style = LocalAppTypographyStyle.current.label, fontWeight = FontWeight.SemiBold, color = statusColor)
+                        Text(scoreLabel(score), style = LocalAppTypography.current.labelMedium, fontWeight = FontWeight.SemiBold, color = statusColor)
                     }
                 }
                 Spacer(Modifier.width(spacing.xs))
-                Text("\u203A", style = LocalAppTypographyStyle.current.titleLarge, color = c.textTertiary)
+                Text("\u203A", style = LocalAppTypography.current.titleLarge, color = c.textTertiary)
             }
             Spacer(Modifier.height(spacing.sm))
-            Text(description, style = LocalAppTypographyStyle.current.bodyMedium.copy(lineHeight = 20.sp), color = c.textSecondary)
+            Text(description, style = LocalAppTypography.current.bodyMedium.copy(lineHeight = 20.sp), color = c.textSecondary)
         }
     }
 }
@@ -361,9 +360,9 @@ private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Uni
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text("下次评估时间", style = LocalAppTypographyStyle.current.bodyMedium, color = c.textSecondary)
+            Text("下次评估时间", style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
             Spacer(Modifier.height(spacing.xxs))
-            Text("1个月后（$nextDateText）", style = LocalAppTypographyStyle.current.bodyLarge.copy(fontWeight = FontWeight.Medium), color = c.textPrimary)
+            Text("1个月后（$nextDateText）", style = LocalAppTypography.current.bodyLarge.copy(fontWeight = FontWeight.Medium), color = c.textPrimary)
         }
         Spacer(Modifier.width(spacing.md))
         Box(
@@ -378,7 +377,7 @@ private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Uni
             Text(
                 "重新评估",
                 color = c.onPrimary,
-                style = LocalAppTypographyStyle.current.bodyLarge,
+                style = LocalAppTypography.current.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
             )
         }
@@ -412,9 +411,9 @@ private fun AssessmentFormDialog(
                 .padding(bottom = spacing.lg)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text("发育评估", style = LocalAppTypographyStyle.current.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            Text("发育评估", style = LocalAppTypography.current.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
             Spacer(Modifier.height(spacing.xs))
-            Text("为宝宝 5 项能力打分（未观察/落后/正常/超前）", style = LocalAppTypographyStyle.current.bodyMedium, color = c.textSecondary)
+            Text("为宝宝 5 项能力打分（未观察/落后/正常/超前）", style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
             Spacer(Modifier.height(spacing.md))
 
             abilities().forEachIndexed { index, meta ->
@@ -461,7 +460,7 @@ private fun AssessmentFormDialog(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("保存评估", color = c.onPrimary, style = LocalAppTypographyStyle.current.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("保存评估", color = c.onPrimary, style = LocalAppTypography.current.titleMedium, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -498,8 +497,8 @@ private fun ScoreSelector(
             }
             Spacer(Modifier.width(10.dp))
             Column {
-                Text(title, style = LocalAppTypographyStyle.current.bodyLarge, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Text(abilityDescription(title, selected), style = LocalAppTypographyStyle.current.label, color = c.textSecondary)
+                Text(title, style = LocalAppTypography.current.bodyLarge, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Text(abilityDescription(title, selected), style = LocalAppTypography.current.labelMedium, color = c.textSecondary)
             }
         }
         Spacer(Modifier.height(spacing.sm))
@@ -518,7 +517,7 @@ private fun ScoreSelector(
                 ) {
                     Text(
                         label,
-                        style = LocalAppTypographyStyle.current.label,
+                        style = LocalAppTypography.current.labelMedium,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                         color = if (isSelected) Color.White else c.textSecondary,
                     )
