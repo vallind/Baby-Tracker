@@ -109,9 +109,10 @@ fun RecordCard(
                         .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                         .semantics {
                             // 无障碍：TalkBack 用户无法滑动删除，暴露自定义删除动作
+                            // 与触屏滑动一致，先弹确认框再删（删除不可恢复）
                             customActions = listOf(
                                 CustomAccessibilityAction(label = AppStrings.delete) {
-                                    onDelete()
+                                    showConfirm = true
                                     true
                                 }
                             )

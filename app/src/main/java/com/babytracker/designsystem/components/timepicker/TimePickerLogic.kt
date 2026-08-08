@@ -159,7 +159,7 @@ fun TimePickerLogic(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(itemHeight)
-                        .semantics { selected = isSelected },
+                        .semantics(mergeDescendants = true) { selected = isSelected },
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
