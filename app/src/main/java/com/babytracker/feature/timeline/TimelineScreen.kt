@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,6 +30,7 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.SegmentedControl
@@ -129,7 +129,7 @@ fun TimelineScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = spacing.md, vertical = 6.dp),
             )
-            HorizontalDivider(color = c.divider, thickness = 0.5.dp)
+            AppDivider(color = c.divider, thickness = 0.5.dp)
 
             if (state.loading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

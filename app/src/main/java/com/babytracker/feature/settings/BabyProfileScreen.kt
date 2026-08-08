@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +23,7 @@ import com.babytracker.core.data.repository.GrowthRepository
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppElevation
@@ -300,7 +300,7 @@ private fun GrowthValueRow(label: String, value: String, date: String?) {
 @Composable
 private fun BirthInfoDivider() {
     val c = LocalAppColors.current
-    HorizontalDivider(
+    AppDivider(
         color = c.divider,
         thickness = 0.5.dp,
     )

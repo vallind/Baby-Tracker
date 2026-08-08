@@ -18,6 +18,7 @@ package com.babytracker.designsystem.components
 // AppTopBar          统一导航栏             (topbar/)
 // AppButton          统一按钮（变体枚举）    (button/)
 // AppInput           统一输入框             (input/)
+// AppDivider         分割线                 (divider/)
 // AppChip            标签                   (chip/)
 // AppTag             语义标签（5色变体）      (tag/)
 // AppFAB             浮动操作按钮            (fab/)

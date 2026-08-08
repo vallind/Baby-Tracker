@@ -14,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
@@ -44,6 +43,7 @@ import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.dialog.AppDialog
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -394,7 +394,7 @@ fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
 fun SettingsDivider() {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    HorizontalDivider(
+    AppDivider(
         color = c.divider,
         thickness = 0.5.dp,
         modifier = Modifier.padding(horizontal = spacing.md),

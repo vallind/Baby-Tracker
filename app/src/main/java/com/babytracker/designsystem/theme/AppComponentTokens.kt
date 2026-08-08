@@ -357,6 +357,20 @@ data class TagTokens(
     }
 }
 
+// —— TT-033 分割线 ——
+@Immutable
+data class DividerTokens(
+    val color: Color,
+    val thickness: Dp,
+) {
+    companion object {
+        fun default(colors: AppColors): DividerTokens = DividerTokens(
+            color = colors.divider,
+            thickness = 0.5.dp,
+        )
+    }
+}
+
 // —— TT-027 进度/骨架屏 ——
 @Immutable
 data class ProgressTokens(
@@ -882,6 +896,7 @@ data class AppComponentTokens(
     val dialog: DialogTokens,
     val menu: MenuTokens,
     val tag: TagTokens,
+    val divider: DividerTokens,
     val progress: ProgressTokens,
     val skeleton: SkeletonTokens,
     val steps: StepsTokens,
@@ -924,6 +939,7 @@ data class AppComponentTokens(
             dialog = DialogTokens.default(colors, shapes, spacing, elevation, opacity),
             menu = MenuTokens.default(colors, shapes, spacing, elevation),
             tag = TagTokens.default(colors, shapes, typography, spacing, opacity),
+            divider = DividerTokens.default(colors),
             progress = ProgressTokens.default(colors),
             skeleton = SkeletonTokens.default(shapes, darkTheme),
             steps = StepsTokens.default(colors),

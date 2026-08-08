@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +26,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.navigation.Screen
@@ -394,7 +394,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 groupItems.forEach { item ->
                     TimelineRecordRow(item)
                     if (item != groupItems.last()) {
-                        HorizontalDivider(color = c.divider, thickness = 0.5.dp, modifier = Modifier.padding(start = 28.dp))
+                        AppDivider(color = c.divider, thickness = 0.5.dp, modifier = Modifier.padding(start = 28.dp))
                     }
                 }
             }

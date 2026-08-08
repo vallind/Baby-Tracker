@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.runtime.*
@@ -37,6 +36,7 @@ import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.dialog.AppDialog
+import com.babytracker.designsystem.components.divider.AppDivider
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -360,7 +360,7 @@ private fun FamilyDetailView(
                         }
                     }
                     if (index < members.lastIndex) {
-                        HorizontalDivider(color = c.divider, thickness = 0.5.dp)
+                        AppDivider(color = c.divider, thickness = 0.5.dp)
                     }
                 }
             }
