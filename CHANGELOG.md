@@ -1,6 +1,20 @@
 ## 更新日志
-遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
+遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，未发布批次条目累积在 [Unreleased] 下。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
+
+### [Unreleased]
+
+**设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
+- Typography 双体系统一：LocalAppTypography 改供自建 AppTypography，新增 8 级补齐至自建 12 级单体系（displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall），删除裸字段与 LocalAppTypographyStyle，禁止组件层暴露 M3 令牌类型（仅 theme 层桥接），迁移 31 文件与 13 处 M3 直用
+- Button 家族收敛为 AppButton + ButtonVariant 枚举（Primary/Secondary/Text），迁移 58 处调用方，颜色改走 ButtonTokens
+- 新增 AppDivider 组件（DividerTokens），迁移 6 处 HorizontalDivider
+- 新增 AppSurface 组件（SurfaceTokens），迁移 3 处 M3 Surface
+- 新增 AppSnackbarHost 组件（SnackbarHostTokens），迁移 9 处 M3 SnackbarHost
+- EmptyState 令牌化：新增 EmptyStateTokens，M3 Button/colorScheme 改走令牌体系
+- AlertDialog 迁移：编辑昵称对话框迁移 AppDialog（移除清除快捷按钮），清理两处死 import
+- 遗留清理：TimePicker/DateTimeCascade 两处 MaterialTheme.colorScheme 改走 LocalAppColors
+- 审计测试扩展：静态审计新增「新组件 Defaults 应被 AppComponentTokens 覆盖」与「组件层不应导入 M3 令牌与主题类型」两条规则，修复头部注释漂移
+- 文档同步：design-system.md 令牌清单/组件速查/Typography 12 级更新，AGENTS.md 组件映射行更新
 
 ### [1.8.0] — 2026-08-08
 

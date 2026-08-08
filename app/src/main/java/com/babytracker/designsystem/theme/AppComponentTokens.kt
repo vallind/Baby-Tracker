@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 // ═══════════════════════════════════════════════════════════
-//  组件令牌 — TT-017 ~ TT-029
+//  组件令牌 — TT-017 ~ TT-036
 //  参照 PaletteComponentThemes 架构：
 //  - 每个组件令牌有独立 default() 工厂，接收基础令牌参数
 //  - AppComponentTokens.default() 统一接收 colors/spacing/shapes/typography/

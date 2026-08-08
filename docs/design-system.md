@@ -11,9 +11,11 @@
   显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
 
 三层令牌：
-  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 39字段/Spacing/Elevation/Opacity/Motion/Shapes/Typography/ControlSizeTokens）
-  designsystem/theme/AppComponentTokens.kt  — 组件令牌（21 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Progress/Skeleton/Steps/Pagination/Slider/Rate + AppBar/Chip/Fab/BottomBar/ListItem）
-  designsystem/util/AppDefaults.kt           — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
+  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 39字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens）
+  designsystem/theme/AppComponentTokens.kt  — 组件令牌（33 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/EmptyState）
+  designsystem/util/AppDefaults.kt          — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
+
+Typography 自建 12 级：displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall（禁止直接使用 M3 Typography，仅 theme 层桥接）
 
 ## 令牌设计约定（参照 shadcn/ui）
 
@@ -42,9 +44,10 @@ tokens.derive { field = value } → 部分覆盖语法糖（⏳ TODO，TT-032，
 ```kotlin
 AppCard { Text("内容") }                          // 替代 Card + shadow + shape + CardDefaults 样板
 AppTopBar(title = "标题", onBack = { ... })       // 替代 CenterAlignedTopAppBar
-PrimaryButton(onClick = { ... }, label = "保存")   // 主按钮（支持 containerColor/contentColor 覆盖）
-SecondaryButton(label = "取消", onClick = { ... }) // 次按钮（描边，支持 color 参数）
-AppTextButton(label = "复制", icon = Icons.Default.ContentCopy) // 文本按钮（支持 icon）
+AppButton(label = "保存", onClick = { ... }, variant = ButtonVariant.Secondary) // 统一按钮（Primary/Secondary/Text 变体枚举）
+AppDivider(thickness = 0.5.dp)                      // 分割线（替代 HorizontalDivider）
+AppSurface { ... }                                  // 表面容器（替代 M3 Surface，可选 color/shape）
+AppSnackbarHost(hostState)                          // 全局提示宿主（替代 M3 SnackbarHost）
 AppDialog(show, title, content = { ... }, confirmEnabled, onConfirm, onDismiss) // 表单/自定义内容对话框
 AppConfirmDialog(show, onConfirm, onDismiss)       // 确认类对话框
 AppFormSheet(show, onSave, ...)                    // 表单底部弹层

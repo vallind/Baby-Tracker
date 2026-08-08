@@ -213,3 +213,14 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 **原因：** material3 1.4.0（BOM 2026.05.01）重构了 Snackbar，公开 API 只剩 `(snackbarData, modifier, actionOnNewLine, shape, containerColor, contentColor, actionColor, actionContentColor, actionIconColor)`，阴影高度改为内部固定读 `SnackbarTokens.ContainerElevation`，既没有 `tonalElevation` 也没有改名的 `elevation` 参数。
 
 **规则：** 升级/换用新版本 M3 组件时，先 `javap` 或查文档核对组件公开参数再写代码；对已移除的参数，令牌照常定义（设计契约），组件内不注入并留中文注释说明原因。
+
+---
+
+## 14. JVM 单测工作目录是 app 模块根，不是仓库根
+
+**现象：** 静态审计测试用 `File("app/src/main/...")` 相对路径读源码，测试一直"全绿"；改用正确路径后立即暴露两个真实违规（RecordCardDefaults 未走 LocalAppComponentTokens）。
+
+**原因：** AGP 的 unitTest 任务工作目录是 `$moduleDir`（`app/`），不是仓库根。`File("app/src/main/...")` 指向不存在的目录时，`walkTopDown()` 静默返回空流、`readText()` 抛 FileNotFoundException——审计测试对空清单/异常无感知，等于空断言假绿。
+
+**规则：** 单测里引用源码路径一律用模块相对路径 `src/main/...`（不要带 `app/` 前缀）；静态审计测试必须自带"扫描到文件数 > 0"的断言，防止路径漂移后静默空转。
+

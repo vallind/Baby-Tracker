@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.timepicker.TimePickerLogic
 import com.babytracker.designsystem.theme.DatePickerTokens
@@ -200,7 +200,7 @@ private fun CascadeToolbar(
             Text(
                 title,
                 style = LocalAppTypography.current.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = LocalAppColors.current.onSurface,
             )
             TextButton(onClick = onConfirm) {
                 Text(

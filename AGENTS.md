@@ -101,7 +101,7 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 
 ## 八、设计系统与 i18n
 
-- **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button` → `PrimaryButton`/`SecondaryButton`，`TextButton` → `AppTextButton`，`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
+- **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button`/`OutlinedButton`/`TextButton` → `AppButton`（variant 枚举 Primary/Secondary/Text），`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`HorizontalDivider` → `AppDivider`，`Surface` → `AppSurface`，`SnackbarHost` → `AppSnackbarHost`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
 - **DS 组件缺失时的决策路径**：
   1. 满足新增标准（见下）→ 新增组件，走完整流程并更新 `docs/design-system.md`
   2. 不满足新增标准 → 允许临时用原生 M3，但必须留下 `// TODO: 迁移到 DS 组件` 注释
