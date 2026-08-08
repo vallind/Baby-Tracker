@@ -26,7 +26,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
-class BackupManager(private val db: AppDatabase) {
+class BackupManager(private val appContext: Context, private val db: AppDatabase) {
     suspend fun createLocalBackup(context: Context): String {
         val backupDir = File(context.filesDir, "backups").also { it.mkdirs() }
         val ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"))
@@ -156,12 +156,12 @@ class BackupManager(private val db: AppDatabase) {
                 birthDate = j.getString("birthDate"),
                 birthWeight = j.optDouble("birthWeight", 0.0).takeIf { it > 0 },
                 birthHeight = j.optDouble("birthHeight", 0.0).takeIf { it > 0 },
-                avatarPath = j.optString("avatarPath").ifBlank { null },
-                createdAt = j.optString("createdAt"),
-                uuid = j.optString("uuid").ifBlank { null },
+                avatarPath = j.optStr("avatarPath"),
+                createdAt = j.optStr("createdAt") ?: "",
+                uuid = j.optStr("uuid"),
                 updatedAt = j.optLong("updatedAt", 0),
                 deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
-                familyId = j.optString("familyId").ifBlank { null },
+                familyId = j.optStr("familyId"),
             )
         }
 
@@ -181,6 +181,13 @@ class BackupManager(private val db: AppDatabase) {
                 parseReminders(data.optJSONArray("${prefix}_reminders")).forEach { db.reminderDao().insert(it) }
             }
             parseMessages(data.optJSONArray("messages")).forEach { db.messageDao().insert(it) }
+        }
+
+        // 还原后存量数据均无 sync_metadata 标记，清除 SyncTrigger 的一次性标记
+        // 让其在下一次家庭触发/重启时重新 markExistingPending，自动同步才能上行还原数据
+        val prefs = appContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        prefs.all.keys.filter { it.startsWith("sync_pending_marked_") }.forEach { key ->
+            prefs.edit().remove(key).apply()
         }
 
         return Result.success(babies.size)
@@ -207,13 +214,13 @@ class BackupManager(private val db: AppDatabase) {
             id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
             amountMl = j.optInt("amountMl", -1).takeIf { v -> v >= 0 },
             durationMin = j.optInt("durationMin", -1).takeIf { v -> v >= 0 },
-            breastSide = j.optString("breastSide").ifBlank { null },
-            foodName = j.optString("foodName").ifBlank { null },
+            breastSide = j.optStr("breastSide"),
+            foodName = j.optStr("foodName"),
             amountG = j.optInt("amountG", -1).takeIf { v -> v >= 0 },
-            brand = j.optString("brand").ifBlank { null },
-            note = j.optString("note").ifBlank { null },
+            brand = j.optStr("brand"),
+            note = j.optStr("note"),
             timestamp = j.getString("timestamp"),
-            uuid = j.optString("uuid").ifBlank { null },
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0),
             deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
@@ -224,8 +231,8 @@ class BackupManager(private val db: AppDatabase) {
         SleepEntity(
             id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
             startTime = j.getString("startTime"), endTime = j.getString("endTime"),
-            note = j.optString("note").ifBlank { null },
-            uuid = j.optString("uuid").ifBlank { null },
+            note = j.optStr("note"),
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0),
             deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
@@ -236,8 +243,8 @@ class BackupManager(private val db: AppDatabase) {
         GrowthEntity(
             id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
             value = j.getDouble("value"), measuredAt = j.getString("measuredAt"),
-            note = j.optString("note").ifBlank { null },
-            uuid = j.optString("uuid").ifBlank { null },
+            note = j.optStr("note"),
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0),
             deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
@@ -247,12 +254,12 @@ class BackupManager(private val db: AppDatabase) {
         val j = it.getJSONObject(i)
         VaccinationEntity(
             id = j.getInt("id"), babyId = j.getInt("babyId"), name = j.getString("name"),
-            dose = j.optString("dose").ifBlank { null },
-            scheduledDate = j.optString("scheduledDate").ifBlank { null },
-            administeredDate = j.optString("administeredDate").ifBlank { null },
-            status = j.optString("status", "pending"),
-            note = j.optString("note").ifBlank { null },
-            uuid = j.optString("uuid").ifBlank { null },
+            dose = j.optStr("dose"),
+            scheduledDate = j.optStr("scheduledDate"),
+            administeredDate = j.optStr("administeredDate"),
+            status = j.optStr("status") ?: "pending",
+            note = j.optStr("note"),
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0),
             deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
@@ -263,11 +270,11 @@ class BackupManager(private val db: AppDatabase) {
         HealthRecordEntity(
             id = j.getInt("id"), babyId = j.getInt("babyId"), category = j.getString("category"),
             description = j.getString("description"),
-            doctorName = j.optString("doctorName").ifBlank { null },
+            doctorName = j.optStr("doctorName"),
             recordDate = j.getString("recordDate"),
-            attachments = j.optString("attachments").ifBlank { null },
-            note = j.optString("note").ifBlank { null },
-            uuid = j.optString("uuid").ifBlank { null },
+            attachments = j.optStr("attachments"),
+            note = j.optStr("note"),
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0),
             deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
@@ -277,8 +284,8 @@ class BackupManager(private val db: AppDatabase) {
         val j = it.getJSONObject(i)
         DiaperEntity(
             id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
-            timestamp = j.getString("timestamp"), note = j.optString("note").ifBlank { null },
-            uuid = j.optString("uuid").ifBlank { null },
+            timestamp = j.getString("timestamp"), note = j.optStr("note"),
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0),
             deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
@@ -288,10 +295,10 @@ class BackupManager(private val db: AppDatabase) {
         val j = it.getJSONObject(i)
         MessageEntity(
             id = j.getLong("id"), type = j.getString("type"), title = j.getString("title"),
-            content = j.getString("content"), senderAvatar = j.optString("senderAvatar").ifBlank { null },
+            content = j.getString("content"), senderAvatar = j.optStr("senderAvatar"),
             createTime = j.getLong("createTime"), isRead = j.optBoolean("isRead"),
-            extraData = j.optString("extraData", ""),
-            uuid = j.optString("uuid").ifBlank { null },
+            extraData = j.optStr("extraData") ?: "",
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0), deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
     } } ?: emptyList()
@@ -303,8 +310,8 @@ class BackupManager(private val db: AppDatabase) {
             assessDate = j.getLong("assessDate"), babyAgeMonths = j.getInt("babyAgeMonths"),
             grossMotor = j.getInt("grossMotor"), fineMotor = j.getInt("fineMotor"),
             language = j.getInt("language"), social = j.getInt("social"),
-            cognitive = j.getInt("cognitive"), note = j.optString("note", ""),
-            uuid = j.optString("uuid").ifBlank { null },
+            cognitive = j.getInt("cognitive"), note = j.optStr("note") ?: "",
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0), deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
     } } ?: emptyList()
@@ -313,12 +320,12 @@ class BackupManager(private val db: AppDatabase) {
         val j = it.getJSONObject(i)
         ReminderEntity(
             id = j.getInt("id"), babyId = j.getInt("babyId"), type = j.getString("type"),
-            title = j.getString("title"), description = j.optString("description", ""),
+            title = j.getString("title"), description = j.optStr("description") ?: "",
             dueDate = j.getLong("dueDate"), isDone = j.optBoolean("isDone"),
             doneDate = j.optLong("doneDate", -1).takeIf { it >= 0 },
             isEnabled = j.optBoolean("isEnabled", true),
-            repeatRule = j.optString("repeatRule", ""),
-            uuid = j.optString("uuid").ifBlank { null },
+            repeatRule = j.optStr("repeatRule") ?: "",
+            uuid = j.optStr("uuid"),
             updatedAt = j.optLong("updatedAt", 0), deletedAt = j.optLong("deletedAt", -1).takeIf { it >= 0 },
         )
     } } ?: emptyList()
@@ -458,3 +465,10 @@ private fun ReminderEntity.toJson() = JSONObject().apply {
     put("isEnabled", isEnabled); put("repeatRule", repeatRule)
     put("uuid", uuid); put("updatedAt", updatedAt); put("deletedAt", deletedAt)
 }
+
+/**
+ * 安全读取可空字符串：org.json 的 optString 对 JSONObject.NULL 返回字符串 "null"（非 blank），
+ * 导致备份文件中显式 null 字段被还原成 "null" 文本（同 lessons 第 6 条）。
+ */
+private fun JSONObject.optStr(key: String): String? =
+    (opt(key) as? String)?.takeIf { it.isNotBlank() }

@@ -9,6 +9,7 @@ import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.auth.user.UserInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -79,26 +80,33 @@ class AuthService(
             prefs.edit().putBoolean(KEY_LOGGED_IN, true).apply()
         }
         // 3. 监听 Supabase session 状态变更（登录/登出/刷新）
-        CoroutineScope(Dispatchers.IO).launch {
-            client.auth.sessionStatus.collect { status ->
-                val user = when (status) {
-                    is SessionStatus.Authenticated -> status.session.user
-                    else -> null
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            try {
+                client.auth.sessionStatus.collect { status ->
+                    val user = when (status) {
+                        is SessionStatus.Authenticated -> status.session.user
+                        else -> null
+                    }
+                    if (user != null) {
+                        _currentUser.value = user
+                        _verifiedUser.value = user
+                        prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).apply()
+                        Timber.tag("Auth").d("sessionStatus: authenticated uid=%s", user.id)
+                    } else {
+                        _verifiedUser.value = null
+                    }
+                    if (user == null && !prefs.getBoolean(KEY_LOGGED_IN, false)) {
+                        _currentUser.value = null
+                        Timber.tag("Auth").d("sessionStatus: not authenticated (no cached session)")
+                    } else {
+                        Timber.tag("Auth").d("sessionStatus: %s (cached session preserved)", status::class.simpleName)
+                    }
                 }
-                if (user != null) {
-                    _currentUser.value = user
-                    _verifiedUser.value = user
-                    prefs.edit().putBoolean(KEY_LOGGED_IN, true).putString(KEY_USER_ID, user.id).apply()
-                    Timber.tag("Auth").d("sessionStatus: authenticated uid=%s", user.id)
-                } else {
-                    _verifiedUser.value = null
-                }
-                if (user == null && !prefs.getBoolean(KEY_LOGGED_IN, false)) {
-                    _currentUser.value = null
-                    Timber.tag("Auth").d("sessionStatus: not authenticated (no cached session)")
-                } else {
-                    Timber.tag("Auth").d("sessionStatus: %s (cached session preserved)", status::class.simpleName)
-                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // 流异常时保住监听协程，避免登录态监控永久失效
+                Timber.tag("Auth").e(e, "sessionStatus collect failed")
             }
         }
     }

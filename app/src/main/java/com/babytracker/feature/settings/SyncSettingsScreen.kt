@@ -32,6 +32,7 @@ fun SyncSettingsScreen(navController: NavController) {
     val isOnline by syncViewModel.isOnline.collectAsState()
     val syncState by syncViewModel.syncState.collectAsState()
     val syncResult by syncViewModel.syncResult.collectAsState()
+    val syncRunId by syncViewModel.syncRunId.collectAsState()
 
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
@@ -128,8 +129,9 @@ fun SyncSettingsScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.sm),
             )
 
-            LaunchedEffect(syncResult) {
-                if (syncResult != null) syncing = false
+            // 用自增 runId 复位：结果字符串相同（如连续两次"无数据需同步"）时 StateFlow 去重不会重新发射
+            LaunchedEffect(syncRunId) {
+                if (syncRunId > 0) syncing = false
             }
 
             Spacer(Modifier.height(spacing.md))

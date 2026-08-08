@@ -170,14 +170,15 @@ class StatsViewModel(
         // ── 喂养 ──
         val feedingInRange = feedings.filter { inRange(it.timestamp, start, end) }
         val feedingPrevInRange = feedings.filter { inRange(it.timestamp, prevStart, prevEnd) }
-        val feedingCount = feedingInRange.size
+        val bucketCount = periodBucketCount(period)
+        val feedingPoints = bucketByDay(period, feedingInRange, start, bucketCount) { 1f }
+        // 计数以能落入图表的记录为准，避免时间戳解析失败的记录在数字与柱状图间不一致
+        val feedingCount = feedingPoints.sum().toInt()
         val breastFeedCount = feedingInRange.count { it.type == FeedingType.BREAST }
         val formulaCount = feedingInRange.count { it.type == FeedingType.FORMULA }
         val formulaTotalMl = feedingInRange.filter { it.type == FeedingType.FORMULA }.sumOf { it.amountMl ?: 0 }
         val feedingCompare = buildCompare((feedingCount - feedingPrevInRange.size).toLong(), "次")
 
-        val bucketCount = periodBucketCount(period)
-        val feedingPoints = bucketByDay(period, feedingInRange, start, bucketCount) { 1f }
         val sleepPoints = bucketByDay(
             period,
             sleeps.filter { inRange(it.startTime, start, end) },

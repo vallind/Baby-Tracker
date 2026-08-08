@@ -203,7 +203,8 @@ class FamilyService(
         client.postgrest.rpc("join_family", mapOf("invite_code" to inviteCode.uppercase()))
         refreshForUser(userId)
         val family = _sessionState.value.families.firstOrNull {
-            it.inviteCode == inviteCode.uppercase()
+            // 服务端可能以小写存储邀请码，忽略大小写匹配避免误报"加入家庭失败"
+            it.inviteCode.equals(inviteCode.uppercase(), ignoreCase = true)
         } ?: error("加入家庭失败")
         selectFamily(family)
         family

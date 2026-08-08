@@ -43,7 +43,7 @@ val appModule = module {
     single { SettingsStore(androidContext(), get()) }
     single { ThemeController(get()) }
     single { BabyController(get(), get()) }
-    single { BackupManager(get()) }
+    single { BackupManager(androidContext(), get()) }
     single { NetworkMonitor(androidContext()) }
     single<BabyRepository> { BabyRepositoryImpl(get(), get(), get(), get()) }
     single<FeedingRepository> { FeedingRepositoryImpl(get(), get(), get()) }

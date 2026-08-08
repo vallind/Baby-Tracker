@@ -55,6 +55,9 @@ class SyncEngine(
 
     private val fullSyncMutex = Mutex()
 
+    /** 保护 push/pull 单操作互斥：check-then-act 的 _syncState 守卫在并发下不可靠 */
+    private val pushPullMutex = Mutex()
+
     /** 当前家庭 ID（登录+加入家庭后设置），push 时自动注入到每条记录 */
     var currentFamilyId: String? = null
 
@@ -176,7 +179,9 @@ class SyncEngine(
      * 使用 upsert 策略（冲突时用云端 uuid 匹配，updatedAt 决定覆盖）。
      */
     /** 上行同步，返回成功数和逐条失败信息。 */
-    suspend fun push(): SyncBatchResult {
+    suspend fun push(): SyncBatchResult = pushPullMutex.withLock { pushInternal() }
+
+    private suspend fun pushInternal(): SyncBatchResult {
         if (_syncState.value == SyncState.SYNCING) return SyncBatchResult()
         val fid = currentFamilyId ?: run {
             Timber.tag("Sync").d("push: no familyId, skip")
@@ -245,7 +250,9 @@ class SyncEngine(
     }
 
     /** 下行同步，只有整页全部落库成功才推进游标和成功数。 */
-    suspend fun pull(): SyncBatchResult {
+    suspend fun pull(): SyncBatchResult = pushPullMutex.withLock { pullInternal() }
+
+    private suspend fun pullInternal(): SyncBatchResult {
         if (_syncState.value == SyncState.SYNCING) return SyncBatchResult()
         val fid = currentFamilyId ?: run {
             Timber.tag("Sync").d("pull: no familyId, skip")

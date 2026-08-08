@@ -133,8 +133,13 @@ class SyncTrigger(
                     }
                     val pendingKey = "sync_pending_marked_$newId"
                     if (!prefs.getBoolean(pendingKey, false)) {
-                        syncEngine.markExistingPending()
-                        prefs.edit().putBoolean(pendingKey, true).apply()
+                        // 有表标记失败时不置位一次性标记，下次家庭触发可重试
+                        val failures = syncEngine.markExistingPending()
+                        if (failures.isEmpty()) {
+                            prefs.edit().putBoolean(pendingKey, true).apply()
+                        } else {
+                            Timber.tag("Sync").w("markExistingPending partial failures=%d, 保留重试机会", failures.size)
+                        }
                     }
                     triggerSync()
                     authService.verifiedUserId()?.let {
@@ -244,7 +249,16 @@ class SyncTrigger(
 
     private suspend fun doPush() {
         try {
-            syncEngine.push()
+            // 防抖/推送期间新增事件可能被缓冲溢出丢弃，推送后复查 pending，仍有余量则补推
+            var attempts = 0
+            while (attempts < 3) {
+                attempts++
+                syncEngine.push()
+                val fid = syncEngine.currentFamilyId ?: return
+                if (syncMeta.pendingCount(fid) <= 0) break
+                Timber.tag("Sync").d("auto push 仍有 %d 条 pending，补推第 %d 次", syncMeta.pendingCount(fid), attempts)
+                if (attempts < 3) kotlinx.coroutines.delay(1_000)
+            }
             Timber.tag("Sync").d("auto push done")
         } catch (e: Exception) {
             Timber.tag("Sync").e(e, "auto push failed")

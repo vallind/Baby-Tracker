@@ -2,6 +2,23 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.10] — 2026-08-08
+
+**同步稳定性修复：**
+- 修复"立即同步"按钮在连续两次同步结果相同时卡死在"同步中..."的问题（StateFlow 去重不重发），改为自增 runId 复位
+- 修复 markExistingPending 部分表标记失败后仍写入一次性标记、存量数据永久不进入同步队列的问题，失败时保留重试机会
+- 修复防抖/推送期间新增变更事件缓冲溢出被丢弃后不补推的问题，推送后复查 pending 余量自动补推
+- 修复 push/pull 的 check-then-act 并发守卫竞态，新增 pushPullMutex 统一互斥（fullSync 持锁顺序固定，无死锁）
+- 修复备份还原清空 sync_metadata 后一次性标记已置位、还原数据永不自动上行的问题，还原成功后清除标记
+- 修复 AuthService 登录态监听协程无 SupervisorJob/异常兜底、流异常后监控永久失效的问题
+- 修复 joinFamily 邀请码与云端存储大小写不一致时误报"加入家庭失败"的问题
+
+**备份解析与统计一致性：**
+- BackupManager 新增 optStr 安全读取（org.json 对 JSONObject.NULL 返回字符串 "null"），替换全部 33 处 optString 调用
+- 统计页喂养次数改为以图表可落入的桶求和为准，消除解析失败记录"数字有、柱子无"的矛盾
+
+**验证：** `assembleDebug` 与 `testDebugUnitTest` 全部通过；Android 应用版本更新为 1.7.10
+
 ### [1.7.9] — 2026-08-08
 
 **崩溃与稳定性修复：**

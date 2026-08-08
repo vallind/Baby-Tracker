@@ -28,9 +28,14 @@ class SyncViewModel(
     private val _syncResult = MutableStateFlow<String?>(null)
     val syncResult: StateFlow<String?> = _syncResult.asStateFlow()
 
+    /** 每次 manualSync 完成自增；字符串结果可能被 StateFlow 去重，UI 需用它复位"同步中"状态 */
+    private val _syncRunId = MutableStateFlow(0)
+    val syncRunId: StateFlow<Int> = _syncRunId.asStateFlow()
+
     fun manualSync() {
         if (!isOnline.value) {
             _syncResult.value = "当前离线，无法同步"
+            _syncRunId.value++
             return
         }
         viewModelScope.launch {
@@ -57,6 +62,8 @@ class SyncViewModel(
                 }
             } catch (exception: Exception) {
                 _syncResult.value = "同步失败：${exception.message}"
+            } finally {
+                _syncRunId.value++
             }
         }
     }
