@@ -3,52 +3,34 @@
 > ⚠️ 任务前必须读取 [docs/lessons.md](docs/lessons.md)，确认无相关教训后再动手。
 >
 > 核心理念：先想清楚再动代码，改完只擦自己的屁股。
+>
+> 本文件只放代码库无法推导的约定（规则、坑、rationale）。目录结构等可自行从代码读取的信息见 `docs/project-structure.md`，不在此重复，避免漂移。
 
 ---
 
 ## 一、项目概览
 
-Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Material 3，MVVM + Koin + Room。
+Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Material 3，MVVM + Koin + Room + Supabase 同步。
+
+分层：`designsystem`（设计系统）/ `core`（数据库、DI、备份、同步引擎、AI、工具）/ `feature`（业务模块）/ `navigation`（路由）。模块索引与路由见 `docs/project-structure.md`。
 
 ## 二、开发命令
 
 ```bash
-./gradlew assembleDebug          # 编译
+./gradlew assembleDebug          # 编译（每次改动后必跑）
+./gradlew testDebugUnitTest      # 单元测试（每次改动后必跑，全绿才算完成）
 ./gradlew assembleRelease        # 发布构建（R8 + 资源压缩）
-./gradlew lint                   # Lint 检查
+./gradlew lint                   # Lint（改动涉及 Compose/资源/Manifest/API 时跑）
 ```
 
-## 三、目录结构
-
-```
-app/src/main/java/com/babytracker/
-├── designsystem/     # 设计系统：主题令牌、可复用组件、Hooks、国际化
-│   ├── theme/        # 主题 + Token + Defaults
-│   ├── components/   # 可复用组件（21+ 个）
-│   ├── hooks/        # useDebounce/useState/useLatestState + Logic 类
-│   ├── i18n/         # AppStrings
-│   ├── foundation/   # BorderContainer/CenterVerticallyRow
-│   └── util/         # AppDefaults 快照
-├── core/             # 业务基础设施：数据库、DI、备份、数据仓库、工具类
-│   ├── backup/       # BackupManager
-│   ├── database/     # Room（AppDatabase/Entities/Daos）
-│   ├── di/           # Koin Modules
-│   ├── data/         # Repository + Mapper
-│   ├── domain/       # Domain Models
-│   └── util/         # BabyController/DateUtils/VaccineSchedule
-├── feature/          # 13 个业务模块（home/feeding/sleep/diaper/growth/vaccination/health/stats/timeline/settings 等）
-└── navigation/       # 路由导航（AppNavigation.kt，11 条路由）
-```
-
-> 详细模块索引：`docs/project-structure.md`
-
-## 四、AI 工作流四大准则
+## 三、AI 工作流四大准则
 
 ### 1. 先想再说，不猜
 
 - 动手前**明确陈述理解**。有歧义列出所有可能解释，让你选。
 - 如果存在更简单的方案，敢于**向上建言**。
-- 遇到不清楚的地方，**立即停止**，等你澄清。
+- **"不清楚"的判定边界**：改动触碰数据模型、同步链路、跨模块共享 API、数据库 schema → **必须请示**；纯 UI 文案/间距/颜色/布局调整 → 直接干。
+- 落在请示范围内的歧义，**立即停止**，等你澄清。
 
 ### 2. 简单优先，不堆料
 
@@ -61,7 +43,6 @@ app/src/main/java/com/babytracker/
 - **只改用户要求的地方**。不顺手"优化"旁边的代码。
 - 匹配文件现有风格。
 - **清理只限于自己改过的地方的副作用**（我删了函数导致变量没用 → 删掉它）。不删改动范围外的死代码，最多顺嘴提一句。
-- 验证标准：每个被改动的**每一行**，都必须能直接回溯到本次需求。
 
 ### 4. 目标驱动，自我闭环
 
@@ -70,63 +51,119 @@ app/src/main/java/com/babytracker/
 
 ---
 
-## 五、🚨 绝对红线（无条件遵守）
+## 四、🚨 绝对红线（无条件遵守）
 
 | # | 规则 | 错误写法 | 正确写法 |
 |---|---|---|---|
-| 1 | **百分比双向夹紧** | `.coerceAtMost(1f)` | `.coerceIn(0f, 1f)` |
-| 2 | **今日日期过滤** | `.firstOrNull { it.date == today }` | `.filter { it.date.startsWith(today) }` |
+| 1 | **百分比双向夹紧** | `.coerceAtMost(1f)` 或 `.coerceAtLeast(0f)` 单独出现 | `.coerceIn(0f, 1f)` |
+| 2 | **今日日期过滤** | `.firstOrNull { it.date == today }` 或 `startsWith(today)` 前缀比较 | `.filter { it.date.take(10) == today }` |
 | 3 | **ViewModel 注册** | `single { MyViewModel(...) }` | `viewModel { MyViewModel(...) }` |
 | 4 | **ViewModel 获取** | `get()` | `koinViewModel()` |
-| 5 | **按 ID 加载数据** | 构造函数里直接 `flow` | `_trigger` + `flatMapLatest` 模式 |
+| 5 | **按 ID 加载数据** | 构造函数里直接 `flow` | `_trigger` + `flatMapLatest` 模式（防竞态/陈旧数据，宝宝切换时能重建数据流） |
 | 6 | **Composable 嵌套定义** | `@Composable fun A() { @Composable fun B() {} }` | 所有 `@Composable` 定义在文件**顶层** |
-| 7 | **AlertDialog 平级** | 弹窗套在其他 if 块内部 | 所有 `AlertDialog` 在顶层 `Column` 中**平级**独立 `if` |
+| 7 | **AlertDialog 平级** | 弹窗套在其他 if 块内部 | 所有 `AlertDialog` 在顶层 `Column` 中**平级**独立 `if`（DS 迁移完成、全项目无 M3 AlertDialog 后本条自动失效） |
 | 8 | **暗色主题来源** | `isSystemInDarkTheme()` | 只读 `theme.name == "night"` |
 | 9 | **硬编码路径** | `"/data/data/..."` | 用 `context.filesDir` 等环境变量 |
-| 10 | **改共享 API 不查调用方** | 直接改 DAO/Repository/工具类方法签名或行为 | **先 `search_content` 搜所有调用方**，评估影响后再改 |
+| 10 | **改共享 API 不查调用方**（流程规则） | 直接改 DAO/Repository/工具类方法签名或行为 | **先全局搜索所有调用方**，评估影响后再改；改签名需按第六节走 🔴 确认 |
 
 ---
 
-## 六、变更分级
+## 五、变更分级
 
 | 级别 | 范围 | AI 动作 |
 |---|---|---|
-| 🔴**重大重构（必须确认）** | 改 Entities 表结构/字段类型；改色系系统；切架构；重写 BackupManager 核心流程；升数据库版本号；换 DI/网络库；改 AndroidManifest 核心配置 | **先出方案（影响范围 + 迁移步骤），等确认再动** |
-| 🟢**日常开发（直接干）** | 增删改 Screen/ViewModel 逻辑；新页面/路由；修 bug；调 UI 间距/颜色/文本；性能优化 | 收到指令直接写，不请示 |
+| 🔴**重大重构（必须确认）** | 改 Entities 表结构/字段类型；改色系系统；切架构；重写 BackupManager/SyncEngine 核心流程；升数据库版本号；换 DI/网络库；改 AndroidManifest 核心配置；**改 DAO/Repository/SyncEngine 等共享 API 的方法签名或行为（哪怕只加参数）** | **先出方案（影响范围 + 迁移步骤 + 调用方清单），等确认再动** |
+| 🟢**日常开发（直接干）** | 增删改 Screen/ViewModel 逻辑；新页面/路由；修 bug；调 UI 间距/颜色/文本；性能优化；补测试 | 收到指令直接写，不请示（仍须遵守准则 1 的请示边界） |
 
 ---
 
-## 七、注释与提交规范
+## 六、测试纪律
+
+- 每次改动后必跑 `./gradlew testDebugUnitTest`，全绿才算完成。
+- 以下情况**必须**补测试：
+  - 修复历史 bug（补回归测试，验证根因不再复发）
+  - 改动纯逻辑（SyncEngine、StatsViewModel.aggregate、JSON 解析、AI 安全校验等）
+  - 新增核心规则或边界逻辑
+- **禁止镜像测试**：测试必须调用生产代码，不允许复制生产逻辑到测试里（生产改了测试不会失败 = 无效测试）。
+- 已知测试盲区，优先补：SyncEngine、StatsViewModel.aggregate、BackupManager 还原路径。
+- 测试代码同样遵守红线（边界值、日期过滤、百分比夹紧等）。
+
+---
+
+## 七、注释、提交与版本规范
 
 - 所有注释**必须中文**。Commit message **必须中文**。
-- 每次构建成功必须先更新 `CHANGELOG.md` 然后提交。
-- CHANGELOG 条目必须分配版本号，不允许留在 `[Unreleased]` 下提交。
 - 复杂逻辑写注释解释**为什么**（why），不重复代码表面意思（what）。
+- CHANGELOG.md 按**提交批次**累积条目，**版本号只在发布时提升**（与 `app/build.gradle.kts` 的 versionName/versionCode 同步）。禁止为每次提交都升版本号。
+- CHANGELOG 条目不允许留在 `[Unreleased]` 下提交；条目未分配版本号时，在当次发布批次统一挂版本。
 
 ---
 
-## 八、关键约束
+## 八、设计系统与 i18n
 
-- **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button` → `AppButton`/`PrimaryButton`，`AlertDialog` → `AppConfirmDialog`。完整列表见 `docs/design-system.md`。
+- **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button` → `PrimaryButton`/`SecondaryButton`，`TextButton` → `AppTextButton`，`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
+- **DS 组件缺失时的决策路径**：
+  1. 满足新增标准（见下）→ 新增组件，走完整流程并更新 `docs/design-system.md`
+  2. 不满足新增标准 → 允许临时用原生 M3，但必须留下 `// TODO: 迁移到 DS 组件` 注释
 - **新增组件判断标准**（两者同时满足才新增）：
   1. 同一视觉形态在项目中已出现 ≥ 2 处（跨功能重复算，按视觉形态计数，不是调用次数）
   2. 需要封装设计令牌（颜色/圆角/间距），而非纯布局组合
-  → 否则直接用 Compose 原生或内联实现，不新增组件
+- **新增组件流程**：判断标准 → 定义令牌（标注与 AppShapes 的对应关系，如 `// shapes.medium * 2`）→ 写 Defaults → 组件本体 → 注册到 `AppComponentTokens` → 更新 `docs/design-system.md`。
 - **令牌设计参照 shadcn/ui**：
   - 颜色：containerColor + contentColor 成对出现（surface/foreground 约定）
   - 圆角：组件 cornerRadius 从 AppShapes 基准派生（medium/large/extraSmall），通过 AppShapes.radiusScale 全局缩放
-  - 新增组件令牌时必须标注与 AppShapes 的对应关系（如 `// shapes.medium * 2`）
+- **i18n**：新增用户可见文本必须写入 `AppStrings`，禁止硬编码中文。存量硬编码文本按批次迁移。
 - **Snackbar** 用 `snackbar.showUndo(onUndo = { ... })` 模式。
 
 ---
 
-## 九、参考文档
+## 九、经验闭环（lessons.md）
+
+- 任务前必须全文读取 `docs/lessons.md`。
+- 出现以下情况，**提交时**必须向 lessons.md 追加条目：
+  - 修复了跨模块 bug，且根因有普适性（同类问题可能再次出现）
+  - 踩了文档未记录的坑
+  - 发现本文件或红线遗漏的规则
+- 条目格式：现象 → 原因 → 规则（含错误/正确写法）。
+
+---
+
+## 十、文档同步义务
+
+改动以下内容后，必须同步更新对应文档：
+
+| 改了什么 | 要更新的文档 |
+|---|---|
+| 目录结构/模块/路由 | `docs/project-structure.md` |
+| 组件/令牌/DS 约束 | `docs/design-system.md` |
+| 同步流程/sync_metadata 表 | `docs/sync-architecture.md` |
+| 数据模型/Room 表 | `docs/data-architecture.md` |
+
+---
+
+## 十一、完成定义（验证标准）
+
+一次任务满足以下全部条件才算完成：
+
+1. `./gradlew assembleDebug` 通过
+2. `./gradlew testDebugUnitTest` 全绿（新增/修改逻辑有测试覆盖）
+3. 被改动的每一行都能回溯到本次需求
+4. （如适用）CHANGELOG 已更新、相关文档已同步
+
+---
+
+## 十二、参考文档
 
 | 文档 | 内容 |
 |---|---|
 | `README.md` | 项目介绍、功能列表 |
 | `docs/project-structure.md` | 完整目录结构、模块索引、技术栈 |
 | `docs/design-system.md` | 令牌架构、组件用法、新增组件指引 |
+| `docs/sync-architecture.md` | 同步引擎完整链路 |
+| `docs/data-architecture.md` | 数据架构 |
+| `docs/architecture.md` | 总体架构 |
+| `docs/room-supabase-architecture.md` | Room 与 Supabase 对接 |
+| `docs/lessons.md` | 开发教训（任务前必读） |
 | `docs/Palette组件库设计深度分析报告.md` | 设计系统审计报告 |
 | `docs/aapt2-termux-fix.md` | Termux AAPT2 兼容问题 |
 | `CHANGELOG.md` | 变更日志 |

@@ -2,6 +2,18 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.8.0] — 2026-08-08
+
+**AGENTS.md 修订（依据 agents.md 开放规范与 Claude Code 写作建议）：**
+- 精简目录结构章节，改为指向 docs/project-structure.md，消除文档漂移
+- 开发命令补充 `testDebugUnitTest`，新增测试纪律章节（何时必写测试、禁止镜像测试、已知盲区清单）
+- 工作流准则明确"不清楚"判定边界（数据模型/同步/跨模块 API 必须请示，纯 UI 直接干）
+- 红线修订：百分比夹紧补充 coerceAtLeast 单用；今日日期过滤升级为 take(10) 精确比较；AlertDialog 平级增加 DS 迁移完成后的自动失效条款
+- 变更分级：共享 API 方法签名变更（哪怕只加参数）升为 🔴 必须确认
+- 版本规范修订：CHANGELOG 按批次累积，版本号仅在发布时提升，消除逐提交升版本的通胀
+- 新增 DS 组件缺失决策路径、i18n 硬编码禁令、lessons.md 闭环义务、文档同步义务表
+- 参考文档补全 sync/data/architecture 等 4 份文档
+
 ### [1.7.11] — 2026-08-08
 
 **低风险修复与死代码清理：**
