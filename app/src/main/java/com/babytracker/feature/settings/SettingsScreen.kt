@@ -47,7 +47,9 @@ import com.babytracker.designsystem.components.surface.AppSurface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.backup.BackupManager
+import com.babytracker.designsystem.theme.AppDensity
 import com.babytracker.designsystem.theme.AppTheme
+import com.babytracker.designsystem.theme.DensityController
 import com.babytracker.designsystem.theme.ThemeController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
@@ -376,6 +378,51 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(spacing.lg))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
+    val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val shapes = LocalAppShapes.current
+    val elev = LocalAppElevation.current
+    AppBottomSheet(
+        show = true,
+        onDismiss = onDismiss,
+    ) {
+        Column(Modifier.padding(spacing.md)) {
+            Text(AppStrings.densityLabel, style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                AppDensity.entries.forEach { density ->
+                    val selected = ctrl.currentDensity == density
+                    AppCard(
+                        modifier = Modifier
+                            .width(120.dp)
+                            .height(96.dp)
+                            .border(
+                                if (selected) BorderStroke(2.dp, c.primary) else BorderStroke(1.dp, c.outline),
+                                RoundedCornerShape(shapes.large),
+                            )
+                            .clickable { ctrl.switchDensity(density) },
+                        elevation = elev.level1,
+                    ) {
+                        Box(Modifier.fillMaxSize().padding(12.dp)) {
+                            Column {
+                                Box(
+                                    Modifier.size(36.dp)
+                                        .clip(RoundedCornerShape(shapes.large))
+                                        .background(if (selected) c.primary else c.surfaceElevated)
+                                )
+                                Spacer(Modifier.height(6.dp))
+                                Text(density.label, style = LocalAppTypography.current.bodySmall, color = c.textPrimary)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

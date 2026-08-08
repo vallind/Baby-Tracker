@@ -21,6 +21,7 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.designsystem.theme.DensityController
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.ThemeController
 import com.babytracker.navigation.Screen
@@ -31,7 +32,9 @@ import org.koin.compose.koinInject
 fun PreferenceSettingsScreen(navController: NavController) {
     val spacing = LocalAppSpacing.current
     val themeCtrl: ThemeController = koinInject()
+    val densityCtrl: DensityController = koinInject()
     var showThemePicker by remember { mutableStateOf(false) }
+    var showDensityPicker by remember { mutableStateOf(false) }
 
     SettingsMenuScaffold(
         title = "使用偏好",
@@ -46,6 +49,13 @@ fun PreferenceSettingsScreen(navController: NavController) {
             )
             SettingsDivider()
             SettingsRow(
+                emoji = "📐",
+                label = AppStrings.densityLabel,
+                subtitle = densityCtrl.currentDensity.label,
+                onClick = { showDensityPicker = true },
+            )
+            SettingsDivider()
+            SettingsRow(
                 emoji = "✨",
                 label = AppStrings.aiSettings,
                 subtitle = "模型、宝宝数据与回答偏好",
@@ -57,6 +67,10 @@ fun PreferenceSettingsScreen(navController: NavController) {
 
     if (showThemePicker) {
         ThemePickerSheet(themeCtrl = themeCtrl, onDismiss = { showThemePicker = false })
+    }
+
+    if (showDensityPicker) {
+        DensityPickerSheet(ctrl = densityCtrl, onDismiss = { showDensityPicker = false })
     }
 }
 

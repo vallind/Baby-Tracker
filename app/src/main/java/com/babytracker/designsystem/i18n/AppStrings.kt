@@ -93,6 +93,7 @@ object AppStrings {
     const val backup = "备份"
     const val backupManage = "备份管理"
     const val theme = "主题"
+    const val densityLabel = "界面密度"
     const val about = "关于"
 
     // —— 时间 ——
