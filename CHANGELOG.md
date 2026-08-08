@@ -1,8 +1,8 @@
 ## 更新日志
-遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，未发布批次条目累积在 [Unreleased] 下。
+遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-### [Unreleased]
+### [1.8.0] — 2026-08-08
 
 **设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
 - Typography 双体系统一：LocalAppTypography 改供自建 AppTypography，新增 8 级补齐至自建 12 级单体系（displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall），删除裸字段与 LocalAppTypographyStyle，禁止组件层暴露 M3 令牌类型（仅 theme 层桥接），迁移 31 文件与 13 处 M3 直用
@@ -15,8 +15,6 @@
 - 遗留清理：TimePicker/DateTimeCascade 两处 MaterialTheme.colorScheme 改走 LocalAppColors
 - 审计测试扩展：静态审计新增「新组件 Defaults 应被 AppComponentTokens 覆盖」与「组件层不应导入 M3 令牌与主题类型」两条规则，修复头部注释漂移
 - 文档同步：design-system.md 令牌清单/组件速查/Typography 12 级更新，AGENTS.md 组件映射行更新
-
-### [1.8.0] — 2026-08-08
 
 **测试盲区补齐（按 AGENTS.md 测试纪律）：**
 - 提取 StatsViewModel 聚合逻辑为 internal 顶层纯函数（aggregateStats 及 8 个辅助函数），新增 `StatsLogicTest` 14 项：周期边界（周日起始/月初/年初/翻页）、跨午夜睡眠时长、反向睡眠钳制、解析失败睡眠、喂养计数与图表桶一致性回归（1.7.10）、周/日分桶落点、对比文案、最新生长值、空数据
