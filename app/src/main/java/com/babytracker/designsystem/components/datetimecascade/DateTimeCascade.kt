@@ -365,7 +365,7 @@ private fun DayCell(
     Box(
         modifier = Modifier
             .size(tokens.daySize)
-            .semantics {
+            .semantics(mergeDescendants = true) {
                 role = Role.Button
                 selected = isSelected
             }
