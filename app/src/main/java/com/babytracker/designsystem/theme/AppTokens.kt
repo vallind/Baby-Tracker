@@ -125,6 +125,18 @@ data class AppSpacing(
     val xxl: Dp = 48.dp,
 )
 
+/** 按密度系数缩放全部间距（全局密度调整入口，零组件迁移成本） */
+fun AppSpacing.scaled(factor: Float): AppSpacing = AppSpacing(
+    none = none,
+    xxs = xxs * factor,
+    xs = xs * factor,
+    sm = sm * factor,
+    md = md * factor,
+    lg = lg * factor,
+    xl = xl * factor,
+    xxl = xxl * factor,
+)
+
 // —— 阴影令牌（6 级） ——
 @Immutable
 data class AppElevation(
@@ -353,3 +365,39 @@ val LocalAppOpacity = staticCompositionLocalOf { AppOpacity() }
 val LocalAppMotion = staticCompositionLocalOf { AppMotion() }
 val LocalAppShapes = staticCompositionLocalOf { AppShapes() }
 val LocalAppControl = staticCompositionLocalOf { AppControlTokens() }
+
+/** 页面密度三档 */
+enum class AppDensity(val key: String, val label: String) {
+    Compact("compact", "紧凑"),
+    Comfortable("comfortable", "舒适"),
+    Large("large", "宽松"),
+    ;
+    companion object {
+        fun fromKey(key: String): AppDensity =
+            entries.firstOrNull { it.key == key } ?: Comfortable
+    }
+}
+
+/** 密度档令牌：间距缩放系数 + 控件高度调整量 */
+@Immutable
+data class AppDensityTokens(
+    val spacingScale: Float,
+    val controlHeightDelta: Dp,
+)
+
+val AppDensity.tokens: AppDensityTokens
+    get() = when (this) {
+        AppDensity.Compact -> AppDensityTokens(spacingScale = 0.85f, controlHeightDelta = (-8).dp)
+        AppDensity.Comfortable -> AppDensityTokens(spacingScale = 1.0f, controlHeightDelta = 0.dp)
+        AppDensity.Large -> AppDensityTokens(spacingScale = 1.15f, controlHeightDelta = 8.dp)
+    }
+
+/** 密度调整控件基准（只动 medium 档，组件默认尺寸随密度变化） */
+fun AppControlTokens.densityAdjusted(density: AppDensity): AppControlTokens {
+    val delta = density.tokens.controlHeightDelta
+    if (delta == 0.dp) return this
+    return copy(medium = medium.copy(height = medium.height + delta))
+}
+
+/** 当前页面密度（默认舒适） */
+val LocalAppDensity = staticCompositionLocalOf { AppDensity.Comfortable }

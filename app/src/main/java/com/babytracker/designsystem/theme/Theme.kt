@@ -263,6 +263,7 @@ fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.
 fun BabyTrackerTheme(
     theme: AppTheme = AppTheme.pure,
     componentTokens: AppComponentTokens? = null,
+    density: AppDensity = LocalAppDensity.current,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -318,13 +319,14 @@ fun BabyTrackerTheme(
         cardShadow = theme.colors.cardShadow,
     )
 
-    val tokensSpacing = AppSpacing()
+    val densityTokens = density.tokens
+    val tokensSpacing = AppSpacing().scaled(densityTokens.spacingScale)
     val tokensElevation = AppElevation()
     val tokensOpacity = AppOpacity()
     val tokensMotion = AppMotion()
     val tokensShapes = AppShapes()
     val tokensTypography = AppTypography()
-    val tokensControl = AppControlTokens()
+    val tokensControl = AppControlTokens().densityAdjusted(density)
 
     val resolvedTokens = componentTokens ?: AppComponentTokens.default(
         colors = resolvedColors,
@@ -341,6 +343,7 @@ fun BabyTrackerTheme(
     CompositionLocalProvider(
         LocalThemeColors provides mergedColors,
         LocalAppColors provides resolvedColors,
+        LocalAppDensity provides density,
         LocalAppSpacing provides tokensSpacing,
         LocalAppElevation provides tokensElevation,
         LocalAppOpacity provides tokensOpacity,
