@@ -424,7 +424,7 @@ private fun TimelineRecordRow(item: Any) {
                     Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), style = typography.bodyLarge, color = c.textPrimary)
                     Text(if (item.type == FeedingType.BREAST) "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", style = typography.label, color = c.textSecondary)
                 }
-                Text(item.timestamp.substring(11, 16), style = typography.label, color = c.textTertiary)
+                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.label, color = c.textTertiary)
             }
             is Sleep -> {
                 Text(if (item.type == SleepType.NIGHT) "🌙" else "☀️", style = typography.titleLarge)
@@ -442,7 +442,7 @@ private fun TimelineRecordRow(item: Any) {
                         color = c.textSecondary,
                     )
                 }
-                Text(item.startTime.substring(11, 16), style = typography.label, color = c.textTertiary)
+                Text(item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.label, color = c.textTertiary)
             }
             is Diaper -> {
                 Text("🧷", style = typography.titleLarge)
@@ -451,7 +451,7 @@ private fun TimelineRecordRow(item: Any) {
                     Text("换尿布", style = typography.bodyLarge, color = c.textPrimary)
                     Text(DateUtils.diaperTypeLabel(com.babytracker.core.domain.model.DiaperType.raw(item.type)), style = typography.label, color = c.textSecondary)
                 }
-                Text(item.timestamp.substring(11, 16), style = typography.label, color = c.textTertiary)
+                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.label, color = c.textTertiary)
             }
         }
     }

@@ -29,6 +29,10 @@ data class TimelineUiState(
     val loading: Boolean = true,
 )
 
+/** 提取 "yyyy-MM-ddTHH:mm" 中的 HH:mm；短串/空串（同步或还原数据）返回空串，避免下标越界崩溃 */
+private fun timePart(s: String): String =
+    if (s.length >= 16) s.substring(11, 16) else ""
+
 private data class EntityBundle(
     val feedings: List<Feeding>,
     val sleeps: List<Sleep>,
@@ -97,7 +101,7 @@ class TimelineViewModel(
                                 FeedingType.FOOD -> "${f.foodName} ${f.amountG}g"
                                 else -> "${f.amountMl}ml"
                             },
-                            time = f.timestamp.substring(11, 16),
+                            time = timePart(f.timestamp),
                             date = f.timestamp.take(10),
                             accent = accent.also { accent = !accent },
                             sortKey = f.timestamp,
@@ -119,10 +123,10 @@ class TimelineViewModel(
                             emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
                             title = if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡",
                             subtitle = buildString {
-                                append("${s.startTime.substring(11, 16)}-${s.endTime.substring(11, 16)}")
+                                append("${timePart(s.startTime)}-${timePart(s.endTime)}")
                                 if (secs > 0) append(" · ${DateUtils.durationFullText(secs)}")
                             },
-                            time = s.startTime.substring(11, 16),
+                            time = timePart(s.startTime),
                             date = s.startTime.take(10),
                             accent = accent.also { accent = !accent },
                             sortKey = s.startTime,
@@ -138,7 +142,7 @@ class TimelineViewModel(
                             emoji = "🧷",
                             title = "换尿布",
                             subtitle = DateUtils.diaperTypeLabel(DiaperType.raw(d.type)),
-                            time = d.timestamp.substring(11, 16),
+                            time = timePart(d.timestamp),
                             date = d.timestamp.take(10),
                             accent = accent.also { accent = !accent },
                             sortKey = d.timestamp,
@@ -155,7 +159,7 @@ class TimelineViewModel(
                             emoji = "📏",
                             title = DateUtils.growthTypeLabel(GrowthType.raw(g.type)),
                             subtitle = "${g.value}$unit",
-                            time = g.measuredAt.substring(11, 16),
+                            time = timePart(g.measuredAt),
                             date = g.measuredAt.take(10),
                             accent = accent.also { accent = !accent },
                             sortKey = g.measuredAt,
@@ -171,7 +175,7 @@ class TimelineViewModel(
                             emoji = "❤️",
                             title = rec.description.take(30),
                             subtitle = rec.category,
-                            time = if (rec.recordDate.length >= 16) rec.recordDate.substring(11, 16) else "",
+                            time = timePart(rec.recordDate),
                             date = rec.recordDate.take(10),
                             accent = accent.also { accent = !accent },
                             sortKey = rec.recordDate,
@@ -234,11 +238,11 @@ class TimelineViewModel(
     fun undoLastDelete() {
         viewModelScope.launch {
             when (lastDeletedType) {
-                "feeding" -> (lastDeletedEntity as? Feeding)?.let { feedingRepo.insert(it) }
-                "sleep" -> (lastDeletedEntity as? Sleep)?.let { sleepRepo.insert(it) }
-                "diaper" -> (lastDeletedEntity as? Diaper)?.let { diaperRepo.insert(it) }
-                "growth" -> (lastDeletedEntity as? Growth)?.let { growthRepo.insert(it) }
-                "health" -> (lastDeletedEntity as? HealthRecord)?.let { healthRepo.insert(it) }
+                "feeding" -> (lastDeletedEntity as? Feeding)?.let { feedingRepo.update(it) }
+                "sleep" -> (lastDeletedEntity as? Sleep)?.let { sleepRepo.update(it) }
+                "diaper" -> (lastDeletedEntity as? Diaper)?.let { diaperRepo.update(it) }
+                "growth" -> (lastDeletedEntity as? Growth)?.let { growthRepo.update(it) }
+                "health" -> (lastDeletedEntity as? HealthRecord)?.let { healthRepo.update(it) }
             }
             lastDeletedEntity = null
             lastDeletedType = null

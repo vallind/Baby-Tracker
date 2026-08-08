@@ -285,7 +285,7 @@ fun DiaperListScreen(navController: NavController) {
                         onDelete = {
                             scope.launch {
                                 diaperRepo.delete(d)
-                                appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.insert(d) }
+                                appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.update(d) }
                             }
                         },
                             onClick = {},

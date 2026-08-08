@@ -9,12 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.AlertDialog
-import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +37,7 @@ import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.components.dialog.AppDialog
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -112,56 +110,45 @@ fun FamilyPage(navController: NavController) {
     }
 
     // ── 创建家庭对话框 ──
-    if (uiState.showCreateDialog) {
-        AlertDialog(
-            onDismissRequest = { vm.hideCreateDialog() },
-            title = { Text("创建家庭") },
-            text = {
-                AppInput(
-                    value = uiState.newFamilyName,
-                    onValueChange = { vm.onFamilyNameChange(it) },
-                    label = "家庭名称",
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = {
-                AppTextButton(onClick = { vm.createFamily() }, label = "创建")
-            },
-            dismissButton = {
-                AppTextButton(onClick = { vm.hideCreateDialog() }, label = "取消")
-            },
-        )
-    }
+    AppDialog(
+        show = uiState.showCreateDialog,
+        title = "创建家庭",
+        confirmText = "创建",
+        cancelText = "取消",
+        content = {
+            AppInput(
+                value = uiState.newFamilyName,
+                onValueChange = { vm.onFamilyNameChange(it) },
+                label = "家庭名称",
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        onConfirm = { vm.createFamily() },
+        onDismiss = { vm.hideCreateDialog() },
+    )
 
     // ── 加入家庭对话框 ──
-    if (uiState.showJoinDialog) {
-        AlertDialog(
-            onDismissRequest = { vm.hideJoinDialog() },
-            title = { Text("加入家庭") },
-            text = {
-                Column {
-                    Text("输入家庭邀请码（6 位）", color = c.textSecondary, style = typography.bodyLarge)
-                    Spacer(Modifier.height(12.dp))
-                    AppInput(
-                        value = uiState.inviteCode,
-                        onValueChange = { vm.onInviteCodeChange(it.take(6)) },
-                        label = "邀请码",
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            },
-            confirmButton = {
-                AppTextButton(
-                    onClick = { vm.joinFamily() },
-                    label = "加入",
-                    enabled = uiState.inviteCode.length == 6,
+    AppDialog(
+        show = uiState.showJoinDialog,
+        title = "加入家庭",
+        confirmText = "加入",
+        cancelText = "取消",
+        confirmEnabled = uiState.inviteCode.length == 6,
+        content = {
+            Column {
+                Text("输入家庭邀请码（6 位）", color = c.textSecondary, style = typography.bodyLarge)
+                Spacer(Modifier.height(12.dp))
+                AppInput(
+                    value = uiState.inviteCode,
+                    onValueChange = { vm.onInviteCodeChange(it.take(6)) },
+                    label = "邀请码",
+                    modifier = Modifier.fillMaxWidth(),
                 )
-            },
-            dismissButton = {
-                AppTextButton(onClick = { vm.hideJoinDialog() }, label = "取消")
-            },
-        )
-    }
+            }
+        },
+        onConfirm = { vm.joinFamily() },
+        onDismiss = { vm.hideJoinDialog() },
+    )
 
     AppConfirmDialog(
         show = uiState.migrationTarget != null,
@@ -314,15 +301,16 @@ private fun FamilyDetailView(
                     Text("邀请码", style = typography.label, color = c.textSecondary)
                     Text(family.inviteCode, style = typography.titleLarge, letterSpacing = 4.sp, color = c.primary)
                 }
-                TextButton(onClick = {
-                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("invite", family.inviteCode))
-                    Toast.makeText(context, "邀请码已复制", Toast.LENGTH_SHORT).show()
-                }) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "复制", modifier = Modifier.size(spacing.md), tint = c.primary)
-                    Spacer(Modifier.width(4.dp))
-                    Text("复制", color = c.primary, style = typography.bodyMedium)
-                }
+                AppTextButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("invite", family.inviteCode))
+                        Toast.makeText(context, "邀请码已复制", Toast.LENGTH_SHORT).show()
+                    },
+                    label = "复制",
+                    icon = Icons.Default.ContentCopy,
+                    color = c.primary,
+                )
             }
         }
     }

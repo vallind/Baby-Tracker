@@ -13,20 +13,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.rememberDatePickerState
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,7 +44,7 @@ import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.button.SecondaryButton
 import com.babytracker.designsystem.components.button.AppTextButton
 import com.babytracker.designsystem.components.input.AppInput
-import com.babytracker.designsystem.components.dialog.DialogDefaults
+import com.babytracker.designsystem.components.dialog.AppDialog
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -628,11 +620,13 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
     var birthWeight by remember { mutableStateOf(baby?.birthWeight?.toString() ?: "") }
     var birthHeight by remember { mutableStateOf(baby?.birthHeight?.toString() ?: "") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = DialogDefaults.containerColor(),
-        title = { Text(if (isEdit) "编辑宝宝" else "添加宝宝") },
-        text = {
+    AppDialog(
+        show = true,
+        title = if (isEdit) "编辑宝宝" else "添加宝宝",
+        confirmText = if (isEdit) "保存" else "添加",
+        cancelText = "取消",
+        confirmEnabled = name.isNotBlank(),
+        content = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppInput(
                     value = name,
@@ -676,26 +670,18 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
                 )
             }
         },
-        confirmButton = {
-            AppTextButton(
-                onClick = {
-                    onSave(Baby(
-                        id = baby?.id ?: 0,
-                        name = name,
-                        gender = gender,
-                        birthDate = birthDate,
-                        birthWeight = birthWeight.toDoubleOrNull(),
-                        birthHeight = birthHeight.toDoubleOrNull(),
-                        createdAt = baby?.createdAt ?: java.time.LocalDateTime.now().toString(),
-                    ))
-                },
-                enabled = name.isNotBlank(),
-                label = if (isEdit) "保存" else "添加",
-            )
+        onConfirm = {
+            onSave(Baby(
+                id = baby?.id ?: 0,
+                name = name,
+                gender = gender,
+                birthDate = birthDate,
+                birthWeight = birthWeight.toDoubleOrNull(),
+                birthHeight = birthHeight.toDoubleOrNull(),
+                createdAt = baby?.createdAt ?: java.time.LocalDateTime.now().toString(),
+            ))
         },
-        dismissButton = {
-            AppTextButton(onClick = onDismiss, label = "取消")
-        },
+        onDismiss = onDismiss,
     )
 }
 
@@ -916,13 +902,14 @@ fun BackupScreen(navController: NavController) {
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    Button(
+                    PrimaryButton(
                         onClick = { restorePicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(shapes.medium),
+                        label = if (restoring) "恢复中..." else "选择备份文件",
                         enabled = !restoring,
-                        colors = ButtonDefaults.buttonColors(containerColor = c.error),
-                    ) { Text(if (restoring) "恢复中..." else "选择备份文件", style = LocalAppTypography.current.bodyMedium) }
+                        containerColor = c.error,
+                        contentColor = Color.White,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
         }

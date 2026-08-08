@@ -161,7 +161,7 @@ fun FeedingListScreen(navController: NavController) {
                     onDelete = { f ->
                         scope.launch {
                             feedingRepo.delete(f)
-                            appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.insert(f) }
+                            appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.update(f) }
                         }
                     },
                     onEdit = { f ->

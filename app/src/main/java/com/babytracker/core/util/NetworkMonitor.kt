@@ -25,21 +25,22 @@ class NetworkMonitor(context: Context) {
 
     private fun checkNetwork(): Boolean {
         return try {
-            val network = cm?.activeNetwork ?: return true
-            val caps = cm.getNetworkCapabilities(network) ?: return true
+            // 无活动网络（离线）或拿不到能力时判为离线，避免同步门禁失效
+            val network = cm?.activeNetwork ?: return false
+            val caps = cm.getNetworkCapabilities(network) ?: return false
             caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         } catch (_: Exception) {
-            true
+            false
         }
     }
 
     private fun checkUnmetered(): Boolean {
         return try {
-            val network = cm?.activeNetwork ?: return true
-            val caps = cm.getNetworkCapabilities(network) ?: return true
+            val network = cm?.activeNetwork ?: return false
+            val caps = cm.getNetworkCapabilities(network) ?: return false
             caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
         } catch (_: Exception) {
-            true
+            false
         }
     }
 

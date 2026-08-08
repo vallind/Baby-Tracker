@@ -26,8 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -53,6 +51,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.markdown.AppMarkdownText
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -119,18 +118,8 @@ fun AiChatScreen(navController: NavController) {
                 title = AppStrings.aiAssistant,
                 onBack = { navController.popBackStack() },
                 actions = {
-                    IconButton(onClick = { showHistory = true }) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = AppStrings.aiHistory,
-                        )
-                    }
-                    IconButton(onClick = { navController.navigate(Screen.AiSettings.route) }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = AppStrings.aiSettings,
-                        )
-                    }
+                    AppIconButton(icon = Icons.Default.History, onClick = { showHistory = true }, contentDescription = AppStrings.aiHistory)
+                    AppIconButton(icon = Icons.Default.Settings, onClick = { navController.navigate(Screen.AiSettings.route) }, contentDescription = AppStrings.aiSettings)
                 },
             )
         },
@@ -377,13 +366,7 @@ private fun AiHistorySheet(
                                     color = colors.textTertiary,
                                 )
                             }
-                            IconButton(onClick = { onDeleteConversation(conversation.id) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = AppStrings.aiHistoryDeleteTitle,
-                                    tint = colors.danger,
-                                )
-                            }
+                            AppIconButton(icon = Icons.Default.Delete, onClick = { onDeleteConversation(conversation.id) }, contentDescription = AppStrings.aiHistoryDeleteTitle, tint = colors.danger)
                         }
                     }
                 }

@@ -253,7 +253,7 @@ fun VaccinationListScreen(navController: NavController) {
                             onDelete = {
                                 scope.launch {
                                     vacRepo.delete(v)
-                                    appSnackbar.showUndo(message = "已删除\u300C${v.name}\u300D") { vacRepo.insert(v) }
+                                    appSnackbar.showUndo(message = "已删除\u300C${v.name}\u300D") { vacRepo.update(v) }
                                 }
                             },
                         )

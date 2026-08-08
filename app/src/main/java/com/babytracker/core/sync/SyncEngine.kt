@@ -444,7 +444,7 @@ class SyncEngine(
     internal suspend fun applyRemoteChange(tableName: String, remoteRow: JsonObject): Boolean {
         val dao = getEntityDao(tableName) ?: return false
         val remoteUuid = jsonStr(remoteRow, "uuid") ?: return false
-        val remoteUpdatedAt = remoteRow["updatedAt"]?.toString()?.removeSurrounding("\"")?.toLongOrNull() ?: 0L
+        val remoteUpdatedAt = (remoteRow["updatedAt"] as? JsonPrimitive)?.content?.toLongOrNull() ?: 0L
 
         try {
             // 按 uuid 查找本地记录，比较 updatedAt 决定是否覆盖（LWW）

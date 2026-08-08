@@ -2,6 +2,24 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无Unreleased部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.7.9] — 2026-08-08
+
+**崩溃与稳定性修复：**
+- 修复删除记录后点"撤销"必然崩溃的问题：软删除后撤销用原 id 重新 INSERT 触发主键冲突，8 个页面（喂养/睡眠/尿布/生长/健康/疫苗/提醒/时间线）统一改为清除删除标记后 UPDATE
+- 修复时间线/首页从云端同步或备份还原的空时间戳触发 `substring` 下标越界崩溃的问题，统一长度保护
+- 修复 NetworkMonitor 离线时误报"在线"导致同步门禁失效的问题，改为无网络即离线（fail-closed）
+- 修复 RealtimeManager 切换家庭重订阅时旧频道收集协程永不取消的泄漏，并重抛 CancellationException 保持取消传播
+- 修复 Realtime DELETE 事件与 applyRemoteChange 的 JSON 解析遗留 `removeSurrounding` 模式（JsonNull 变字符串 "null"），改用 JsonPrimitive 安全读取
+
+**设计系统合规清理：**
+- AppDialog 新增 content 插槽与 confirmEnabled 参数，宝宝表单、创建/加入家庭对话框迁移
+- PrimaryButton 新增容器/内容颜色覆盖参数，备份恢复红色按钮迁移
+- AppTextButton 新增 icon 参数，邀请码复制按钮迁移
+- 迁移 LogViewerScreen 的 7 处 MaterialTheme.typography、SyncSettingsScreen 的 2 处 M3 RadioButton、AiChatScreen 的 3 处 M3 IconButton
+- 清理 SettingsScreen 等文件 8 个未使用 M3 import
+
+**验证：** `assembleDebug` 与 `testDebugUnitTest` 全部通过；Android 应用版本更新为 1.7.9
+
 ### [1.7.8] — 2026-07-24
 
 **同步修复：**

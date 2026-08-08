@@ -295,7 +295,7 @@ fun SleepListScreen(navController: NavController) {
                                 onDelete = {
                                     scope.launch {
                                         sleepRepo.delete(nap)
-                                        appSnackbar.showUndo(message = "已删除小睡记录") { sleepRepo.insert(nap) }
+                                        appSnackbar.showUndo(message = "已删除小睡记录") { sleepRepo.update(nap) }
                                     }
                                 },
                                 onClick = {},

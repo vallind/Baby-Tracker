@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Refresh
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -46,6 +45,7 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import java.text.SimpleDateFormat
@@ -180,7 +180,7 @@ fun LogViewerScreen(navController: NavController) {
                 ) {
                     Text(
                         text = "已选 ${selectedIds.size} 条，点击图标复制",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = LocalAppTypography.current.labelSmall,
                         color = c.onPrimary,
                         modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
                     )
@@ -262,7 +262,7 @@ fun LogViewerScreen(navController: NavController) {
             ) {
                 Text(
                     text = "共 ${filteredLogs.size} 条${if (filter.isNotBlank() || selectedLevels.size < 5) "（已过滤）" else ""}",
-                    style = MaterialTheme.typography.labelSmall,
+                    style = LocalAppTypography.current.labelSmall,
                     color = c.textSecondary,
                     modifier = Modifier.padding(
                         horizontal = spacing.md,
@@ -338,20 +338,20 @@ private fun LogEntryRow(
             text = if (isSelected) "✓" else "[${entry.level}]",
             color = levelColor,
             fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.labelSmall,
+            style = LocalAppTypography.current.labelSmall,
             modifier = Modifier.width(24.dp),
         )
         Text(
             text = ts,
             color = c.textTertiary,
-            style = MaterialTheme.typography.labelSmall,
+            style = LocalAppTypography.current.labelSmall,
             modifier = Modifier.width(80.dp),
         )
         Text(
             text = entry.tag,
             color = levelColor,
             fontWeight = FontWeight.Medium,
-            style = MaterialTheme.typography.labelSmall,
+            style = LocalAppTypography.current.labelSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.widthIn(max = 120.dp),
@@ -359,12 +359,12 @@ private fun LogEntryRow(
         Text(
             text = ": ",
             color = c.textTertiary,
-            style = MaterialTheme.typography.labelSmall,
+            style = LocalAppTypography.current.labelSmall,
         )
         Text(
             text = entry.message,
             color = c.textPrimary,
-            style = MaterialTheme.typography.labelSmall,
+            style = LocalAppTypography.current.labelSmall,
             maxLines = 100,
         )
     }

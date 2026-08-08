@@ -21,14 +21,26 @@ import androidx.compose.ui.unit.dp
  *       onConfirm = { deleteItem() },
  *       onDismiss = { showDialog = false },
  *   )
+ *
+ * 需要自定义表单内容时传 content 插槽（与 text 互斥）：
+ *   AppDialog(
+ *       show = showDialog,
+ *       title = "编辑",
+ *       content = { AppInput(...) },
+ *       confirmEnabled = input.isNotBlank(),
+ *       onConfirm = { save() },
+ *       onDismiss = { showDialog = false },
+ *   )
  */
 @Composable
 fun AppDialog(
     show: Boolean,
     title: String,
     text: String? = null,
+    content: (@Composable () -> Unit)? = null,
     confirmText: String = "确认",
     cancelText: String = "取消",
+    confirmEnabled: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     cornerRadius: Dp = DialogDefaults.cornerRadius(),
@@ -47,9 +59,9 @@ fun AppDialog(
         textContentColor = contentColor,
         tonalElevation = elevation,
         title = { Text(title) },
-        text = text?.let { { Text(it) } },
+        text = content ?: text?.let { { Text(it) } },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick = onConfirm, enabled = confirmEnabled) {
                 Text(confirmText)
             }
         },

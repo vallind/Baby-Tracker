@@ -111,7 +111,7 @@ fun ReminderScreen(navController: NavController) {
                             onDelete = {
                                 scope.launch {
                                     reminderRepo.delete(reminder)
-                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.insert(reminder) }
+                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.update(reminder) }
                                 }
                             },
                         )
@@ -121,7 +121,7 @@ fun ReminderScreen(navController: NavController) {
                             onDelete = {
                                 scope.launch {
                                     reminderRepo.delete(reminder)
-                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.insert(reminder) }
+                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.update(reminder) }
                                 }
                             },
                         )

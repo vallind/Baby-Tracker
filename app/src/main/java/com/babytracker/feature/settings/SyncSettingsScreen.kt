@@ -2,7 +2,6 @@ package com.babytracker.feature.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +14,7 @@ import com.babytracker.core.sync.SyncDelay
 import com.babytracker.designsystem.components.button.PrimaryButton
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
+import com.babytracker.designsystem.components.switchcontrol.AppRadioButton
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -162,7 +162,7 @@ fun SyncSettingsScreen(navController: NavController) {
                         },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RadioButton(
+                        AppRadioButton(
                             selected = config.syncDelay == delay,
                             onClick = {
                                 settingsViewModel.updateSync { it.copy(syncDelay = delay) }
@@ -189,7 +189,7 @@ fun SyncSettingsScreen(navController: NavController) {
                         },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RadioButton(
+                        AppRadioButton(
                             selected = config.bgInterval == interval,
                             onClick = {
                                 settingsViewModel.updateSync { it.copy(bgInterval = interval) }

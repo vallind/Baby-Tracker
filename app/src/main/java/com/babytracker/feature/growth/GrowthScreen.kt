@@ -420,7 +420,7 @@ fun GrowthScreen(navController: NavController) {
                             onDelete = {
                                 scope.launch {
                                     growthRepo.delete(g)
-                                    appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.insert(g) }
+                                    appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.update(g) }
                                 }
                             },
                                 onClick = {},

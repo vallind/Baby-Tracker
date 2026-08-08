@@ -7,7 +7,9 @@ import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -46,6 +48,9 @@ class RealtimeManager(
 
     private var channel: io.github.jan.supabase.realtime.RealtimeChannel? = null
 
+    /** 当前订阅的变更收集协程，重订阅/断开时统一取消，防止旧频道协程泄漏 */
+    private var changeJobs: List<Job> = emptyList()
+
     /** 订阅所有业务表的变更（切换家庭时重新调用，确保先断开旧频道再建新频道） */
     fun subscribeAll() {
         scope.launch {
@@ -64,6 +69,7 @@ class RealtimeManager(
                     "family_members",
                 )
 
+                val jobs = mutableListOf<Job>()
                 for (tableName in tables) {
                     val changeFlow = ch.postgresChangeFlow<PostgresAction>(
                         schema = "public",
@@ -73,10 +79,11 @@ class RealtimeManager(
                         },
                     )
 
-                    changeFlow.onEach { action ->
+                    jobs += changeFlow.onEach { action ->
                         handleRealtimeChange(tableName, action)
                     }.launchIn(scope)
                 }
+                changeJobs = jobs
 
                 channel = ch
                 withTimeout(10_000L) { ch.subscribe(blockUntilSubscribed = true) }
@@ -98,6 +105,9 @@ class RealtimeManager(
     /** 断开当前频道（suspend，内部在协程内顺序执行） */
     private suspend fun disconnect() {
         try {
+            // 先取消旧频道的变更收集协程，避免其挂在已断开的 flow 上持续持有引用
+            changeJobs.forEach { it.cancel() }
+            changeJobs = emptyList()
             channel?.unsubscribe()
             channel = null
             _connectionState.value = RealtimeState.DISCONNECTED
@@ -131,13 +141,16 @@ class RealtimeManager(
                 }
                 is PostgresAction.Delete -> {
                     val oldRecord = record ?: return
-                    val uuid = oldRecord["uuid"]?.toString()?.removeSurrounding("\"") ?: return
+                    // 用 JsonPrimitive 读取，避免 JsonNull.toString() 产生字符串 "null"
+                    val uuid = (oldRecord["uuid"] as? JsonPrimitive)?.content ?: return
                     val now = System.currentTimeMillis()
                     // 通过 uuid 查找并软删除本地记录
                     softDeleteLocal(tableName, uuid, now)
                 }
                 is PostgresAction.Select -> { /* 不处理 select 事件 */ }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             // 单条记录处理失败不阻塞其他变更
         }

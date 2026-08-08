@@ -38,6 +38,10 @@ fun PrimaryButton(
     fontSize: TextUnit = AppButtonDefaults.fontSize(),
     fontWeight: FontWeight = AppButtonDefaults.fontWeight(),
     iconSize: Dp = AppButtonDefaults.iconSize(),
+    containerColor: Color = AppButtonDefaults.containerColor(),
+    contentColor: Color = AppButtonDefaults.contentColor(),
+    disabledContainerColor: Color = AppButtonDefaults.disabledContainerColor(),
+    disabledContentColor: Color = AppButtonDefaults.disabledContentColor(),
     modifier: Modifier = Modifier,
 ) {
     Button(
@@ -46,10 +50,10 @@ fun PrimaryButton(
         shape = RoundedCornerShape(cornerRadius),
         modifier = modifier.height(height),
         colors = ButtonDefaults.buttonColors(
-            containerColor = AppButtonDefaults.containerColor(),
-            contentColor = AppButtonDefaults.contentColor(),
-            disabledContainerColor = AppButtonDefaults.disabledContainerColor(),
-            disabledContentColor = AppButtonDefaults.disabledContentColor(),
+            containerColor = containerColor,
+            contentColor = contentColor,
+            disabledContainerColor = disabledContainerColor,
+            disabledContentColor = disabledContentColor,
         ),
     ) {
         if (icon != null) {
@@ -102,10 +106,12 @@ fun SecondaryButton(
 fun AppTextButton(
     onClick: () -> Unit,
     label: String,
+    icon: ImageVector? = null,
     enabled: Boolean = true,
     fontSize: TextUnit = AppButtonDefaults.fontSize(),
     fontWeight: FontWeight = AppButtonDefaults.fontWeight(),
     color: Color = LocalAppColors.current.primary,
+    iconSize: Dp = AppButtonDefaults.iconSize(),
     modifier: Modifier = Modifier,
 ) {
     TextButton(
@@ -117,6 +123,9 @@ fun AppTextButton(
             disabledContentColor = AppButtonDefaults.disabledContentColor(),
         ),
     ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(iconSize))
+        }
         Text(label, fontSize = fontSize, fontWeight = fontWeight)
     }
 }

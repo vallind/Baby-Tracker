@@ -169,7 +169,7 @@ fun HealthScreen(navController: NavController) {
                                     onDelete = { record ->
                                         scope.launch {
                                             healthRepo.delete(record)
-                                            appSnackbar.showUndo(message = "已删除「${record.description.take(20)}」") { healthRepo.insert(record) }
+                                            appSnackbar.showUndo(message = "已删除「${record.description.take(20)}」") { healthRepo.update(record) }
                                         }
                                     },
                                 )
