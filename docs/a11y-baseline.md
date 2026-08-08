@@ -30,7 +30,7 @@
 
 | 组件 | 语义承诺 |
 |---|---|
-| SegmentedControl | `Role.Tab` + `selected` + `stateDescription = label`（SegmentedControl.kt:70-74） |
+| SegmentedControl | `Role.Tab` + `selected`（SegmentedControl.kt:70-71）；label 由内部 Text 朗读 |
 | RecordCard | `customActions` 暴露「删除」自定义动作（label = AppStrings.delete，RecordCard.kt:112-117）；背景删除 icon `clearAndSetSemantics` 隔离 |
 | AppRate | 容器 `contentDescription = "评分 %d，共 %d 星"`（AppRate.kt:38）；只读星 icon `clearAndSetSemantics` 单次朗读 |
 | TimePickerLogic 滚轮 | 选中项 `selected` 语义（TimePickerLogic.kt:162，与视觉高亮同源） |
