@@ -3,8 +3,10 @@ package com.babytracker.core.sync
 import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilySessionState
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
@@ -97,12 +99,15 @@ class FamilyIsolationTest {
     }
 
     @Test
-    fun `app version matches latest changelog version`() {
+    fun `app version exists in changelog`() {
         val build = repositoryFile("app/build.gradle.kts").readText()
         val changelog = repositoryFile("CHANGELOG.md").readText()
         val appVersion = Regex("""versionName\s*=\s*"([^"]+)"""").find(build)?.groupValues?.get(1)
-        val changelogVersion = Regex("""### \[([^]]+)]""").find(changelog)?.groupValues?.get(1)
+        val changelogVersions = Regex("""### \[([^]]+)]""").findAll(changelog).map { it.groupValues[1] }.toList()
 
-        assertEquals(changelogVersion, appVersion)
+        // 新规范：版本号只在发布时提升，CHANGELOG 可含未发布的后续批次条目
+        // 约束：已发布的 app 版本必须能在 CHANGELOG 中找到对应条目
+        assertNotNull("app 版本号未找到", appVersion)
+        assertTrue("app 版本 $appVersion 未出现在 CHANGELOG 中", changelogVersions.contains(appVersion))
     }
 }

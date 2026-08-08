@@ -78,7 +78,7 @@ class StatsViewModel(
                     sleepRepo.watchByBaby(babyId),
                     growthRepo.watchByBaby(babyId),
                 ) { feedings, sleeps, growths ->
-                    aggregate(period, offset, feedings, sleeps, growths)
+                    aggregateStats(period, offset, feedings, sleeps, growths)
                 }
                     .onStart {
                         emit(
@@ -87,10 +87,10 @@ class StatsViewModel(
                                 errorMessage = null,
                                 period = period,
                                 periodOffset = offset,
-                                dateRangeText = buildDateRangeText(
+                                dateRangeText = statsBuildDateRangeText(
                                     period,
-                                    periodStart(period, offset),
-                                    periodEnd(period, offset),
+                                    statsPeriodStart(period, offset),
+                                    statsPeriodEnd(period, offset),
                                 ),
                             ),
                         )
@@ -133,203 +133,205 @@ class StatsViewModel(
         val trigger = _trigger.value ?: return
         _trigger.value = trigger.copy(requestId = trigger.requestId + 1)
     }
+}
 
-    // ── 聚合核心 ──
+// ═══════════════════════════════════════════════════════════════
+// 聚合核心（顶层纯函数，供 ViewModel 与单元测试共同调用）
+// ═══════════════════════════════════════════════════════════════
 
-    private fun inRange(timestamp: String, rangeStart: LocalDateTime, rangeEnd: LocalDateTime): Boolean {
-        val t = try { LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return false }
-        return !t.isBefore(rangeStart) && t.isBefore(rangeEnd)
-    }
+internal fun aggregateStats(
+    period: StatsPeriod,
+    offset: Int,
+    feedings: List<Feeding>,
+    sleeps: List<Sleep>,
+    growths: List<Growth>,
+): StatsUiState {
+    val start = statsPeriodStart(period, offset)
+    val end = statsPeriodEnd(period, offset)
+    val dateRangeText = statsBuildDateRangeText(period, start, end)
 
-    private fun sleepDurationMinutes(sleep: Sleep): Long {
-        val st = try { LocalDateTime.parse(sleep.startTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return 0L }
-        val et = try { LocalDateTime.parse(sleep.endTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return 0L }
-        return Duration.between(st, et).toMinutes().coerceAtLeast(0)
-    }
+    val prevStart = statsPeriodStart(period, offset - 1)
+    val prevEnd = statsPeriodEnd(period, offset - 1)
 
-    private fun latestGrowth(growths: List<Growth>, type: GrowthType, rangeStart: LocalDateTime, rangeEnd: LocalDateTime): Pair<Float, List<Float>> {
-        val filtered = growths.filter { it.type == type && inRange(it.measuredAt, rangeStart, rangeEnd) }.sortedBy { it.measuredAt }
-        val raw = filtered.lastOrNull()?.value?.toFloat() ?: -1f
-        return raw to filtered.map { it.value.toFloat() }
-    }
+    // ── 喂养 ──
+    val feedingInRange = feedings.filter { statsInRange(it.timestamp, start, end) }
+    val feedingPrevInRange = feedings.filter { statsInRange(it.timestamp, prevStart, prevEnd) }
+    val bucketCount = statsPeriodBucketCount(period)
+    val feedingPoints = statsBucketByDay(period, feedingInRange, start, bucketCount) { 1f }
+    // 计数以能落入图表的记录为准，避免时间戳解析失败的记录在数字与柱状图间不一致
+    val feedingCount = feedingPoints.sum().toInt()
+    val breastFeedCount = feedingInRange.count { it.type == FeedingType.BREAST }
+    val formulaCount = feedingInRange.count { it.type == FeedingType.FORMULA }
+    val formulaTotalMl = feedingInRange.filter { it.type == FeedingType.FORMULA }.sumOf { it.amountMl ?: 0 }
+    val feedingCompare = statsBuildCompare((feedingCount - feedingPrevInRange.size).toLong(), "次")
 
-    private fun aggregate(
-        period: StatsPeriod,
-        offset: Int,
-        feedings: List<Feeding>,
-        sleeps: List<Sleep>,
-        growths: List<Growth>,
-    ): StatsUiState {
-        val start = periodStart(period, offset)
-        val end = periodEnd(period, offset)
-        val dateRangeText = buildDateRangeText(period, start, end)
+    val sleepPoints = statsBucketByDay(
+        period,
+        sleeps.filter { statsInRange(it.startTime, start, end) },
+        start,
+        bucketCount,
+    ) { s -> statsSleepDurationMinutes(s).toFloat() / 60f }
 
-        val prevStart = periodStart(period, offset - 1)
-        val prevEnd = periodEnd(period, offset - 1)
+    // ── 睡眠 ──
+    val sleepMinutes = sleeps.filter { statsInRange(it.startTime, start, end) }.sumOf { statsSleepDurationMinutes(it) }
+    val sleepPrevMinutes = sleeps.filter { statsInRange(it.startTime, prevStart, prevEnd) }.sumOf { statsSleepDurationMinutes(it) }
+    val sleepDiffHours = if (sleepMinutes == 0L && sleepPrevMinutes == 0L) 0L
+    else (sleepMinutes - sleepPrevMinutes + 30) / 60
+    val sleepCompare = statsBuildCompare(sleepDiffHours, "时")
 
-        // ── 喂养 ──
-        val feedingInRange = feedings.filter { inRange(it.timestamp, start, end) }
-        val feedingPrevInRange = feedings.filter { inRange(it.timestamp, prevStart, prevEnd) }
-        val bucketCount = periodBucketCount(period)
-        val feedingPoints = bucketByDay(period, feedingInRange, start, bucketCount) { 1f }
-        // 计数以能落入图表的记录为准，避免时间戳解析失败的记录在数字与柱状图间不一致
-        val feedingCount = feedingPoints.sum().toInt()
-        val breastFeedCount = feedingInRange.count { it.type == FeedingType.BREAST }
-        val formulaCount = feedingInRange.count { it.type == FeedingType.FORMULA }
-        val formulaTotalMl = feedingInRange.filter { it.type == FeedingType.FORMULA }.sumOf { it.amountMl ?: 0 }
-        val feedingCompare = buildCompare((feedingCount - feedingPrevInRange.size).toLong(), "次")
+    // ── 身高/体重 ──
+    val (heightRaw, heightPoints) = statsLatestGrowth(growths, GrowthType.HEIGHT, start, end)
+    val (heightPrevRaw, _) = statsLatestGrowth(growths, GrowthType.HEIGHT, prevStart, prevEnd)
+    val height = if (heightRaw < 0) "--" else "${(heightRaw * 10).toInt() / 10.0}cm"
+    val heightCompare = if (heightRaw < 0 || heightPrevRaw < 0) ""
+    else statsBuildCompare(((heightRaw - heightPrevRaw) * 10).toInt() / 10f, "cm")
 
-        val sleepPoints = bucketByDay(
-            period,
-            sleeps.filter { inRange(it.startTime, start, end) },
-            start,
-            bucketCount,
-        ) { s -> sleepDurationMinutes(s).toFloat() / 60f }
+    val (weightRaw, weightPoints) = statsLatestGrowth(growths, GrowthType.WEIGHT, start, end)
+    val (weightPrevRaw, _) = statsLatestGrowth(growths, GrowthType.WEIGHT, prevStart, prevEnd)
+    val weight = if (weightRaw < 0) "--" else "${(weightRaw * 10).toInt() / 10.0}kg"
+    val weightCompare = if (weightRaw < 0 || weightPrevRaw < 0) ""
+    else statsBuildCompare(((weightRaw - weightPrevRaw) * 10).toInt() / 10f, "kg")
 
-        // ── 睡眠 ──
-        val sleepMinutes = sleeps.filter { inRange(it.startTime, start, end) }.sumOf { sleepDurationMinutes(it) }
-        val sleepPrevMinutes = sleeps.filter { inRange(it.startTime, prevStart, prevEnd) }.sumOf { sleepDurationMinutes(it) }
-        val sleepDiffHours = if (sleepMinutes == 0L && sleepPrevMinutes == 0L) 0L
-        else (sleepMinutes - sleepPrevMinutes + 30) / 60
-        val sleepCompare = buildCompare(sleepDiffHours, "时")
+    return StatsUiState(
+        isLoading = false,
+        errorMessage = null,
+        period = period,
+        periodOffset = offset,
+        dateRangeText = dateRangeText,
+        feedingCount = feedingCount,
+        breastFeedCount = breastFeedCount,
+        formulaCount = formulaCount,
+        formulaTotalMl = formulaTotalMl,
+        sleepMinutes = sleepMinutes,
+        height = height,
+        heightRaw = heightRaw,
+        weight = weight,
+        weightRaw = weightRaw,
+        feedingCompare = feedingCompare,
+        sleepCompare = sleepCompare,
+        heightCompare = heightCompare,
+        weightCompare = weightCompare,
+        feedingPoints = feedingPoints,
+        sleepPoints = sleepPoints,
+        heightPoints = heightPoints,
+        weightPoints = weightPoints,
+    )
+}
 
-        // ── 身高/体重 ──
-        val (heightRaw, heightPoints) = latestGrowth(growths, GrowthType.HEIGHT, start, end)
-        val (heightPrevRaw, _) = latestGrowth(growths, GrowthType.HEIGHT, prevStart, prevEnd)
-        val height = if (heightRaw < 0) "--" else "${(heightRaw * 10).toInt() / 10.0}cm"
-        val heightCompare = if (heightRaw < 0 || heightPrevRaw < 0) ""
-        else buildCompare(((heightRaw - heightPrevRaw) * 10).toInt() / 10f, "cm")
+// ── 时间窗口工具 ──
 
-        val (weightRaw, weightPoints) = latestGrowth(growths, GrowthType.WEIGHT, start, end)
-        val (weightPrevRaw, _) = latestGrowth(growths, GrowthType.WEIGHT, prevStart, prevEnd)
-        val weight = if (weightRaw < 0) "--" else "${(weightRaw * 10).toInt() / 10.0}kg"
-        val weightCompare = if (weightRaw < 0 || weightPrevRaw < 0) ""
-        else buildCompare(((weightRaw - weightPrevRaw) * 10).toInt() / 10f, "kg")
-
-        return StatsUiState(
-            isLoading = false,
-            errorMessage = null,
-            period = period,
-            periodOffset = offset,
-            dateRangeText = dateRangeText,
-            feedingCount = feedingCount,
-            breastFeedCount = breastFeedCount,
-            formulaCount = formulaCount,
-            formulaTotalMl = formulaTotalMl,
-            sleepMinutes = sleepMinutes,
-            height = height,
-            heightRaw = heightRaw,
-            weight = weight,
-            weightRaw = weightRaw,
-            feedingCompare = feedingCompare,
-            sleepCompare = sleepCompare,
-            heightCompare = heightCompare,
-            weightCompare = weightCompare,
-            feedingPoints = feedingPoints,
-            sleepPoints = sleepPoints,
-            heightPoints = heightPoints,
-            weightPoints = weightPoints,
-        )
-    }
-
-    // ── 时间窗口工具 ──
-
-    /** 周期的起始时间（以当前 offset 计算） */
-    private fun periodStart(period: StatsPeriod, offset: Int): LocalDateTime {
-        val now = LocalDate.now()
-        return when (period) {
-            StatsPeriod.DAY -> now.plusDays(offset.toLong()).atStartOfDay()
-            StatsPeriod.WEEK -> {
-                // 周日作为一周开始
-                val dayOfWeek = now.dayOfWeek.value % 7 // 0=周日
-                val thisWeekStart = now.minusDays(dayOfWeek.toLong())
-                thisWeekStart.plusWeeks(offset.toLong()).atStartOfDay()
-            }
-            StatsPeriod.MONTH -> now.withDayOfMonth(1).plusMonths(offset.toLong()).atStartOfDay()
-            StatsPeriod.YEAR -> now.withDayOfYear(1).plusYears(offset.toLong()).atStartOfDay()
+/** 周期的起始时间（以当前 offset 计算） */
+internal fun statsPeriodStart(period: StatsPeriod, offset: Int): LocalDateTime {
+    val now = LocalDate.now()
+    return when (period) {
+        StatsPeriod.DAY -> now.plusDays(offset.toLong()).atStartOfDay()
+        StatsPeriod.WEEK -> {
+            // 周日作为一周开始
+            val dayOfWeek = now.dayOfWeek.value % 7 // 0=周日
+            val thisWeekStart = now.minusDays(dayOfWeek.toLong())
+            thisWeekStart.plusWeeks(offset.toLong()).atStartOfDay()
         }
+        StatsPeriod.MONTH -> now.withDayOfMonth(1).plusMonths(offset.toLong()).atStartOfDay()
+        StatsPeriod.YEAR -> now.withDayOfYear(1).plusYears(offset.toLong()).atStartOfDay()
     }
+}
 
-    /** 周期的结束时间（不含） */
-    private fun periodEnd(period: StatsPeriod, offset: Int): LocalDateTime {
-        return when (period) {
-            StatsPeriod.DAY -> periodStart(period, offset).plusDays(1)
-            StatsPeriod.WEEK -> periodStart(period, offset).plusWeeks(1)
-            StatsPeriod.MONTH -> periodStart(period, offset).plusMonths(1)
-            StatsPeriod.YEAR -> periodStart(period, offset).plusYears(1)
+/** 周期的结束时间（不含） */
+internal fun statsPeriodEnd(period: StatsPeriod, offset: Int): LocalDateTime {
+    return when (period) {
+        StatsPeriod.DAY -> statsPeriodStart(period, offset).plusDays(1)
+        StatsPeriod.WEEK -> statsPeriodStart(period, offset).plusWeeks(1)
+        StatsPeriod.MONTH -> statsPeriodStart(period, offset).plusMonths(1)
+        StatsPeriod.YEAR -> statsPeriodStart(period, offset).plusYears(1)
+    }
+}
+
+/** 用于图表分桶的天数 */
+internal fun statsPeriodBucketCount(period: StatsPeriod): Int = when (period) {
+    StatsPeriod.DAY -> 24  // 按小时
+    StatsPeriod.WEEK -> 7
+    StatsPeriod.MONTH -> 30
+    StatsPeriod.YEAR -> 12 // 按月
+}
+
+// ── 格式化工具 ──
+
+internal fun statsBuildDateRangeText(period: StatsPeriod, start: LocalDateTime, end: LocalDateTime): String {
+    val fmt = when (period) {
+        StatsPeriod.DAY -> DateTimeFormatter.ofPattern("M.d")
+        StatsPeriod.WEEK, StatsPeriod.MONTH -> DateTimeFormatter.ofPattern("M.d")
+        StatsPeriod.YEAR -> DateTimeFormatter.ofPattern("yyyy.M.d")
+    }
+    val endDisplay = end.minusDays(1)
+    return "${start.format(fmt)} - ${endDisplay.format(fmt)}"
+}
+
+/** 构建同比对比文案：+6次 / -2时 */
+internal fun statsBuildCompare(diff: Long, suffix: String): String = when {
+    diff > 0 -> "+$diff$suffix"
+    diff < 0 -> "$diff$suffix"
+    else -> ""
+}
+
+/** Float 版对比文案 */
+internal fun statsBuildCompare(diff: Float, suffix: String): String = when {
+    diff > 0f -> "+$diff$suffix"
+    diff < 0f -> "$diff$suffix"
+    else -> ""
+}
+
+// ── 分桶辅助：按日分组数据 → points 列表 ──
+
+internal fun <T> statsBucketByDay(
+    period: StatsPeriod,
+    items: List<T>,
+    periodStart: LocalDateTime,
+    bucketCount: Int,
+    valueExtractor: (T) -> Float,
+): List<Float> {
+    if (period.let { it == StatsPeriod.DAY }) {
+        // 日视图：按小时分 24 桶
+        val byHour = items.groupBy { item ->
+            try {
+                val ts = when (item) {
+                    is Feeding -> item.timestamp
+                    is Sleep -> item.startTime
+                    else -> ""
+                }
+                LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).hour
+            } catch (_: Exception) { -1 }
         }
+        return (0 until 24).map { hour -> byHour[hour]?.sumOf { valueExtractor(it).toDouble() }?.toFloat() ?: 0f }
     }
-
-    /** 用于图表分桶的天数 */
-    private fun periodBucketCount(period: StatsPeriod): Int = when (period) {
-        StatsPeriod.DAY -> 24  // 按小时
-        StatsPeriod.WEEK -> 7
-        StatsPeriod.MONTH -> 30
-        StatsPeriod.YEAR -> 12 // 按月
-    }
-
-    // ── 格式化工具 ──
-
-    private fun buildDateRangeText(period: StatsPeriod, start: LocalDateTime, end: LocalDateTime): String {
-        val fmt = when (period) {
-            StatsPeriod.DAY -> DateTimeFormatter.ofPattern("M.d")
-            StatsPeriod.WEEK, StatsPeriod.MONTH -> DateTimeFormatter.ofPattern("M.d")
-            StatsPeriod.YEAR -> DateTimeFormatter.ofPattern("yyyy.M.d")
+    val byDay: Map<LocalDate, Float> = items.groupBy { item ->
+        val ts = when (item) {
+            is Feeding -> item.timestamp
+            is Sleep -> item.startTime
+            else -> ""
         }
-        val endDisplay = end.minusDays(1)
-        return "${start.format(fmt)} - ${endDisplay.format(fmt)}"
+        try { LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).toLocalDate() }
+        catch (_: Exception) { LocalDate.MIN }
+    }.mapValues { (_, list) -> list.sumOf { valueExtractor(it).toDouble() }.toFloat() }
+
+    return (0 until bucketCount).map { offset ->
+        val day = periodStart.toLocalDate().plusDays(offset.toLong())
+        byDay[day] ?: 0f
     }
+}
 
-    /** 构建同比对比文案：+6次 / -2时 */
-    private fun buildCompare(diff: Long, suffix: String): String = when {
-        diff > 0 -> "+$diff$suffix"
-        diff < 0 -> "$diff$suffix"
-        else -> ""
-    }
+internal fun statsInRange(timestamp: String, rangeStart: LocalDateTime, rangeEnd: LocalDateTime): Boolean {
+    val t = try { LocalDateTime.parse(timestamp, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return false }
+    return !t.isBefore(rangeStart) && t.isBefore(rangeEnd)
+}
 
-    /** Float 版对比文案 */
-    private fun buildCompare(diff: Float, suffix: String): String = when {
-        diff > 0f -> "+$diff$suffix"
-        diff < 0f -> "$diff$suffix"
-        else -> ""
-    }
+internal fun statsSleepDurationMinutes(sleep: Sleep): Long {
+    val st = try { LocalDateTime.parse(sleep.startTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return 0L }
+    val et = try { LocalDateTime.parse(sleep.endTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { return 0L }
+    return Duration.between(st, et).toMinutes().coerceAtLeast(0)
+}
 
-    // ── 分桶辅助：按日分组数据 → points 列表 ──
-
-    private fun <T> bucketByDay(
-        period: StatsPeriod,
-        items: List<T>,
-        periodStart: LocalDateTime,
-        bucketCount: Int,
-        valueExtractor: (T) -> Float,
-    ): List<Float> {
-        if (period.let { it == StatsPeriod.DAY }) {
-            // 日视图：按小时分 24 桶
-            val byHour = items.groupBy { item ->
-                try {
-                    val ts = when (item) {
-                        is Feeding -> item.timestamp
-                        is Sleep -> item.startTime
-                        else -> ""
-                    }
-                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).hour
-                } catch (_: Exception) { -1 }
-            }
-            return (0 until 24).map { hour -> byHour[hour]?.sumOf { valueExtractor(it).toDouble() }?.toFloat() ?: 0f }
-        }
-        val byDay: Map<LocalDate, Float> = items.groupBy { item ->
-            val ts = when (item) {
-                is Feeding -> item.timestamp
-                is Sleep -> item.startTime
-                else -> ""
-            }
-            try { LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).toLocalDate() }
-            catch (_: Exception) { LocalDate.MIN }
-        }.mapValues { (_, list) -> list.sumOf { valueExtractor(it).toDouble() }.toFloat() }
-
-        return (0 until bucketCount).map { offset ->
-            val day = periodStart.toLocalDate().plusDays(offset.toLong())
-            byDay[day] ?: 0f
-        }
-    }
+internal fun statsLatestGrowth(growths: List<Growth>, type: GrowthType, rangeStart: LocalDateTime, rangeEnd: LocalDateTime): Pair<Float, List<Float>> {
+    val filtered = growths.filter { it.type == type && statsInRange(it.measuredAt, rangeStart, rangeEnd) }.sortedBy { it.measuredAt }
+    val raw = filtered.lastOrNull()?.value?.toFloat() ?: -1f
+    return raw to filtered.map { it.value.toFloat() }
 }

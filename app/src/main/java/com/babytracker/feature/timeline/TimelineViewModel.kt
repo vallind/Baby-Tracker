@@ -85,107 +85,12 @@ class TimelineViewModel(
                 cachedGrowths = bundle.growths
                 cachedHealths = bundle.healths
 
-                val items = mutableListOf<TimelineItem>()
-                var accent = false
-
-                bundle.feedings.forEach { f ->
-                    items.add(
-                        TimelineItem(
-                            id = f.id,
-                            recordType = "feeding",
-                            emoji = when (f.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" },
-                            title = DateUtils.feedingTypeLabel(FeedingType.raw(f.type)),
-                            subtitle = when (f.type) {
-                                FeedingType.BREAST -> "${f.breastSide?.let { BreastSide.raw(it) } ?: "双侧"} · ${f.durationMin}分钟"
-                                FeedingType.FORMULA -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
-                                FeedingType.FOOD -> "${f.foodName} ${f.amountG}g"
-                                else -> "${f.amountMl}ml"
-                            },
-                            time = timePart(f.timestamp),
-                            date = f.timestamp.take(10),
-                            accent = accent.also { accent = !accent },
-                            sortKey = f.timestamp,
-                        )
-                    )
-                }
-
-                bundle.sleeps.forEach { s ->
-                    val secs = try {
-                        Duration.between(
-                            LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME),
-                            LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME),
-                        ).seconds
-                    } catch (_: Exception) { 0L }
-                    items.add(
-                        TimelineItem(
-                            id = s.id,
-                            recordType = "sleep",
-                            emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
-                            title = if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡",
-                            subtitle = buildString {
-                                append("${timePart(s.startTime)}-${timePart(s.endTime)}")
-                                if (secs > 0) append(" · ${DateUtils.durationFullText(secs)}")
-                            },
-                            time = timePart(s.startTime),
-                            date = s.startTime.take(10),
-                            accent = accent.also { accent = !accent },
-                            sortKey = s.startTime,
-                        )
-                    )
-                }
-
-                bundle.diapers.forEach { d ->
-                    items.add(
-                        TimelineItem(
-                            id = d.id,
-                            recordType = "diaper",
-                            emoji = "🧷",
-                            title = "换尿布",
-                            subtitle = DateUtils.diaperTypeLabel(DiaperType.raw(d.type)),
-                            time = timePart(d.timestamp),
-                            date = d.timestamp.take(10),
-                            accent = accent.also { accent = !accent },
-                            sortKey = d.timestamp,
-                        )
-                    )
-                }
-
-                bundle.growths.forEach { g ->
-                    val unit = when (g.type) { GrowthType.WEIGHT -> "kg"; GrowthType.HEIGHT -> "cm"; else -> "cm" }
-                    items.add(
-                        TimelineItem(
-                            id = g.id,
-                            recordType = "growth",
-                            emoji = "📏",
-                            title = DateUtils.growthTypeLabel(GrowthType.raw(g.type)),
-                            subtitle = "${g.value}$unit",
-                            time = timePart(g.measuredAt),
-                            date = g.measuredAt.take(10),
-                            accent = accent.also { accent = !accent },
-                            sortKey = g.measuredAt,
-                        )
-                    )
-                }
-
-                bundle.healths.forEach { rec ->
-                    items.add(
-                        TimelineItem(
-                            id = rec.id,
-                            recordType = "health",
-                            emoji = "❤️",
-                            title = rec.description.take(30),
-                            subtitle = rec.category,
-                            time = timePart(rec.recordDate),
-                            date = rec.recordDate.take(10),
-                            accent = accent.also { accent = !accent },
-                            sortKey = rec.recordDate,
-                        )
-                    )
-                }
-
-                items.sortByDescending { it.sortKey }
-
-                TimelineUiState(items = items, loading = false)
+                TimelineUiState(
+                    items = toTimelineItems(
+                        bundle.feedings, bundle.sleeps, bundle.diapers, bundle.growths, bundle.healths,
+                    ),
+                    loading = false,
+                )
             }
             .onEach { _state.value = it }
             .launchIn(viewModelScope)
@@ -248,4 +153,117 @@ class TimelineViewModel(
             lastDeletedType = null
         }
     }
+}
+
+/**
+ * 五类记录 → TimelineItem 列表（按时间倒序）。
+ * 顶层纯函数，供 ViewModel 与单元测试共同调用（禁止测试镜像复制）。
+ */
+internal fun toTimelineItems(
+    feedings: List<Feeding>,
+    sleeps: List<Sleep>,
+    diapers: List<Diaper>,
+    growths: List<Growth>,
+    healths: List<HealthRecord>,
+): List<TimelineItem> {
+    val items = mutableListOf<TimelineItem>()
+    var accent = false
+
+    feedings.forEach { f ->
+        items.add(
+            TimelineItem(
+                id = f.id,
+                recordType = "feeding",
+                emoji = when (f.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" },
+                title = DateUtils.feedingTypeLabel(FeedingType.raw(f.type)),
+                subtitle = when (f.type) {
+                    FeedingType.BREAST -> "${f.breastSide?.let { BreastSide.raw(it) } ?: "双侧"} · ${f.durationMin}分钟"
+                    FeedingType.FORMULA -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
+                    FeedingType.FOOD -> "${f.foodName} ${f.amountG}g"
+                    else -> "${f.amountMl}ml"
+                },
+                time = timePart(f.timestamp),
+                date = f.timestamp.take(10),
+                accent = accent.also { accent = !accent },
+                sortKey = f.timestamp,
+            )
+        )
+    }
+
+    sleeps.forEach { s ->
+        val secs = try {
+            Duration.between(
+                LocalDateTime.parse(s.startTime, DateTimeFormatter.ISO_DATE_TIME),
+                LocalDateTime.parse(s.endTime, DateTimeFormatter.ISO_DATE_TIME),
+            ).seconds
+        } catch (_: Exception) { 0L }
+        items.add(
+            TimelineItem(
+                id = s.id,
+                recordType = "sleep",
+                emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
+                title = if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡",
+                subtitle = buildString {
+                    append("${timePart(s.startTime)}-${timePart(s.endTime)}")
+                    if (secs > 0) append(" · ${DateUtils.durationFullText(secs)}")
+                },
+                time = timePart(s.startTime),
+                date = s.startTime.take(10),
+                accent = accent.also { accent = !accent },
+                sortKey = s.startTime,
+            )
+        )
+    }
+
+    diapers.forEach { d ->
+        items.add(
+            TimelineItem(
+                id = d.id,
+                recordType = "diaper",
+                emoji = "🧷",
+                title = "换尿布",
+                subtitle = DateUtils.diaperTypeLabel(DiaperType.raw(d.type)),
+                time = timePart(d.timestamp),
+                date = d.timestamp.take(10),
+                accent = accent.also { accent = !accent },
+                sortKey = d.timestamp,
+            )
+        )
+    }
+
+    growths.forEach { g ->
+        val unit = when (g.type) { GrowthType.WEIGHT -> "kg"; GrowthType.HEIGHT -> "cm"; else -> "cm" }
+        items.add(
+            TimelineItem(
+                id = g.id,
+                recordType = "growth",
+                emoji = "📏",
+                title = DateUtils.growthTypeLabel(GrowthType.raw(g.type)),
+                subtitle = "${g.value}$unit",
+                time = timePart(g.measuredAt),
+                date = g.measuredAt.take(10),
+                accent = accent.also { accent = !accent },
+                sortKey = g.measuredAt,
+            )
+        )
+    }
+
+    healths.forEach { rec ->
+        items.add(
+            TimelineItem(
+                id = rec.id,
+                recordType = "health",
+                emoji = "❤️",
+                title = rec.description.take(30),
+                subtitle = rec.category,
+                time = timePart(rec.recordDate),
+                date = rec.recordDate.take(10),
+                accent = accent.also { accent = !accent },
+                sortKey = rec.recordDate,
+            )
+        )
+    }
+
+    items.sortByDescending { it.sortKey }
+    return items
 }

@@ -4,6 +4,11 @@
 
 ### [1.8.0] — 2026-08-08
 
+**测试盲区补齐（按 AGENTS.md 测试纪律）：**
+- 提取 StatsViewModel 聚合逻辑为 internal 顶层纯函数（aggregateStats 及 8 个辅助函数），新增 `StatsLogicTest` 14 项：周期边界（周日起始/月初/年初/翻页）、跨午夜睡眠时长、反向睡眠钳制、解析失败睡眠、喂养计数与图表桶一致性回归（1.7.10）、周/日分桶落点、对比文案、最新生长值、空数据
+- 提取 TimelineViewModel 记录映射为 internal 顶层函数 `toTimelineItems`，重写 `TimelineViewModelTest` 调用生产代码（消除镜像测试），并新增短时间戳 substring 越界回归测试（1.7.9）
+- `FamilyIsolationTest` 版本断言按新版本规范更新：app 版本必须存在于 CHANGELOG（不再要求等于最新条目，允许未发布的批次条目）
+
 **文档体系修订（全部文档增加版本日期头，对齐代码实际状态）：**
 - 重写 `docs/sync-architecture.md`：游标分页机制（sync_version 替代 lastSyncAt）、9 张同步表（messages 摘除）、sync_metadata 10 字段 + 唯一索引、markRetry 指数退避、push 远端 LWW 预检、家庭驱动链（替代 ensureFamily）、1.7.7~1.7.11 修复项
 - 重写 `docs/room-supabase-architecture.md`：v8/15 实体/14 DAO/7 迁移/exportSchema、INSERT IGNORE、频道名 db-changes-$familyId、loadMyFamilies 已删、messages 不参与同步
