@@ -44,6 +44,9 @@ object AppStrings {
     const val undo = "撤销"
     const val deleted = "已删除"
 
+    // —— 评分 ——
+    const val rateDescription = "评分 %1\$d，共 %2\$d 星"
+
     // —— 宝宝 ——
     const val addBaby = "添加宝宝"
     const val noBabyTitle = "还没有添加宝宝"

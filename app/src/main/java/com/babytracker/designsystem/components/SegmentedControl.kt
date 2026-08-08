@@ -9,6 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -61,6 +66,12 @@ fun SegmentedControl(
                     .clip(RoundedCornerShape(innerCornerRadius))
                     .then(if (selected) Modifier.background(selectedContainerColor) else Modifier)
                     .clickable { onSelect(index) }
+                    .semantics {
+                        // 无障碍：声明 Tab 角色与选中态，让 TalkBack 朗读"哪个段、选中与否"
+                        role = Role.Tab
+                        this.selected = selected
+                        stateDescription = label
+                    }
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 contentAlignment = Alignment.Center,
             ) {

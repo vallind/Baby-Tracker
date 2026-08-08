@@ -8,7 +8,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import com.babytracker.designsystem.i18n.AppStrings
 
 /**
  * 星级评分组件 — 对标 Palette Rate，消费 AppComponentTokens.rate。
@@ -30,7 +34,9 @@ fun AppRate(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier,
+        modifier = modifier.semantics {
+            contentDescription = String.format(AppStrings.rateDescription, rating, maxStars)
+        },
         horizontalArrangement = Arrangement.spacedBy(starSpacing),
     ) {
         for (index in 1..maxStars) {
@@ -40,9 +46,9 @@ fun AppRate(
             if (readOnly) {
                 Icon(
                     imageVector = Icons.Default.Star,
-                    contentDescription = "$index 星",
+                    contentDescription = null,
                     tint = tint,
-                    modifier = Modifier.size(starSize),
+                    modifier = Modifier.size(starSize).clearAndSetSemantics {}, // 只读星仅随容器朗读一次
                 )
             } else {
                 IconButton(

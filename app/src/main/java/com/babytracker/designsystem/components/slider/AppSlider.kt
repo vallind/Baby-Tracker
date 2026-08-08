@@ -11,6 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -84,6 +86,10 @@ fun AppLabeledSlider(
             onValueChange = onValueChange,
             valueRange = valueRange,
             enabled = enabled,
+            modifier = Modifier.semantics {
+                // 无障碍：滑块自带百分比朗读，合并 label 让 TalkBack 一次读全"音量 + 数值"
+                contentDescription = label
+            },
         )
     }
 }

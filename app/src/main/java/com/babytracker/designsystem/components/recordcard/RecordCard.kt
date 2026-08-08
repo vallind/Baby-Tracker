@@ -32,9 +32,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
@@ -90,8 +95,9 @@ fun RecordCard(
                 ) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "删除",
+                        contentDescription = null,
                         tint = Color.White,
+                        modifier = Modifier.clearAndSetSemantics {}, // 背景删除图标仅装饰，清空语义防止常驻无障碍树
                     )
                 }
             },
@@ -100,7 +106,16 @@ fun RecordCard(
                     Modifier
                         .fillMaxWidth()
                         .shadow(elevation, shape)
-                        .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+                        .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                        .semantics {
+                            // 无障碍：TalkBack 用户无法滑动删除，暴露自定义删除动作
+                            customActions = listOf(
+                                CustomAccessibilityAction(label = AppStrings.delete) {
+                                    onDelete()
+                                    true
+                                }
+                            )
+                        },
                     shape = shape,
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     colors = CardDefaults.cardColors(containerColor = containerColor),
