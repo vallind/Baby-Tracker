@@ -35,8 +35,9 @@ object TokenAuditChecker {
         "import androidx.compose.material3.Shapes",
     )
 
-    // 检查器自身源码含扫描模式串（如 "import androidx.compose.material3.Typography"），规则 4 须豁免本文件，否则自查必报
-    private const val SELF_FILE_NAME = "TokenAuditChecker.kt"
+    // 检查器自身源码含扫描模式串（如 "import androidx.compose.material3.Typography"），规则 4 须豁免本文件，否则自查必报。
+    // 按相对 kotlinRoot 的路径匹配而非文件名，避免误豁免其他同名文件（lessons #14/#17）。
+    private const val SELF_FILE_REL_PATH = "com/babytracker/core/util/TokenAuditChecker.kt"
 
     fun audit(
         kotlinRoot: File,
@@ -71,7 +72,7 @@ object TokenAuditChecker {
         val scanned = kotlinRoot.walkTopDown()
             .filter { it.isFile && it.name.endsWith(".kt") }
             .filterNot { it.path.contains(themeRelPath) }
-            .filterNot { it.name == SELF_FILE_NAME }
+            .filterNot { it.path == File(kotlinRoot, SELF_FILE_REL_PATH).path }
             .toList()
         // 防呆（lessons #14）：规则 4 扫描为空必须报错，禁止静默假绿
         if (scanned.isEmpty()) {
@@ -94,6 +95,9 @@ object TokenAuditChecker {
                     violations.add(AuditViolation(componentTokensFile.path, RULE_TOKENS_MISSING_REGISTRATION, "缺少令牌字段 $field"))
                 }
             }
+        } else {
+            // 防呆（lessons #14/#17）：文件缺失必须报错，禁止静默假绿（否则注册校验随路径漂移失效）
+            violations.add(AuditViolation(componentTokensFile.path, "ScanEmpty", "AppComponentTokens.kt 不存在，注册校验已失效"))
         }
         return violations
     }
