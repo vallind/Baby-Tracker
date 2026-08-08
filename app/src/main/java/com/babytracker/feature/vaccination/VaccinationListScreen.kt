@@ -10,7 +10,6 @@ import androidx.compose.material3.DatePickerDialog
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -48,6 +47,7 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -130,7 +130,7 @@ fun VaccinationListScreen(navController: NavController) {
         topBar = {
             AppTopBar(title = "疫苗接种", onBack = { navController.popBackStack() })
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
         fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { editingVac = null; showForm = true })
         },

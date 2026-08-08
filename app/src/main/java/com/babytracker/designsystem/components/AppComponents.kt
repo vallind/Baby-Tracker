@@ -31,6 +31,7 @@ package com.babytracker.designsystem.components
 // AppActionSheet     底部操作面板           (dialog/)
 // AppBottomSheet     表单底部弹层           (sheet/)
 // AppSnackbar        撤销 Snackbar          (snackbar/)
+// AppSnackbarHost    全局提示宿主            (snackbar/)
 // AppSwitch          主题化 Switch          (switchcontrol/)
 // AppCheckbox        主题化复选框           (switchcontrol/)
 // AppRadioButton     主题化单选按钮         (switchcontrol/)

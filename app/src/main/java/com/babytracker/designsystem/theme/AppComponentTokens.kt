@@ -387,6 +387,25 @@ data class SurfaceTokens(
     }
 }
 
+// —— TT-035 全局提示宿主 ——
+@Immutable
+data class SnackbarHostTokens(
+    val containerColor: Color,
+    val contentColor: Color,
+    val cornerRadius: Dp,
+    val elevation: Dp,
+) {
+    companion object {
+        fun default(colors: AppColors, shapes: AppShapes, elevation: AppElevation): SnackbarHostTokens =
+            SnackbarHostTokens(
+                containerColor = colors.inverseSurface,
+                contentColor = colors.inverseOnSurface,
+                cornerRadius = shapes.scaled(shapes.small),
+                elevation = elevation.level3,   // 中档阴影；M3 1.4.0 Snackbar 无 tonalElevation 参数，令牌预留
+            )
+    }
+}
+
 // —— TT-027 进度/骨架屏 ——
 @Immutable
 data class ProgressTokens(
@@ -914,6 +933,7 @@ data class AppComponentTokens(
     val tag: TagTokens,
     val divider: DividerTokens,
     val surface: SurfaceTokens,
+    val snackbarHost: SnackbarHostTokens,
     val progress: ProgressTokens,
     val skeleton: SkeletonTokens,
     val steps: StepsTokens,
@@ -958,6 +978,7 @@ data class AppComponentTokens(
             tag = TagTokens.default(colors, shapes, typography, spacing, opacity),
             divider = DividerTokens.default(colors),
             surface = SurfaceTokens.default(colors, shapes),
+            snackbarHost = SnackbarHostTokens.default(colors, shapes, elevation),
             progress = ProgressTokens.default(colors),
             skeleton = SkeletonTokens.default(shapes, darkTheme),
             steps = StepsTokens.default(colors),

@@ -203,3 +203,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 **原因：** M3 `Button`/`OutlinedButton`/`TextButton` 的 content 参数签名是 `@Composable RowScope.() -> Unit`（拖尾 lambda 写法因 Kotlin 的隐式接收者推断不会报错，显式传参时类型不匹配才暴露）。计划/设计文档里的代码块可能省略或写错接收者类型，逐字转写前先检查。
 
 **规则：** 显式构造组件 content 变量时，必须用 `@Composable RowScope.() -> Unit` 并 import `androidx.compose.foundation.layout.RowScope`。
+
+---
+
+## 13. material3 1.4.0 移除 Snackbar 的 tonalElevation 参数
+
+**现象：** 按计划文档给 `Snackbar(snackbarData = ...)` 传 `tonalElevation = ...` 编译失败：参数不存在。
+
+**原因：** material3 1.4.0（BOM 2026.05.01）重构了 Snackbar，公开 API 只剩 `(snackbarData, modifier, actionOnNewLine, shape, containerColor, contentColor, actionColor, actionContentColor, actionIconColor)`，阴影高度改为内部固定读 `SnackbarTokens.ContainerElevation`，既没有 `tonalElevation` 也没有改名的 `elevation` 参数。
+
+**规则：** 升级/换用新版本 M3 组件时，先 `javap` 或查文档核对组件公开参数再写代码；对已移除的参数，令牌照常定义（设计契约），组件内不注入并留中文注释说明原因。
