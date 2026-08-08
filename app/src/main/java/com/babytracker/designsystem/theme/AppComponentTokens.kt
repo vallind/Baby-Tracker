@@ -1,8 +1,10 @@
 package com.babytracker.designsystem.theme
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -367,6 +369,20 @@ data class DividerTokens(
         fun default(colors: AppColors): DividerTokens = DividerTokens(
             color = colors.divider,
             thickness = 0.5.dp,
+        )
+    }
+}
+
+// —— TT-034 表面容器 ——
+@Immutable
+data class SurfaceTokens(
+    val color: Color,
+    val shape: Shape,
+) {
+    companion object {
+        fun default(colors: AppColors, shapes: AppShapes): SurfaceTokens = SurfaceTokens(
+            color = colors.surface,
+            shape = RoundedCornerShape(shapes.scaled(shapes.medium)),   // 卡片级圆角
         )
     }
 }
@@ -897,6 +913,7 @@ data class AppComponentTokens(
     val menu: MenuTokens,
     val tag: TagTokens,
     val divider: DividerTokens,
+    val surface: SurfaceTokens,
     val progress: ProgressTokens,
     val skeleton: SkeletonTokens,
     val steps: StepsTokens,
@@ -940,6 +957,7 @@ data class AppComponentTokens(
             menu = MenuTokens.default(colors, shapes, spacing, elevation),
             tag = TagTokens.default(colors, shapes, typography, spacing, opacity),
             divider = DividerTokens.default(colors),
+            surface = SurfaceTokens.default(colors, shapes),
             progress = ProgressTokens.default(colors),
             skeleton = SkeletonTokens.default(shapes, darkTheme),
             steps = StepsTokens.default(colors),

@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +41,7 @@ import kotlinx.coroutines.flow.collectLatest
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.surface.AppSurface
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -174,7 +174,7 @@ fun LogViewerScreen(navController: NavController) {
             }
             if (selectMode && selectedIds.isNotEmpty()) {
                 // 选择模式操作提示
-                Surface(
+                AppSurface(
                     color = c.primaryContainer,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -255,7 +255,7 @@ fun LogViewerScreen(navController: NavController) {
             }
 
             // 底部统计
-            Surface(
+            AppSurface(
                 color = c.surface,
                 tonalElevation = 1.dp,
                 modifier = Modifier.fillMaxWidth(),

@@ -14,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import com.babytracker.designsystem.components.chip.AppFilterChip
@@ -45,6 +44,7 @@ import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.dialog.AppDialog
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
+import com.babytracker.designsystem.components.surface.AppSurface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.backup.BackupManager
@@ -517,7 +517,7 @@ fun BabyManagementScreen(navController: NavController) {
                                     Text(b.name, style = LocalAppTypography.current.titleSmall)
                                     if (isCurrent) {
                                         Spacer(Modifier.width(spacing.sm))
-                                        Surface(color = c.primaryContainer, shape = RoundedCornerShape(shapes.medium)) {
+                                        AppSurface(color = c.primaryContainer, shape = RoundedCornerShape(shapes.medium)) {
                                             Text("当前", style = LocalAppTypography.current.labelSmall, color = c.primary, modifier = Modifier.padding(horizontal = spacing.sm, vertical = spacing.xxs))
                                         }
                                     }
