@@ -70,4 +70,19 @@ class TokenAuditCheckerTest {
         )
         assertTrue("合规样本出现违规: ${violations.joinToString { "${it.file}:${it.rule}" }}", violations.isEmpty())
     }
+
+    @Test
+    fun `规则 4 扫描为空时应报 ScanEmpty 违规`() {
+        val emptyRoot = tmp.newFolder("emptyRoot")
+        val violations = TokenAuditChecker.audit(
+            kotlinRoot = emptyRoot,
+            themeRelDir = "com/babytracker/designsystem/theme",
+            componentsRelDir = "com/babytracker/designsystem/components",
+            componentTokensFile = File(tmp.root, "AppComponentTokens.kt"),
+        )
+        assertTrue(
+            "规则 4 扫描为空未检出: ${violations.joinToString { "${it.rule}:${it.detail}" }}",
+            violations.any { it.rule == "ScanEmpty" && it.detail.contains("规则 4") },
+        )
+    }
 }

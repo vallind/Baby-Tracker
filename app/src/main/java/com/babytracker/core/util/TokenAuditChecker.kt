@@ -1,6 +1,7 @@
 package com.babytracker.core.util
 
 import java.io.File
+import kotlin.system.exitProcess
 
 /** 令牌审计违规项 */
 data class AuditViolation(val file: String, val rule: String, val detail: String)
@@ -33,6 +34,9 @@ object TokenAuditChecker {
         "import androidx.compose.material3.ColorScheme",
         "import androidx.compose.material3.Shapes",
     )
+
+    // 检查器自身源码含扫描模式串（如 "import androidx.compose.material3.Typography"），规则 4 须豁免本文件，否则自查必报
+    private const val SELF_FILE_NAME = "TokenAuditChecker.kt"
 
     fun audit(
         kotlinRoot: File,
@@ -67,7 +71,12 @@ object TokenAuditChecker {
         val scanned = kotlinRoot.walkTopDown()
             .filter { it.isFile && it.name.endsWith(".kt") }
             .filterNot { it.path.contains(themeRelPath) }
+            .filterNot { it.name == SELF_FILE_NAME }
             .toList()
+        // 防呆（lessons #14）：规则 4 扫描为空必须报错，禁止静默假绿
+        if (scanned.isEmpty()) {
+            violations.add(AuditViolation(kotlinRoot.path, "ScanEmpty", "规则 4 扫描为空，路径可能漂移"))
+        }
         for (file in scanned) {
             val text = file.readText()
             val hitM3Import = m3TokenImports.any { text.contains(it) }
@@ -88,4 +97,32 @@ object TokenAuditChecker {
         }
         return violations
     }
+}
+
+/**
+ * Gradle JavaExec 入口（mainClass = TokenAuditCheckerKt），与 JUnit 测试共用 audit 逻辑。
+ * 参数按序：kotlinRoot、themeRelDir、componentsRelDir、componentTokensFile。
+ * 违规时逐条打印 `文件: 规则 — 详情` 并 exitProcess(1)；参数数量不符打印用法并 exit 2。
+ */
+fun main(args: Array<String>) {
+    if (args.size != 4) {
+        System.err.println(
+            "用法: themeTokenAudit <kotlinRoot> <themeRelDir> <componentsRelDir> <componentTokensFile>\n" +
+                "示例: ./gradlew themeTokenAudit",
+        )
+        exitProcess(2)
+    }
+    val violations = TokenAuditChecker.audit(
+        kotlinRoot = File(args[0]),
+        themeRelDir = args[1],
+        componentsRelDir = args[2],
+        componentTokensFile = File(args[3]),
+    )
+    if (violations.isEmpty()) {
+        println("themeTokenAudit: 未发现违规")
+        return
+    }
+    println("themeTokenAudit: 发现 ${violations.size} 处违规:")
+    violations.forEach { println("${it.file}: ${it.rule} — ${it.detail}") }
+    exitProcess(1)
 }

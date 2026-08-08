@@ -251,3 +251,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 **规则：** 给自定义可交互组件暴露 `customActions` 时，动作内容必须与触屏手势行为**完全一致**（含确认/撤销等中间步骤）；修改触屏行为时同步检查 customActions 是否仍对齐，避免读屏用户走"捷径"。
 
+---
+
+## 17. AGP 9 构建脚本：sourceSets 已移除 + extendsFrom 不继承变体属性
+
+**现象：** `sourceSets.getByName("main")` 报 `SourceSet with name 'main' not found`；新建配置 `extendsFrom(debugRuntimeClasspath)` 后 JavaExec 解析报缺 `realtime-kt-jvm-3.6.0.jar`，而 app 自身 `assembleDebug` 一切正常。
+
+**原因：** AGP 9 移除了 legacy `sourceSets` 容器；`extendsFrom` 只继承依赖关系、不继承目标配置的变体属性，新建的普通配置（auditClasspath）解析时选了 JVM 变体依赖（其 jar 未缓存），而 AGP 内部配置（debugCompileClasspath 等）带 Android 变体属性，解析出的是 android 变体（均已缓存）。
+
+**规则：** AGP 9 里取编译产物用 `compileDebugKotlin.destinationDirectory`（`org.jetbrains.kotlin.gradle.tasks.KotlinCompile`，本项目无 Java 源码）；JavaExec 需要与 app 同解析语义的 classpath 时，直接引用 AGP 配置本身（`configurations.getByName("debugCompileClasspath")`），而不是新建配置再 `extendsFrom`。
+
