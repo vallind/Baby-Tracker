@@ -16,18 +16,33 @@
 
 1. **架构不动**：保持「核心语义令牌 → 组件令牌 → Defaults 桥接 → 组件」四层结构。
 2. **API 统一**：新增组件遵循统一签名约定（见第五节）；变体用枚举参数表达，不拆新组件函数、不堆布尔参数。
-3. **不盲目扩展数量**：只加实际需要的令牌字段与层级（Typography 对齐 M3 11 级为用户已确认的例外）。
+3. **不盲目扩展数量**：只加实际使用的令牌字段与层级（Typography 15 级字段集由实际使用盘点得出，无预判性扩展）。
 4. **红线**：触碰共享 API 前全局搜索调用方（红线 10）；暗色只认 `theme.name == "night"`（红线 8）；百分比夹紧 `coerceIn`（红线 1）；日期过滤 `take(10)`（红线 2）。
 5. **每阶段验收**：`./gradlew assembleDebug` + `testDebugUnitTest` 全绿 + lint（涉及 Compose/资源时）+ 文档同步 + CHANGELOG 按批次累积。
 
 ## 三、P1 清理（阶段 1）
 
-### 3.1 Typography 7→11 级
+### 3.1 Typography 自建单体系统一（不暴露 M3）
 
-- `AppTypography` 数据类新增 4 级：`titleSmall`、`bodySmall`、`labelLarge`、`labelSmall`，命名对齐 M3。
-- 纯增量扩展（不改现有 7 级定义），20 个现有 `LocalAppTypography` 调用方零影响。
-- 同步 `AppDefaults.kt` 快照；`docs/design-system.md` 更新。
-- DS 内部 13 处 `MaterialTheme.typography` 改为 `LocalAppTypography.current`（TimePicker、TimePickerLogic、AppFormSheet、DateTimeCascade）。
+**现状（自审核实）**：存在双体系——
+- `LocalAppTypography`（Theme.kt:186）当前提供 **M3 `Typography` 类**（`BabyTrackerTypography`，15 级），17 个文件使用；
+- `LocalAppTypographyStyle`（AppTokens.kt:194）提供**自建 `AppTypography` 数据类**（7 级），14 个文件使用；
+- 两套字号数值不一致（titleLarge 18sp vs 22sp、bodyLarge 15sp vs 16sp、bodyMedium 13sp vs 14sp），同名字段不同页面渲染字号不同。
+
+**目标（用户决策：自建、不暴露 M3）**：统一到自建 `AppTypography` 数据类单体系，对外（designsystem 之外的任何代码）不暴露 M3 `Typography` 类型。
+
+**字段全集（按实际使用盘点，15 级，每级均有真实使用点）**：
+`display`、`displayLarge`、`headline`、`headlineLarge`、`headlineMedium`、`headlineSmall`、`titleLarge`、`titleMedium`、`titleSmall`、`bodyLarge`、`bodyMedium`、`bodySmall`、`label`、`labelMedium`、`labelSmall`
+
+**实施**：
+1. `AppTypography` 数据类扩展为上述 15 级；现有 7 级数值保持不变（避免 14 个文件视觉回归），新增 8 级在现有数值间按自建风格插值（数值表在实施计划中确定）。
+2. `LocalAppTypography` 改为提供 `AppTypography` 数据类；删除 `LocalAppTypographyStyle`（统一单一入口）；删除 `BabyTrackerTypography`（M3 Typography 对象）。
+3. `MaterialTheme(typography = ...)` 所需 M3 Typography 在 Theme.kt 内部**私有**构造（从自建数值映射），不导出。
+4. **迁移 31 个文件**：17 个 `LocalAppTypography`（M3）文件 + 14 个 `LocalAppTypographyStyle` 文件 → 统一 `LocalAppTypography.current`。因字段全部同名，迁移 = 改 import / 别名来源，style 引用点基本零改动（`typography.label`、`typography.titleLarge` 等不变）。
+5. DS 内部 13 处 `MaterialTheme.typography` → `LocalAppTypography.current`（TimePicker、TimePickerLogic、AppFormSheet、DateTimeCascade；字段在 15 级中全部存在，纯替换）。
+6. 组件令牌 8 处 `typography.label/titleLarge/bodyLarge/bodyMedium` 引用（AppComponentTokens.kt:46 等）在 15 级下继续有效，无需改动。
+7. 快照：`AppDefaults.kt` 无 typography 字段（已核实），无需改动；`docs/design-system.md` 更新。
+8. P3 门禁新增规则：禁止在 designsystem 之外 import `androidx.compose.material3.Typography`（不暴露 M3 落地为审计规则）。
 
 ### 3.2 Button 家族收敛为 AppButton + 变体枚举
 
@@ -108,6 +123,7 @@
   - 硬编码 `Color(0xFF` / `Color.Black` / `Color.White`
   - `isSystemInDarkTheme()`
   - Defaults 文件 import `LocalAppColors`
+  - designsystem 之外 import `androidx.compose.material3.Typography`（不暴露 M3 落地）
 
 ### 6.2 自定义 Detekt 规则
 
@@ -119,9 +135,9 @@
 
 - 每阶段收尾必跑：`./gradlew assembleDebug`、`./gradlew testDebugUnitTest`（全绿）、`./gradlew lint`（涉及 Compose/资源/Manifest/API 时）。
 - 新增逻辑补测试：
-  - P1：Typography 快照一致性断言、3 个新组件的静态审计断言（纳入审计检查器）、AppButton 变体视觉差异断言（Paparazzi 如可行）、58 处调用方迁移后编译通过即回归验证。
+  - P1：AppTypography 15 级字段全量/数值一致性测试（含新增 8 级插值断言）、3 个新组件的静态审计断言（纳入审计检查器）、AppButton 变体视觉差异断言（Paparazzi 如可行）、58 处调用方迁移后编译通过即回归验证。
   - P2：密度缩放纯函数测试、暗色/状态令牌测试（4.3）、a11y 审计断言。
-  - P3：检查器单测（拦截样本 + 白名单样本）。
+  - P3：检查器单测（拦截样本 + 白名单样本，含"禁止 import M3 Typography"规则）。
 - 禁止镜像测试：测试必须调用生产代码。
 - 文档同步义务：`docs/design-system.md`（新组件/密度/Typography/AppButton）、`docs/project-structure.md`（DensityController、规则模块等）、`docs/a11y-baseline.md`（新增）、`AGENTS.md`（第八节 Button 对应关系）、CHANGELOG.md（按提交批次累积，版本发布时统一提升）。
 - 经验闭环：每阶段完成后检查 lessons.md 是否需追加条目。
