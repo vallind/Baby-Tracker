@@ -68,10 +68,10 @@ fun BottomNavBar(navController: NavController) {
                 icon = {
                     if (tab.badgeCount > 0) {
                         BadgedBox(badge = { Badge { Text(if (tab.badgeCount > 99) "99+" else tab.badgeCount.toString()) } }) {
-                            Icon(tab.icon, contentDescription = tab.label, modifier = Modifier.size(BottomBarDefaults.iconSize()))
+                            Icon(tab.icon, contentDescription = null, modifier = Modifier.size(BottomBarDefaults.iconSize()))
                         }
                     } else {
-                        Icon(tab.icon, contentDescription = tab.label, modifier = Modifier.size(BottomBarDefaults.iconSize()))
+                        Icon(tab.icon, contentDescription = null, modifier = Modifier.size(BottomBarDefaults.iconSize()))
                     }
                 },
                 label = { Text(tab.label, style = LocalAppTypography.current.labelSmall) },

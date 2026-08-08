@@ -36,7 +36,7 @@ fun AppFAB(
     if (label != null) {
         androidx.compose.material3.ExtendedFloatingActionButton(
             onClick = onClick,
-            icon = { Icon(icon, contentDescription = label, modifier = Modifier.size(iconSize)) },
+            icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(iconSize)) },
             text = { androidx.compose.material3.Text(label) },
             shape = RoundedCornerShape(cornerRadius),
             containerColor = FabDefaults.containerColor(),
