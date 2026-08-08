@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
@@ -218,10 +217,6 @@ fun SettingsScreen(navController: NavController) {
                 authService.setNickname(newNickname)
                 showNicknameDialog = false
                 Toast.makeText(context, AppStrings.nicknameSaved, Toast.LENGTH_SHORT).show()
-            },
-            onClear = {
-                authService.clearNickname()
-                showNicknameDialog = false
             },
         )
     }
@@ -693,15 +688,13 @@ private fun NicknameEditDialog(
     currentNickname: String,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
-    onClear: () -> Unit,
 ) {
-    val c = LocalAppColors.current
     var input by remember(currentNickname) { mutableStateOf(currentNickname) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(AppStrings.editNickname) },
-        text = {
+    AppDialog(
+        show = true,
+        title = AppStrings.editNickname,
+        content = {
             AppInput(
                 value = input,
                 onValueChange = { input = it },
@@ -710,22 +703,11 @@ private fun NicknameEditDialog(
                 modifier = Modifier.fillMaxWidth(),
             )
         },
-        confirmButton = {
-            AppButton(
-                variant = ButtonVariant.Text,
-                onClick = { onSave(input.trim()) },
-                enabled = input.isNotBlank(),
-                label = AppStrings.save,
-            )
-        },
-        dismissButton = {
-            Row {
-                if (currentNickname.isNotEmpty()) {
-                    AppButton(variant = ButtonVariant.Text, onClick = onClear, label = "清除", contentColor = c.textTertiary)
-                }
-                AppButton(variant = ButtonVariant.Text, onClick = onDismiss, label = AppStrings.cancel)
-            }
-        },
+        confirmText = AppStrings.save,
+        cancelText = AppStrings.cancel,
+        confirmEnabled = input.isNotBlank(),
+        onConfirm = { onSave(input.trim()) },
+        onDismiss = onDismiss,
     )
 }
 
