@@ -345,7 +345,7 @@ data class TagTokens(
                 textColor = colors.textSecondary,
             ),
             cornerRadius = shapes.scaled(shapes.full),     // shadcn 风格：标签 = rounded-full
-            fontSize = typography.label.fontSize,
+            fontSize = typography.labelMedium.fontSize,
             fontWeight = FontWeight.Medium,
             horizontalPadding = 12.dp,
             verticalPadding = 6.dp,
@@ -529,7 +529,7 @@ data class ChipTokens(
             typography: AppTypography,
         ): ChipTokens = ChipTokens(
             cornerRadius = shapes.scaled(shapes.full),     // shadcn 风格：Chip = rounded-full
-            fontSize = typography.label.fontSize,
+            fontSize = typography.labelMedium.fontSize,
             fontWeight = FontWeight.Medium,
             horizontalPadding = 12.dp,
             verticalPadding = 6.dp,
@@ -855,7 +855,7 @@ data class SegmentedControlTokens(
             cornerRadius = shapes.scaled(shapes.large),
             innerCornerRadius = shapes.scaled(shapes.small),
             borderWidth = 2.dp,
-            fontSize = typography.label.fontSize,
+            fontSize = typography.labelMedium.fontSize,
             fontWeight = FontWeight.Normal,
             selectedFontWeight = FontWeight.SemiBold,
         )
