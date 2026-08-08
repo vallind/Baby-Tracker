@@ -21,7 +21,8 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.GrowthRepository
-import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -212,13 +213,15 @@ fun BabyProfileScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AppTextButton(
+                AppButton(
+                    variant = ButtonVariant.Text,
                     onClick = { navController.navigate(Screen.BabyManagement.route) },
                     label = "管理全部宝宝",
-                    color = c.textSecondary,
+                    contentColor = c.textSecondary,
                 )
                 Text("·", color = c.textTertiary, style = typography.bodyMedium)
-                AppTextButton(
+                AppButton(
+                    variant = ButtonVariant.Text,
                     onClick = { showEdit = true },
                     label = "编辑资料",
                 )

@@ -29,7 +29,8 @@ import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.SegmentedControl
@@ -294,7 +295,8 @@ fun TimelineScreen(navController: NavController) {
                     Screen.Health to "❤️ 健康",
                 )
                 types.forEach { (screen, label) ->
-                    AppTextButton(
+                    AppButton(
+                        variant = ButtonVariant.Text,
                         onClick = {
                             showTypePicker = false
                             when (screen) {

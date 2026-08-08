@@ -31,8 +31,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
-import com.babytracker.designsystem.components.button.PrimaryButton
-import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
@@ -339,7 +338,7 @@ fun DiaperListScreen(navController: NavController) {
                     .background(c.surface)
                     .padding(horizontal = spacing.md, vertical = 12.dp),
             ) {
-                PrimaryButton(
+                AppButton(
                     onClick = {
                         editingDiaper = null
                         showForm = true

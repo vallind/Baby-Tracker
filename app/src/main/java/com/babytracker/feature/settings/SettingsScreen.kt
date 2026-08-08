@@ -40,9 +40,8 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
-import com.babytracker.designsystem.components.button.PrimaryButton
-import com.babytracker.designsystem.components.button.SecondaryButton
-import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.dialog.AppDialog
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -186,10 +185,11 @@ fun SettingsScreen(navController: NavController) {
                     Modifier.fillMaxWidth().padding(vertical = spacing.sm),
                     contentAlignment = Alignment.Center,
                 ) {
-                    AppTextButton(
+                    AppButton(
+                        variant = ButtonVariant.Text,
                         onClick = { showLogoutConfirm = true },
                         label = "退出登录",
-                        color = c.danger,
+                        contentColor = c.danger,
                     )
                 }
             }
@@ -532,7 +532,8 @@ fun BabyManagementScreen(navController: NavController) {
                                 }
                             }
                             if (!isCurrent) {
-                                AppTextButton(
+                                AppButton(
+                                    variant = ButtonVariant.Text,
                                     onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() },
                                     label = "切换",
                                 )
@@ -544,10 +545,11 @@ fun BabyManagementScreen(navController: NavController) {
 
                 if (deletedBabies.isNotEmpty()) {
                     Spacer(Modifier.height(spacing.md))
-                    AppTextButton(
+                    AppButton(
+                        variant = ButtonVariant.Text,
                         onClick = { showDeleted = !showDeleted },
                         label = "已删除的宝宝 (${deletedBabies.size}) ${if (showDeleted) "▲" else "▼"}",
-                        color = c.textSecondary,
+                        contentColor = c.textSecondary,
                     )
                     if (showDeleted) {
                         deletedBabies.forEach { b ->
@@ -564,7 +566,8 @@ fun BabyManagementScreen(navController: NavController) {
                                         Text(b.name, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
                                         Text("已删除", style = LocalAppTypography.current.labelSmall, color = c.textTertiary)
                                     }
-                                    AppTextButton(
+                                    AppButton(
+                                        variant = ButtonVariant.Text,
                                         onClick = { scope.launch { babyRepo.restore(b) } },
                                         label = "恢复",
                                     )
@@ -708,7 +711,8 @@ private fun NicknameEditDialog(
             )
         },
         confirmButton = {
-            AppTextButton(
+            AppButton(
+                variant = ButtonVariant.Text,
                 onClick = { onSave(input.trim()) },
                 enabled = input.isNotBlank(),
                 label = AppStrings.save,
@@ -717,9 +721,9 @@ private fun NicknameEditDialog(
         dismissButton = {
             Row {
                 if (currentNickname.isNotEmpty()) {
-                    AppTextButton(onClick = onClear, label = "清除", color = c.textTertiary)
+                    AppButton(variant = ButtonVariant.Text, onClick = onClear, label = "清除", contentColor = c.textTertiary)
                 }
-                AppTextButton(onClick = onDismiss, label = AppStrings.cancel)
+                AppButton(variant = ButtonVariant.Text, onClick = onDismiss, label = AppStrings.cancel)
             }
         },
     )
@@ -799,7 +803,8 @@ fun BackupScreen(navController: NavController) {
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    SecondaryButton(
+                    AppButton(
+                        variant = ButtonVariant.Secondary,
                         onClick = { dirPicker.launch(null) },
                         label = "选择目录",
                         icon = Icons.Default.FolderOpen,
@@ -814,7 +819,7 @@ fun BackupScreen(navController: NavController) {
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    PrimaryButton(
+                    AppButton(
                         onClick = {
                             scope.launch {
                                 val path = if (selectedDirUri != null) {
@@ -853,7 +858,7 @@ fun BackupScreen(navController: NavController) {
                     }
                     Spacer(Modifier.height(12.dp))
                     if (!showWebDAV) {
-                        SecondaryButton(onClick = { showWebDAV = true }, label = "配置 WebDAV", modifier = Modifier.fillMaxWidth())
+                        AppButton(variant = ButtonVariant.Secondary, onClick = { showWebDAV = true }, label = "配置 WebDAV", modifier = Modifier.fillMaxWidth())
                     } else {
                         AppInput(value = webdavUrl, onValueChange = { webdavUrl = it }, label = "服务器地址", modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(spacing.sm))
@@ -862,14 +867,14 @@ fun BackupScreen(navController: NavController) {
                         AppInput(value = webdavPass, onValueChange = { webdavPass = it }, label = "密码", modifier = Modifier.fillMaxWidth(), isPassword = true)
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                            SecondaryButton(onClick = {
+                            AppButton(variant = ButtonVariant.Secondary, onClick = {
                                 scope.launch {
                                     backupManager.saveConfig(webdavUrl, webdavUser, webdavPass)
                                     webdavStatus = "已保存"
                                     Toast.makeText(context, "配置已保存", Toast.LENGTH_SHORT).show()
                                 }
                             }, label = "保存", modifier = Modifier.weight(1f))
-                            PrimaryButton(onClick = {
+                            AppButton(onClick = {
                                 scope.launch {
                                     backupManager.createWebDAVBackup().onSuccess {
                                         webdavStatus = "上次: ${java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))}"
@@ -879,7 +884,7 @@ fun BackupScreen(navController: NavController) {
                                     }
                                 }
                             }, label = "备份", modifier = Modifier.weight(1f))
-                            PrimaryButton(onClick = { showWebdavRestoreConfirm = true }, label = "恢复", modifier = Modifier.weight(1f))
+                            AppButton(onClick = { showWebdavRestoreConfirm = true }, label = "恢复", modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -902,7 +907,7 @@ fun BackupScreen(navController: NavController) {
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    PrimaryButton(
+                    AppButton(
                         onClick = { restorePicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
                         label = if (restoring) "恢复中..." else "选择备份文件",
                         enabled = !restoring,

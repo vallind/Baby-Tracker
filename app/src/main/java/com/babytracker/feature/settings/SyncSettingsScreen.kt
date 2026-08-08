@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.babytracker.core.sync.BgInterval
 import com.babytracker.core.sync.SyncDelay
-import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.switchcontrol.AppRadioButton
@@ -120,7 +120,7 @@ fun SyncSettingsScreen(navController: NavController) {
 
             var syncing by remember { mutableStateOf(false) }
 
-            PrimaryButton(
+            AppButton(
                 label = if (syncing) "同步中..." else "立即同步",
                 onClick = {
                     syncing = true

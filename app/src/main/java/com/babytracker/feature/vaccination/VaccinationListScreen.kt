@@ -34,8 +34,8 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.recordcard.RecordCard
-import com.babytracker.designsystem.components.button.PrimaryButton
-import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -454,7 +454,7 @@ fun VaccinationFormDialog(
 
             AppInput(value = note, onValueChange = { note = it }, label = "备注 (可选)", modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp))
 
-            PrimaryButton(
+            AppButton(
                 onClick = {
                     val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
                     val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
@@ -490,7 +490,7 @@ fun VaccinationFormDialog(
     if (showScheduledDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { showScheduledDatePicker = false }, confirmButton = {
-            AppTextButton(onClick = {
+            AppButton(variant = ButtonVariant.Text, onClick = {
                 showScheduledDatePicker = false
                 datePickerState.selectedDateMillis?.let { millis ->
                     val instant = java.time.Instant.ofEpochMilli(millis)
@@ -498,7 +498,7 @@ fun VaccinationFormDialog(
                         .toLocalDate().toString()
                 }
             }, label = "确定")
-            }, dismissButton = { AppTextButton(onClick = { showScheduledDatePicker = false }, label = "取消") }) {
+            }, dismissButton = { AppButton(variant = ButtonVariant.Text, onClick = { showScheduledDatePicker = false }, label = "取消") }) {
             DatePicker(state = datePickerState)
         }
     }
@@ -506,7 +506,7 @@ fun VaccinationFormDialog(
     if (showAdministeredDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { showAdministeredDatePicker = false }, confirmButton = {
-            AppTextButton(onClick = {
+            AppButton(variant = ButtonVariant.Text, onClick = {
                 showAdministeredDatePicker = false
                 datePickerState.selectedDateMillis?.let { millis ->
                     val instant = java.time.Instant.ofEpochMilli(millis)
@@ -514,7 +514,7 @@ fun VaccinationFormDialog(
                         .toLocalDate().toString()
                 }
             }, label = "确定")
-            }, dismissButton = { AppTextButton(onClick = { showAdministeredDatePicker = false }, label = "取消") }) {
+            }, dismissButton = { AppButton(variant = ButtonVariant.Text, onClick = { showAdministeredDatePicker = false }, label = "取消") }) {
             DatePicker(state = datePickerState)
         }
     }

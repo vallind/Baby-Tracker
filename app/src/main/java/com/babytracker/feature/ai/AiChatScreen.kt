@@ -45,8 +45,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.babytracker.designsystem.components.button.AppTextButton
-import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
@@ -281,7 +281,7 @@ private fun AiHistorySheet(
                 .padding(horizontal = spacing.md),
         )
         Spacer(Modifier.height(spacing.sm))
-        PrimaryButton(
+        AppButton(
             onClick = onNewConversation,
             label = AppStrings.aiHistoryNewChat,
             icon = Icons.Default.Add,
@@ -548,7 +548,8 @@ private fun AiAnalysisContextBar(
                     color = colors.textPrimary,
                 )
             }
-            AppTextButton(
+            AppButton(
+                variant = ButtonVariant.Text,
                 onClick = onRemove,
                 label = AppStrings.aiAnalysisRemove,
                 enabled = canRemove,
@@ -657,7 +658,7 @@ private fun AiModelSelector(
                     modifier = Modifier.weight(1f),
                 )
                 if (state.prerequisite == AiChatPrerequisite.CONFIG_UNAVAILABLE) {
-                    AppTextButton(onClick = onRefresh, label = AppStrings.aiRetry)
+                    AppButton(variant = ButtonVariant.Text, onClick = onRefresh, label = AppStrings.aiRetry)
                 }
             }
             else -> Row(
@@ -785,7 +786,8 @@ private fun AiMessageBubble(
                 }
                 if (!isUser && !isStreaming && message.content.isNotBlank()) {
                     Spacer(Modifier.height(spacing.sm))
-                    AppTextButton(
+                    AppButton(
+                        variant = ButtonVariant.Text,
                         onClick = { answerBasisExpanded = !answerBasisExpanded },
                         label = if (answerBasisExpanded) {
                             AppStrings.aiHideAnswerBasis
@@ -797,16 +799,19 @@ private fun AiMessageBubble(
                         AiAnswerBasis(message.references)
                     }
                     Row {
-                        AppTextButton(
+                        AppButton(
+                            variant = ButtonVariant.Text,
                             onClick = { onCopy(message.content) },
                             label = AppStrings.aiCopy,
                         )
                         if (canRevise) {
-                            AppTextButton(
+                            AppButton(
+                                variant = ButtonVariant.Text,
                                 onClick = onEditQuestion,
                                 label = AppStrings.aiEditQuestion,
                             )
-                            AppTextButton(
+                            AppButton(
+                                variant = ButtonVariant.Text,
                                 onClick = onRegenerate,
                                 label = AppStrings.aiRegenerate,
                             )
@@ -875,7 +880,8 @@ private fun AiReasoningBlock(
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
-    AppTextButton(
+    AppButton(
+        variant = ButtonVariant.Text,
         onClick = { expanded = !expanded },
         label = when {
             isStreaming -> AppStrings.aiThinking
@@ -969,7 +975,7 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
     ) {
         Text(message, style = typography.bodyMedium, color = colors.error, modifier = Modifier.weight(1f))
         if (canRetry) {
-            AppTextButton(onClick = onRetry, label = AppStrings.aiRetry)
+            AppButton(variant = ButtonVariant.Text, onClick = onRetry, label = AppStrings.aiRetry)
         }
     }
 }
@@ -1030,7 +1036,7 @@ private fun AiComposer(
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(spacing.sm))
-        PrimaryButton(
+        AppButton(
             onClick = if (state.isSending) onStop else onSend,
             label = if (state.isSending) AppStrings.aiStop else AppStrings.aiSend,
             enabled = state.isSending || state.canSend,

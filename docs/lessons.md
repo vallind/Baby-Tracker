@@ -193,3 +193,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 - 辅助类别只能丰富已经可用的分析，不能单独激活专项入口。
 - 综合概览可以由任意已启用类别的有效记录激活。
 - 快捷入口只保存分析类型；发送前必须按当前家庭和当前宝宝重新读取记录，禁止缓存业务摘要。
+
+---
+
+## 12. M3 Button 的 content 参数要求 RowScope 接收者
+
+**现象：** 按计划文档逐字转写 `AppButton` 时，`val content: @Composable () -> Unit` 传给 `Button(content = content)` 编译失败：`Argument type mismatch: actual type is 'ComposableFunction0<Unit>', but 'ComposableFunction1<RowScope, Unit>' was expected.`
+
+**原因：** M3 `Button`/`OutlinedButton`/`TextButton` 的 content 参数签名是 `@Composable RowScope.() -> Unit`（拖尾 lambda 写法因 Kotlin 的隐式接收者推断不会报错，显式传参时类型不匹配才暴露）。计划/设计文档里的代码块可能省略或写错接收者类型，逐字转写前先检查。
+
+**规则：** 显式构造组件 content 变量时，必须用 `@Composable RowScope.() -> Unit` 并 import `androidx.compose.foundation.layout.RowScope`。

@@ -16,9 +16,7 @@ package com.babytracker.designsystem.components
 // —— 组件层 ——
 // AppCard            统一卡片               (card/)
 // AppTopBar          统一导航栏             (topbar/)
-// PrimaryButton      主按钮（填充）          (button/)
-// SecondaryButton    次按钮（描边）
-// AppTextButton      文本按钮
+// AppButton          统一按钮（变体枚举）    (button/)
 // AppInput           统一输入框             (input/)
 // AppChip            标签                   (chip/)
 // AppTag             语义标签（5色变体）      (tag/)

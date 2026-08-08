@@ -18,4 +18,6 @@ object ButtonDefaults {
     @Composable fun contentColor(): Color = LocalAppComponentTokens.current.button.contentColor
     @Composable fun disabledContainerColor(): Color = LocalAppComponentTokens.current.button.disabledContainerColor
     @Composable fun disabledContentColor(): Color = LocalAppComponentTokens.current.button.disabledContentColor
+    @Composable fun secondaryContentColor(): Color = LocalAppComponentTokens.current.button.secondaryContentColor
+    @Composable fun textContentColor(): Color = LocalAppComponentTokens.current.button.textContentColor
 }

@@ -14,8 +14,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.babytracker.designsystem.components.button.AppTextButton
-import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -90,7 +90,7 @@ fun LoginScreen(navController: NavController) {
             }
             Spacer(Modifier.height(spacing.lg))
 
-            PrimaryButton(
+            AppButton(
                 onClick = vm::submit,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
@@ -98,7 +98,8 @@ fun LoginScreen(navController: NavController) {
             )
             Spacer(Modifier.height(spacing.md))
 
-            AppTextButton(
+            AppButton(
+                variant = ButtonVariant.Text,
                 onClick = vm::toggleMode,
                 label = if (uiState.isRegisterMode) "已有账户？去登录" else "没有账户？去注册",
             )

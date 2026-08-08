@@ -48,7 +48,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
-import com.babytracker.designsystem.components.button.PrimaryButton
+import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import kotlinx.coroutines.launch
@@ -472,7 +472,7 @@ fun GrowthScreen(navController: NavController) {
                     .background(c.surface)
                     .padding(horizontal = spacing.md, vertical = 12.dp),
             ) {
-                PrimaryButton(
+                AppButton(
                     onClick = {
                         editingGrowth = null
                         showForm = true

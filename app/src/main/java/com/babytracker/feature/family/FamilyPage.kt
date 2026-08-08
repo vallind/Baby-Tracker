@@ -31,9 +31,8 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.button.PrimaryButton
-import com.babytracker.designsystem.components.button.SecondaryButton
-import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
@@ -212,7 +211,8 @@ private fun LocalDataView(
             if (count > 0 && families.isNotEmpty()) {
                 Spacer(Modifier.height(spacing.md))
                 families.forEach { family ->
-                    SecondaryButton(
+                    AppButton(
+                        variant = ButtonVariant.Secondary,
                         onClick = { onMigrate(family) },
                         label = "归入 ${family.name}",
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -242,8 +242,8 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
             )
             Spacer(Modifier.height(spacing.lg))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                SecondaryButton(onClick = onJoinClick, label = "加入家庭", icon = Icons.Default.GroupAdd)
-                PrimaryButton(onClick = onCreateClick, label = "创建家庭", icon = Icons.Default.Add)
+                AppButton(variant = ButtonVariant.Secondary, onClick = onJoinClick, label = "加入家庭", icon = Icons.Default.GroupAdd)
+                AppButton(onClick = onCreateClick, label = "创建家庭", icon = Icons.Default.Add)
             }
         }
     }
@@ -301,7 +301,8 @@ private fun FamilyDetailView(
                     Text("邀请码", style = typography.labelMedium, color = c.textSecondary)
                     Text(family.inviteCode, style = typography.titleLarge, letterSpacing = 4.sp, color = c.primary)
                 }
-                AppTextButton(
+                AppButton(
+                    variant = ButtonVariant.Text,
                     onClick = {
                         val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                         clipboard.setPrimaryClip(android.content.ClipData.newPlainText("invite", family.inviteCode))
@@ -309,7 +310,7 @@ private fun FamilyDetailView(
                     },
                     label = "复制",
                     icon = Icons.Default.ContentCopy,
-                    color = c.primary,
+                    contentColor = c.primary,
                 )
             }
         }
@@ -370,7 +371,7 @@ private fun FamilyDetailView(
 
     // 操作按钮
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-        SecondaryButton(onClick = onJoinClick, label = "加入新家庭", icon = Icons.Default.GroupAdd, modifier = Modifier.weight(1f))
-        SecondaryButton(onClick = onCreateClick, label = "创建新家庭", icon = Icons.Default.Add, modifier = Modifier.weight(1f))
+        AppButton(variant = ButtonVariant.Secondary, onClick = onJoinClick, label = "加入新家庭", icon = Icons.Default.GroupAdd, modifier = Modifier.weight(1f))
+        AppButton(variant = ButtonVariant.Secondary, onClick = onCreateClick, label = "创建新家庭", icon = Icons.Default.Add, modifier = Modifier.weight(1f))
     }
 }

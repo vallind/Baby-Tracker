@@ -21,7 +21,8 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.button.AppTextButton
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
@@ -366,7 +367,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("最近记录", style = typography.titleMedium, color = c.textPrimary)
-                AppTextButton(onClick = onSeeAll, label = "查看全部")
+                AppButton(variant = ButtonVariant.Text, onClick = onSeeAll, label = "查看全部")
             }
             Spacer(Modifier.height(spacing.sm))
             val recentItems = items.take(5)

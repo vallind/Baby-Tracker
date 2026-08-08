@@ -32,6 +32,8 @@ data class ButtonTokens(
     val disabledContainerColor: Color,
     val disabledContentColor: Color,
     val disabledAlpha: Float,
+    val secondaryContentColor: Color,   // Secondary 变体内容色（描边色）
+    val textContentColor: Color,        // Text 变体内容色
 ) {
     companion object {
         fun default(
@@ -51,6 +53,8 @@ data class ButtonTokens(
             disabledContainerColor = colors.bgDisabled,
             disabledContentColor = colors.textDisabled,
             disabledAlpha = opacity.disabled,
+            secondaryContentColor = colors.primary,
+            textContentColor = colors.primary,
         )
     }
 }
