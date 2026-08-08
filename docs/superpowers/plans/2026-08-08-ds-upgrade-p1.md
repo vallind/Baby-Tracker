@@ -313,7 +313,7 @@ AppTokens.kt 中删除 `display`、`headline`、`label` 三个字段定义，并
 
 - [ ] **Step 3: 恢复严格测试断言**
 
-`TypographyTokensTest.kt` 三个测试改为 12 字段清单（去掉 `t.display`/`t.headline`/`t.label`），顺序断言维持 `>=`（bodySmall 12sp 与 labelMedium 12sp 同为 12sp，允许相等），两端极值 `assertEquals(40f, ordered.first())` / `assertEquals(11f, ordered.last())` 不变。
+`TypographyTokensTest.kt` 两个测试改为 12 字段清单（去掉 `t.display`/`t.headline`/`t.label`），顺序断言维持 `>=`（bodySmall 12sp 与 labelMedium 12sp 同为 12sp，允许相等），两端极值 `assertEquals(40f, ordered.first())` / `assertEquals(11f, ordered.last())` 不变。
 
 - [ ] **Step 4: 编译 + 全量测试**
 
