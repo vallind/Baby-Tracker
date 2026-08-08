@@ -37,7 +37,7 @@
 
 **字段全集（按实际使用盘点，12 级，每级均有真实使用点）**：
 `displayLarge`、`headlineLarge`、`headlineMedium`、`headlineSmall`、`titleLarge`、`titleMedium`、`titleSmall`、`bodyLarge`、`bodyMedium`、`bodySmall`、`labelMedium`、`labelSmall`
-（原始盘点含裸 `display`/`headline`/`label` 共 15 级，经 Task 2 分别映射到 `displayLarge`/`headlineMedium`/`labelMedium` 后删除，收敛为 12 级）
+（原始盘点含裸 `display`/`headline`/`label` 共 15 级，Task 2 分别映射到 `displayLarge`/`headlineMedium`/`labelMedium`，Task 3 删除裸字段，收敛为 12 级）
 
 **实施**：
 1. `AppTypography` 数据类扩展为上述 12 级；现有 7 级数值保持不变（避免 14 个文件视觉回归），新增 5 级在现有数值间按自建风格插值（数值表在实施计划中确定）。
