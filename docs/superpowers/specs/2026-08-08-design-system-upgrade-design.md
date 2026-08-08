@@ -19,6 +19,10 @@
 3. **不盲目扩展数量**：只加实际使用的令牌字段与层级（Typography 15 级字段集由实际使用盘点得出，无预判性扩展）。
 4. **红线**：触碰共享 API 前全局搜索调用方（红线 10）；暗色只认 `theme.name == "night"`（红线 8）；百分比夹紧 `coerceIn`（红线 1）；日期过滤 `take(10)`（红线 2）。
 5. **每阶段验收**：`./gradlew assembleDebug` + `testDebugUnitTest` 全绿 + lint（涉及 Compose/资源时）+ 文档同步 + CHANGELOG 按批次累积。
+6. **token 桥接 M3，M3 不暴露给组件**（用户原则）：
+   - **theme 层可以桥接 M3**：`designsystem/theme/` 内部允许持有/转换 M3 类型（如 private M3 `Typography` 供 `MaterialTheme` 使用、`toColorScheme()`、`MaterialTheme(typography=...)` 的桥接），这是 token 体系与 M3 的唯一接触点。
+   - **组件层不暴露 M3**：`designsystem/components/` 与 `feature/`（含 navigation/core 的 UI 代码）禁止直接 import/使用 M3 的令牌与主题类型——`androidx.compose.material3.Typography`、`ColorScheme`、`Shapes`、`MaterialTheme.typography`/`MaterialTheme.colorScheme`/`MaterialTheme.shapes`。组件只能通过 `LocalApp*` 令牌访问视觉参数。
+   - **边界说明**：M3 组件类（`Button`/`OutlinedTextField` 等）在 DS 组件内部受控包裹是允许的（AppButton 包 material3.Button 等），但组件的**公开 API 签名不出现 M3 类型**；M3 状态类（如 `SnackbarHostState`）沿用既有 `AppSnackbar(hostState)` 模式，不扩大解释。
 
 ## 三、P1 清理（阶段 1）
 
@@ -112,6 +116,7 @@
 4. 尺寸/间距参数默认走令牌（`Dp.Unspecified` 或令牌值），不用魔法数。
 5. 无内部交互状态的组件不写 Logic；需要时用现有 Hooks 桥接模式。
 6. 文件内 `@Composable` 全部顶层定义（红线 6）。
+7. **组件公开签名禁止 M3 类型**：`Typography`/`ColorScheme`/`Shapes` 等 M3 令牌类型不出现在组件参数与返回值中（见总体原则 6）；桥接只发生在 `designsystem/theme/`。
 
 ## 六、P3 门禁（阶段 3）
 

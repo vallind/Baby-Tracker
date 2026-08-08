@@ -18,6 +18,7 @@
 - 暗色只认 `theme.name == "night"`（红线 8）
 - 改共享 API 前先查调用方（红线 10）；ViewModel 注册用 `viewModel {}`、获取用 `koinViewModel()`（红线 3/4）
 - 组件签名约定：显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌；变体用枚举参数；颜色参数类型 `Color`，默认走令牌；组件内部不写死色值
+- **token 桥接 M3，M3 不暴露给组件**：`designsystem/theme/` 内部允许持有/转换 M3 类型（private M3 Typography、toColorScheme 等）；`designsystem/components/` 与 `feature/` 禁止 import M3 令牌/主题类型（`androidx.compose.material3.Typography`、`ColorScheme`、`Shapes`、`MaterialTheme.typography/colorScheme/shapes`）；组件公开 API 不出现 M3 类型（M3 组件类受控包裹与 SnackbarHostState 状态类沿用既有模式，不在此限）
 - 禁止给用户可见文本硬编码中文 → 新组件文案走 `AppStrings`
 - 设计文档：`docs/superpowers/specs/2026-08-08-design-system-upgrade-design.md`
 
@@ -986,18 +987,33 @@ fun `新组件 Defaults 应被 AppComponentTokens 覆盖`() {
 }
 ```
 
-3. 新增断言「主源码禁用 M3 Typography 类型」：
+3. 新增断言「M3 令牌类型不暴露给组件层（theme 层桥接豁免）」：
 
 ```kotlin
 @Test
-fun `designsystem 之外不应导入 M3 Typography 类型`() {
+fun `组件层不应导入 M3 令牌与主题类型`() {
+    // theme 层是唯一允许桥接 M3 的位置
     val root = File("app/src/main/java/com/babytracker")
+    val m3TokenImports = listOf(
+        "import androidx.compose.material3.Typography",
+        "import androidx.compose.material3.ColorScheme",
+        "import androidx.compose.material3.Shapes",
+    )
     val violations = root.walkTopDown()
         .filter { it.isFile && it.name.endsWith(".kt") }
-        .filterNot { it.path.contains("/designsystem/") }
-        .filter { it.readText().contains("import androidx.compose.material3.Typography") }
+        .filterNot { it.path.contains("/designsystem/theme/") }
+        .filter { file ->
+            val text = file.readText()
+            m3TokenImports.any { text.contains(it) } ||
+                text.contains("MaterialTheme.typography") ||
+                text.contains("MaterialTheme.colorScheme") ||
+                text.contains("MaterialTheme.shapes")
+        }
         .toList()
-    assert(violations.isEmpty()) { "designsystem 之外暴露 M3 Typography:\n" + violations.joinToString("\n") { it.path } }
+    assert(violations.isEmpty()) {
+        "组件层暴露 M3 令牌/主题类型（token 只允许在 theme 层桥接 M3）:\n" +
+            violations.joinToString("\n") { it.path }
+    }
 }
 ```
 
