@@ -181,6 +181,35 @@ data class XxxTokens(
 
 集成测试在 `ThemeTokenizationStaticAuditTest` 中补充。
 
+## 令牌审计门禁
+
+### themeTokenAudit Gradle 任务
+
+`./gradlew themeTokenAudit`（group `verification`，JavaExec，入口 `core/util/TokenAuditChecker.kt`）扫描 `app/src/main/java` 全部 Kotlin 源码（排除 `designsystem/theme` 桥接层与检查器自身），发现违规即 FAIL。规则与 `TokenAuditChecker.audit()` 一一对应，Gradle 任务与 JVM 单测**双路复用同一份检查器代码**，禁止各自实现：
+
+| # | 规则 | 拦截语义 |
+|---|---|---|
+| 1 | `DefaultsMissingLocalAppComponentTokens` | components 包 Defaults 文件未引用 `LocalAppComponentTokens` |
+| 2 | `DefaultsHardcodedColor` | Defaults 内硬编码 `Color.Black` / `Color.White` / `Color(0xFF...)` |
+| 3 | `DefaultsImportsLocalAppColors` | Defaults 直接 import `LocalAppColors`（跳过组件令牌消费层） |
+| 4 | `ComponentLayerM3Token` | theme 层之外 import M3 `Typography`/`ColorScheme`/`Shapes` 或直用 `MaterialTheme.typography/colorScheme/shapes` |
+| 5 | `ComponentTokensMissingRegistration` | 新增组件令牌未注册进 `AppComponentTokens` 聚合（divider/surface/snackbarHost/emptyState 硬校验） |
+
+**防呆（lessons #14/#17）**：`ScanEmpty` 违规——任何扫描范围为空、`AppComponentTokens.kt` 缺失时以违规形式报错，禁止路径漂移后静默假绿。
+
+### detekt 自定义规则
+
+`./gradlew detekt`（detekt 1.23.8）加载 `:detekt-rules` 模块产出的规则 jar（ServiceLoader 注册），两条自定义规则与 TokenAuditChecker 规则 2/4 同源双守（AST 版）：
+
+- **`HardcodedColor`**：拦截组件层/feature 层 `Color(0xFF...)` / `Color.Black` / `Color.White`（含全限定写法）。白名单：文件路径含 `designsystem/theme`（令牌定义处合法默认值）；未 import compose `Color` 的文件自动豁免（core 非 UI 层、其他同名 Color 类型）。通配 import `androidx.compose.ui.graphics.*` 不识别，属已知盲区。
+- **`TokenBypass`**：拦截两处绕过——① components 包 `Defaults.kt` 文件 import `LocalAppColors`；② 组件层 `MaterialTheme.colorScheme|typography|shapes` 直用。白名单：`designsystem/theme` 桥接层。
+
+**存量债务**：当前 24 处 `HardcodedColor` 存量违规（components 7 + feature 17，如 `Color.White.copy(alpha=...)` 等无令牌等价物的写法），detekt 为 report-only（`ignoreFailures=true`）不阻断，列入已知债务待后续批次清理。修改 `:detekt-rules` 源码后需 `./gradlew --stop` 再跑（lessons #18）。
+
+### detekt 配置方案（Termux 约束）
+
+`config/detekt/detekt.yml` 采用**显式枚举**：detekt 1.23 移除 `@ActiveByDefault` 语义，独立 config 文件会整体替换默认配置，规则集/规则未显式列出的不激活（ruleset 级 `active` 不会级联到规则）。`buildUponDefaultConfig` 叠加默认配置虽免手写，但全量默认规则在 Termux 上分析 184 个文件超 20 分钟不结束，显式枚举实测 ~9 秒，故采用枚举方案（naming 规则集整体关闭 + potential-bugs 逐条对齐 1.23.8 默认激活规则 + 自定义规则集逐条列出）。
+
 ## 详细报告
 
 参见 `docs/Palette组件库设计深度分析报告.md`。

@@ -137,11 +137,15 @@
   - Defaults 文件 import `LocalAppColors`
   - designsystem 之外 import `androidx.compose.material3.Typography`（不暴露 M3 落地）
 
+> **实现偏差标注（Task 6 回填）：** 检查器落地为 `TokenAuditChecker.audit(kotlinRoot, themeRelDir, componentsRelDir, componentTokensFile)` 四参签名（计划未定义签名，见 TokenAuditChecker.kt:42）。规则实际 5 条：Defaults 走组件令牌 / Defaults 硬编码颜色 / Defaults 引 LocalAppColors / 组件层 M3 令牌（含 `MaterialTheme.shapes` 与 M3 `Typography`/`ColorScheme`/`Shapes` import）/ 新组件令牌注册（divider/surface/snackbarHost/emptyState 硬校验）；`isSystemInDarkTheme()` 拦截未落地为独立规则（该模式已在早前批次清零，审计重点转向 M3 令牌/颜色/注册），另加 `ScanEmpty` 防呆（扫描为空或 AppComponentTokens.kt 缺失必报违规，lessons #14/#17）。门禁任务用 JavaExec 注册（mainClass=`TokenAuditCheckerKt`，group=verification，dependsOn compileDebugKotlin，违规 exitProcess(1)），classpath 直接引用 `debugCompileClasspath`——AGP 9 移除 sourceSets 容器、新建配置 `extendsFrom` 不继承变体属性（lessons #17）。静态审计测试 `ThemeTokenizationStaticAuditTest` 迁移为调用共享检查器，新增 `TokenAuditCheckerTest`（拦截样本/白名单样本/ScanEmpty 防呆 3 项）。
+
 ### 6.2 自定义 Detekt 规则
 
 - 新增 detekt 插件（版本与 Kotlin 2.3.21 兼容）+ 独立规则模块产规则 jar。
 - 两条自定义规则：`HardcodedColor`（硬编码颜色字面量）、`TokenBypass`（默认参数绕过组件令牌的颜色引用）。
 - **前置 POC**：Termux 环境下验证 detekt 插件加载与规则 jar 构建链路；POC 失败则降级为仅 6.1 单任务方案，并在文档记录原因。
+
+> **实现偏差标注（Task 6 回填）：** detekt 版本落地为 **1.23.8**（gradle/libs.versions.toml，POC 验证与 Kotlin 2.3.21 兼容，插件与 detekt-api/test 同版本）；Termux POC **通过**，未触发降级路径。实现约束：`config/detekt/detekt.yml` 采用**显式枚举**方案——detekt 1.23 移除 `@ActiveByDefault` 语义，独立 config 文件整体替换默认配置，规则集/规则未显式列出的一律不激活（ruleset 级 active 不级联）；`buildUponDefaultConfig` 在 Termux 上分析 184 个文件超 20 分钟不结束，显式枚举实测 ~9 秒（naming 整体关闭 + potential-bugs 逐条对齐 1.23.8 默认激活 + 自定义规则集逐条列出）。规则实现与计划语义一致、判定层更细：`HardcodedColor` 以「绑定 import」判定——命中 `Color(0xFF...)` 调用与 `Color.Black`/`Color.White` 属性（含全限定写法），豁免未 import compose `Color` 的文件与路径含 `designsystem/theme` 的令牌定义层（通配 import 不识别，已知盲区）；`TokenBypass` 命中 components 包 `Defaults.kt` 文件 import `LocalAppColors`（形态 1）与组件层 `MaterialTheme.colorScheme|typography|shapes` 直用（形态 2），豁免 theme 桥接层。`./gradlew detekt` 为 report-only（`ignoreFailures=true`，只报告不阻断），存量 24 处 `HardcodedColor` 违规（components 7 + feature 17，`Color.White.copy(alpha=...)` 等无令牌等价物）列为已知债务。规则单测：HardcodedColorRuleTest / TokenBypassRuleTest（detekt-test + assertj-core）；改规则后须 `./gradlew --stop` 再跑 detekt（ClassLoaderCache，lessons #18）；Rule 子类 `issue` 声明须在任何自定义 init 块之前（lessons #19）。
 
 ## 七、测试与验收
 

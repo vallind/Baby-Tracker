@@ -25,7 +25,7 @@ app/src/main/java/com/babytracker/
 │   ├── domain/                  # Domain Models
 │   ├── settings/                # AppSettings（DataStore 设置聚合）
 │   ├── sync/                    # SyncEngine / SyncTrigger / RealtimeManager / SyncWorker
-│   └── util/                    # BabyController/DateUtils/VaccineSchedule/NetworkMonitor
+│   └── util/                    # BabyController/DateUtils/VaccineSchedule/NetworkMonitor/TokenAuditChecker（令牌审计检查器，Gradle 任务与 JVM 单测双路复用）
 ├── feature/                     # 业务功能（16 个模块）
 │   ├── home/feeding/sleep/diaper/growth/
 │   ├── vaccination/health/stats/timeline/
@@ -35,12 +35,22 @@ app/src/main/java/com/babytracker/
 └── navigation/                  # 导航（AppNavigation.kt，sealed class Screen 25+ 路由）
 ```
 
-设计系统相关测试（`app/src/test/java/com/babytracker/designsystem/`）：
+仓库根级模块与构建配置：
+
+```
+detekt-rules/                    # detekt 自定义规则模块（HardcodedColor/TokenBypass，ServiceLoader 注册；单测 HardcodedColorRuleTest/TokenBypassRuleTest）
+config/detekt/detekt.yml         # detekt 显式枚举配置（Termux 下 buildUponDefaultConfig 全量规则超时，见文件头注释）
+```
+
+令牌审计门禁：`app/build.gradle.kts` 注册 `themeTokenAudit` JavaExec 任务（group verification），classpath 直接引用 `debugCompileClasspath`（AGP 9 无 sourceSets 容器，lessons #17），详见 `docs/design-system.md`「令牌审计门禁」。
+
+设计系统相关测试（`app/src/test/java/com/babytracker/`）：
 
 ```
 designsystem/
 ├── theme/                       # DensityTokensTest / ComponentTokensStateAuditTest / ThemeTokenizationStaticAuditTest / TypographyTokensTest
-└── components/                  # A11ySemanticsAuditTest（自定义可交互组件语义静态审计）
+├── components/                  # A11ySemanticsAuditTest（自定义可交互组件语义静态审计）
+└── core/util/                   # TokenAuditCheckerTest（共享检查器拦截/白名单/防呆样本）
 ```
 
 无障碍基线文档：`docs/a11y-baseline.md`（组件语义承诺表 + 装饰隔离 + 审计说明）。
@@ -69,6 +79,7 @@ designsystem/
 | 家庭/登录 | `core/data/FamilyService.kt` / `core/auth/AuthService.kt` |
 | 导航/路由 | `navigation/AppNavigation.kt` |
 | DI | `core/di/Modules.kt` |
+| 令牌审计门禁 | `core/util/TokenAuditChecker.kt` + `app/build.gradle.kts`（themeTokenAudit 任务）+ `detekt-rules/`（HardcodedColor/TokenBypass）+ `config/detekt/detekt.yml` |
 
 ## 技术栈
 
@@ -83,3 +94,4 @@ designsystem/
 | 文件 | DocumentFile 1.0.1（SAF） |
 | 设置存储 | Jetpack DataStore + kotlinx.serialization（AppSettings） |
 | 构建 | Java 17 / compileSdk 36 / minSdk 24 |
+| 静态分析 | detekt 1.23.8（report-only，config/detekt/detekt.yml 显式枚举）+ :detekt-rules 自定义规则模块 |
