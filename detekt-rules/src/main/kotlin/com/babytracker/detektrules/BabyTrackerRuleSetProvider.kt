@@ -14,5 +14,5 @@ class BabyTrackerRuleSetProvider : RuleSetProvider {
     override val ruleSetId: String = "baby-tracker-rules"
 
     override fun instance(config: Config): RuleSet =
-        RuleSet(ruleSetId, listOf(HardcodedColorRule(config)))
+        RuleSet(ruleSetId, listOf(HardcodedColorRule(config), TokenBypassRule(config)))
 }

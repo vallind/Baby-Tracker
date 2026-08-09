@@ -261,3 +261,23 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 **规则：** AGP 9 里取编译产物用 `compileDebugKotlin.destinationDirectory`（`org.jetbrains.kotlin.gradle.tasks.KotlinCompile`，本项目无 Java 源码）；JavaExec 需要与 app 同解析语义的 classpath 时，直接引用 AGP 配置本身（`configurations.getByName("debugCompileClasspath")`），而不是新建配置再 `extendsFrom`。
 
+---
+
+## 18. detekt 插件类缓存：改自定义规则后必须重启 Gradle daemon
+
+**现象：** 新增/修改 `detekt-rules` 自定义规则后跑 `./gradlew detekt`，新规则始终 0 命中（还带 `--rerun-tasks` 也一样）；`./gradlew --stop` 后一次生效。
+
+**原因：** detekt Gradle 插件（1.23.8 的 `DefaultCliInvoker`）用 `ClassLoaderCache` 按 classpath 缓存 URLClassLoader，缓存存活于 Gradle daemon 生命周期内；`detekt-rules.jar` 原地重编译不换缓存，运行时仍是首次加载的旧规则类字节码（provider 列表也是旧的）。
+
+**规则：** 每次改动 `detekt-rules` 模块源码后，先 `./gradlew --stop` 再跑 `./gradlew detekt`。`./gradlew :detekt-rules:test` 不经该缓存（单测绿 ≠ detekt 任务端到端生效）；验证自定义规则是否真实加载，用带违规样本的临时文件跑一次 detekt 确认命中，再删掉。
+
+---
+
+## 19. detekt Rule 子类 init 块内禁调 valueOrDefault
+
+**现象：** 在 `Rule` 子类的 `init {}` 块里写 `valueOrDefault("active", ...)` 做调试/校验，分析时抛 NPE：`Cannot invoke Issue.getId() because Rule.getIssue() is null`（栈顶 `Rule.getRuleId(Rule.kt:34)` → `TokenBypassRule.<init>`）。
+
+**原因：** Kotlin 按声明顺序执行属性初始化与 init 块，`override val issue = Issue(...)` 若声明在 init 块之后，init 执行时 `issue` 还是 null；而 `valueOrDefault` → `getRuleConfig` → `getRuleId()` → `issue.id`，必然 NPE。
+
+**规则：** detekt `Rule` 子类里**禁止**在 `issue` 初始化之前（init 块、或 `issue` 声明之前的属性初始化器）调用任何 `ConfigAware` 的 `valueOrDefault`/`subConfig`；`issue` 声明必须放在任何自定义 init 块之前。错误写法：`init { valueOrDefault("active", false) }`；正确写法：不做 init 块，或把 `issue` 声明提到最前。
+

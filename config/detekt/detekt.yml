@@ -68,3 +68,5 @@ baby-tracker-rules:
   active: true
   HardcodedColor:
     active: true
+  TokenBypass:
+    active: true
