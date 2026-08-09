@@ -19,4 +19,10 @@ java {
 dependencies {
     // compileOnly：detekt 运行时自带 detekt-api，避免规则 jar 重复打包
     compileOnly(libs.detekt.api)
+
+    // 规则单测：detekt-test 提供 lint 编译与 TestConfig（active 默认 true），
+    // assertj-core 为 detekt-test 的 compileOnly 依赖，需自行声明才能用 FindingsAssert
+    testImplementation(libs.junit)
+    testImplementation(libs.detekt.test)
+    testImplementation(libs.assertj.core)
 }

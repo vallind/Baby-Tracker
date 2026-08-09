@@ -136,6 +136,8 @@ commonmark-strikethrough = { group = "org.commonmark", name = "commonmark-ext-gf
 
 # ── Detekt ──
 detekt-api = { group = "io.gitlab.arturbosch.detekt", name = "detekt-api", version.ref = "detekt" }
+detekt-test = { group = "io.gitlab.arturbosch.detekt", name = "detekt-test", version.ref = "detekt" }
+assertj-core = { group = "org.assertj", name = "assertj-core", version = "3.25.3" }
 
 # ── Test ──
 junit = { group = "junit", name = "junit", version.ref = "junit" }

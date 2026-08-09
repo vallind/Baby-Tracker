@@ -62,8 +62,9 @@ potential-bugs:
   WrongEqualsTypeParameter:
     active: true
 
-# 自定义规则集（detekt-rules 模块，POC 验证 ServiceLoader 链路）
+# 自定义规则集（detekt-rules 模块，ServiceLoader 加载）
+# 经验证：ruleset 级 active 不会级联到规则（1.23.8 实测 0 命中），必须逐条显式列出
 baby-tracker-rules:
   active: true
-  AppComponentName:
+  HardcodedColor:
     active: true
