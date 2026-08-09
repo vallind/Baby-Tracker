@@ -199,12 +199,12 @@ data class XxxTokens(
 
 ### detekt 自定义规则
 
-`./gradlew detekt`（detekt 1.23.8）加载 `:detekt-rules` 模块产出的规则 jar（ServiceLoader 注册），两条自定义规则与 TokenAuditChecker 规则 2/4 同源双守（AST 版）：
+`./gradlew detekt`（detekt 1.23.8）加载 `:detekt-rules` 模块产出的规则 jar（ServiceLoader 注册），两条自定义规则与 TokenAuditChecker 规则 2/3/4 同源双守（AST 版）：
 
-- **`HardcodedColor`**：拦截组件层/feature 层 `Color(0xFF...)` / `Color.Black` / `Color.White`（含全限定写法）。白名单：文件路径含 `designsystem/theme`（令牌定义处合法默认值）；未 import compose `Color` 的文件自动豁免（core 非 UI 层、其他同名 Color 类型）。通配 import `androidx.compose.ui.graphics.*` 不识别，属已知盲区。
-- **`TokenBypass`**：拦截两处绕过——① components 包 `Defaults.kt` 文件 import `LocalAppColors`；② 组件层 `MaterialTheme.colorScheme|typography|shapes` 直用。白名单：`designsystem/theme` 桥接层。
+- **`HardcodedColor`**：拦截组件层/feature 层 `Color(0xFF...)` / `Color.Black` / `Color.White`（含全限定写法），是 TokenAuditChecker 规则 2 `DefaultsHardcodedColor` 的超集——规则 2 只扫 Defaults 文件，本规则扫全组件/feature 层。白名单：文件路径含 `designsystem/theme`（令牌定义处合法默认值）；未 import compose `Color` 的文件自动豁免（core 非 UI 层、其他同名 Color 类型）。通配 import `androidx.compose.ui.graphics.*` 不识别、别名 import 漏检、`0xFF` 前缀只匹配大写，属已知盲区（靠 TokenAuditChecker 规则 2 兜底）。
+- **`TokenBypass`**：拦截两处绕过——① components 包 `Defaults.kt` 文件 import `LocalAppColors`（对应 TokenAuditChecker 规则 3 `DefaultsImportsLocalAppColors`）；② 组件层 `MaterialTheme.colorScheme|typography|shapes` 直用（对应规则 4 `ComponentLayerM3Token`）。白名单：`designsystem/theme` 桥接层。
 
-**存量债务**：当前 24 处 `HardcodedColor` 存量违规（components 7 + feature 17，如 `Color.White.copy(alpha=...)` 等无令牌等价物的写法），detekt 为 report-only（`ignoreFailures=true`）不阻断，列入已知债务待后续批次清理。修改 `:detekt-rules` 源码后需 `./gradlew --stop` 再跑（lessons #18）。
+**存量债务**：当前 24 处 `HardcodedColor` 存量违规（components 7 + feature 17，如 `Color.White.copy(alpha=...)` 等无令牌等价物的写法）与 9 处 `ImplicitDefaultLocale`（内置规则告警，如未显式传 Locale 的 toLowerCase/toUpperCase 等，真实存量债）列为已知债务，detekt 为 report-only（`ignoreFailures=true`）不阻断，列入已知债务待后续批次清理。修改 `:detekt-rules` 源码后需 `./gradlew --stop` 再跑（lessons #18）。
 
 ### detekt 配置方案（Termux 约束）
 

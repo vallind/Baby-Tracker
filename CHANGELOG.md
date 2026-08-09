@@ -27,7 +27,7 @@
 - 注册 `themeTokenAudit` Gradle 门禁任务（JavaExec，group verification，入口 TokenAuditCheckerKt）：扫描全部源码拦截 M3 令牌直用/硬编码颜色/令牌绕过，违规即 FAIL；classpath 直接引用 `debugCompileClasspath`（AGP 9 无 sourceSets 容器，lessons #17）
 - 静态审计测试迁移到共享检查器（双路复用）：`ThemeTokenizationStaticAuditTest` 改为调用 `TokenAuditChecker.audit()`，新增 `TokenAuditCheckerTest`（拦截/白名单/防呆样本），Gradle 任务与 JUnit 不再各自实现
 - detekt 1.23.8 集成（Termux POC 通过）：新增 `:detekt-rules` 模块产规则 jar（ServiceLoader 注册，detektPlugins 接入），自定义规则 `HardcodedColor`（拦截 `Color(0xFF...)`/`Color.Black`/`Color.White`，白名单 theme 令牌层与未 import compose Color 的文件）与 `TokenBypass`（拦截 Defaults 直读 LocalAppColors 与组件层 M3 主题直用，豁免 theme 桥接层），各带规则单测；`./gradlew detekt` 为 report-only（ignoreFailures=true），`config/detekt/detekt.yml` 采用显式枚举方案（detekt 1.23 移除 @ActiveByDefault；buildUponDefaultConfig 在 Termux 上全量规则超 20 分钟，枚举实测 ~9 秒）
-- 存量债务登记：24 处 `HardcodedColor` 存量违规（components 7 + feature 17，如 `Color.White.copy(alpha=...)` 等无令牌等价物的写法）列为已知债务，报告不阻断，待后续批次清理
+- 存量债务登记：24 处 `HardcodedColor` 存量违规（components 7 + feature 17，如 `Color.White.copy(alpha=...)` 等无令牌等价物的写法）与 9 处 `ImplicitDefaultLocale`（内置规则告警，如未显式传 Locale 的 toLowerCase/toUpperCase 等，真实存量债）列为已知债务，报告不阻断，待后续批次清理
 
 **测试盲区补齐（按 AGENTS.md 测试纪律）：**
 - 提取 StatsViewModel 聚合逻辑为 internal 顶层纯函数（aggregateStats 及 8 个辅助函数），新增 `StatsLogicTest` 14 项：周期边界（周日起始/月初/年初/翻页）、跨午夜睡眠时长、反向睡眠钳制、解析失败睡眠、喂养计数与图表桶一致性回归（1.7.10）、周/日分桶落点、对比文案、最新生长值、空数据
