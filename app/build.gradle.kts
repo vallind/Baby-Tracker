@@ -39,6 +39,7 @@ android {
     kotlin { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) }
 
     buildFeatures { compose = true }
+
 }
 
 dependencies {
