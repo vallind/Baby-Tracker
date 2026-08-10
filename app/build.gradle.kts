@@ -22,6 +22,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            // debug 也走 R8 裁剪，避免调试/分发包体积失控；
+            // 代价是每次 assembleDebug 需要跑 R8，迭代变慢时可临时关掉
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
