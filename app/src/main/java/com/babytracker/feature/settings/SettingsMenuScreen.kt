@@ -16,7 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -24,12 +24,12 @@ import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.DensityController
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.ThemeController
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Route
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun PreferenceSettingsScreen(navController: NavController) {
+fun PreferenceSettingsScreen(navigator: Navigator) {
     val spacing = LocalAppSpacing.current
     val themeCtrl: ThemeController = koinInject()
     val densityCtrl: DensityController = koinInject()
@@ -38,7 +38,7 @@ fun PreferenceSettingsScreen(navController: NavController) {
 
     SettingsMenuScaffold(
         title = "使用偏好",
-        navController = navController,
+        navigator = navigator,
     ) {
         SettingsCard {
             SettingsRow(
@@ -59,7 +59,7 @@ fun PreferenceSettingsScreen(navController: NavController) {
                 emoji = "✨",
                 label = AppStrings.aiSettings,
                 subtitle = "模型、宝宝数据与回答偏好",
-                onClick = { navController.navigate(Screen.AiSettings.route) },
+                onClick = { navigator.navigate(Route.AiSettings) },
             )
         }
         Spacer(Modifier.height(spacing.md))
@@ -75,7 +75,7 @@ fun PreferenceSettingsScreen(navController: NavController) {
 }
 
 @Composable
-fun DataSettingsScreen(navController: NavController) {
+fun DataSettingsScreen(navigator: Navigator) {
     val context = LocalContext.current
     val settingsVM: SettingsViewModel = koinViewModel()
     val settings by settingsVM.settings.collectAsState()
@@ -83,7 +83,7 @@ fun DataSettingsScreen(navController: NavController) {
 
     SettingsMenuScaffold(
         title = "数据与同步",
-        navController = navController,
+        navigator = navigator,
     ) {
         SettingsCard {
             SettingsRow(
@@ -94,14 +94,14 @@ fun DataSettingsScreen(navController: NavController) {
                 } else {
                     "已关闭"
                 },
-                onClick = { navController.navigate(Screen.SyncSettings.route) },
+                onClick = { navigator.navigate(Route.SyncSettings) },
             )
             SettingsDivider()
             SettingsRow(
                 emoji = "📦",
                 label = "备份与恢复",
                 subtitle = "本地备份、WebDAV 与数据恢复",
-                onClick = { navController.navigate(Screen.Backup.route) },
+                onClick = { navigator.navigate(Route.Backup) },
             )
             SettingsDivider()
             SettingsRow(
@@ -117,7 +117,7 @@ fun DataSettingsScreen(navController: NavController) {
 }
 
 @Composable
-fun SupportSettingsScreen(navController: NavController) {
+fun SupportSettingsScreen(navigator: Navigator) {
     val context = LocalContext.current
     val settingsVM: SettingsViewModel = koinViewModel()
     val settings by settingsVM.settings.collectAsState()
@@ -132,7 +132,7 @@ fun SupportSettingsScreen(navController: NavController) {
 
     SettingsMenuScaffold(
         title = "帮助与关于",
-        navController = navController,
+        navigator = navigator,
     ) {
         SettingsCard {
             SettingsRow(
@@ -164,7 +164,7 @@ fun SupportSettingsScreen(navController: NavController) {
                         },
                     )
                 },
-                onClick = { navController.navigate(Screen.LogViewer.route) },
+                onClick = { navigator.navigate(Route.LogViewer) },
             )
             SettingsDivider()
             SettingsRow(
@@ -179,7 +179,7 @@ fun SupportSettingsScreen(navController: NavController) {
 @Composable
 private fun SettingsMenuScaffold(
     title: String,
-    navController: NavController,
+    navigator: Navigator,
     content: @Composable () -> Unit,
 ) {
     val spacing = LocalAppSpacing.current
@@ -187,7 +187,7 @@ private fun SettingsMenuScaffold(
         topBar = {
             AppTopBar(
                 title = title,
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
             )
         },
     ) { padding ->

@@ -28,11 +28,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -44,7 +44,7 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import org.koin.compose.koinInject
 
 @Composable
-fun StatsScreen(navController: NavController) {
+fun StatsScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -63,7 +63,7 @@ fun StatsScreen(navController: NavController) {
         topBar = {
             AppTopBar(title = "统计分析")
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { BottomNavBar(navigator) },
     ) { padding ->
         Column(
             Modifier

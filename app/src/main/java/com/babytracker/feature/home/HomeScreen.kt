@@ -12,8 +12,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
@@ -25,11 +23,12 @@ import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Navigator
+import com.babytracker.navigation.Route
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.Sleep
@@ -43,7 +42,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val babyRepo: BabyRepository = koinInject()
@@ -61,7 +60,7 @@ fun HomeScreen(navController: NavController) {
     }
 
     AppScaffold(
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { BottomNavBar(navigator) },
     ) { padding ->
         if (baby == null) {
             EmptyState(
@@ -69,7 +68,7 @@ fun HomeScreen(navController: NavController) {
                 title = "还没有添加宝宝",
                 subtitle = "点击下方按钮，记录宝宝成长的每一个瞬间",
                 actionText = "添加宝宝",
-                onAction = { navController.navigate(Screen.BabyManagement.route) },
+                onAction = { navigator.navigate(Route.BabyManagement) },
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -83,13 +82,13 @@ fun HomeScreen(navController: NavController) {
                 .background(c.pageBackground),
         ) {
             // —— 顶部宝宝信息区（浅蓝渐变背景 + 圆形头像）——
-            BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyProfile.route) })
+            BabyHeader(baby, onClickProfile = { navigator.navigate(Route.BabyProfile) })
 
             Spacer(Modifier.height(spacing.md))
-            FeatureGrid(navController)
+            FeatureGrid(navigator)
 
             Spacer(Modifier.height(spacing.md))
-            AiAssistantEntryCard(navController)
+            AiAssistantEntryCard(navigator)
 
             Spacer(Modifier.height(spacing.md))
             TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
@@ -98,7 +97,7 @@ fun HomeScreen(navController: NavController) {
                 Spacer(Modifier.height(spacing.md))
                 RecentRecordsSection(
                     items = state.recentItems,
-                    onSeeAll = { navController.navigate(Screen.Timeline.route) },
+                    onSeeAll = { navigator.navigate(Route.Timeline) },
                 )
             }
 
@@ -108,7 +107,7 @@ fun HomeScreen(navController: NavController) {
 }
 
 @Composable
-private fun AiAssistantEntryCard(navController: NavController) {
+private fun AiAssistantEntryCard(navigator: Navigator) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -117,7 +116,7 @@ private fun AiAssistantEntryCard(navController: NavController) {
         modifier = Modifier
             .padding(horizontal = spacing.md)
             .fillMaxWidth()
-            .clickable { navController.navigate(Screen.AiAssistant.route) },
+            .clickable { navigator.navigate(Route.AiAssistant) },
         containerColor = colors.primaryContainer,
     ) {
         Row(
@@ -273,31 +272,31 @@ fun RowScope.StatDivider() {
 }
 
 @Composable
-fun FeatureGrid(navController: NavController) {
+fun FeatureGrid(navigator: Navigator) {
     val spacing = LocalAppSpacing.current
     val items = listOf(
-        FeatureGridItemData(Screen.Feeding, "🍼", "喂养记录"),
-        FeatureGridItemData(Screen.Sleep, "🌙", "睡眠记录"),
-        FeatureGridItemData(Screen.Diaper, "🧷", "尿布更换"),
-        FeatureGridItemData(Screen.Growth, "📏", "生长记录"),
-        FeatureGridItemData(Screen.DevelopmentAssessment, "🧠", "发育评估"),
-        FeatureGridItemData(Screen.Vaccination, "💉", "疫苗接种"),
-        FeatureGridItemData(Screen.Health, "❤️", "健康档案"),
-        FeatureGridItemData(Screen.Stats, "📊", "统计分析"),
+        FeatureGridItemData(Route.Feeding, "🍼", "喂养记录"),
+        FeatureGridItemData(Route.Sleep, "🌙", "睡眠记录"),
+        FeatureGridItemData(Route.Diaper, "🧷", "尿布更换"),
+        FeatureGridItemData(Route.Growth, "📏", "生长记录"),
+        FeatureGridItemData(Route.DevelopmentAssessment, "🧠", "发育评估"),
+        FeatureGridItemData(Route.Vaccination, "💉", "疫苗接种"),
+        FeatureGridItemData(Route.Health, "❤️", "健康档案"),
+        FeatureGridItemData(Route.Stats, "📊", "统计分析"),
     )
     Column(Modifier.padding(horizontal = spacing.md)) {
         Spacer(Modifier.height(14.dp))
         // 第一行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             items.subList(0, 4).forEachIndexed { i, item ->
-                FeatureGridItem(item, useAccent = i % 2 == 1, navController, Modifier.weight(1f))
+                FeatureGridItem(item, useAccent = i % 2 == 1, navigator, Modifier.weight(1f))
             }
         }
         Spacer(Modifier.height(spacing.sm))
         // 第二行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             items.subList(4, 8).forEachIndexed { i, item ->
-                FeatureGridItem(item, useAccent = i % 2 == 1, navController, Modifier.weight(1f))
+                FeatureGridItem(item, useAccent = i % 2 == 1, navigator, Modifier.weight(1f))
             }
         }
     }
@@ -307,7 +306,7 @@ fun FeatureGrid(navController: NavController) {
 private fun FeatureGridItem(
     item: FeatureGridItemData,
     useAccent: Boolean,
-    navController: NavController,
+    navigator: Navigator,
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
@@ -319,14 +318,9 @@ private fun FeatureGridItem(
         modifier
             .clip(RoundedCornerShape(shapes.large))
             .clickable {
-                    navController.navigate(item.screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
+                // 顶部功能入口按 Tab 语义切换：弹回根路由再压入，避免栈膨胀
+                navigator.switchTab(item.route)
+            }
             .padding(vertical = spacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -346,7 +340,7 @@ private fun FeatureGridItem(
 }
 
 private data class FeatureGridItemData(
-    val screen: com.babytracker.navigation.Screen,
+    val route: Route,
     val emoji: String,
     val label: String,
 )

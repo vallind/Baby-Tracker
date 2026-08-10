@@ -33,7 +33,7 @@ app/src/main/java/com/babytracker/
 │   ├── message/development/reminder/settings/
 │   │   └── settings/            # SettingsMenuScreen（使用偏好：界面密度入口）/ SettingsScreen（DensityPickerSheet/ThemePickerSheet）/ SettingsViewModel
 │   └── ai/auth/family/
-└── navigation/                  # 导航（AppNavigation.kt，sealed class Screen 25+ 路由；Elyon 迁移：Route sealed interface + Navigator + AppRouteGraph）
+└── navigation/                  # elyon-nav 导航（AppNavigation.kt：NavDisplay + 25 条 Route + Navigator + AppRouteGraph；已移除 AndroidX Navigation）
 ```
 
 仓库根级模块与构建配置：
@@ -87,7 +87,7 @@ designsystem/
 | 层面 | 选型 |
 |---|---|
 | UI | Jetpack Compose + Material 3，**Elyon 迁移中**（vide/elegant 复合构建：elyon-core/ui/effects/blur/nav，主题根已切换 BabyTrackerElyonTheme） |
-| 导航 | Navigation Compose（迁移中）→ elyon-nav（Route/Navigator/AppRouteGraph 已就绪） |
+| 导航 | elyon-nav（Route sealed interface + Navigator + NavDisplay，已移除 Navigation Compose） |
 | 数据库 | Room 2.8.4 + KSP（version 8，15 张 @Entity，exportSchema 开启） |
 | DI | Koin 4.2.1（`viewModel { }` 注册） |
 | 异步 | Coroutines + Flow |

@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -29,7 +29,7 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.androidx.compose.koinViewModel
@@ -56,7 +56,7 @@ private fun categoryOverviews(): List<CategoryOverview> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MessageScreen(navController: NavController) {
+fun MessageScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val viewModel: MessageViewModel = koinViewModel()
@@ -87,7 +87,7 @@ fun MessageScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { BottomNavBar(navigator) },
     ) { padding ->
         Column(
             Modifier

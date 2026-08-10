@@ -43,7 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
@@ -64,7 +64,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Route
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
@@ -73,7 +73,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun AiChatScreen(navController: NavController) {
+fun AiChatScreen(navigator: Navigator) {
     val viewModel: AiChatViewModel = koinViewModel()
     val babyController: BabyController = koinInject()
     val state by viewModel.state.collectAsState()
@@ -116,10 +116,10 @@ fun AiChatScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = AppStrings.aiAssistant,
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
                 actions = {
                     AppIconButton(icon = Icons.Default.History, onClick = { showHistory = true }, contentDescription = AppStrings.aiHistory)
-                    AppIconButton(icon = Icons.Default.Settings, onClick = { navController.navigate(Screen.AiSettings.route) }, contentDescription = AppStrings.aiSettings)
+                    AppIconButton(icon = Icons.Default.Settings, onClick = { navigator.navigate(Route.AiSettings) }, contentDescription = AppStrings.aiSettings)
                 },
             )
         },

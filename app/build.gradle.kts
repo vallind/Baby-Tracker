@@ -31,11 +31,12 @@ android {
 
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        // elyon-nav 的 inline 函数以 JVM target 21 编译，应用必须对齐才能内联
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
-    kotlin { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+    kotlin { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) }
 
     buildFeatures { compose = true }
 }
@@ -61,9 +62,6 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.core)
     implementation(libs.compose.material.icons.extended)
-
-    // Navigation
-    implementation(libs.navigation.compose)
 
     // Elyon UI 基座（vide/elegant 复合构建）
     implementation(project(":elegant:elyon-core"))

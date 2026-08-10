@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -49,7 +49,7 @@ import java.time.temporal.ChronoUnit
  * 提醒中心 —— 待办提醒 + 历史提醒。
  */
 @Composable
-fun ReminderScreen(navController: NavController) {
+fun ReminderScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val viewModel: ReminderViewModel = org.koin.androidx.compose.koinViewModel()
     val babyCtrl: BabyController = koinInject()
@@ -84,7 +84,7 @@ fun ReminderScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            ReminderHeader(onBack = { navController.popBackStack() })
+            ReminderHeader(onBack = { navigator.pop() })
 
             ReminderTabBar(tab = state.tab, onSwitch = viewModel::switchTab)
 

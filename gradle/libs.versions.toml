@@ -14,9 +14,6 @@ activityCompose = "1.13.0"
 # ── Compose ──
 composeBom = "2026.05.01"
 
-# ── Navigation ──
-navigation = "2.9.1"
-
 # ── DI ──
 koin = "4.2.1"
 
@@ -83,9 +80,6 @@ compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
 compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
-
-# ── Navigation ──
-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 
 # ── Koin (DI) ──
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }

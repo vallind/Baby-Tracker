@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.domain.model.Sleep
@@ -38,7 +38,7 @@ import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.SleepRepository
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
@@ -56,7 +56,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun SleepListScreen(navController: NavController) {
+fun SleepListScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
@@ -107,7 +107,7 @@ fun SleepListScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "睡眠记录",
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
@@ -118,7 +118,7 @@ fun SleepListScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { BottomNavBar(navigator) },
     ) { padding ->
         Column(
             Modifier

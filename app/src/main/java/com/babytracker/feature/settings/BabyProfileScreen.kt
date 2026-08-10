@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.core.domain.model.*
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
@@ -30,7 +30,7 @@ import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Route
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -38,7 +38,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun BabyProfileScreen(navController: NavController) {
+fun BabyProfileScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val typography = LocalAppTypography.current
     val spacing = LocalAppSpacing.current
@@ -72,7 +72,7 @@ fun BabyProfileScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "宝宝信息",
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
             )
         },
     ) { padding ->
@@ -215,7 +215,7 @@ fun BabyProfileScreen(navController: NavController) {
             ) {
                 AppButton(
                     variant = ButtonVariant.Text,
-                    onClick = { navController.navigate(Screen.BabyManagement.route) },
+                    onClick = { navigator.navigate(Route.BabyManagement) },
                     label = "管理全部宝宝",
                     contentColor = c.textSecondary,
                 )

@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -24,7 +24,7 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
@@ -43,14 +43,14 @@ import com.babytracker.feature.feeding.FeedingFormDialog
 import com.babytracker.feature.growth.GrowthFormDialog
 import com.babytracker.feature.health.HealthFormDialog
 import com.babytracker.feature.sleep.SleepFormDialog
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Route
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimelineScreen(navController: NavController) {
+fun TimelineScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -107,7 +107,7 @@ fun TimelineScreen(navController: NavController) {
         topBar = {
             AppTopBar(title = "记录")
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { BottomNavBar(navigator) },
         fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { showTypePicker = true })
         },
@@ -286,12 +286,12 @@ fun TimelineScreen(navController: NavController) {
                     modifier = Modifier.padding(bottom = spacing.md),
                 )
                 val types = listOf(
-                    Screen.Feeding to "🤱 喂养",
-                    Screen.Sleep to "😴 睡眠",
-                    Screen.Diaper to "🧷 尿布",
-                    Screen.Growth to "📏 生长",
-                    Screen.Vaccination to "💉 疫苗",
-                    Screen.Health to "❤️ 健康",
+                    Route.Feeding to "🤱 喂养",
+                    Route.Sleep to "😴 睡眠",
+                    Route.Diaper to "🧷 尿布",
+                    Route.Growth to "📏 生长",
+                    Route.Vaccination to "💉 疫苗",
+                    Route.Health to "❤️ 健康",
                 )
                 types.forEach { (screen, label) ->
                     AppButton(
@@ -299,10 +299,10 @@ fun TimelineScreen(navController: NavController) {
                         onClick = {
                             showTypePicker = false
                             when (screen) {
-                                Screen.Feeding -> showAddFeeding = true
-                                Screen.Sleep -> showAddSleep = true
-                                Screen.Diaper -> showAddDiaper = true
-                                else -> navController.navigate(screen.route)
+                                Route.Feeding -> showAddFeeding = true
+                                Route.Sleep -> showAddSleep = true
+                                Route.Diaper -> showAddDiaper = true
+                                else -> navigator.navigate(screen)
                             }
                         },
                         label = label,

@@ -289,4 +289,4 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 **原因：** Gradle 9 把 included build 的项目以 `<included-build-名>:<项目名>` 暴露（任务输出可见 `:elegant:elyon-blur`），裸项目名查不到；AGP 9 额外强制整个复合构建树使用同一个 AGP 版本，跨构建混版本直接判不兼容。
 
-**规则：** 复合构建引入 Android 库时，先统一根构建与 included build 的 AGP 版本；依赖写成 `implementation(project(":<included-build-名>:<项目名>"))`；库的传递依赖要求更高 compileSdk 时同步提升应用 compileSdk（Elyon 要求 37，blur 要求 minSdk 33）。
+**规则：** 复合构建引入 Android 库时，先统一根构建与 included build 的 AGP 版本；依赖写成 `implementation(project(":<included-build-名>:<项目名>"))`；库的传递依赖要求更高 compileSdk 时同步提升应用 compileSdk（Elyon 要求 37，blur 要求 minSdk 33）；库的 inline 函数以更高 JVM target 编译时，应用必须同步 `sourceCompatibility`/`jvmTarget`（Elyon 为 21，否则报 `Cannot inline bytecode built with JVM target 21`）。

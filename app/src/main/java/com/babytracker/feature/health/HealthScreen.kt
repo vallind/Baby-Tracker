@@ -20,7 +20,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
+import com.babytracker.navigation.Route
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.designsystem.theme.AppColors
@@ -84,7 +85,7 @@ private fun categorySummary(category: String, items: List<HealthRecord>): String
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HealthScreen(navController: NavController) {
+fun HealthScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -108,7 +109,7 @@ fun HealthScreen(navController: NavController) {
     }
 
     AppScaffold(
-        topBar = { AppTopBar(title = "健康档案", onBack = { navController.popBackStack() }) },
+        topBar = { AppTopBar(title = "健康档案", onBack = { navigator.pop() }) },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { editingRecord = null; showForm = true })
@@ -138,7 +139,7 @@ fun HealthScreen(navController: NavController) {
                                 bgColor = meta.bgColor,
                                 label = meta.label,
                                 count = vaccinatedCount,
-                                onClick = { navController.navigate(com.babytracker.navigation.Screen.Vaccination.route) },
+                                onClick = { navigator.navigate(Route.Vaccination) },
                             )
                         } else {
                             val items = grouped[meta.key].orEmpty()

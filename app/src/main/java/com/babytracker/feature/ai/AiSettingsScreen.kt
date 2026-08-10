@@ -21,7 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.core.ai.AiModelOption
 import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
@@ -47,7 +47,7 @@ import java.time.format.DateTimeFormatter
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AiSettingsScreen(navController: NavController) {
+fun AiSettingsScreen(navigator: Navigator) {
     val viewModel: AiSettingsViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
     val preferences = state.preferences
@@ -59,7 +59,7 @@ fun AiSettingsScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = AppStrings.aiSettings,
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
             )
         },
     ) { padding ->

@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -26,7 +26,7 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController) {
+fun LoginScreen(navigator: Navigator) {
     val vm: LoginViewModel = koinInject()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val c = LocalAppColors.current
@@ -35,12 +35,12 @@ fun LoginScreen(navController: NavController) {
 
 
     LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) navController.popBackStack()
+        if (uiState.isLoggedIn) navigator.pop()
     }
 
     AppScaffold(
         topBar = {
-            AppTopBar(title = "账户", onBack = { navController.popBackStack() })
+            AppTopBar(title = "账户", onBack = { navigator.pop() })
         },
     ) { padding ->
         Column(

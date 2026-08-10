@@ -24,7 +24,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.FeedingType
 import com.babytracker.designsystem.theme.AppColors
@@ -39,7 +39,7 @@ import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
@@ -56,7 +56,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun FeedingListScreen(navController: NavController) {
+fun FeedingListScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
@@ -97,7 +97,7 @@ fun FeedingListScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "喂养记录",
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
@@ -108,7 +108,7 @@ fun FeedingListScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { BottomNavBar(navigator) },
     ) { padding ->
         Column(
             Modifier

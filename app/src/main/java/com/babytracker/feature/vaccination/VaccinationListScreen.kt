@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.domain.model.Vaccination
@@ -85,7 +85,7 @@ private fun isExpired(v: Vaccination): Boolean {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VaccinationListScreen(navController: NavController) {
+fun VaccinationListScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
@@ -128,7 +128,7 @@ fun VaccinationListScreen(navController: NavController) {
 
     AppScaffold(
         topBar = {
-            AppTopBar(title = "疫苗接种", onBack = { navController.popBackStack() })
+            AppTopBar(title = "疫苗接种", onBack = { navigator.pop() })
         },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         fab = {

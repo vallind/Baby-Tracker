@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.core.sync.BgInterval
 import com.babytracker.core.sync.SyncDelay
 import com.babytracker.designsystem.components.button.AppButton
@@ -23,7 +23,7 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SyncSettingsScreen(navController: NavController) {
+fun SyncSettingsScreen(navigator: Navigator) {
     val settingsViewModel: SettingsViewModel = koinViewModel()
     val syncViewModel: SyncViewModel = koinViewModel()
     val settings by settingsViewModel.settings.collectAsState()
@@ -52,7 +52,7 @@ fun SyncSettingsScreen(navController: NavController) {
 
     AppScaffold(
         topBar = {
-            AppTopBar(title = "同步设置", onBack = { navController.popBackStack() })
+            AppTopBar(title = "同步设置", onBack = { navigator.pop() })
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md)) {

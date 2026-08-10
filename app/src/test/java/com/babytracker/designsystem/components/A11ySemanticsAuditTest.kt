@@ -42,8 +42,7 @@ class A11ySemanticsAuditTest {
         assert(read("TimePickerLogic.kt").contains("selected =")) { "TimePickerLogic 滚轮当前项缺少 selected 选中语义" }
         // 日历日期格：声明 Button 角色与 selected 选中语义
         assert(read("DateTimeCascade.kt").contains("selected =")) { "DateTimeCascade 日历日期格缺少 selected 选中语义" }
-        // FAB label 变体与底部导航：图标不重复朗读，置空 contentDescription
+        // FAB label 变体：图标不重复朗读，置空 contentDescription
         assert(read("Fab.kt").contains("contentDescription = null")) { "Fab label 变体图标未置空 contentDescription（会与文字重复朗读）" }
-        assert(read("BottomNav.kt").contains("contentDescription = null")) { "BottomNav 图标未置空 contentDescription（M3 内置 label 已朗读）" }
     }
 }

@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilyMember
 import com.babytracker.designsystem.components.card.AppCard
@@ -40,7 +40,7 @@ import com.babytracker.designsystem.components.divider.AppDivider
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun FamilyPage(navController: NavController) {
+fun FamilyPage(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -52,7 +52,7 @@ fun FamilyPage(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "家庭共享",
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
             )
         },
     ) { padding ->

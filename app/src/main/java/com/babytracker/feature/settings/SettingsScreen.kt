@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.babytracker.navigation.Navigator
 import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.Gradients
@@ -56,21 +56,21 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.VaccinationRepository
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.section.AppListItem
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Route
 import com.babytracker.core.auth.AuthService
 import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val babyRepo: BabyRepository = koinInject()
@@ -95,7 +95,7 @@ fun SettingsScreen(navController: NavController) {
                 showBack = false,
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { BottomNavBar(navigator) },
     ) { padding ->
         Column(
             Modifier
@@ -113,9 +113,9 @@ fun SettingsScreen(navController: NavController) {
                 isLoggedIn = isLoggedIn,
                 onClick = {
                     if (isLoggedIn) {
-                        navController.navigate(Screen.Family.route)
+                        navigator.navigate(Route.Family)
                     } else {
-                        navController.navigate(Screen.Login.route)
+                        navigator.navigate(Route.Login)
                     }
                 },
                 onEditNickname = if (isLoggedIn) {
@@ -131,7 +131,7 @@ fun SettingsScreen(navController: NavController) {
                     emoji = "👶",
                     label = "宝宝管理",
                     subtitle = "资料、成长信息与宝宝切换",
-                    onClick = { navController.navigate(Screen.BabyManagement.route) },
+                    onClick = { navigator.navigate(Route.BabyManagement) },
                 )
                 SettingsDivider()
                 SettingsRow(
@@ -139,8 +139,8 @@ fun SettingsScreen(navController: NavController) {
                     label = "家庭与账号",
                     subtitle = if (isLoggedIn) "成员管理与账号信息" else "登录后与家人共享记录",
                     onClick = {
-                        navController.navigate(
-                            if (isLoggedIn) Screen.Family.route else Screen.Login.route
+                        navigator.navigate(
+                            if (isLoggedIn) Route.Family else Route.Login
                         )
                     },
                 )
@@ -149,7 +149,7 @@ fun SettingsScreen(navController: NavController) {
                     emoji = "🔔",
                     label = "提醒设置",
                     subtitle = "喂养、睡眠与护理提醒",
-                    onClick = { navController.navigate(Screen.Reminder.route) },
+                    onClick = { navigator.navigate(Route.Reminder) },
                 )
             }
 
@@ -161,21 +161,21 @@ fun SettingsScreen(navController: NavController) {
                     emoji = "🎨",
                     label = "使用偏好",
                     subtitle = "主题与 AI 助手",
-                    onClick = { navController.navigate(Screen.PreferenceSettings.route) },
+                    onClick = { navigator.navigate(Route.PreferenceSettings) },
                 )
                 SettingsDivider()
                 SettingsRow(
                     emoji = "🔒",
                     label = "数据与同步",
                     subtitle = "云同步、备份与隐私",
-                    onClick = { navController.navigate(Screen.DataSettings.route) },
+                    onClick = { navigator.navigate(Route.DataSettings) },
                 )
                 SettingsDivider()
                 SettingsRow(
                     emoji = "❓",
                     label = "帮助与关于",
                     subtitle = "问题反馈、运行日志与版本信息",
-                    onClick = { navController.navigate(Screen.SupportSettings.route) },
+                    onClick = { navigator.navigate(Route.SupportSettings) },
                 )
             }
 
@@ -498,7 +498,7 @@ fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BabyManagementScreen(navController: NavController) {
+fun BabyManagementScreen(navigator: Navigator) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
@@ -520,7 +520,7 @@ fun BabyManagementScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "宝宝管理",
-                onBack = { navController.popBackStack() },
+                onBack = { navigator.pop() },
             )
         },
         fab = {
@@ -576,7 +576,7 @@ fun BabyManagementScreen(navController: NavController) {
                             if (!isCurrent) {
                                 AppButton(
                                     variant = ButtonVariant.Text,
-                                    onClick = { babyCtrl.selectBaby(b.id); navController.popBackStack() },
+                                    onClick = { babyCtrl.selectBaby(b.id); navigator.pop() },
                                     label = "切换",
                                 )
                             }
@@ -760,7 +760,7 @@ private fun NicknameEditDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BackupScreen(navController: NavController) {
+fun BackupScreen(navigator: Navigator) {
     val backupManager: BackupManager = koinInject()
     val context = androidx.compose.ui.platform.LocalContext.current
     val scope = rememberCoroutineScope()
@@ -812,7 +812,7 @@ fun BackupScreen(navController: NavController) {
     AppScaffold(topBar = {
         AppTopBar(
             title = "备份管理",
-            onBack = { navController.popBackStack() },
+            onBack = { navigator.pop() },
         )
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md, vertical = spacing.md)) {
