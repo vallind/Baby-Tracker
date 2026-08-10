@@ -12,7 +12,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.i18n.AppStrings
 
 /**
  * 星级评分组件 — 对标 Palette Rate，消费 AppComponentTokens.rate。

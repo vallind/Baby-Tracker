@@ -57,7 +57,7 @@ import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing

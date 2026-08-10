@@ -35,7 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
-import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.i18n.AppStrings
 import io.elyon.kmp.basic.Card
 import io.elyon.kmp.basic.CardDefaults
 import io.elyon.kmp.basic.Icon

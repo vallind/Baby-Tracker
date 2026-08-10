@@ -65,7 +65,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.section.AppListItem
 import com.babytracker.navigation.Route
 import com.babytracker.core.auth.AuthService
-import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.i18n.AppStrings
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 

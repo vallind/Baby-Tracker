@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.babytracker.core.data.repository.MessageRepository
 import com.babytracker.core.ui.BlurPolicy
-import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.i18n.AppStrings
 import com.babytracker.navigation.Navigator
 import com.babytracker.navigation.Route
 import io.elyon.kmp.basic.Badge

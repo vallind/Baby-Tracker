@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.i18n.AppStrings
 import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.IconButton
 import io.elyon.kmp.basic.TopAppBar

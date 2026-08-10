@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.i18n
+package com.babytracker.i18n
 
 /**
  * 国际化文案 — 对标 Palette PaiStrings

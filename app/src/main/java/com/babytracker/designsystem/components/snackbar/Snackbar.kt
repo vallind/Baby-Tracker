@@ -1,6 +1,6 @@
 package com.babytracker.designsystem.components.snackbar
 
-import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.i18n.AppStrings
 import io.elyon.kmp.basic.SnackbarDuration
 import io.elyon.kmp.basic.SnackbarHostState
 import io.elyon.kmp.basic.SnackbarResult
