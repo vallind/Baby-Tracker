@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppElevation
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 设置列表卡片组，统一承载连续的 AppListItem。
@@ -18,8 +18,8 @@ fun AppCardGroup(
 ) {
     AppCard(
         modifier = modifier.fillMaxWidth(),
-        elevation = LocalAppElevation.current.level2,
-        containerColor = LocalAppColors.current.surface,
+        elevation = 2.dp,
+        containerColor = ElyonTheme.colorScheme.surface,
         content = content,
     )
 }

@@ -29,6 +29,7 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.navigation.Navigator
 import com.babytracker.navigation.Route
+import io.elyon.kmp.theme.ElyonTheme
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.Sleep
@@ -152,7 +153,7 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
-            .background(Gradients.pageHeader(c))
+            .background(Gradients.pageHeader(ElyonTheme.colorScheme))
             .padding(horizontal = spacing.md),
     ) {
         Row(

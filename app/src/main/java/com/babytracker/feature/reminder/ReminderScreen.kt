@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.navigation.Navigator
+import io.elyon.kmp.theme.ElyonTheme
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -139,7 +140,7 @@ private fun ReminderHeader(onBack: () -> Unit) {
     Box(
         Modifier
             .fillMaxWidth()
-            .background(Gradients.pageHeader(c)),
+            .background(Gradients.pageHeader(ElyonTheme.colorScheme)),
     ) {
         Row(
             Modifier

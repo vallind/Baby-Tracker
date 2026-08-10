@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.navigation.Navigator
+import io.elyon.kmp.theme.ElyonTheme
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
@@ -240,7 +241,7 @@ private fun BabyHeader(baby: Baby) {
     Box(
         Modifier
             .fillMaxWidth()
-            .background(Gradients.pageHeader(c))
+            .background(Gradients.pageHeader(ElyonTheme.colorScheme))
             .padding(horizontal = spacing.md),
     ) {
         Row(
@@ -369,7 +370,7 @@ private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Uni
             Modifier
                 .height(44.dp)
                 .clip(RoundedCornerShape(shapes.full))
-                .background(Gradients.primary(c))
+                .background(Gradients.primary(ElyonTheme.colorScheme))
                 .clickable(onClick = onReassess)
                 .padding(horizontal = spacing.lg),
             contentAlignment = Alignment.Center,
@@ -442,7 +443,7 @@ private fun AssessmentFormDialog(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(shapeBtn)
-                    .background(Gradients.primary(c))
+                    .background(Gradients.primary(ElyonTheme.colorScheme))
                     .clickable {
                         onSubmit(
                             DevelopmentAssessment(

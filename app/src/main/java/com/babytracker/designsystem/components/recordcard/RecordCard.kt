@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -40,7 +36,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.designsystem.theme.LocalAppColors
+import io.elyon.kmp.basic.Card
+import io.elyon.kmp.basic.CardDefaults
+import io.elyon.kmp.basic.Icon
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 记录卡片 — 滑动删除+点击编辑一体化组件
@@ -50,7 +49,7 @@ import com.babytracker.designsystem.theme.LocalAppColors
  * 优先级模型：
  *   显式参数 > RecordCardDefaults > CardDefaults > 组件令牌
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Suppress("DEPRECATION")
 @Composable
 fun RecordCard(
@@ -58,10 +57,10 @@ fun RecordCard(
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = RecordCardDefaults.cornerRadius(),
-    containerColor: Color = LocalAppColors.current.surface,
-    elevation: Dp = RecordCardDefaults.elevation(),
-    innerPadding: Dp = RecordCardDefaults.innerPadding(),
+    cornerRadius: Dp = 16.dp,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    elevation: Dp = 0.dp,
+    innerPadding: Dp = 12.dp,
     accentColor: Color = Color.Unspecified,
     verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     content: @Composable RowScope.() -> Unit,
@@ -89,7 +88,7 @@ fun RecordCard(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .background(LocalAppColors.current.danger)
+                        .background(ElyonTheme.colorScheme.error)
                         .padding(horizontal = 20.dp),
                     contentAlignment = Alignment.CenterEnd,
                 ) {
@@ -117,9 +116,8 @@ fun RecordCard(
                                 }
                             )
                         },
-                    shape = shape,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    colors = CardDefaults.cardColors(containerColor = containerColor),
+                    cornerRadius = cornerRadius,
+                    colors = CardDefaults.defaultColors(color = containerColor),
                 ) {
                     Box(Modifier.fillMaxWidth().then(
                         if (accentColor != Color.Unspecified) Modifier.drawBehind {

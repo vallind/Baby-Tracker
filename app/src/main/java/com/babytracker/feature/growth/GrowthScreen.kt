@@ -14,6 +14,7 @@ import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import io.elyon.kmp.basic.SnackbarHostState
+import io.elyon.kmp.theme.ElyonTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -257,7 +258,7 @@ fun GrowthScreen(navigator: Navigator) {
                         val gridColor = c.divider
                         val lineColor = c.primary
                         val bgColor = c.surface
-                        val areaBrush = Gradients.growthChart(c)
+                        val areaBrush = Gradients.growthChart(ElyonTheme.colorScheme)
                         val minVal = chartData.minOfOrNull { it.value } ?: 0.0
                         val maxVal = chartData.maxOfOrNull { it.value } ?: 100.0
                         val range = (maxVal - minVal).coerceAtLeast(1.0)

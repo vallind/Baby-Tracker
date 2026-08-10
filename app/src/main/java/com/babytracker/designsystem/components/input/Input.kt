@@ -55,6 +55,7 @@ fun AppInput(
     iconSize: Dp = InputDefaults.iconSize(),
     modifier: Modifier = Modifier,
 ) {
+    // TODO: 迁移到 Elyon TextField（Elyon 当前无 error 态/支持文本，迁移前保留 M3）
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,

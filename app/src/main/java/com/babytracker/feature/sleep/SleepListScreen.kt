@@ -10,6 +10,7 @@ import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import io.elyon.kmp.basic.SnackbarHostState
+import io.elyon.kmp.theme.ElyonTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -182,7 +183,7 @@ fun SleepListScreen(navigator: Navigator) {
                         Box(
                             Modifier
                                 .fillMaxWidth()
-                                .background(Gradients.sleepHeader(c), cardShape)
+                                .background(Gradients.sleepHeader(ElyonTheme.colorScheme), cardShape)
                         ) {
                             Column(Modifier.padding(20.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {

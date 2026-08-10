@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.navigation.Navigator
+import io.elyon.kmp.theme.ElyonTheme
 import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilyMember
 import com.babytracker.designsystem.components.card.AppCard
@@ -274,7 +275,7 @@ private fun FamilyDetailView(
                     Modifier
                         .size(spacing.xxl)
                         .clip(RoundedCornerShape(shapes.large))
-                        .background(Gradients.primary(c)),
+                        .background(Gradients.primary(ElyonTheme.colorScheme)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("👨‍👩‍👧", style = typography.headlineMedium)

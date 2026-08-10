@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,7 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.SegmentedControlDefaults as AppSegmentedControlDefaults
+import androidx.compose.ui.unit.sp
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 分段选择器 —— 用于标签切换（全部/喂养/睡眠/...）。
@@ -40,16 +41,16 @@ fun SegmentedControl(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.containerColor(),
-    selectedContainerColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.selectedContainerColor(),
-    selectedContentColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.selectedContentColor(),
-    unselectedContentColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.unselectedContentColor(),
-    cornerRadius: Dp = AppSegmentedControlDefaults.cornerRadius(),
-    innerCornerRadius: Dp = AppSegmentedControlDefaults.innerCornerRadius(),
-    borderWidth: Dp = AppSegmentedControlDefaults.borderWidth(),
-    fontSize: TextUnit = AppSegmentedControlDefaults.fontSize(),
-    fontWeight: FontWeight = AppSegmentedControlDefaults.fontWeight(),
-    selectedFontWeight: FontWeight = AppSegmentedControlDefaults.selectedFontWeight(),
+    containerColor: androidx.compose.ui.graphics.Color = ElyonTheme.colorScheme.surfaceContainer,
+    selectedContainerColor: androidx.compose.ui.graphics.Color = ElyonTheme.colorScheme.surfaceContainerHighest,
+    selectedContentColor: androidx.compose.ui.graphics.Color = ElyonTheme.colorScheme.onSurfaceContainerHighest,
+    unselectedContentColor: androidx.compose.ui.graphics.Color = ElyonTheme.colorScheme.onSurfaceVariantSummary,
+    cornerRadius: Dp = 12.dp,
+    innerCornerRadius: Dp = 6.dp,
+    borderWidth: Dp = 2.dp,
+    fontSize: TextUnit = 13.sp,
+    fontWeight: FontWeight = FontWeight.Normal,
+    selectedFontWeight: FontWeight = FontWeight.SemiBold,
 ) {
     Row(
         modifier = modifier

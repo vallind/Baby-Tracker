@@ -8,15 +8,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.section.SectionHeaderDefaults as AppSectionHeaderDefaults
+import androidx.compose.ui.unit.sp
+import io.elyon.kmp.basic.HorizontalDivider
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 分区标题 — 对标 Palette LayoutTokens，页面中的分区标题 + 可选操作链接
@@ -35,13 +36,18 @@ fun SectionHeader(
         modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, fontSize = AppSectionHeaderDefaults.titleSize(), fontWeight = FontWeight.Bold, color = AppSectionHeaderDefaults.titleColor())
+        Text(
+            title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = ElyonTheme.colorScheme.onSurface,
+        )
         Spacer(Modifier.weight(1f))
         if (actionText != null && onAction != null) {
             Text(
                 actionText,
-                fontSize = AppSectionHeaderDefaults.subtitleSize(),
-                color = AppSectionHeaderDefaults.actionColor(),
+                fontSize = 13.sp,
+                color = ElyonTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.clickable(onClick = onAction),
             )
@@ -68,9 +74,9 @@ fun AppListItem(
     supportingContent: @Composable (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
-    minHeight: Dp = ListItemDefaults.minHeight(),
-    horizontalPadding: Dp = ListItemDefaults.horizontalPadding(),
-    dividerAlpha: Float = ListItemDefaults.dividerAlpha(),
+    minHeight: Dp = 48.dp,
+    horizontalPadding: Dp = 16.dp,
+    dividerAlpha: Float = 0.12f,
     showDivider: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -98,7 +104,10 @@ fun AppListItem(
             }
         }
         if (showDivider) {
-            HorizontalDivider(color = ListItemDefaults.dividerColor().copy(alpha = dividerAlpha), thickness = 0.5.dp)
+            HorizontalDivider(
+                color = ElyonTheme.colorScheme.dividerLine.copy(alpha = dividerAlpha),
+                thickness = 0.5.dp,
+            )
         }
     }
 }

@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -25,9 +23,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypography
+import io.elyon.kmp.basic.HorizontalDivider
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 安全文本 Markdown 渲染组件。
@@ -39,17 +37,17 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 fun AppMarkdownText(
     markdown: String,
     modifier: Modifier = Modifier,
-    style: TextStyle = LocalAppTypography.current.bodyLarge,
-    color: Color = LocalAppColors.current.textPrimary,
+    style: TextStyle = ElyonTheme.textStyles.body1,
+    color: Color = ElyonTheme.colorScheme.onSurface,
 ) {
     val blocks = remember(markdown) { parseMarkdown(markdown) }
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = 8.dp
+    val colors = ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         blocks.forEach { block ->
             when (block) {
@@ -61,9 +59,9 @@ fun AppMarkdownText(
                 is MarkdownBlock.HeadingBlock -> Text(
                     text = block.text,
                     style = when (block.level) {
-                        1 -> typography.titleLarge
-                        2 -> typography.titleMedium
-                        else -> typography.bodyLarge
+                        1 -> typography.title2
+                        2 -> typography.title3
+                        else -> typography.body1
                     },
                     fontWeight = FontWeight.Bold,
                     color = color,
@@ -78,7 +76,7 @@ fun AppMarkdownText(
                         color = color,
                         modifier = Modifier.widthIn(min = 24.dp),
                     )
-                    Spacer(Modifier.width(spacing.xs))
+                    Spacer(Modifier.width(4.dp))
                     Text(
                         text = block.text,
                         style = style,
@@ -96,13 +94,13 @@ fun AppMarkdownText(
                     Text(
                         text = block.text,
                         style = style,
-                        color = colors.textSecondary,
-                        modifier = Modifier.padding(start = spacing.sm),
+                        color = colors.onSurfaceVariantSummary,
+                        modifier = Modifier.padding(start = 8.dp),
                     )
                 }
                 is MarkdownBlock.CodeBlock -> AppCard(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = colors.pageBackground,
+                    containerColor = colors.background,
                 ) {
                     Text(
                         text = block.code,
@@ -110,10 +108,10 @@ fun AppMarkdownText(
                         color = color,
                         modifier = Modifier
                             .horizontalScroll(rememberScrollState())
-                            .padding(spacing.sm),
+                            .padding(8.dp),
                     )
                 }
-                MarkdownBlock.DividerBlock -> HorizontalDivider(color = colors.divider)
+                MarkdownBlock.DividerBlock -> HorizontalDivider(color = colors.dividerLine)
             }
         }
     }
