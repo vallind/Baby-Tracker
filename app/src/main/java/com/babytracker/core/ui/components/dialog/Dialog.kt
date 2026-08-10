@@ -36,7 +36,7 @@ fun AppConfirmDialog(
     cancelText: String = AppStrings.cancel,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f),
     contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
     cornerRadius: Dp = 24.dp,
     elevation: Dp = 0.dp,

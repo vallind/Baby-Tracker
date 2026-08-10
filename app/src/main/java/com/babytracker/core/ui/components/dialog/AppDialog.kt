@@ -48,7 +48,7 @@ fun AppDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     cornerRadius: Dp = 24.dp,
-    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f),
     contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
     elevation: Dp = 0.dp,
     modifier: Modifier = Modifier,
@@ -102,7 +102,7 @@ fun AppActionSheet(
     cancelText: String = "取消",
     onDismiss: () -> Unit,
     cornerRadius: Dp = 24.dp,
-    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f),
     contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
     modifier: Modifier = Modifier,
 ) {

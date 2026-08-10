@@ -38,7 +38,7 @@ fun AppFormSheet(
     modifier: Modifier = Modifier,
     saveText: String = "保存",
     saveEnabled: Boolean = true,
-    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
     contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
     content: @Composable () -> Unit,
 ) {

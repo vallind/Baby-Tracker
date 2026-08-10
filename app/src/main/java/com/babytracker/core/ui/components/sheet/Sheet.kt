@@ -22,7 +22,7 @@ fun AppBottomSheet(
     show: Boolean,
     onDismiss: () -> Unit,
     skipPartiallyExpanded: Boolean = true,
-    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
     contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
     cornerRadius: Dp = 28.dp,
     modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,

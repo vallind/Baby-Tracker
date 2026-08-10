@@ -1,5 +1,6 @@
 package com.babytracker.core.ui.components.fab
 
+import android.os.Build
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -9,12 +10,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.babytracker.core.ui.BlurPolicy
+import com.babytracker.core.ui.components.LocalScaffoldBackdrop
+import com.babytracker.core.ui.components.appBlur
 import io.elyon.kmp.basic.FloatingActionButton
 import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.Text
+import io.elyon.kmp.blur.isRuntimeShaderSupported
 import io.elyon.kmp.theme.ElyonTheme
 
 /**
@@ -36,11 +42,16 @@ fun AppFAB(
     elevation: Dp = 4.dp,
     modifier: Modifier = Modifier,
 ) {
+    val backdrop = LocalScaffoldBackdrop.current
+    val blurEnabled = BlurPolicy.isBlurSupported(
+        runtimeSdk = Build.VERSION.SDK_INT,
+        shaderSupported = isRuntimeShaderSupported(),
+    ) && backdrop != null
     FloatingActionButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.appBlur(backdrop = backdrop, radius = 28f, tintAlpha = 0.65f),
         shape = RoundedCornerShape(cornerRadius),
-        containerColor = ElyonTheme.colorScheme.primary,
+        containerColor = if (blurEnabled) Color.Transparent else ElyonTheme.colorScheme.primary,
         shadowElevation = elevation,
         minWidth = if (label == null) size else 120.dp,
         minHeight = size,

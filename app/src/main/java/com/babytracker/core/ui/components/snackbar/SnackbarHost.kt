@@ -2,10 +2,14 @@ package com.babytracker.core.ui.components.snackbar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.babytracker.core.ui.components.LocalScaffoldBackdrop
+import com.babytracker.core.ui.components.appBlur
 import io.elyon.kmp.basic.Snackbar
 import io.elyon.kmp.basic.SnackbarDefaults
 import io.elyon.kmp.basic.SnackbarHost
 import io.elyon.kmp.basic.SnackbarHostState
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 全局提示宿主 — 对标 M3 SnackbarHost，消费 AppComponentTokens.snackbarHost。
@@ -22,13 +26,20 @@ fun AppSnackbarHost(
     hostState: SnackbarHostState,
     modifier: Modifier = Modifier,
 ) {
+    val backdrop = LocalScaffoldBackdrop.current
     SnackbarHost(
         state = hostState,
         modifier = modifier,
         content = { data ->
             Snackbar(
                 data = data,
-                colors = SnackbarDefaults.snackbarColors(),
+                modifier = Modifier.appBlur(backdrop = backdrop, radius = 24f, tintAlpha = 0.85f),
+                colors = SnackbarDefaults.snackbarColors(
+                    containerColor = Color.Transparent,
+                    contentColor = ElyonTheme.colorScheme.onSurface,
+                    actionContentColor = ElyonTheme.colorScheme.onPrimary,
+                    actionContainerColor = ElyonTheme.colorScheme.primary,
+                ),
             )
         },
     )
