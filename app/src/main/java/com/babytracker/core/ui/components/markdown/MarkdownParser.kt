@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.markdown
+package com.babytracker.core.ui.components.markdown
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation

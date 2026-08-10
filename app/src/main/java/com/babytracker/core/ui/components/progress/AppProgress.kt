@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.progress
+package com.babytracker.core.ui.components.progress
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween

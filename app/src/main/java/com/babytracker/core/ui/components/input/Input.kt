@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.input
+package com.babytracker.core.ui.components.input
 
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
@@ -20,8 +20,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import com.babytracker.designsystem.components.input.InputDefaults
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.babytracker.i18n.AppStrings
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 统一输入框组件 — 对标 Palette TextField，消费 AppComponentTokens.input
@@ -47,12 +49,12 @@ fun AppInput(
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    height: Dp = InputDefaults.height(),
-    cornerRadius: Dp = InputDefaults.cornerRadius(),
-    fontSize: TextUnit = InputDefaults.fontSize(),
-    borderWidth: Dp = InputDefaults.borderWidth(),
-    borderWidthFocus: Dp = InputDefaults.borderWidthFocus(),
-    iconSize: Dp = InputDefaults.iconSize(),
+    height: Dp = 48.dp,
+    cornerRadius: Dp = 12.dp,
+    fontSize: TextUnit = 15.sp,
+    borderWidth: Dp = 1.dp,
+    borderWidthFocus: Dp = 2.dp,
+    iconSize: Dp = 20.dp,
     modifier: Modifier = Modifier,
 ) {
     // TODO: 迁移到 Elyon TextField（Elyon 当前无 error 态/支持文本，迁移前保留 M3）
@@ -82,19 +84,19 @@ fun AppInput(
         shape = RoundedCornerShape(cornerRadius),
         modifier = modifier.defaultMinSize(minHeight = height),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = InputDefaults.focusedBorderColor(),
-            unfocusedBorderColor = InputDefaults.unfocusedBorderColor(),
-            errorBorderColor = InputDefaults.errorBorderColor(),
-            focusedContainerColor = InputDefaults.containerColor(),
-            unfocusedContainerColor = InputDefaults.containerColor(),
-            errorContainerColor = InputDefaults.containerColor(),
-            cursorColor = InputDefaults.cursorColor(),
-            focusedLabelColor = InputDefaults.focusedBorderColor(),
-            unfocusedLabelColor = InputDefaults.placeholderColor(),
-            errorLabelColor = InputDefaults.errorBorderColor(),
+            focusedBorderColor = ElyonTheme.colorScheme.primary,
+            unfocusedBorderColor = ElyonTheme.colorScheme.outline,
+            errorBorderColor = ElyonTheme.colorScheme.error,
+            focusedContainerColor = ElyonTheme.colorScheme.surfaceContainer,
+            unfocusedContainerColor = ElyonTheme.colorScheme.surfaceContainer,
+            errorContainerColor = ElyonTheme.colorScheme.surfaceContainer,
+            cursorColor = ElyonTheme.colorScheme.primary,
+            focusedLabelColor = ElyonTheme.colorScheme.primary,
+            unfocusedLabelColor = ElyonTheme.colorScheme.onSurfaceVariantSummary,
+            errorLabelColor = ElyonTheme.colorScheme.error,
         ),
         supportingText = if (isError && errorMessage != null) {
-            { androidx.compose.material3.Text(errorMessage, color = InputDefaults.errorBorderColor()) }
+            { androidx.compose.material3.Text(errorMessage, color = ElyonTheme.colorScheme.error) }
         } else null,
     )
 }

@@ -10,7 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Text
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,10 +33,10 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
-import com.babytracker.designsystem.components.input.AppInput
-import com.babytracker.designsystem.components.progress.AppCircularProgress
-import com.babytracker.designsystem.components.dialog.AppConfirmDialog
-import com.babytracker.designsystem.components.dialog.AppDialog
+import com.babytracker.core.ui.components.input.AppInput
+import com.babytracker.core.ui.components.progress.AppCircularProgress
+import com.babytracker.core.ui.components.dialog.AppConfirmDialog
+import com.babytracker.core.ui.components.dialog.AppDialog
 import com.babytracker.designsystem.components.divider.AppDivider
 import org.koin.androidx.compose.koinViewModel
 

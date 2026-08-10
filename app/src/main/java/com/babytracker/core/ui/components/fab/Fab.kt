@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.fab
+package com.babytracker.core.ui.components.fab
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer

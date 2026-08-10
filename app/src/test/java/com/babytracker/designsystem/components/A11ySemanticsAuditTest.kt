@@ -14,17 +14,21 @@ import java.io.FileNotFoundException
  */
 class A11ySemanticsAuditTest {
 
-    private val root = File("src/main/java/com/babytracker/designsystem/components")
+    // 组件已分批迁移到 core/ui/components，审计同时扫描新旧两处，防止路径漂移
+    private val roots = listOf(
+        File("src/main/java/com/babytracker/designsystem/components"),
+        File("src/main/java/com/babytracker/core/ui/components"),
+    )
 
     private fun read(name: String): String {
-        val file = root.walkTopDown().firstOrNull { it.name == name }
-            ?: throw FileNotFoundException("审计目标文件不存在（路径漂移？）：$root/$name")
+        val file = roots.asSequence().flatMap { root -> root.walkTopDown() }.firstOrNull { it.name == name }
+            ?: throw FileNotFoundException("审计目标文件不存在（路径漂移？）：$name")
         return file.readText()
     }
 
     // 防呆（lessons #14）：walkTopDown 对不存在的路径静默返回空流，必须断言扫描命中文件数 > 0，防止路径漂移后审计假绿
     private fun assertScanNonEmpty() {
-        assert(root.walkTopDown().count() > 0) { "组件目录扫描为空，路径可能已漂移，审计已失效：$root" }
+        assert(roots.any { it.walkTopDown().count() > 0 }) { "组件目录扫描为空，路径可能已漂移，审计已失效：$roots" }
     }
 
     @Test

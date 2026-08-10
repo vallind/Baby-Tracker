@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.dialog
+package com.babytracker.core.ui.components.dialog
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

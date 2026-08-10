@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.markdown
+package com.babytracker.core.ui.components.markdown
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -22,7 +22,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.card.AppCard
+import io.elyon.kmp.basic.Card
+import io.elyon.kmp.basic.CardDefaults
 import io.elyon.kmp.basic.HorizontalDivider
 import io.elyon.kmp.basic.Text
 import io.elyon.kmp.theme.ElyonTheme
@@ -98,9 +99,10 @@ fun AppMarkdownText(
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
-                is MarkdownBlock.CodeBlock -> AppCard(
+                is MarkdownBlock.CodeBlock -> Card(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = colors.background,
+                    cornerRadius = 12.dp,
+                    colors = CardDefaults.defaultColors(color = colors.background),
                 ) {
                     Text(
                         text = block.code,

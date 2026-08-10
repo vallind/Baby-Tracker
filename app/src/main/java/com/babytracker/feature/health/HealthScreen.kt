@@ -8,7 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDatePickerState
 import io.elyon.kmp.basic.SnackbarHostState
@@ -31,7 +31,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.HealthRepository
@@ -40,13 +40,13 @@ import kotlinx.coroutines.launch
 import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
-import com.babytracker.designsystem.components.recordcard.RecordCard
-import com.babytracker.designsystem.components.dialog.AppFormSheet
-import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.core.ui.components.recordcard.RecordCard
+import com.babytracker.core.ui.components.dialog.AppFormSheet
+import com.babytracker.core.ui.components.EmptyState
+import com.babytracker.core.ui.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.components.snackbar.AppSnackbar
-import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
+import com.babytracker.core.ui.components.snackbar.AppSnackbar
+import com.babytracker.core.ui.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import org.koin.compose.koinInject
 import java.time.LocalDateTime

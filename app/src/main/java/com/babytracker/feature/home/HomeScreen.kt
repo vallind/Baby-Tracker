@@ -25,7 +25,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.divider.AppDivider
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.core.ui.components.EmptyState
 import com.babytracker.i18n.AppStrings
 import com.babytracker.navigation.Navigator
 import com.babytracker.navigation.Route

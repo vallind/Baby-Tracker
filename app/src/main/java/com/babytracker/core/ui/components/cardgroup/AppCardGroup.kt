@@ -1,11 +1,12 @@
-package com.babytracker.designsystem.components.cardgroup
+package com.babytracker.core.ui.components.cardgroup
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.card.AppCard
+import io.elyon.kmp.basic.Card
+import io.elyon.kmp.basic.CardDefaults
 import io.elyon.kmp.theme.ElyonTheme
 
 /**
@@ -16,10 +17,10 @@ fun AppCardGroup(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    AppCard(
+    Card(
         modifier = modifier.fillMaxWidth(),
-        elevation = 2.dp,
-        containerColor = ElyonTheme.colorScheme.surface,
+        cornerRadius = 16.dp,
+        colors = CardDefaults.defaultColors(color = ElyonTheme.colorScheme.surface),
         content = content,
     )
 }

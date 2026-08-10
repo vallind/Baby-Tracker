@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.chip
+package com.babytracker.core.ui.components.chip
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding

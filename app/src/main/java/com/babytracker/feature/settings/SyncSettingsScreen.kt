@@ -2,7 +2,8 @@ package com.babytracker.feature.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -11,15 +12,17 @@ import androidx.compose.ui.unit.dp
 import com.babytracker.navigation.Navigator
 import com.babytracker.core.sync.BgInterval
 import com.babytracker.core.sync.SyncDelay
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.sheet.AppBottomSheet
-import com.babytracker.designsystem.components.switchcontrol.AppRadioButton
-import com.babytracker.designsystem.components.switchcontrol.AppSwitch
-import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypography
+import io.elyon.kmp.basic.Button
+import io.elyon.kmp.basic.ButtonDefaults
+import io.elyon.kmp.basic.Icon
+import io.elyon.kmp.basic.IconButton
+import io.elyon.kmp.basic.RadioButton
+import io.elyon.kmp.basic.Scaffold
+import io.elyon.kmp.basic.Switch
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.TopAppBar
+import io.elyon.kmp.overlay.OverlayBottomSheet
+import io.elyon.kmp.theme.ElyonTheme
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -34,9 +37,8 @@ fun SyncSettingsScreen(navigator: Navigator) {
     val syncResult by syncViewModel.syncResult.collectAsState()
     val syncRunId by syncViewModel.syncRunId.collectAsState()
 
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
 
     var showDelaySheet by remember { mutableStateOf(false) }
     var showBgSheet by remember { mutableStateOf(false) }
@@ -50,19 +52,28 @@ fun SyncSettingsScreen(navigator: Navigator) {
         else -> "待同步"
     }
 
-    AppScaffold(
+    Scaffold(
         topBar = {
-            AppTopBar(title = "同步设置", onBack = { navigator.pop() })
+            TopAppBar(
+                title = "同步设置",
+                color = c.primaryContainer,
+                titleColor = c.onPrimaryContainer,
+                navigationIcon = {
+                    IconButton(onClick = { navigator.pop() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
+            )
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md)) {
+        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
 
             SettingsCard {
                 SettingsRow(
                     emoji = "🔄",
                     label = "自动同步",
                     trailing = {
-                        AppSwitch(
+                        Switch(
                             checked = config.autoSync,
                             onCheckedChange = { enabled ->
                                 settingsViewModel.updateSync { it.copy(autoSync = enabled) }
@@ -92,7 +103,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                     emoji = "🚪",
                     label = "退出时同步",
                     trailing = {
-                        AppSwitch(
+                        Switch(
                             checked = config.syncOnExit,
                             onCheckedChange = { enabled ->
                                 settingsViewModel.updateSync { it.copy(syncOnExit = enabled) }
@@ -106,7 +117,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                     emoji = "📶",
                     label = "仅 Wi‑Fi",
                     trailing = {
-                        AppSwitch(
+                        Switch(
                             checked = config.wifiOnly,
                             onCheckedChange = { enabled ->
                                 settingsViewModel.updateSync { it.copy(wifiOnly = enabled) }
@@ -116,28 +127,33 @@ fun SyncSettingsScreen(navigator: Navigator) {
                 )
             }
 
-            Spacer(Modifier.height(spacing.lg))
+            Spacer(Modifier.height(24.dp))
 
             var syncing by remember { mutableStateOf(false) }
 
-            AppButton(
-                label = if (syncing) "同步中..." else "立即同步",
+            Button(
                 onClick = {
                     syncing = true
                     syncViewModel.manualSync()
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.sm),
-            )
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    color = c.primary,
+                    contentColor = c.onPrimary,
+                ),
+            ) {
+                Text(if (syncing) "同步中..." else "立即同步")
+            }
 
             // 用自增 runId 复位：结果字符串相同（如连续两次"无数据需同步"）时 StateFlow 去重不会重新发射
             LaunchedEffect(syncRunId) {
                 if (syncRunId > 0) syncing = false
             }
 
-            Spacer(Modifier.height(spacing.md))
+            Spacer(Modifier.height(16.dp))
 
             Box(
-                Modifier.fillMaxWidth().padding(horizontal = spacing.sm),
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -145,17 +161,17 @@ fun SyncSettingsScreen(navigator: Navigator) {
                         syncResult != null -> "$syncStatus·${syncResult}"
                         else -> syncStatus
                     },
-                    style = typography.bodySmall,
-                    color = c.textTertiary,
+                    style = typography.footnote1,
+                    color = c.onSurfaceVariantSummary,
                 )
             }
         }
     }
 
     if (showDelaySheet) {
-        AppBottomSheet(show = true, onDismiss = { showDelaySheet = false }) {
-            Column(Modifier.padding(spacing.md)) {
-                Text("同步延迟", style = typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+        OverlayBottomSheet(show = true, onDismissRequest = { showDelaySheet = false }) {
+            Column(Modifier.padding(16.dp)) {
+                Text("同步延迟", style = typography.title1, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
                 SyncDelay.entries.forEach { delay ->
                     Row(
                         Modifier.fillMaxWidth().height(48.dp).clickable {
@@ -164,7 +180,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                         },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        AppRadioButton(
+                        RadioButton(
                             selected = config.syncDelay == delay,
                             onClick = {
                                 settingsViewModel.updateSync { it.copy(syncDelay = delay) }
@@ -172,7 +188,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                             },
                         )
                         Spacer(Modifier.width(12.dp))
-                        Text(delay.label, style = typography.bodyLarge)
+                        Text(delay.label, style = typography.body1)
                     }
                 }
             }
@@ -180,9 +196,9 @@ fun SyncSettingsScreen(navigator: Navigator) {
     }
 
     if (showBgSheet) {
-        AppBottomSheet(show = true, onDismiss = { showBgSheet = false }) {
-            Column(Modifier.padding(spacing.md)) {
-                Text("后台同步", style = typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+        OverlayBottomSheet(show = true, onDismissRequest = { showBgSheet = false }) {
+            Column(Modifier.padding(16.dp)) {
+                Text("后台同步", style = typography.title1, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
                 BgInterval.entries.forEach { interval ->
                     Row(
                         Modifier.fillMaxWidth().height(48.dp).clickable {
@@ -191,7 +207,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                         },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        AppRadioButton(
+                        RadioButton(
                             selected = config.bgInterval == interval,
                             onClick = {
                                 settingsViewModel.updateSync { it.copy(bgInterval = interval) }
@@ -199,7 +215,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                             },
                         )
                         Spacer(Modifier.width(12.dp))
-                        Text(interval.label, style = typography.bodyLarge)
+                        Text(interval.label, style = typography.body1)
                     }
                 }
             }

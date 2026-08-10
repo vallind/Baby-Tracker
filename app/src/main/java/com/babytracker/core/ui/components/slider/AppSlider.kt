@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.slider
+package com.babytracker.core.ui.components.slider
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

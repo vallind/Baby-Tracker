@@ -15,7 +15,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,10 +39,10 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
-import com.babytracker.designsystem.components.input.AppInput
-import com.babytracker.designsystem.components.dialog.AppDialog
+import com.babytracker.core.ui.components.input.AppInput
+import com.babytracker.core.ui.components.dialog.AppDialog
 import com.babytracker.designsystem.components.divider.AppDivider
-import com.babytracker.designsystem.components.sheet.AppBottomSheet
+import com.babytracker.core.ui.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.surface.AppSurface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -58,11 +58,11 @@ import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.cardgroup.AppCardGroup
-import com.babytracker.designsystem.components.dialog.AppConfirmDialog
-import com.babytracker.designsystem.components.fab.AppFAB
+import com.babytracker.core.ui.components.cardgroup.AppCardGroup
+import com.babytracker.core.ui.components.dialog.AppConfirmDialog
+import com.babytracker.core.ui.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.components.section.AppListItem
+import com.babytracker.core.ui.components.section.AppListItem
 import com.babytracker.navigation.Route
 import com.babytracker.core.auth.AuthService
 import com.babytracker.i18n.AppStrings
@@ -325,13 +325,11 @@ private fun UserInfoCard(
 
 @Composable
 private fun SettingsSectionTitle(title: String) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
     Text(
         title,
-        style = LocalAppTypography.current.labelMedium,
-        color = c.textSecondary,
-        modifier = Modifier.padding(bottom = spacing.sm),
+        style = io.elyon.kmp.theme.ElyonTheme.textStyles.footnote1,
+        color = io.elyon.kmp.theme.ElyonTheme.colorScheme.onSurfaceVariantSummary,
+        modifier = Modifier.padding(bottom = 8.dp),
     )
 }
 
@@ -429,54 +427,73 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
 
 @Composable
 fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
-    AppCardGroup(content = content)
+    io.elyon.kmp.basic.Card(
+        modifier = Modifier.fillMaxWidth(),
+        cornerRadius = 16.dp,
+        colors = io.elyon.kmp.basic.CardDefaults.defaultColors(
+            color = io.elyon.kmp.theme.ElyonTheme.colorScheme.surfaceContainer,
+        ),
+        content = content,
+    )
 }
 
 @Composable
 fun SettingsDivider() {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    AppDivider(
-        color = c.divider,
+    io.elyon.kmp.basic.HorizontalDivider(
+        color = io.elyon.kmp.theme.ElyonTheme.colorScheme.dividerLine,
         thickness = 0.5.dp,
-        modifier = Modifier.padding(horizontal = spacing.md),
+        modifier = Modifier.padding(horizontal = 16.dp),
     )
 }
 
 @Composable
 fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
-    val c = LocalAppColors.current
-    val shapes = LocalAppShapes.current
-    AppListItem(
-        leadingContent = {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(shapes.large))
-                    .background(c.primaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(emoji, style = LocalAppTypography.current.titleMedium)
+    val c = io.elyon.kmp.theme.ElyonTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(c.primaryContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            io.elyon.kmp.basic.Text(
+                emoji,
+                style = io.elyon.kmp.theme.ElyonTheme.textStyles.title3,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            io.elyon.kmp.basic.Text(
+                label,
+                style = io.elyon.kmp.theme.ElyonTheme.textStyles.body1,
+                color = c.onSurface,
+            )
+            if (subtitle != null) {
+                io.elyon.kmp.basic.Text(
+                    subtitle,
+                    style = io.elyon.kmp.theme.ElyonTheme.textStyles.footnote1,
+                    color = c.onSurfaceVariantSummary,
+                )
             }
-        },
-        headlineContent = {
-            Text(label, style = LocalAppTypography.current.bodyMedium, color = c.textPrimary)
-        },
-        supportingContent = subtitle?.let {
-            {
-                Text(it, style = LocalAppTypography.current.bodySmall, color = c.textTertiary)
-            }
-        },
-        trailingContent = trailing ?: {
-            Icon(
-                Icons.Default.ChevronRight,
+        }
+        if (trailing != null) {
+            trailing()
+        } else {
+            io.elyon.kmp.basic.Icon(
+                imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = c.textTertiary,
+                tint = c.onSurfaceVariantSummary,
                 modifier = Modifier.size(18.dp),
             )
-        },
-        onClick = onClick,
-    )
+        }
+    }
 }
 
 @Composable

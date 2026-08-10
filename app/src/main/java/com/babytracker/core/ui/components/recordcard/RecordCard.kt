@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.recordcard
+package com.babytracker.core.ui.components.recordcard
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -34,7 +34,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.i18n.AppStrings
 import io.elyon.kmp.basic.Card
 import io.elyon.kmp.basic.CardDefaults

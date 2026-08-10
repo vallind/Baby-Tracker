@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.core.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

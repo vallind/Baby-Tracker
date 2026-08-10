@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.snackbar
+package com.babytracker.core.ui.components.snackbar
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

@@ -30,7 +30,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
 import com.babytracker.core.ui.components.BottomNavBar
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.core.ui.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDateTime

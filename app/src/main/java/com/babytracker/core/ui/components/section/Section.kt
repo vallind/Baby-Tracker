@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.section
+package com.babytracker.core.ui.components.section
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

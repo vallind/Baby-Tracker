@@ -16,7 +16,7 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -35,11 +35,11 @@ import com.babytracker.navigation.Navigator
 import com.babytracker.BabyTrackerApp
 import com.babytracker.core.util.LogBuffer
 import com.babytracker.core.util.LogEntry
-import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.divider.AppDivider
 import kotlinx.coroutines.flow.collectLatest
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
-import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.surface.AppSurface
 import com.babytracker.designsystem.components.topbar.AppTopBar

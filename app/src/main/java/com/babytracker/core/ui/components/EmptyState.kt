@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.core.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.babytracker.designsystem.components.button.AppButton
+import io.elyon.kmp.basic.Button
 import io.elyon.kmp.basic.Text
 import io.elyon.kmp.theme.ElyonTheme
 
@@ -59,7 +59,9 @@ fun EmptyState(
         )
         if (actionText != null && onAction != null) {
             Spacer(Modifier.height(20.dp))
-            AppButton(label = actionText, onClick = onAction)
+            Button(onClick = onAction) {
+                Text(actionText)
+            }
         }
     }
 }

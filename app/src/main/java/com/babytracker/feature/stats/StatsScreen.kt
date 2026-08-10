@@ -30,11 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.navigation.Navigator
 import com.babytracker.core.util.BabyController
-import com.babytracker.designsystem.components.SegmentedControl
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.core.ui.components.SegmentedControl
+import com.babytracker.core.ui.components.EmptyState
 import com.babytracker.core.ui.components.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.progress.AppCircularProgress
+import com.babytracker.core.ui.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes

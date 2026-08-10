@@ -27,12 +27,12 @@ import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
 import com.babytracker.core.ai.settings.AiReasoningEffort
 import com.babytracker.core.ai.settings.AiThinkingMode
-import com.babytracker.designsystem.components.chip.AppChip
-import com.babytracker.designsystem.components.dialog.AppConfirmDialog
-import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.core.ui.components.chip.AppChip
+import com.babytracker.core.ui.components.dialog.AppConfirmDialog
+import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.slider.AppSlider
-import com.babytracker.designsystem.components.switchcontrol.AppSwitch
+import com.babytracker.core.ui.components.slider.AppSlider
+import com.babytracker.core.ui.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors

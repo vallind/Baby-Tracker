@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components.switchcontrol
+package com.babytracker.core.ui.components.switchcontrol
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.babytracker.navigation.Navigator
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.switchcontrol.AppSwitch
+import com.babytracker.core.ui.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.i18n.AppStrings
 import com.babytracker.designsystem.theme.DensityController

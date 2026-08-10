@@ -1,5 +1,7 @@
 package com.babytracker.designsystem.components.markdown
 
+import com.babytracker.core.ui.components.markdown.MarkdownBlock
+import com.babytracker.core.ui.components.markdown.parseMarkdown
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
