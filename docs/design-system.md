@@ -37,8 +37,15 @@ HorizontalDivider/FloatingActionButton/NavigationBar…），弹层用 `io.elyon
 
 ## 毛玻璃与导航
 
-- 底部导航：`core/ui/components/BottomNavBar.kt`（Elyon NavigationBar + `textureBlur`，
-  由 `AppScaffold` 的 `layerBackdrop` 捕获页面内容；不支持 blur 时回退纯色）。
+- 统一修饰符：`core/ui/components/BlurModifiers.kt` 的 `Modifier.appBlur()`（API 33+ 且有
+  Scaffold backdrop 时叠加 `textureBlur`，否则原样返回）。
+- 已铺开毛玻璃的组件：底部导航（BottomNavBar）、顶栏（AppTopBar，半透明玻璃）、
+  FAB（AppFAB）、Snackbar（AppSnackbarHost）；底部弹层与对话框为半透明玻璃质感
+  （独立弹窗无法采样页面，不做真实 backdrop 模糊）。
+- 顶栏真毛玻璃：列表打头的屏幕用 `AppScaffold(edgeToEdgeTop = true)` 让内容延伸到
+  顶栏下（当前：健康档案），其余顶栏下有固定筛选头的屏幕保持半透明。
+- 不适用毛玻璃的组件：卡片/列表项/输入框/开关/滑块/图表等页面内容组件（背后没有
+  可模糊的内容），以及下拉菜单/弹窗（独立窗口）。
 - 导航根：`navigation/AppNavigation.kt`（elyon-nav `NavDisplay` + `Route` + `Navigator`），
   路由注册表 `AppRouteGraph` 由 `RouteGraphTest` 守护。
 

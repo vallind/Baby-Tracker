@@ -107,6 +107,7 @@ fun HealthScreen(navigator: Navigator) {
     }
 
     AppScaffold(
+        edgeToEdgeTop = true,
         topBar = { AppTopBar(title = "健康档案", onBack = { navigator.pop() }) },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         fab = {
@@ -127,7 +128,7 @@ fun HealthScreen(navigator: Navigator) {
         } else {
             LazyColumn(
                 Modifier.fillMaxSize().padding(padding).background(c.background),
-                contentPadding = PaddingValues(top = 12.dp, bottom = 80.dp),
+                contentPadding = PaddingValues(top = 80.dp, bottom = 80.dp),
             ) {
                 healthCategories(c).forEach { meta ->
                     item(key = meta.key) {

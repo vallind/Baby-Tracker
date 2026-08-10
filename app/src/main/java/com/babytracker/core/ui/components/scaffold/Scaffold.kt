@@ -23,6 +23,8 @@ fun AppScaffold(
     fab: @Composable (() -> Unit)? = null,
     snackbarHost: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    // 顶栏全出血：内容延伸到顶栏下面，滚动时产生真毛玻璃效果
+    edgeToEdgeTop: Boolean = false,
     content: @Composable (androidx.compose.foundation.layout.PaddingValues) -> Unit,
 ) {
     // 页面内容捕获为 backdrop，供底部导航毛玻璃使用（过渡期实现，迁移完成后由 Elyon Scaffold 接管）
@@ -42,12 +44,11 @@ fun AppScaffold(
             containerColor = containerColor,
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
-                // 底栏存在时，内容不垫底栏高度：列表内容滚动时延伸到栏后面，
+                // 底栏存在时内容不垫底栏高度；列表屏开启 edgeToEdgeTop 时顶栏同理，
                 // backdrop 才能录到栏后内容，毛玻璃才有可见效果（参照 Elyon 示例）。
-                // 顶栏保持原 padding，避免首行内容被顶栏永久遮挡。
                 content(
                     PaddingValues(
-                        top = padding.calculateTopPadding(),
+                        top = if (topBar != null && edgeToEdgeTop) 0.dp else padding.calculateTopPadding(),
                         bottom = if (bottomBar != null) 0.dp else padding.calculateBottomPadding(),
                         start = padding.calculateStartPadding(LocalLayoutDirection.current),
                         end = padding.calculateEndPadding(LocalLayoutDirection.current),
