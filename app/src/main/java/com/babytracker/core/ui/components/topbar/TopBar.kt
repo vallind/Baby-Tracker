@@ -7,15 +7,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.os.Build
+import com.babytracker.core.ui.BlurPolicy
+import com.babytracker.core.ui.components.LocalScaffoldBackdrop
 import com.babytracker.i18n.AppStrings
 import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.IconButton
 import io.elyon.kmp.basic.TopAppBar
+import io.elyon.kmp.blur.BlendColorEntry
+import io.elyon.kmp.blur.BlurDefaults
+import io.elyon.kmp.blur.isRuntimeShaderSupported
+import io.elyon.kmp.blur.textureBlur
 import io.elyon.kmp.theme.ElyonTheme
 
 /**
@@ -40,11 +49,34 @@ fun AppTopBar(
     backIconSize: Dp = 22.dp,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val containerColor = ElyonTheme.colorScheme.primaryContainer
+    val backdrop = LocalScaffoldBackdrop.current
+    val blurEnabled = BlurPolicy.isBlurSupported(
+        runtimeSdk = Build.VERSION.SDK_INT,
+        shaderSupported = isRuntimeShaderSupported(),
+    ) && backdrop != null
+    val containerColor = if (blurEnabled) Color.Transparent else ElyonTheme.colorScheme.primaryContainer
     val contentColor = ElyonTheme.colorScheme.onPrimaryContainer
+    val blurColors = BlurDefaults.blurColors(
+        blendColors = listOf(
+            BlendColorEntry(color = ElyonTheme.colorScheme.surface.copy(alpha = 0.65f)),
+        ),
+    )
     TopAppBar(
         title = title,
-        modifier = Modifier.height(height),
+        modifier = Modifier
+            .height(height)
+            .then(
+                if (blurEnabled) {
+                    Modifier.textureBlur(
+                        backdrop = backdrop,
+                        shape = RectangleShape,
+                        blurRadius = 32f,
+                        colors = blurColors,
+                    )
+                } else {
+                    Modifier
+                },
+            ),
         color = containerColor,
         titleColor = contentColor,
         navigationIcon = {

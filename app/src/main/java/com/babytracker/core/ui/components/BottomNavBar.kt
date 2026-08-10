@@ -54,7 +54,7 @@ fun BottomNavBar(
     ) && backdrop != null
     val blurColors = BlurDefaults.blurColors(
         blendColors = listOf(
-            BlendColorEntry(color = ElyonTheme.colorScheme.surface.copy(alpha = 0.78f)),
+            BlendColorEntry(color = ElyonTheme.colorScheme.surface.copy(alpha = 0.55f)),
         ),
     )
 
@@ -72,7 +72,7 @@ fun BottomNavBar(
                 Modifier.textureBlur(
                     backdrop = backdrop,
                     shape = RectangleShape,
-                    blurRadius = 24f,
+                    blurRadius = 32f,
                     colors = blurColors,
                 )
             } else {

@@ -192,7 +192,8 @@ fun SettingsScreen(navigator: Navigator) {
                 }
             }
 
-            Spacer(Modifier.height(spacing.md))
+            // 底栏毛玻璃延伸：末尾预留滚动空间，避免最后一项被底栏遮挡
+            Spacer(Modifier.height(96.dp))
         }
     }
 
