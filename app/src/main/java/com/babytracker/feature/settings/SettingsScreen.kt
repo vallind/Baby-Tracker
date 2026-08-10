@@ -459,12 +459,14 @@ fun SettingsDivider() {
 }
 
 @Composable
-fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing: @Composable (() -> Unit)? = null, onClick: () -> Unit = {}) {
+fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing: @Composable (() -> Unit)? = null, onClick: (() -> Unit)? = null) {
     val c = io.elyon.kmp.theme.ElyonTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            // 与旧 AppListItem 契约一致：只有提供 onClick 才可点，
+            // 避免无操作行吞掉内部 Switch/RadioButton 的点击
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

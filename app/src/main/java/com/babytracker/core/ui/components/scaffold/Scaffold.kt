@@ -26,15 +26,16 @@ fun AppScaffold(
         drawRect(containerColor)
         drawContent()
     }
-    Scaffold(
-        topBar = topBar ?: {},
-        bottomBar = bottomBar ?: {},
-        floatingActionButton = fab ?: {},
-        snackbarHost = snackbarHost ?: {},
-        modifier = modifier,
-        containerColor = containerColor,
-    ) { padding ->
-        CompositionLocalProvider(LocalScaffoldBackdrop provides backdrop) {
+    // Provider 放在 Scaffold 外层：bottomBar/topBar 插槽与内容都能读到 backdrop
+    CompositionLocalProvider(LocalScaffoldBackdrop provides backdrop) {
+        Scaffold(
+            topBar = topBar ?: {},
+            bottomBar = bottomBar ?: {},
+            floatingActionButton = fab ?: {},
+            snackbarHost = snackbarHost ?: {},
+            modifier = modifier,
+            containerColor = containerColor,
+        ) { padding ->
             Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
                 content(padding)
             }
