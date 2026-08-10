@@ -1,4 +1,7 @@
 package com.babytracker.feature.settings
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import android.net.Uri
 import android.widget.Toast
@@ -71,8 +74,8 @@ import org.koin.compose.koinInject
 
 @Composable
 fun SettingsScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val authService: AuthService = koinInject()
@@ -190,7 +193,7 @@ fun SettingsScreen(navigator: Navigator) {
                         variant = ButtonVariant.Text,
                         onClick = { showLogoutConfirm = true },
                         label = "退出登录",
-                        contentColor = c.danger,
+                        contentColor = c.error,
                     )
                 }
             }
@@ -237,8 +240,8 @@ private fun UserInfoCard(
     onClick: (() -> Unit)? = null,
     onEditNickname: (() -> Unit)? = null,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     val elev = LocalAppElevation.current
     val displayName = nickname ?: displayAccount ?: babyName
 
@@ -268,7 +271,7 @@ private fun UserInfoCard(
             ) {
                 Text(
                     displayName.take(1).ifEmpty { "?" },
-                    style = LocalAppTypography.current.headlineSmall,
+                    style = ElyonTheme.textStyles.title2,
                     fontWeight = FontWeight.Bold,
                     color = c.onPrimary,
                 )
@@ -280,16 +283,16 @@ private fun UserInfoCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = displayName,
-                        style = LocalAppTypography.current.titleMedium,
+                        style = ElyonTheme.textStyles.title3,
                         fontWeight = FontWeight.SemiBold,
-                        color = c.textPrimary,
+                        color = c.onSurface,
                     )
                     if (isLoggedIn && onEditNickname != null) {
                         Spacer(Modifier.width(6.dp))
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = "修改昵称",
-                            tint = c.textTertiary,
+                            tint = c.onSurfaceVariantSummary,
                             modifier = Modifier
                                 .size(16.dp)
                                 .clickable(onClick = onEditNickname),
@@ -301,8 +304,8 @@ private fun UserInfoCard(
                     text = if (isLoggedIn && displayAccount != null) {
                         if (nickname != null) "账号: ${displayAccount.take(8)}…" else "ID: ${displayAccount.take(8)}…"
                     } else "点击登录账号",
-                    style = LocalAppTypography.current.bodySmall,
-                    color = c.textTertiary,
+                    style = ElyonTheme.textStyles.footnote1,
+                    color = c.onSurfaceVariantSummary,
                     maxLines = 1,
                 )
             }
@@ -311,7 +314,7 @@ private fun UserInfoCard(
                 Icon(
                     Icons.Default.ChevronRight,
                     contentDescription = null,
-                    tint = c.textTertiary,
+                    tint = c.onSurfaceVariantSummary,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -336,9 +339,9 @@ private fun SettingsSectionTitle(title: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val elev = LocalAppElevation.current
     val names = mapOf("pure" to "纯净蓝", "aurora" to "极光紫", "warm" to "暖阳粉", "sunny" to "阳光黄", "night" to "暗夜深", "morandi" to "莫兰迪")
     AppBottomSheet(
@@ -346,7 +349,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
         onDismiss = onDismiss,
     ) {
         Column(Modifier.padding(spacing.md)) {
-            Text("选择主题", style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
+            Text("选择主题", style = ElyonTheme.textStyles.title1, modifier = Modifier.padding(bottom = 20.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppTheme.all.forEach { theme ->
                     val selected = themeCtrl.currentTheme.name == theme.name
@@ -366,7 +369,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                             Column {
                                 Box(Modifier.size(36.dp).clip(RoundedCornerShape(shapes.large)).background(theme.colors.primary))
                                 Spacer(Modifier.height(6.dp))
-                                Text(names[theme.name] ?: theme.name, style = LocalAppTypography.current.bodySmall, color = theme.colors.textPrimary)
+                                Text(names[theme.name] ?: theme.name, style = ElyonTheme.textStyles.footnote1, color = theme.colors.textPrimary)
                             }
                             if (selected) {
                                 Icon(Icons.Default.Check, contentDescription = null, tint = c.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))
@@ -383,16 +386,16 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val elev = LocalAppElevation.current
     AppBottomSheet(
         show = true,
         onDismiss = onDismiss,
     ) {
         Column(Modifier.padding(spacing.md)) {
-            Text(AppStrings.densityLabel, style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
+            Text(AppStrings.densityLabel, style = ElyonTheme.textStyles.title1, modifier = Modifier.padding(bottom = 20.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppDensity.entries.forEach { density ->
                     val selected = ctrl.currentDensity == density
@@ -412,10 +415,10 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
                                 Box(
                                     Modifier.size(36.dp)
                                         .clip(RoundedCornerShape(shapes.large))
-                                        .background(if (selected) c.primary else c.surfaceElevated)
+                                        .background(if (selected) c.primary else c.surfaceContainerHigh)
                                 )
                                 Spacer(Modifier.height(6.dp))
-                                Text(density.label, style = LocalAppTypography.current.bodySmall, color = c.textPrimary)
+                                Text(density.label, style = ElyonTheme.textStyles.footnote1, color = c.onSurface)
                             }
                         }
                     }
@@ -498,7 +501,7 @@ fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing
 
 @Composable
 fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     val themesColors = mapOf(
         "pure" to 0xFF2563EB, "aurora" to 0xFF7C3AED, "warm" to 0xFFFF8A80,
         "sunny" to 0xFFF59E0B, "night" to 0xFF1E293B, "morandi" to 0xFF94A3B8,
@@ -516,9 +519,9 @@ fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BabyManagementScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val elev = LocalAppElevation.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -549,7 +552,7 @@ fun BabyManagementScreen(navigator: Navigator) {
     ) { padding ->
         if (activeBabies.isEmpty() && deletedBabies.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("还没有添加宝宝", color = c.textSecondary)
+                Text("还没有添加宝宝", color = c.onSurfaceVariantSummary)
             }
         } else {
             Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md, vertical = spacing.sm)) {
@@ -568,25 +571,25 @@ fun BabyManagementScreen(navigator: Navigator) {
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(44.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {
-                                Text(b.name.take(1), color = c.primary, fontWeight = FontWeight.SemiBold, style = LocalAppTypography.current.titleMedium)
+                                Text(b.name.take(1), color = c.primary, fontWeight = FontWeight.SemiBold, style = ElyonTheme.textStyles.title3)
                             }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(b.name, style = LocalAppTypography.current.titleSmall)
+                                    Text(b.name, style = ElyonTheme.textStyles.subtitle)
                                     if (isCurrent) {
                                         Spacer(Modifier.width(spacing.sm))
                                         AppSurface(color = c.primaryContainer, shape = RoundedCornerShape(shapes.medium)) {
-                                            Text("当前", style = LocalAppTypography.current.labelSmall, color = c.primary, modifier = Modifier.padding(horizontal = spacing.sm, vertical = spacing.xxs))
+                                            Text("当前", style = ElyonTheme.textStyles.footnote2, color = c.primary, modifier = Modifier.padding(horizontal = spacing.sm, vertical = spacing.xxs))
                                         }
                                     }
                                 }
-                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
+                                Text("${b.gender} · ${DateUtils.monthAge(java.time.LocalDate.parse(b.birthDate))}", style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary)
                                 if (b.uuid != null) {
                                     Text(
                                         "UUID: ${b.uuid.take(8)}…",
-                                        style = LocalAppTypography.current.labelSmall,
-                                        color = c.textSecondary.copy(alpha = 0.5f),
+                                        style = ElyonTheme.textStyles.footnote2,
+                                        color = c.onSurfaceVariantSummary.copy(alpha = 0.5f),
                                     )
                                 }
                             }
@@ -597,7 +600,7 @@ fun BabyManagementScreen(navigator: Navigator) {
                                     label = "切换",
                                 )
                             }
-                            AppIconButton(icon = Icons.Default.Delete, onClick = { showDeleteConfirm = b }, contentDescription = "删除", tint = c.textSecondary)
+                            AppIconButton(icon = Icons.Default.Delete, onClick = { showDeleteConfirm = b }, contentDescription = "删除", tint = c.onSurfaceVariantSummary)
                         }
                     }
                 }
@@ -608,7 +611,7 @@ fun BabyManagementScreen(navigator: Navigator) {
                         variant = ButtonVariant.Text,
                         onClick = { showDeleted = !showDeleted },
                         label = "已删除的宝宝 (${deletedBabies.size}) ${if (showDeleted) "▲" else "▼"}",
-                        contentColor = c.textSecondary,
+                        contentColor = c.onSurfaceVariantSummary,
                     )
                     if (showDeleted) {
                         deletedBabies.forEach { b ->
@@ -617,13 +620,13 @@ fun BabyManagementScreen(navigator: Navigator) {
                                 elevation = elev.level1,
                             ) {
                                 Row(Modifier.padding(spacing.md), verticalAlignment = Alignment.CenterVertically) {
-                                    Box(Modifier.size(36.dp).clip(CircleShape).background(c.textTertiary), contentAlignment = Alignment.Center) {
+                                    Box(Modifier.size(36.dp).clip(CircleShape).background(c.onSurfaceVariantSummary), contentAlignment = Alignment.Center) {
                                         Text(b.name.take(1), color = Color.White, fontWeight = FontWeight.SemiBold)
                                     }
                                     Spacer(Modifier.width(10.dp))
                                     Column(Modifier.weight(1f)) {
-                                        Text(b.name, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
-                                        Text("已删除", style = LocalAppTypography.current.labelSmall, color = c.textTertiary)
+                                        Text(b.name, style = ElyonTheme.textStyles.body2, color = c.onSurfaceVariantSummary)
+                                        Text("已删除", style = ElyonTheme.textStyles.footnote2, color = c.onSurfaceVariantSummary)
                                     }
                                     AppButton(
                                         variant = ButtonVariant.Text,
@@ -674,7 +677,7 @@ fun BabyManagementScreen(navigator: Navigator) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     val isEdit = baby != null
     var name by remember { mutableStateOf(baby?.name ?: "") }
     var gender by remember { mutableStateOf(baby?.gender ?: "男") }
@@ -822,9 +825,9 @@ fun BackupScreen(navigator: Navigator) {
         }
     }
 
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val elev = LocalAppElevation.current
     AppScaffold(topBar = {
         AppTopBar(
@@ -844,8 +847,8 @@ fun BackupScreen(navigator: Navigator) {
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("本地备份", style = LocalAppTypography.current.titleSmall)
-                            Text("选择备份保存位置", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
+                            Text("本地备份", style = ElyonTheme.textStyles.subtitle)
+                            Text("选择备份保存位置", style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -858,10 +861,10 @@ fun BackupScreen(navigator: Navigator) {
                     )
                     if (selectedDirName.isNotEmpty()) {
                         Spacer(Modifier.height(spacing.sm))
-                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(shapes.medium)).background(c.surfaceElevated).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("📁", style = LocalAppTypography.current.bodyMedium)
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(shapes.medium)).background(c.surfaceContainerHigh).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("📁", style = ElyonTheme.textStyles.body2)
                             Spacer(Modifier.width(spacing.sm))
-                            Text(selectedDirName, style = LocalAppTypography.current.bodySmall, modifier = Modifier.weight(1f), maxLines = 1)
+                            Text(selectedDirName, style = ElyonTheme.textStyles.footnote1, modifier = Modifier.weight(1f), maxLines = 1)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -883,7 +886,7 @@ fun BackupScreen(navigator: Navigator) {
                 }
             }
             if (backupPath.isNotEmpty()) {
-                Text("上次备份: $backupPath", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(top = spacing.sm))
+                Text("上次备份: $backupPath", style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary, modifier = Modifier.padding(top = spacing.sm))
             }
             Spacer(Modifier.height(12.dp))
 
@@ -893,13 +896,13 @@ fun BackupScreen(navigator: Navigator) {
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.tertiary.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
-                            Text("☁️", style = LocalAppTypography.current.titleMedium)
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.tertiaryContainer.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                            Text("☁️", style = ElyonTheme.textStyles.title3)
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("WebDAV 云备份", style = LocalAppTypography.current.titleSmall)
-                            Text(webdavStatus, style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
+                            Text("WebDAV 云备份", style = ElyonTheme.textStyles.subtitle)
+                            Text(webdavStatus, style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -948,8 +951,8 @@ fun BackupScreen(navigator: Navigator) {
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("恢复备份", style = LocalAppTypography.current.titleSmall)
-                            Text("从 zip 文件导入数据", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
+                            Text("恢复备份", style = ElyonTheme.textStyles.subtitle)
+                            Text("从 zip 文件导入数据", style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary)
                         }
                     }
                     Spacer(Modifier.height(12.dp))

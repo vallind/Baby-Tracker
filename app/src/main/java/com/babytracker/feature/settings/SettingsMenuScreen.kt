@@ -1,4 +1,5 @@
 package com.babytracker.feature.settings
+import com.babytracker.core.ui.AppSpacing
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
@@ -30,7 +31,7 @@ import org.koin.compose.koinInject
 
 @Composable
 fun PreferenceSettingsScreen(navigator: Navigator) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     val themeCtrl: ThemeController = koinInject()
     val densityCtrl: DensityController = koinInject()
     var showThemePicker by remember { mutableStateOf(false) }
@@ -182,7 +183,7 @@ private fun SettingsMenuScaffold(
     navigator: Navigator,
     content: @Composable () -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     AppScaffold(
         topBar = {
             AppTopBar(

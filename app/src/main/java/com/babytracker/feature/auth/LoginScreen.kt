@@ -1,4 +1,6 @@
 package com.babytracker.feature.auth
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -29,9 +31,9 @@ import org.koin.compose.koinInject
 fun LoginScreen(navigator: Navigator) {
     val vm: LoginViewModel = koinInject()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
-    val c = LocalAppColors.current
-    val typography = LocalAppTypography.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
+    val spacing = com.babytracker.core.ui.AppSpacing
 
 
     LaunchedEffect(uiState.isLoggedIn) {
@@ -55,12 +57,12 @@ fun LoginScreen(navigator: Navigator) {
 
             Text(
                 text = if (uiState.isRegisterMode) "创建账户" else "登录账户",
-                style = typography.headlineLarge, color = c.textPrimary,
+                style = typography.headline1, color = c.onSurface,
             )
             Spacer(Modifier.height(spacing.sm))
             Text(
                 text = if (uiState.isRegisterMode) "注册后可开启云同步和家庭共享" else "登录后同步数据到云端",
-                style = typography.bodyLarge, color = c.textSecondary,
+                style = typography.body1, color = c.onSurfaceVariantSummary,
             )
             Spacer(Modifier.height(spacing.xl))
 
@@ -86,7 +88,7 @@ fun LoginScreen(navigator: Navigator) {
             Spacer(Modifier.height(spacing.sm))
 
             uiState.errorMessage?.let {
-                Text(it, color = c.error, style = typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs))
+                Text(it, color = c.error, style = typography.body2, modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs))
             }
             Spacer(Modifier.height(spacing.lg))
 
@@ -104,7 +106,7 @@ fun LoginScreen(navigator: Navigator) {
                 label = if (uiState.isRegisterMode) "已有账户？去登录" else "没有账户？去注册",
             )
             Spacer(Modifier.height(spacing.xl))
-            Text("登录为可选操作，不登录不影响本地使用", style = typography.labelSmall, color = c.textTertiary)
+            Text("登录为可选操作，不登录不影响本地使用", style = typography.footnote2, color = c.onSurfaceVariantSummary)
             Spacer(Modifier.height(spacing.md))
         }
     }

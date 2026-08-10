@@ -1,4 +1,7 @@
 package com.babytracker.feature.stats
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -45,9 +48,9 @@ import org.koin.compose.koinInject
 
 @Composable
 fun StatsScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val viewModel: StatsViewModel = org.koin.androidx.compose.koinViewModel()
     val state by viewModel.state.collectAsState()
 
@@ -70,7 +73,7 @@ fun StatsScreen(navigator: Navigator) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             val periodLabels = listOf("日", "周", "月", "年")
             val selectedIndex = when (state.period) {
@@ -172,9 +175,9 @@ fun StatsScreen(navigator: Navigator) {
 
 @Composable
 private fun StatsLoadingState() {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,7 +186,7 @@ private fun StatsLoadingState() {
     ) {
         AppCircularProgress()
         Spacer(Modifier.height(spacing.md))
-        Text("正在加载统计数据", style = typography.bodyMedium, color = c.textSecondary)
+        Text("正在加载统计数据", style = typography.body2, color = c.onSurfaceVariantSummary)
     }
 }
 
@@ -195,9 +198,9 @@ private fun DateRangeNav(
     onBack: () -> Unit,
     onForward: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     Row(
         Modifier
             .fillMaxWidth()
@@ -208,7 +211,7 @@ private fun DateRangeNav(
         Icon(
             Icons.Filled.ChevronLeft,
             contentDescription = "上一周期",
-            tint = if (canGoBack) c.textSecondary else c.textDisabled,
+            tint = if (canGoBack) c.onSurfaceVariantSummary else c.disabledOnSurface,
             modifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
@@ -216,15 +219,15 @@ private fun DateRangeNav(
         )
         Text(
             dateRangeText,
-            style = typography.bodyLarge,
-            color = c.textSecondary,
+            style = typography.body1,
+            color = c.onSurfaceVariantSummary,
             modifier = Modifier.padding(horizontal = spacing.md),
             textAlign = TextAlign.Center,
         )
         Icon(
             Icons.Filled.ChevronRight,
             contentDescription = "下一周期",
-            tint = if (canGoForward) c.textSecondary else c.textDisabled,
+            tint = if (canGoForward) c.onSurfaceVariantSummary else c.disabledOnSurface,
             modifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
@@ -243,9 +246,9 @@ private fun FeedingCard(
     points: List<Float>,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val showBreast = breastFeedCount > 0
     val showFormula = formulaCount > 0
     StatCardFrame(modifier) {
@@ -255,20 +258,20 @@ private fun FeedingCard(
             verticalAlignment = Alignment.Top,
         ) {
             Column {
-                StatCardIcon("🍼", c.warning)
+                StatCardIcon("🍼", c.secondary)
                 Spacer(Modifier.height(spacing.sm))
-                Text("喂养", style = typography.labelMedium, color = c.textTertiary)
+                Text("喂养", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             Column(horizontalAlignment = Alignment.End) {
                 if (showBreast && showFormula) {
-                    Text("母乳 ${breastFeedCount}次", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                    Text("配方 ${formulaTotalMl}ml", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                    Text("母乳 ${breastFeedCount}次", style = typography.title3, fontWeight = FontWeight.Bold, color = c.onSurface)
+                    Text("配方 ${formulaTotalMl}ml", style = typography.title3, fontWeight = FontWeight.Bold, color = c.onSurface)
                 } else if (showBreast) {
-                    Text("母乳 ${breastFeedCount}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                    Text("母乳 ${breastFeedCount}次", style = typography.title1, fontWeight = FontWeight.Bold, color = c.onSurface)
                 } else if (showFormula) {
-                    Text("配方 ${formulaTotalMl}ml", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                    Text("配方 ${formulaTotalMl}ml", style = typography.title1, fontWeight = FontWeight.Bold, color = c.onSurface)
                 } else {
-                    Text("${count}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                    Text("${count}次", style = typography.title1, fontWeight = FontWeight.Bold, color = c.onSurface)
                 }
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
@@ -280,7 +283,7 @@ private fun FeedingCard(
             hasData = points.any { it > 0f },
             emptyText = "本周期暂无喂养记录",
         ) {
-            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.warning)
+            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.secondary)
         }
     }
 }
@@ -292,9 +295,9 @@ private fun SleepCard(
     points: List<Float>,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val hours = minutes / 60
     val mins = minutes % 60
     StatCardFrame(modifier) {
@@ -306,10 +309,10 @@ private fun SleepCard(
             Column {
                 StatCardIcon("🌙", c.secondary)
                 Spacer(Modifier.height(spacing.sm))
-                Text("睡眠时长", style = typography.labelMedium, color = c.textTertiary)
+                Text("睡眠时长", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text("${hours}时${mins}分", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text("${hours}时${mins}分", style = typography.title1, fontWeight = FontWeight.Bold, color = c.onSurface)
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }
@@ -332,9 +335,9 @@ private fun HeightCard(
     points: List<Float>,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -344,10 +347,10 @@ private fun HeightCard(
             Column {
                 StatCardIcon("📏", c.primary)
                 Spacer(Modifier.height(spacing.sm))
-                Text("身高增长", style = typography.labelMedium, color = c.textTertiary)
+                Text("身高增长", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text(value, style = typography.title1, fontWeight = FontWeight.Bold, color = c.onSurface)
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }
@@ -370,9 +373,9 @@ private fun WeightCard(
     points: List<Float>,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     StatCardFrame(modifier) {
         Row(
             Modifier.fillMaxWidth(),
@@ -380,12 +383,12 @@ private fun WeightCard(
             verticalAlignment = Alignment.Top,
         ) {
             Column {
-                StatCardIcon("⚖️", c.success)
+                StatCardIcon("⚖️", c.tertiaryContainer)
                 Spacer(Modifier.height(spacing.sm))
-                Text("体重增长", style = typography.labelMedium, color = c.textTertiary)
+                Text("体重增长", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text(value, style = typography.title1, fontWeight = FontWeight.Bold, color = c.onSurface)
                 if (compare.isNotEmpty()) {
                     StatCompareLabel(compare)
                 }
@@ -407,8 +410,8 @@ private fun StatChartArea(
     emptyText: String,
     content: @Composable () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     if (hasData) {
         content()
     } else {
@@ -418,7 +421,7 @@ private fun StatChartArea(
                 .height(52.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
-            Text(emptyText, style = typography.labelMedium, color = c.textTertiary)
+            Text(emptyText, style = typography.footnote1, color = c.onSurfaceVariantSummary)
         }
     }
 }
@@ -428,8 +431,8 @@ private fun StatCardFrame(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     AppCard(
         containerColor = c.surface,
         modifier = modifier.fillMaxWidth(),
@@ -440,8 +443,8 @@ private fun StatCardFrame(
 
 @Composable
 private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifier) {
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     Box(
         modifier
             .size(spacing.xl)
@@ -449,20 +452,20 @@ private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifi
             .background(tint.copy(alpha = 0.12f)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(emoji, style = typography.titleMedium)
+        Text(emoji, style = typography.title3)
     }
 }
 
 @Composable
 private fun StatCompareLabel(compare: String) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val isPositive = compare.startsWith("+")
     Text(
         compare,
-        style = typography.labelMedium,
-        color = if (isPositive) c.success else c.textSecondary,
+        style = typography.footnote1,
+        color = if (isPositive) c.tertiaryContainer else c.onSurfaceVariantSummary,
         modifier = Modifier.padding(top = spacing.xs),
     )
 }
@@ -471,9 +474,9 @@ private fun StatCompareLabel(compare: String) {
 fun MiniBarChart(
     points: List<Float>,
     modifier: Modifier = Modifier,
-    barColor: Color = LocalAppColors.current.primary,
+    barColor: Color =  ElyonTheme.colorScheme.primary,
 ) {
-    val shapes = LocalAppShapes.current
+    val shapes = com.babytracker.core.ui.AppShapes
     Canvas(modifier) {
         if (points.none { it > 0f }) return@Canvas
 
@@ -503,7 +506,7 @@ fun MiniBarChart(
 
 @Composable
 fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     val lineColor = c.primary
     val areaBrush = androidx.compose.ui.graphics.Brush.verticalGradient(
         colors = listOf(c.primary.copy(alpha = 0.25f), Color.Transparent),

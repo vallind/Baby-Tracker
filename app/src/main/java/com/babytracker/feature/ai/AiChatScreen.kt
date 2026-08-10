@@ -1,4 +1,7 @@
 package com.babytracker.feature.ai
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -129,7 +132,7 @@ fun AiChatScreen(navigator: Navigator) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(LocalAppColors.current.pageBackground),
+                .background( ElyonTheme.colorScheme.background),
         ) {
             AiBabySummary(state)
             AiModelSelector(
@@ -144,10 +147,10 @@ fun AiChatScreen(navigator: Navigator) {
                     .weight(1f)
                     .fillMaxWidth(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = LocalAppSpacing.current.md,
-                    vertical = LocalAppSpacing.current.sm,
+                    horizontal =  com.babytracker.core.ui.AppSpacing.md,
+                    vertical =  com.babytracker.core.ui.AppSpacing.sm,
                 ),
-                verticalArrangement = Arrangement.spacedBy(LocalAppSpacing.current.sm),
+                verticalArrangement = Arrangement.spacedBy( com.babytracker.core.ui.AppSpacing.sm),
             ) {
                 if (state.messages.isEmpty()) {
                     item {
@@ -254,21 +257,21 @@ private fun AiHistorySheet(
     onLoadConversation: (Long) -> Unit,
     onDeleteConversation: (Long) -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     AppBottomSheet(show = show, onDismiss = onDismiss) {
         Text(
             text = AppStrings.aiHistory,
-            style = typography.titleLarge,
-            color = colors.textPrimary,
+            style = typography.title1,
+            color = colors.onSurface,
             modifier = Modifier.padding(horizontal = spacing.md),
         )
         Spacer(Modifier.height(spacing.xs))
         Text(
             text = AppStrings.aiHistoryLocalNotice,
-            style = typography.bodyMedium,
-            color = colors.textSecondary,
+            style = typography.body2,
+            color = colors.onSurfaceVariantSummary,
             modifier = Modifier.padding(horizontal = spacing.md),
         )
         Spacer(Modifier.height(spacing.sm))
@@ -294,8 +297,8 @@ private fun AiHistorySheet(
         if (state.isHistoryLoading) {
             Text(
                 text = AppStrings.aiAnalysisLoading,
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
+                style = typography.body2,
+                color = colors.onSurfaceVariantSummary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(spacing.lg),
@@ -307,8 +310,8 @@ private fun AiHistorySheet(
                 } else {
                     AppStrings.aiHistoryNoMatch
                 },
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
+                style = typography.body2,
+                color = colors.onSurfaceVariantSummary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(spacing.lg),
@@ -332,7 +335,7 @@ private fun AiHistorySheet(
                         containerColor = if (state.conversationId == conversation.id) {
                             colors.primaryContainer
                         } else {
-                            colors.surfaceElevated
+                            colors.surfaceContainerHigh
                         },
                     ) {
                         Row(
@@ -344,8 +347,8 @@ private fun AiHistorySheet(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     text = conversation.title,
-                                    style = typography.titleMedium,
-                                    color = colors.textPrimary,
+                                    style = typography.title3,
+                                    color = colors.onSurface,
                                 )
                                 if (conversation.preview.isNotBlank()) {
                                     Spacer(Modifier.height(spacing.xs))
@@ -354,19 +357,19 @@ private fun AiHistorySheet(
                                             Regex("[\\r\\n]+"),
                                             " ",
                                         ).take(80),
-                                        style = typography.bodyMedium,
-                                        color = colors.textSecondary,
+                                        style = typography.body2,
+                                        color = colors.onSurfaceVariantSummary,
                                         maxLines = 2,
                                     )
                                 }
                                 Spacer(Modifier.height(spacing.xs))
                                 Text(
                                     text = formatAiHistoryTime(conversation.updatedAt),
-                                    style = typography.labelMedium,
-                                    color = colors.textTertiary,
+                                    style = typography.footnote1,
+                                    color = colors.onSurfaceVariantSummary,
                                 )
                             }
-                            AppIconButton(icon = Icons.Default.Delete, onClick = { onDeleteConversation(conversation.id) }, contentDescription = AppStrings.aiHistoryDeleteTitle, tint = colors.danger)
+                            AppIconButton(icon = Icons.Default.Delete, onClick = { onDeleteConversation(conversation.id) }, contentDescription = AppStrings.aiHistoryDeleteTitle, tint = colors.error)
                         }
                     }
                 }
@@ -385,26 +388,26 @@ private fun AiQuickAnalysisSection(
     onSelect: (AiAnalysisSource) -> Unit,
     onSelectPeriod: (AiAnalysisPeriod) -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     Column {
         Text(
             text = AppStrings.aiQuickAnalysis,
-            style = typography.titleMedium,
-            color = colors.textPrimary,
+            style = typography.title3,
+            color = colors.onSurface,
         )
         Spacer(Modifier.height(spacing.xs))
         Text(
             text = AppStrings.aiQuickAnalysisSubtitle,
-            style = typography.bodyMedium,
-            color = colors.textSecondary,
+            style = typography.body2,
+            color = colors.onSurfaceVariantSummary,
         )
         Spacer(Modifier.height(spacing.sm))
         Text(
             text = AppStrings.aiAnalysisPeriod,
-            style = typography.labelMedium,
-            color = colors.textSecondary,
+            style = typography.footnote1,
+            color = colors.onSurfaceVariantSummary,
         )
         Spacer(Modifier.height(spacing.xs))
         Row(
@@ -417,8 +420,8 @@ private fun AiQuickAnalysisSection(
                 val selected = state.analysisPeriod == period
                 AppChip(
                     label = "${period.days} 天",
-                    backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
-                    textColor = if (selected) colors.onPrimary else colors.textSecondary,
+                    backgroundColor = if (selected) colors.primary else colors.surfaceContainerHigh,
+                    textColor = if (selected) colors.onPrimary else colors.onSurfaceVariantSummary,
                     modifier = Modifier.clickable { onSelectPeriod(period) },
                 )
             }
@@ -444,7 +447,7 @@ private fun AiAnalysisCardRow(
     state: AiChatUiState,
     onSelect: (AiAnalysisSource) -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     Row(Modifier.fillMaxWidth()) {
         sources.forEachIndexed { index, source ->
             if (index > 0) Spacer(Modifier.width(spacing.sm))
@@ -465,9 +468,9 @@ private fun AiAnalysisCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     val enabled = isAnalysisSourceEnabled(source, state.preferences)
     val status = when {
         state.isAnalysisAvailabilityLoading -> AppStrings.aiAnalysisLoading
@@ -480,30 +483,30 @@ private fun AiAnalysisCard(
         modifier = modifier
             .heightIn(min = 96.dp)
             .clickable(onClick = onClick),
-        containerColor = if (selected) colors.primaryContainer else colors.surfaceElevated,
+        containerColor = if (selected) colors.primaryContainer else colors.surfaceContainerHigh,
         borderColor = if (selected) colors.primary else colors.outline,
         borderWidth = 1.dp,
     ) {
         Column(Modifier.padding(spacing.md)) {
             Text(
                 text = analysisTitle(source),
-                style = typography.titleMedium,
-                color = colors.textPrimary,
+                style = typography.title3,
+                color = colors.onSurface,
             )
             Spacer(Modifier.height(spacing.xs))
             Text(
                 text = analysisRange(state.analysisPeriod),
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
+                style = typography.body2,
+                color = colors.onSurfaceVariantSummary,
             )
             Spacer(Modifier.height(spacing.xs))
             Text(
                 text = status,
-                style = typography.labelMedium,
+                style = typography.footnote1,
                 color = if (source in state.availableAnalyses) {
                     colors.primary
                 } else {
-                    colors.textTertiary
+                    colors.onSurfaceVariantSummary
                 },
             )
         }
@@ -517,9 +520,9 @@ private fun AiAnalysisContextBar(
     canRemove: Boolean,
     onRemove: () -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     AppCard(
         modifier = Modifier
             .padding(horizontal = spacing.md, vertical = spacing.xs)
@@ -539,13 +542,13 @@ private fun AiAnalysisContextBar(
             ) {
                 Text(
                     text = AppStrings.aiAnalysisContext,
-                    style = typography.labelMedium,
-                    color = colors.textSecondary,
+                    style = typography.footnote1,
+                    color = colors.onSurfaceVariantSummary,
                 )
                 Text(
                     text = "${analysisTitle(source)} · ${analysisRange(period)}",
-                    style = typography.bodyMedium,
-                    color = colors.textPrimary,
+                    style = typography.body2,
+                    color = colors.onSurface,
                 )
             }
             AppButton(
@@ -563,9 +566,9 @@ private fun AiAnalysisUnavailableBanner(
     source: AiAnalysisSource,
     reason: AiAnalysisUnavailableReason,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     val message = if (reason == AiAnalysisUnavailableReason.DATA_DISABLED) {
         AppStrings.aiAnalysisEnableRecords
     } else {
@@ -578,11 +581,11 @@ private fun AiAnalysisUnavailableBanner(
     }
     Text(
         text = message,
-        style = typography.bodyMedium,
-        color = colors.warning,
+        style = typography.body2,
+        color = colors.secondary,
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.warning.copy(alpha = 0.1f))
+            .background(colors.secondary.copy(alpha = 0.1f))
             .padding(horizontal = spacing.md, vertical = spacing.sm),
     )
 }
@@ -599,9 +602,9 @@ private fun analysisRange(period: AiAnalysisPeriod): String =
 
 @Composable
 private fun AiBabySummary(state: AiChatUiState) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     val baby = state.baby
     AppCard(
         modifier = Modifier
@@ -616,8 +619,8 @@ private fun AiBabySummary(state: AiChatUiState) {
                         ?: AppStrings.aiMonthAgeUnknown
                     "${it.name} · $age"
                 } ?: AppStrings.aiNoBaby,
-                style = typography.titleMedium,
-                color = colors.textPrimary,
+                style = typography.title3,
+                color = colors.onSurface,
             )
             Spacer(Modifier.height(spacing.xs))
             Text(
@@ -626,8 +629,8 @@ private fun AiBabySummary(state: AiChatUiState) {
                 } else {
                     AppStrings.aiDataNoticeDisabled
                 },
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
+                style = typography.body2,
+                color = colors.onSurfaceVariantSummary,
             )
         }
     }
@@ -639,9 +642,9 @@ private fun AiModelSelector(
     onSelect: (String) -> Unit,
     onRefresh: () -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     Column(Modifier.padding(horizontal = spacing.md)) {
         when {
             state.prerequisite != AiChatPrerequisite.READY -> Row(
@@ -649,11 +652,11 @@ private fun AiModelSelector(
             ) {
                 Text(
                     text = prerequisiteMessage(state.prerequisite),
-                    style = typography.bodyMedium,
+                    style = typography.body2,
                     color = if (state.prerequisite == AiChatPrerequisite.CONFIG_UNAVAILABLE) {
                         colors.error
                     } else {
-                        colors.textSecondary
+                        colors.onSurfaceVariantSummary
                     },
                     modifier = Modifier.weight(1f),
                 )
@@ -671,8 +674,8 @@ private fun AiModelSelector(
                     val selected = option.id == state.selectedOptionId
                     AppChip(
                         label = option.name,
-                        backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
-                        textColor = if (selected) colors.onPrimary else colors.textSecondary,
+                        backgroundColor = if (selected) colors.primary else colors.surfaceContainerHigh,
+                        textColor = if (selected) colors.onPrimary else colors.onSurfaceVariantSummary,
                         modifier = Modifier.clickable { onSelect(option.id) },
                     )
                 }
@@ -695,12 +698,12 @@ private fun prerequisiteMessage(prerequisite: AiChatPrerequisite): String = when
 
 @Composable
 private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(spacing.md)) {
-            Text(AppStrings.aiWelcome, style = typography.bodyLarge, color = colors.textPrimary)
+            Text(AppStrings.aiWelcome, style = typography.body1, color = colors.onSurface)
             Spacer(Modifier.height(spacing.md))
             listOf(
                 AppStrings.aiQuestionAge,
@@ -728,10 +731,10 @@ private fun AiMessageBubble(
     onRegenerate: () -> Unit,
     onEditQuestion: () -> Unit,
 ) {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    val typography = LocalAppTypography.current
+    val colors =  ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
+    val typography = ElyonTheme.textStyles
     val isUser = message.role == AiChatRole.USER
     var answerBasisExpanded by remember(message.id) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
@@ -743,7 +746,7 @@ private fun AiMessageBubble(
                 Modifier
                     .widthIn(max = 340.dp)
                     .clip(RoundedCornerShape(shapes.large))
-                    .background(if (isUser) colors.primary else colors.surfaceElevated)
+                    .background(if (isUser) colors.primary else colors.surfaceContainerHigh)
                     .padding(spacing.md),
             ) {
                 if (!isUser && message.reasoningContent.isNotBlank()) {
@@ -760,11 +763,11 @@ private fun AiMessageBubble(
                             AiAnswerSafetyStatus.SUPPLEMENTED -> AppStrings.aiSafetySupplemented
                             AiAnswerSafetyStatus.BLOCKED -> AppStrings.aiSafetyBlocked
                         },
-                        style = typography.labelMedium,
+                        style = typography.footnote1,
                         color = if (message.safetyStatus == AiAnswerSafetyStatus.BLOCKED) {
                             colors.error
                         } else {
-                            colors.warning
+                            colors.secondary
                         },
                     )
                     Spacer(Modifier.height(spacing.sm))
@@ -773,14 +776,14 @@ private fun AiMessageBubble(
                     if (!isUser && renderMarkdown) {
                         AppMarkdownText(
                             markdown = message.content,
-                            style = typography.bodyLarge,
-                            color = colors.textPrimary,
+                            style = typography.body1,
+                            color = colors.onSurface,
                         )
                     } else {
                         Text(
                             text = message.content,
-                            style = typography.bodyLarge,
-                            color = if (isUser) colors.onPrimary else colors.textPrimary,
+                            style = typography.body1,
+                            color = if (isUser) colors.onPrimary else colors.onSurface,
                         )
                     }
                 }
@@ -829,14 +832,14 @@ private fun AiMessageBubble(
 
 @Composable
 private fun AiAnswerBasis(references: List<String>) {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val colors =  ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
         Text(
             text = AppStrings.aiRecordFacts,
-            style = typography.labelMedium,
-            color = colors.textPrimary,
+            style = typography.footnote1,
+            color = colors.onSurface,
         )
         Text(
             text = if (references.isEmpty()) {
@@ -844,28 +847,28 @@ private fun AiAnswerBasis(references: List<String>) {
             } else {
                 AppStrings.aiReferencePrefix + references.joinToString("、")
             },
-            style = typography.labelMedium,
-            color = colors.textSecondary,
+            style = typography.footnote1,
+            color = colors.onSurfaceVariantSummary,
         )
         Text(
             text = AppStrings.aiInference,
-            style = typography.labelMedium,
-            color = colors.textPrimary,
+            style = typography.footnote1,
+            color = colors.onSurface,
         )
         Text(
             text = AppStrings.aiInferenceNotice,
-            style = typography.labelMedium,
-            color = colors.textSecondary,
+            style = typography.footnote1,
+            color = colors.onSurfaceVariantSummary,
         )
         Text(
             text = AppStrings.aiActionAdvice,
-            style = typography.labelMedium,
-            color = colors.textPrimary,
+            style = typography.footnote1,
+            color = colors.onSurface,
         )
         Text(
             text = AppStrings.aiDisclaimer,
-            style = typography.labelMedium,
-            color = colors.textTertiary,
+            style = typography.footnote1,
+            color = colors.onSurfaceVariantSummary,
         )
     }
 }
@@ -877,9 +880,9 @@ private fun AiReasoningBlock(
     renderMarkdown: Boolean,
 ) {
     var expanded by remember { mutableStateOf(isStreaming) }
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val colors =  ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     AppButton(
         variant = ButtonVariant.Text,
         onClick = { expanded = !expanded },
@@ -894,14 +897,14 @@ private fun AiReasoningBlock(
         if (renderMarkdown) {
             AppMarkdownText(
                 markdown = reasoning,
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
+                style = typography.body2,
+                color = colors.onSurfaceVariantSummary,
             )
         } else {
             Text(
                 text = reasoning,
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
+                style = typography.body2,
+                color = colors.onSurfaceVariantSummary,
             )
         }
     }
@@ -909,10 +912,10 @@ private fun AiReasoningBlock(
 
 @Composable
 private fun AiRiskCard(riskLevel: AiRiskLevel) {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val accent = if (riskLevel == AiRiskLevel.ATTENTION) colors.warning else colors.error
+    val colors =  ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val accent = if (riskLevel == AiRiskLevel.ATTENTION) colors.secondary else colors.error
     val title = when (riskLevel) {
         AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyTitle
         AiRiskLevel.HIGH -> AppStrings.aiRiskHighTitle
@@ -925,36 +928,36 @@ private fun AiRiskCard(riskLevel: AiRiskLevel) {
     }
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = colors.surfaceElevated,
+        containerColor = colors.surfaceContainerHigh,
         borderColor = accent,
         borderWidth = 1.dp,
     ) {
         Column(Modifier.padding(spacing.md)) {
-            Text(title, style = typography.titleMedium, color = accent)
+            Text(title, style = typography.title3, color = accent)
             Spacer(Modifier.height(spacing.xs))
-            Text(message, style = typography.bodyMedium, color = colors.textPrimary)
+            Text(message, style = typography.body2, color = colors.onSurface)
         }
     }
 }
 
 @Composable
 private fun AiTypingIndicator() {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val colors =  ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     Text(
         text = AppStrings.aiAnswering,
-        style = typography.bodyMedium,
-        color = colors.textSecondary,
+        style = typography.body2,
+        color = colors.onSurfaceVariantSummary,
         modifier = Modifier.padding(vertical = spacing.sm),
     )
 }
 
 @Composable
 private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> Unit) {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val colors =  ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val message = when (error) {
         AiChatError.INPUT_TOO_LONG -> AppStrings.aiInputTooLong
         AiChatError.CONFIG_UNAVAILABLE -> AppStrings.aiConfigUnavailable
@@ -973,7 +976,7 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
             .padding(horizontal = spacing.md, vertical = spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(message, style = typography.bodyMedium, color = colors.error, modifier = Modifier.weight(1f))
+        Text(message, style = typography.body2, color = colors.error, modifier = Modifier.weight(1f))
         if (canRetry) {
             AppButton(variant = ButtonVariant.Text, onClick = onRetry, label = AppStrings.aiRetry)
         }
@@ -983,7 +986,7 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
 @Composable
 private fun AiHistorySaveStatusBanner(status: AiHistorySaveStatus) {
     if (status == AiHistorySaveStatus.IDLE) return
-    val colors = LocalAppColors.current
+    val colors =  ElyonTheme.colorScheme
     val text = when (status) {
         AiHistorySaveStatus.IDLE -> return
         AiHistorySaveStatus.SAVING -> AppStrings.aiHistorySaving
@@ -995,14 +998,14 @@ private fun AiHistorySaveStatusBanner(status: AiHistorySaveStatus) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = LocalAppSpacing.current.md,
-                vertical = LocalAppSpacing.current.xs,
+                horizontal =  com.babytracker.core.ui.AppSpacing.md,
+                vertical =  com.babytracker.core.ui.AppSpacing.xs,
             ),
-        style = LocalAppTypography.current.labelMedium,
+        style = ElyonTheme.textStyles.footnote1,
         color = if (status == AiHistorySaveStatus.FAILED) {
             colors.error
         } else {
-            colors.textSecondary
+            colors.onSurfaceVariantSummary
         },
     )
 }
@@ -1014,11 +1017,11 @@ private fun AiComposer(
     onSend: () -> Unit,
     onStop: () -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     Row(
         Modifier
             .fillMaxWidth()
-            .background(LocalAppColors.current.surface)
+            .background( ElyonTheme.colorScheme.surface)
             .padding(spacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -1,4 +1,6 @@
 package com.babytracker.feature.growth
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -61,10 +63,10 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GrowthScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
     val growthRepo: GrowthRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -100,7 +102,7 @@ fun GrowthScreen(navigator: Navigator) {
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
                         contentDescription = "日历",
-                        tint = c.textPrimary,
+                        tint = c.onSurface,
                     )
                 },
             )
@@ -111,7 +113,7 @@ fun GrowthScreen(navigator: Navigator) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             Box(
                 Modifier
@@ -144,15 +146,15 @@ fun GrowthScreen(navigator: Navigator) {
             ) {
                 Text(
                     "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = LocalAppTypography.current.titleSmall,
+                    style = ElyonTheme.textStyles.subtitle,
                     fontWeight = FontWeight.Medium,
-                    color = c.textPrimary,
+                    color = c.onSurface,
                 )
                 Spacer(Modifier.width(spacing.xs))
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = c.textTertiary,
+                    tint = c.onSurfaceVariantSummary,
                     modifier = Modifier.size(18.dp),
                 )
             }
@@ -216,8 +218,8 @@ fun GrowthScreen(navigator: Navigator) {
                                 Column(Modifier.fillMaxWidth().padding(spacing.lg), horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         "当前${tabs[tab]}",
-                                        style = LocalAppTypography.current.bodyMedium,
-                                        color = c.textSecondary,
+                                        style = ElyonTheme.textStyles.body2,
+                                        color = c.onSurfaceVariantSummary,
                                     )
                                     Spacer(Modifier.height(spacing.sm))
                                     Row(
@@ -225,24 +227,24 @@ fun GrowthScreen(navigator: Navigator) {
                                     ) {
                                         Text(
                                             valText,
-                                            style = typography.displayLarge,
+                                            style = typography.headline1,
                                             fontWeight = FontWeight.Bold,
-                                            color = c.textPrimary,
+                                            color = c.onSurface,
                                         )
                                         Spacer(Modifier.width(6.dp))
                                         Text(
                                             units[tab],
-                                            style = typography.titleLarge,
+                                            style = typography.title1,
                                             fontWeight = FontWeight.Medium,
-                                            color = c.textSecondary,
+                                            color = c.onSurfaceVariantSummary,
                                             modifier = Modifier.padding(bottom = 10.dp),
                                         )
                                     }
                                     Spacer(Modifier.height(6.dp))
                                     Text(
                                         "$measuredDate 测量",
-                                        style = LocalAppTypography.current.bodySmall,
-                                        color = c.textTertiary,
+                                        style = ElyonTheme.textStyles.footnote1,
+                                        color = c.onSurfaceVariantSummary,
                                     )
                                 }
                             }
@@ -255,7 +257,7 @@ fun GrowthScreen(navigator: Navigator) {
                             animationSpec = tween(durationMillis = 800),
                         )
                         val chartCardShape = RoundedCornerShape(12.dp)
-                        val gridColor = c.divider
+                        val gridColor = c.dividerLine
                         val lineColor = c.primary
                         val bgColor = c.surface
                         val areaBrush = Gradients.growthChart(ElyonTheme.colorScheme)
@@ -281,7 +283,7 @@ fun GrowthScreen(navigator: Navigator) {
                                     Modifier.fillMaxHeight().width(36.dp).padding(bottom = spacing.lg),
                                     verticalArrangement = Arrangement.SpaceBetween,
                                 ) {
-                                    yLabels.forEach { Text(it, style = LocalAppTypography.current.labelSmall, color = c.textSecondary) }
+                                    yLabels.forEach { Text(it, style = ElyonTheme.textStyles.footnote2, color = c.onSurfaceVariantSummary) }
                                 }
 
                                 Canvas(Modifier.fillMaxSize().padding(start = 36.dp, bottom = 24.dp)) {
@@ -343,8 +345,8 @@ fun GrowthScreen(navigator: Navigator) {
                                                         LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME)
                                                             .format(DateTimeFormatter.ofPattern("MM/dd"))
                                                     } catch (_: Exception) { "" },
-                                                    style = LocalAppTypography.current.labelSmall,
-                                                    color = c.textSecondary,
+                                                    style = ElyonTheme.textStyles.footnote2,
+                                                    color = c.onSurfaceVariantSummary,
                                                 )
                                             }
                                         }
@@ -373,21 +375,21 @@ fun GrowthScreen(navigator: Navigator) {
                                         .background(c.primary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text("📊", style = typography.titleMedium)
+                                    Text("📊", style = typography.title3)
                                 }
                                 Spacer(Modifier.width(12.dp))
                                 Column {
                                     Text(
                                         "${tabs[tab]}正常范围",
-                                        style = LocalAppTypography.current.bodySmall,
-                                        color = c.textSecondary,
+                                        style = ElyonTheme.textStyles.footnote1,
+                                        color = c.onSurfaceVariantSummary,
                                     )
                                     Spacer(Modifier.height(spacing.xxs))
                                     Text(
                                         normalRanges[tab],
-                                        style = LocalAppTypography.current.titleMedium,
+                                        style = ElyonTheme.textStyles.title3,
                                         fontWeight = FontWeight.Bold,
-                                        color = c.textPrimary,
+                                        color = c.onSurface,
                                     )
                                 }
                             }
@@ -398,8 +400,8 @@ fun GrowthScreen(navigator: Navigator) {
                         stickyHeader(key = date) {
                             Text(
                                 date,
-                                style = LocalAppTypography.current.labelMedium,
-                                color = c.textSecondary,
+                                style = ElyonTheme.textStyles.footnote1,
+                                color = c.onSurfaceVariantSummary,
                                 fontWeight = FontWeight.Medium,
                                 modifier = Modifier.padding(vertical = spacing.xs),
                             )
@@ -443,20 +445,20 @@ fun GrowthScreen(navigator: Navigator) {
                                             GrowthType.WEIGHT -> "⚖️"
                                             GrowthType.HEAD -> "📐"
                                         },
-                                        style = LocalAppTypography.current.titleLarge,
+                                        style = ElyonTheme.textStyles.title1,
                                     )
                                 }
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
                                     Text(
                                         "$label $valStr $unitStr",
-                                        style = LocalAppTypography.current.titleSmall,
-                                        color = c.textPrimary,
+                                        style = ElyonTheme.textStyles.subtitle,
+                                        color = c.onSurface,
                                     )
                                     Text(
                                         dateStr,
-                                        style = LocalAppTypography.current.bodySmall,
-                                        color = c.textSecondary,
+                                        style = ElyonTheme.textStyles.footnote1,
+                                        color = c.onSurfaceVariantSummary,
                                     )
                                 }
                             }
@@ -529,8 +531,8 @@ fun GrowthFormDialog(
     onDismiss: () -> Unit,
     onSave: (Growth) -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     val isEdit = editEntity != null
     var type by remember { mutableStateOf(editEntity?.let { GrowthType.raw(it.type) } ?: "height") }
     var value by remember {

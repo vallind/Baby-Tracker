@@ -16,9 +16,8 @@ import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.babytracker.core.ui.components.chip.AppFilterChip
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,18 +35,17 @@ import com.babytracker.BabyTrackerApp
 import com.babytracker.core.util.LogBuffer
 import com.babytracker.core.util.LogEntry
 import com.babytracker.core.ui.components.dialog.AppConfirmDialog
-import com.babytracker.designsystem.components.divider.AppDivider
 import kotlinx.coroutines.flow.collectLatest
-import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.core.ui.components.input.AppInput
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.surface.AppSurface
-import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.AppColors
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.theme.LocalAppSpacing
+import io.elyon.kmp.basic.HorizontalDivider
+import io.elyon.kmp.basic.Icon
+import io.elyon.kmp.basic.IconButton
+import io.elyon.kmp.basic.Scaffold
+import io.elyon.kmp.basic.Surface
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.TopAppBar
+import io.elyon.kmp.theme.Colors
+import io.elyon.kmp.theme.ElyonTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -62,12 +60,10 @@ private val LEVELS = listOf(
 
 private data class LevelOption(val level: Char, val label: String)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogViewerScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
     val context = LocalContext.current
 
     var filter by remember { mutableStateOf("") }
@@ -110,11 +106,17 @@ fun LogViewerScreen(navigator: Navigator) {
         selectedIds = emptySet()
     }
 
-    AppScaffold(
+    Scaffold(
         topBar = {
-            AppTopBar(
+            TopAppBar(
                 title = "日志查看",
-                onBack = { navigator.pop() },
+                color = c.primaryContainer,
+                titleColor = c.onPrimaryContainer,
+                navigationIcon = {
+                    IconButton(onClick = { navigator.pop() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
             )
         },
     ) { padding ->
@@ -127,7 +129,7 @@ fun LogViewerScreen(navigator: Navigator) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.sm, vertical = spacing.xs),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 AppInput(
@@ -137,23 +139,25 @@ fun LogViewerScreen(navigator: Navigator) {
                     placeholder = "tag 或消息",
                     modifier = Modifier.weight(1f),
                 )
-                AppIconButton(
-                    icon = Icons.Default.Refresh,
+                IconButton(
                     onClick = { logs = LogBuffer.getEntries() },
-                    contentDescription = "刷新",
-                )
-                AppIconButton(
-                    icon = Icons.Default.Delete,
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = "刷新")
+                }
+                IconButton(
                     onClick = { showClearConfirm = true },
-                    contentDescription = "清除",
-                )
-                AppIconButton(
-                    icon = if (autoScroll) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = "清除")
+                }
+                IconButton(
                     onClick = { autoScroll = !autoScroll },
-                    contentDescription = if (autoScroll) "关闭自动滚动" else "开启自动滚动",
-                )
-                AppIconButton(
-                    icon = if (selectMode) Icons.Default.ContentCopy else Icons.Default.Checklist,
+                ) {
+                    Icon(
+                        if (autoScroll) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                        contentDescription = if (autoScroll) "关闭自动滚动" else "开启自动滚动",
+                    )
+                }
+                IconButton(
                     onClick = {
                         if (selectMode) {
                             val text = filteredLogs
@@ -169,20 +173,25 @@ fun LogViewerScreen(navigator: Navigator) {
                             selectedIds = emptySet()
                         }
                     },
-                    contentDescription = if (selectMode) "复制选中" else "选择",
-                )
+                ) {
+                    Icon(
+                        if (selectMode) Icons.Default.ContentCopy else Icons.Default.Checklist,
+                        contentDescription = if (selectMode) "复制选中" else "选择",
+                    )
+                }
             }
             if (selectMode && selectedIds.isNotEmpty()) {
                 // 选择模式操作提示
-                AppSurface(
+                Surface(
                     color = c.primaryContainer,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         text = "已选 ${selectedIds.size} 条，点击图标复制",
-                        style = LocalAppTypography.current.labelSmall,
+                        style = typography.footnote2,
                         color = c.onPrimary,
-                        modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     )
                 }
             }
@@ -191,7 +200,7 @@ fun LogViewerScreen(navigator: Navigator) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.sm),
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 LEVELS.forEach { opt ->
@@ -204,14 +213,14 @@ fun LogViewerScreen(navigator: Navigator) {
                         },
                         label = opt.label,
                         selectedColor = when (opt.level) {
-                            'V' -> c.textTertiary
-                            'D' -> c.info
-                            'I' -> c.success
-                            'W' -> c.warning
-                            'E' -> c.danger
+                            'V' -> c.onSurfaceVariantSummary
+                            'D' -> c.primary
+                            'I' -> c.tertiaryContainer
+                            'W' -> c.secondary
+                            'E' -> c.error
                             else -> c.primary
                         },
-                        shape = RoundedCornerShape(shapes.extraSmall),
+                        shape = RoundedCornerShape(4.dp),
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -223,7 +232,7 @@ fun LogViewerScreen(navigator: Navigator) {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = spacing.sm),
+                contentPadding = PaddingValues(horizontal = 8.dp),
             ) {
                 items(filteredLogs, key = { entryKey(it) }) { entry ->
                     val key = entryKey(entry)
@@ -246,8 +255,8 @@ fun LogViewerScreen(navigator: Navigator) {
                             }
                         },
                     )
-                    AppDivider(
-                        color = c.divider.copy(alpha = 0.4f),
+                    HorizontalDivider(
+                        color = c.dividerLine.copy(alpha = 0.4f),
                         thickness = 0.5.dp,
                         modifier = Modifier.padding(start = if (isSelected) 0.dp else 4.dp, end = 4.dp),
                     )
@@ -255,18 +264,19 @@ fun LogViewerScreen(navigator: Navigator) {
             }
 
             // 底部统计
-            AppSurface(
+            Surface(
                 color = c.surface,
-                tonalElevation = 1.dp,
+                shadowElevation = 1.dp,
+                shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
                     text = "共 ${filteredLogs.size} 条${if (filter.isNotBlank() || selectedLevels.size < 5) "（已过滤）" else ""}",
-                    style = LocalAppTypography.current.labelSmall,
-                    color = c.textSecondary,
+                    style = typography.footnote2,
+                    color = c.onSurfaceVariantSummary,
                     modifier = Modifier.padding(
-                        horizontal = spacing.md,
-                        vertical = spacing.xs,
+                        horizontal = 16.dp,
+                        vertical = 4.dp,
                     ),
                 )
             }
@@ -294,19 +304,19 @@ fun LogViewerScreen(navigator: Navigator) {
 @Composable
 private fun LogEntryRow(
     entry: LogEntry,
-    c: AppColors,
+    c: Colors,
     selectMode: Boolean,
     isSelected: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
     val levelColor = when (entry.level) {
-        'V' -> c.textTertiary
-        'D' -> c.info
-        'I' -> c.success
-        'W' -> c.warning
-        'E' -> c.danger
-        else -> c.textPrimary
+        'V' -> c.onSurfaceVariantSummary
+        'D' -> c.primary
+        'I' -> c.tertiaryContainer
+        'W' -> c.secondary
+        'E' -> c.error
+        else -> c.onSurface
     }
     val ts = remember(entry.timestamp) {
         val sdf = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
@@ -338,33 +348,33 @@ private fun LogEntryRow(
             text = if (isSelected) "✓" else "[${entry.level}]",
             color = levelColor,
             fontWeight = FontWeight.Bold,
-            style = LocalAppTypography.current.labelSmall,
+            style = ElyonTheme.textStyles.footnote2,
             modifier = Modifier.width(24.dp),
         )
         Text(
             text = ts,
-            color = c.textTertiary,
-            style = LocalAppTypography.current.labelSmall,
+            color = c.onSurfaceVariantSummary,
+            style = ElyonTheme.textStyles.footnote2,
             modifier = Modifier.width(80.dp),
         )
         Text(
             text = entry.tag,
             color = levelColor,
             fontWeight = FontWeight.Medium,
-            style = LocalAppTypography.current.labelSmall,
+            style = ElyonTheme.textStyles.footnote2,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.widthIn(max = 120.dp),
         )
         Text(
             text = ": ",
-            color = c.textTertiary,
-            style = LocalAppTypography.current.labelSmall,
+            color = c.onSurfaceVariantSummary,
+            style = ElyonTheme.textStyles.footnote2,
         )
         Text(
             text = entry.message,
-            color = c.textPrimary,
-            style = LocalAppTypography.current.labelSmall,
+            color = c.onSurface,
+            style = ElyonTheme.textStyles.footnote2,
             maxLines = 100,
         )
     }

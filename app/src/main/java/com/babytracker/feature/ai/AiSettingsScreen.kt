@@ -1,4 +1,6 @@
 package com.babytracker.feature.ai
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -52,7 +54,7 @@ fun AiSettingsScreen(navigator: Navigator) {
     val state by viewModel.state.collectAsState()
     val preferences = state.preferences
     val capabilities = state.selectedModel?.capabilities
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     var showClearConfirm by remember { mutableStateOf(false) }
 
     AppScaffold(
@@ -204,8 +206,8 @@ fun AiSettingsScreen(navigator: Navigator) {
                         )
                         Text(
                             text = String.format("%.1f", preferences.temperatureTenths / 10f),
-                            style = LocalAppTypography.current.bodyMedium,
-                            color = LocalAppColors.current.textSecondary,
+                            style = ElyonTheme.textStyles.body2,
+                            color =  ElyonTheme.colorScheme.onSurfaceVariantSummary,
                             modifier = Modifier.padding(
                                 start = spacing.md,
                                 end = spacing.md,
@@ -354,9 +356,9 @@ fun AiSettingsScreen(navigator: Navigator) {
 private fun AiSettingsSectionTitle(title: String) {
     Text(
         text = title,
-        style = LocalAppTypography.current.labelMedium,
-        color = LocalAppColors.current.textSecondary,
-        modifier = Modifier.padding(top = LocalAppSpacing.current.lg, bottom = LocalAppSpacing.current.sm),
+        style = ElyonTheme.textStyles.footnote1,
+        color =  ElyonTheme.colorScheme.onSurfaceVariantSummary,
+        modifier = Modifier.padding(top =  com.babytracker.core.ui.AppSpacing.lg, bottom =  com.babytracker.core.ui.AppSpacing.sm),
     )
 }
 
@@ -396,19 +398,19 @@ private fun AiChoiceSetting(
     subtitle: String? = null,
     interactive: Boolean = true,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val colors =  ElyonTheme.colorScheme
     Column(Modifier.fillMaxWidth().padding(horizontal = spacing.md, vertical = spacing.sm)) {
         Text(
             text = "$emoji  $label",
-            style = LocalAppTypography.current.bodyLarge,
-            color = colors.textPrimary,
+            style = ElyonTheme.textStyles.body1,
+            color = colors.onSurface,
         )
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                style = LocalAppTypography.current.bodyMedium,
-                color = colors.textSecondary,
+                style = ElyonTheme.textStyles.body2,
+                color = colors.onSurfaceVariantSummary,
                 modifier = Modifier.padding(top = spacing.xs),
             )
         }
@@ -416,8 +418,8 @@ private fun AiChoiceSetting(
         if (options.isEmpty()) {
             Text(
                 text = AppStrings.aiConfigUnavailable,
-                style = LocalAppTypography.current.bodyMedium,
-                color = colors.textSecondary,
+                style = ElyonTheme.textStyles.body2,
+                color = colors.onSurfaceVariantSummary,
             )
         } else {
             Row(
@@ -428,8 +430,8 @@ private fun AiChoiceSetting(
                     val selected = id == selectedId
                     AppChip(
                         label = optionLabel,
-                        backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
-                        textColor = if (selected) colors.onPrimary else colors.textSecondary,
+                        backgroundColor = if (selected) colors.primary else colors.surfaceContainerHigh,
+                        textColor = if (selected) colors.onPrimary else colors.onSurfaceVariantSummary,
                         modifier = if (interactive) {
                             Modifier.clickable { onSelect(id) }
                         } else {

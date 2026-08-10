@@ -1,4 +1,6 @@
 package com.babytracker.feature.family
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -42,9 +44,9 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun FamilyPage(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val vm: FamilyViewModel = koinViewModel()
     val uiState by vm.uiState.collectAsState()
     val context = LocalContext.current
@@ -104,7 +106,7 @@ fun FamilyPage(navigator: Navigator) {
             // 错误提示
             uiState.errorMessage?.let { msg ->
                 Spacer(Modifier.height(12.dp))
-                Text(msg, color = c.error, style = typography.bodyLarge, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                Text(msg, color = c.error, style = typography.body1, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             }
         }
     }
@@ -136,7 +138,7 @@ fun FamilyPage(navigator: Navigator) {
         confirmEnabled = uiState.inviteCode.length == 6,
         content = {
             Column {
-                Text("输入家庭邀请码（6 位）", color = c.textSecondary, style = typography.bodyLarge)
+                Text("输入家庭邀请码（6 位）", color = c.onSurfaceVariantSummary, style = typography.body1)
                 Spacer(Modifier.height(12.dp))
                 AppInput(
                     value = uiState.inviteCode,
@@ -169,7 +171,7 @@ private fun FamilyModeSelector(
     onSelectFamily: (Family) -> Unit,
     onSelectLocal: () -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(spacing.sm),
@@ -197,17 +199,17 @@ private fun LocalDataView(
     families: List<Family>,
     onMigrate: (Family) -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     AppCard(modifier = Modifier.fillMaxWidth(), elevation = 1.dp) {
         Column(Modifier.padding(spacing.lg)) {
-            Text("本机数据", style = typography.titleMedium)
+            Text("本机数据", style = typography.title3)
             Spacer(Modifier.height(spacing.sm))
             Text(
                 "$count 个无家庭归属的宝宝及其记录仍保存在本机，不会上传。你可以继续本地使用，或明确选择一个家庭归属。",
-                style = typography.bodyLarge,
-                color = c.textSecondary,
+                style = typography.body1,
+                color = c.onSurfaceVariantSummary,
             )
             if (count > 0 && families.isNotEmpty()) {
                 Spacer(Modifier.height(spacing.md))
@@ -227,18 +229,18 @@ private fun LocalDataView(
 /** 空态：未加入任何家庭 */
 @Composable
 private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
 
     Box(Modifier.fillMaxWidth().padding(vertical = 60.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("👨‍👩‍👧", style = typography.displayLarge)
+            Text("👨‍👩‍👧", style = typography.headline1)
             Spacer(Modifier.height(spacing.md))
             Text(
                 "创建或加入家庭\n与家人共享宝宝的成长记录",
-                style = typography.bodyLarge,
-                color = c.textSecondary,
+                style = typography.body1,
+                color = c.onSurfaceVariantSummary,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(spacing.lg))
@@ -258,10 +260,10 @@ private fun FamilyDetailView(
     onCreateClick: () -> Unit,
     onJoinClick: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
     val context = LocalContext.current
 
     // 家庭名称卡片
@@ -278,12 +280,12 @@ private fun FamilyDetailView(
                         .background(Gradients.primary(ElyonTheme.colorScheme)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("👨‍👩‍👧", style = typography.headlineMedium)
+                    Text("👨‍👩‍👧", style = typography.headline2)
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(family.name, style = typography.titleMedium)
-                    Text("${members.size} 位成员", style = typography.labelMedium, color = c.textSecondary)
+                    Text(family.name, style = typography.title3)
+                    Text("${members.size} 位成员", style = typography.footnote1, color = c.onSurfaceVariantSummary)
                 }
             }
 
@@ -299,8 +301,8 @@ private fun FamilyDetailView(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("邀请码", style = typography.labelMedium, color = c.textSecondary)
-                    Text(family.inviteCode, style = typography.titleLarge, letterSpacing = 4.sp, color = c.primary)
+                    Text("邀请码", style = typography.footnote1, color = c.onSurfaceVariantSummary)
+                    Text(family.inviteCode, style = typography.title1, letterSpacing = 4.sp, color = c.primary)
                 }
                 AppButton(
                     variant = ButtonVariant.Text,
@@ -321,7 +323,7 @@ private fun FamilyDetailView(
 
     // 成员列表
     if (members.isNotEmpty()) {
-        Text("家庭成员", style = typography.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
+        Text("家庭成员", style = typography.footnote1, color = c.onSurfaceVariantSummary, modifier = Modifier.padding(bottom = spacing.sm))
         AppCard(
             modifier = Modifier.fillMaxWidth(),
             elevation = 1.dp,
@@ -343,25 +345,25 @@ private fun FamilyDetailView(
                         ) {
                             Text(
                                 if (member.role == "owner") "👑" else "👤",
-                                style = typography.titleMedium,
+                                style = typography.title3,
                             )
                         }
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
                             Text(
                                 member.userId.take(8) + "…",
-                                style = typography.bodyMedium,
-                                color = c.textPrimary,
+                                style = typography.body2,
+                                color = c.onSurface,
                             )
                             Text(
                                 if (member.role == "owner") "创建者" else "成员",
-                                style = typography.labelMedium,
-                                color = c.textSecondary,
+                                style = typography.footnote1,
+                                color = c.onSurfaceVariantSummary,
                             )
                         }
                     }
                     if (index < members.lastIndex) {
-                        AppDivider(color = c.divider, thickness = 0.5.dp)
+                        AppDivider(color = c.dividerLine, thickness = 0.5.dp)
                     }
                 }
             }

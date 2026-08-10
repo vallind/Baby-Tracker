@@ -1,4 +1,6 @@
 package com.babytracker.feature.diaper
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -54,9 +56,9 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DiaperListScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val diaperRepo: DiaperRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -110,7 +112,7 @@ fun DiaperListScreen(navigator: Navigator) {
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
                         contentDescription = "选择日期",
-                        tint = c.textPrimary,
+                        tint = c.onSurface,
                     )
                 },
             )
@@ -121,7 +123,7 @@ fun DiaperListScreen(navigator: Navigator) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             // —— 日期选择器 ——
             Row(
@@ -133,15 +135,15 @@ fun DiaperListScreen(navigator: Navigator) {
             ) {
                 Text(
                     "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = LocalAppTypography.current.titleSmall,
+                    style = ElyonTheme.textStyles.subtitle,
                     fontWeight = FontWeight.Medium,
-                    color = c.textPrimary,
+                    color = c.onSurface,
                 )
                 Spacer(Modifier.width(spacing.xs))
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = c.textTertiary,
+                    tint = c.onSurfaceVariantSummary,
                     modifier = Modifier.size(18.dp),
                 )
             }
@@ -184,11 +186,11 @@ fun DiaperListScreen(navigator: Navigator) {
                                         .clip(RoundedCornerShape(shapes.medium))
                                         .background(Color.White.copy(alpha = 0.25f)),
                                     contentAlignment = Alignment.Center,
-                                ) { Text("🧷", style = LocalAppTypography.current.titleMedium) }
+                                ) { Text("🧷", style = ElyonTheme.textStyles.title3) }
                                 Spacer(Modifier.width(spacing.sm))
                                 Text(
                                     "今日尿布",
-                                    style = LocalAppTypography.current.titleMedium,
+                                    style = ElyonTheme.textStyles.title3,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.White.copy(alpha = 0.9f),
                                 )
@@ -196,14 +198,14 @@ fun DiaperListScreen(navigator: Navigator) {
                             Spacer(Modifier.height(20.dp))
                             Text(
                                 "${filtered.size} 次",
-                                style = LocalAppTypography.current.headlineMedium,
+                                style = ElyonTheme.textStyles.headline2,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
                             )
                             Spacer(Modifier.height(spacing.xs))
                             Text(
                                 "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
-                                style = LocalAppTypography.current.bodyMedium,
+                                style = ElyonTheme.textStyles.body2,
                                 color = Color.White.copy(alpha = 0.75f),
                             )
                         }
@@ -222,9 +224,9 @@ fun DiaperListScreen(navigator: Navigator) {
                     Column(Modifier.padding(spacing.md)) {
                         Text(
                             "换尿布详情",
-                            style = LocalAppTypography.current.titleSmall,
+                            style = ElyonTheme.textStyles.subtitle,
                             fontWeight = FontWeight.SemiBold,
-                            color = c.textPrimary,
+                            color = c.onSurface,
                         )
                         Spacer(Modifier.height(spacing.md))
                         Row(Modifier.fillMaxWidth()) {
@@ -277,7 +279,7 @@ fun DiaperListScreen(navigator: Navigator) {
                         }
                         val accentColor = when (d.type) {
                             DiaperType.WET -> c.primary
-                            DiaperType.POOP -> c.warning
+                            DiaperType.POOP -> c.secondary
                             DiaperType.BOTH -> c.error
                         }
 
@@ -301,26 +303,26 @@ fun DiaperListScreen(navigator: Navigator) {
                                     .clip(RoundedCornerShape(shapes.large))
                                     .background(accentColor.copy(alpha = 0.12f)),
                                 contentAlignment = Alignment.Center,
-                            ) { Text(typeEmoji, style = LocalAppTypography.current.titleLarge) }
+                            ) { Text(typeEmoji, style = ElyonTheme.textStyles.title1) }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     label,
-                                    style = LocalAppTypography.current.titleSmall,
-                                    color = c.textPrimary,
+                                    style = ElyonTheme.textStyles.subtitle,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.Medium,
                                 )
                                 Text(
                                     timeStr,
-                                    style = LocalAppTypography.current.bodySmall,
-                                    color = c.textSecondary,
+                                    style = ElyonTheme.textStyles.footnote1,
+                                    color = c.onSurfaceVariantSummary,
                                 )
                             }
                             if (!d.note.isNullOrBlank()) {
                                 Text(
                                     d.note.take(8),
-                                    style = LocalAppTypography.current.labelSmall,
-                                    color = c.textTertiary,
+                                    style = ElyonTheme.textStyles.footnote2,
+                                    color = c.onSurfaceVariantSummary,
                                     modifier = Modifier.padding(start = spacing.sm),
                                 )
                             }
@@ -395,7 +397,7 @@ fun DiaperFormDialog(
     onDismiss: () -> Unit,
     onSave: (Diaper) -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     val isEdit = editEntity != null
     var selectedType by remember { mutableStateOf(editEntity?.let { DiaperType.raw(it.type) } ?: "wet") }
     val now = LocalDateTime.now()
@@ -476,27 +478,27 @@ private fun DiaperStatCell(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
-    c: AppColors,
+    c: io.elyon.kmp.theme.Colors,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     Column(
         modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(emoji, style = LocalAppTypography.current.titleLarge)
+        Text(emoji, style = ElyonTheme.textStyles.title1)
         Spacer(Modifier.height(spacing.xs))
         Text(
             value,
-            style = LocalAppTypography.current.titleMedium,
+            style = ElyonTheme.textStyles.title3,
             fontWeight = FontWeight.Bold,
-            color = c.textPrimary,
+            color = c.onSurface,
         )
         Spacer(Modifier.height(spacing.xxs))
         Text(
             label,
-            style = LocalAppTypography.current.bodySmall,
-            color = c.textSecondary,
+            style = ElyonTheme.textStyles.footnote1,
+            color = c.onSurfaceVariantSummary,
         )
     }
 }

@@ -8,10 +8,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import com.babytracker.core.ui.components.chip.AppFilterChip
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDatePickerState
 import io.elyon.kmp.basic.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,18 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.navigation.Navigator
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.core.ui.components.recordcard.RecordCard
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.core.ui.components.sheet.AppBottomSheet
@@ -44,10 +38,21 @@ import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.ui.components.EmptyState
-import com.babytracker.core.ui.components.fab.AppFAB
-import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.core.ui.components.snackbar.AppSnackbar
 import com.babytracker.core.ui.components.snackbar.AppSnackbarHost
+import io.elyon.kmp.basic.Button
+import io.elyon.kmp.basic.ButtonDefaults
+import io.elyon.kmp.basic.Card
+import io.elyon.kmp.basic.CardDefaults
+import io.elyon.kmp.basic.FloatingActionButton
+import io.elyon.kmp.basic.Icon
+import io.elyon.kmp.basic.IconButton
+import io.elyon.kmp.basic.Scaffold
+import io.elyon.kmp.basic.SnackbarHost
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.TextButton
+import io.elyon.kmp.basic.TopAppBar
+import io.elyon.kmp.theme.ElyonTheme
 import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -86,9 +91,9 @@ private fun isExpired(v: Vaccination): Boolean {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaccinationListScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = AppSpacing
+    val shapes = AppShapes
     val vacRepo: VaccinationRepository = koinInject()
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -126,25 +131,36 @@ fun VaccinationListScreen(navigator: Navigator) {
     val scope = rememberCoroutineScope()
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
-    AppScaffold(
+    Scaffold(
         topBar = {
-            AppTopBar(title = "疫苗接种", onBack = { navigator.pop() })
+            TopAppBar(
+                title = "疫苗接种",
+                color = c.primaryContainer,
+                titleColor = c.onPrimaryContainer,
+                navigationIcon = {
+                    IconButton(onClick = { navigator.pop() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
+            )
         },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
-        fab = {
-            AppFAB(icon = Icons.Default.Add, onClick = { editingVac = null; showForm = true })
+        floatingActionButton = {
+            FloatingActionButton(onClick = { editingVac = null; showForm = true }) {
+                Icon(Icons.Default.Add, contentDescription = "添加")
+            }
         },
     ) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .background(c.pageBackground)
+                    .background(c.background)
                     .padding(horizontal = spacing.md, vertical = 12.dp),
                 horizontalArrangement = Arrangement.Center,
             ) {
@@ -162,9 +178,9 @@ fun VaccinationListScreen(navigator: Navigator) {
                     ) {
                         Text(
                             label,
-                            style = LocalAppTypography.current.titleMedium,
+                            style = ElyonTheme.textStyles.title3,
                             fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-                            color = if (active) c.primary else c.textSecondary,
+                            color = if (active) c.primary else c.onSurfaceVariantSummary,
                         )
                         Spacer(Modifier.height(6.dp))
                         Box(
@@ -188,7 +204,7 @@ fun VaccinationListScreen(navigator: Navigator) {
                 FILTER_PILLS.forEach { pill ->
                     val active = statusFilter == pill.key
                     val pillColor = when (pill.key) {
-                        "done" -> c.success
+                        "done" -> c.tertiaryContainer
                         "expired" -> c.error
                         else -> c.primary
                     }
@@ -205,9 +221,9 @@ fun VaccinationListScreen(navigator: Navigator) {
                     ) {
                         Text(
                             pill.label,
-                            style = LocalAppTypography.current.bodyMedium,
+                            style = ElyonTheme.textStyles.body2,
                             fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (active) Color.White else c.textSecondary,
+                            color = if (active) Color.White else c.onSurfaceVariantSummary,
                         )
                     }
                 }
@@ -261,8 +277,8 @@ fun VaccinationListScreen(navigator: Navigator) {
                         item {
                             Text(
                                 "以上计划根据国家免疫规划制定，具体接种时间请遵医嘱。",
-                                style = LocalAppTypography.current.labelMedium,
-                                color = c.textTertiary,
+                                style = ElyonTheme.textStyles.footnote1,
+                                color = c.onSurfaceVariantSummary,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -318,9 +334,9 @@ private fun VaccinationCard(
     onClick: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = AppSpacing
+    val shapes = AppShapes
     val ageText = remember(vaccination.scheduledDate, birthDate) {
         suggestedAgeText(vaccination.scheduledDate, birthDate)
     }
@@ -336,10 +352,10 @@ private fun VaccinationCard(
     val isExpired = isExpired(vaccination)
 
     val (tagColor, tagLabel) = when {
-        vaccination.status == VaccinationStatus.DONE -> c.success to "已接种"
-        vaccination.status == VaccinationStatus.SKIPPED -> c.textTertiary to "已跳过"
+        vaccination.status == VaccinationStatus.DONE -> c.tertiaryContainer to "已接种"
+        vaccination.status == VaccinationStatus.SKIPPED -> c.onSurfaceVariantSummary to "已跳过"
         isExpired -> c.error to "已过期"
-        else -> c.warning to "未接种"
+        else -> c.secondary to "未接种"
     }
 
     RecordCard(
@@ -351,16 +367,16 @@ private fun VaccinationCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     vaccination.name,
-                    style = LocalAppTypography.current.titleMedium,
+                    style = ElyonTheme.textStyles.title3,
                     fontWeight = FontWeight.SemiBold,
-                    color = c.textPrimary,
+                    color = c.onSurface,
                 )
                 if (!vaccination.dose.isNullOrBlank()) {
                     Spacer(Modifier.width(spacing.sm))
                     Text(
                         vaccination.dose,
-                        style = LocalAppTypography.current.bodyMedium,
-                        color = c.textSecondary,
+                        style = ElyonTheme.textStyles.body2,
+                        color = c.onSurfaceVariantSummary,
                     )
                 }
                 Spacer(Modifier.weight(1f))
@@ -372,7 +388,7 @@ private fun VaccinationCard(
                 ) {
                     Text(
                         tagLabel,
-                        style = LocalAppTypography.current.labelMedium,
+                        style = ElyonTheme.textStyles.footnote1,
                         fontWeight = FontWeight.SemiBold,
                         color = tagColor,
                     )
@@ -382,11 +398,11 @@ private fun VaccinationCard(
                 Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (ageText.isNotBlank()) {
-                        Text(ageText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
+                        Text(ageText, style = ElyonTheme.textStyles.body2, color = c.onSurfaceVariantSummary)
                     }
                     Spacer(Modifier.weight(1f))
                     if (dateText.isNotBlank()) {
-                        Text(dateText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
+                        Text(dateText, style = ElyonTheme.textStyles.body2, color = c.onSurfaceVariantSummary)
                     }
                 }
             }
@@ -402,8 +418,8 @@ fun VaccinationFormDialog(
     onSave: (Vaccination) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = AppSpacing
     val isEdit = editEntity != null
     var name by remember { mutableStateOf(editEntity?.name ?: "") }
     var dose by remember { mutableStateOf(editEntity?.dose ?: "") }
@@ -428,13 +444,13 @@ fun VaccinationFormDialog(
         onDismiss = onDismiss,
     ) {
         Column(Modifier.padding(horizontal = spacing.md, vertical = 0.dp).padding(bottom = spacing.xl).verticalScroll(rememberScrollState())) {
-            Text(if (isEdit) "编辑疫苗" else "添加疫苗", style = LocalAppTypography.current.titleMedium, modifier = Modifier.padding(bottom = spacing.md))
+            Text(if (isEdit) "编辑疫苗" else "添加疫苗", style = ElyonTheme.textStyles.title3, modifier = Modifier.padding(bottom = spacing.md))
 
             AppInput(value = name, onValueChange = { name = it }, label = "疫苗名称", isError = name.isBlank(), errorMessage = "名称不能为空", modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
             AppInput(value = dose, onValueChange = { dose = it }, label = "剂次 (可选)", placeholder = "第1剂", modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
-            Text("状态", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
+            Text("状态", style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary, modifier = Modifier.padding(bottom = spacing.sm))
             Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                 listOf("pending" to "未接种", "done" to "已接种", "skipped" to "已跳过").forEach { (s, l) ->
                     AppFilterChip(
@@ -454,7 +470,7 @@ fun VaccinationFormDialog(
 
             AppInput(value = note, onValueChange = { note = it }, label = "备注 (可选)", modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp))
 
-            AppButton(
+            Button(
                 onClick = {
                     val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
                     val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
@@ -480,25 +496,30 @@ fun VaccinationFormDialog(
                     }
                     onSave(vac)
                 },
-                label = if (isEdit) "更新" else "保存",
+                colors = ButtonDefaults.buttonColors(
+                    color = c.primary,
+                    contentColor = c.onPrimary,
+                ),
                 enabled = name.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
-            )
+            ) {
+                Text(if (isEdit) "更新" else "保存")
+            }
         }
     }
 
     if (showScheduledDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { showScheduledDatePicker = false }, confirmButton = {
-            AppButton(variant = ButtonVariant.Text, onClick = {
+            TextButton(text = "确定", onClick = {
                 showScheduledDatePicker = false
                 datePickerState.selectedDateMillis?.let { millis ->
                     val instant = java.time.Instant.ofEpochMilli(millis)
                     scheduledDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
                         .toLocalDate().toString()
                 }
-            }, label = "确定")
-            }, dismissButton = { AppButton(variant = ButtonVariant.Text, onClick = { showScheduledDatePicker = false }, label = "取消") }) {
+            })
+            }, dismissButton = { TextButton(text = "取消", onClick = { showScheduledDatePicker = false }) }) {
             DatePicker(state = datePickerState)
         }
     }
@@ -506,15 +527,15 @@ fun VaccinationFormDialog(
     if (showAdministeredDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(onDismissRequest = { showAdministeredDatePicker = false }, confirmButton = {
-            AppButton(variant = ButtonVariant.Text, onClick = {
+            TextButton(text = "确定", onClick = {
                 showAdministeredDatePicker = false
                 datePickerState.selectedDateMillis?.let { millis ->
                     val instant = java.time.Instant.ofEpochMilli(millis)
                     administeredDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
                         .toLocalDate().toString()
                 }
-            }, label = "确定")
-            }, dismissButton = { AppButton(variant = ButtonVariant.Text, onClick = { showAdministeredDatePicker = false }, label = "取消") }) {
+            })
+            }, dismissButton = { TextButton(text = "取消", onClick = { showAdministeredDatePicker = false }) }) {
             DatePicker(state = datePickerState)
         }
     }

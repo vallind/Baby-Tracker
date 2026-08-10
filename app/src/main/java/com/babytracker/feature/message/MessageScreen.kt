@@ -1,4 +1,7 @@
 package com.babytracker.feature.message
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -46,7 +49,7 @@ private data class CategoryOverview(
 
 @Composable
 private fun categoryOverviews(): List<CategoryOverview> {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     return listOf(
         CategoryOverview(MessageType.INTERACTION, "互动消息", "\uD83D\uDCAC", c.primary),
         CategoryOverview(MessageType.SYSTEM, "系统通知", "\uD83D\uDD14", c.primary),
@@ -57,8 +60,8 @@ private fun categoryOverviews(): List<CategoryOverview> {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessageScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     val viewModel: MessageViewModel = koinViewModel()
     val state by viewModel.state.collectAsState()
 
@@ -77,9 +80,9 @@ fun MessageScreen(navigator: Navigator) {
                     val canMarkAll = state.totalUnread > 0
                     Text(
                         "全部已读",
-                        style = LocalAppTypography.current.bodyLarge,
+                        style = ElyonTheme.textStyles.body1,
                         fontWeight = FontWeight.Medium,
-                        color = if (canMarkAll) c.primary else c.textTertiary,
+                        color = if (canMarkAll) c.primary else c.onSurfaceVariantSummary,
                         modifier = Modifier
                             .clickable(enabled = canMarkAll, onClick = { viewModel.markAllRead() })
                             .padding(horizontal = spacing.xs),
@@ -93,7 +96,7 @@ fun MessageScreen(navigator: Navigator) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             CategoryOverviewBar(
                 interactionUnread = state.interactionUnread,
@@ -153,8 +156,8 @@ private fun CategoryOverviewBar(
     selectedType: MessageType?,
     onSelect: (MessageType) -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     Row(
         Modifier
             .fillMaxWidth()
@@ -185,14 +188,14 @@ private fun CategoryOverviewBar(
                     Column {
                         Text(
                             cat.emoji,
-                            style = LocalAppTypography.current.titleLarge,
+                            style = ElyonTheme.textStyles.title1,
                         )
                         Spacer(Modifier.height(spacing.xs))
                         Text(
                             cat.label,
-                            style = LocalAppTypography.current.bodyMedium,
+                            style = ElyonTheme.textStyles.body2,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                            color = if (selected) Color.White else c.textPrimary,
+                            color = if (selected) Color.White else c.onSurface,
                         )
                     }
                     if (unread > 0) {
@@ -201,13 +204,13 @@ private fun CategoryOverviewBar(
                                 .size(20.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (selected) Color.White.copy(alpha = 0.3f) else c.danger,
+                                    if (selected) Color.White.copy(alpha = 0.3f) else c.error,
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 if (unread > 99) "99+" else unread.toString(),
-                                style = LocalAppTypography.current.labelMedium,
+                                style = ElyonTheme.textStyles.footnote1,
                                 fontWeight = FontWeight.Bold,
                                 color = if (selected) Color.White else Color.White,
                             )
@@ -225,8 +228,8 @@ private fun MessageCard(
     onClick: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     AppCard(
         elevation = 2.dp,
         containerColor = c.surface,
@@ -248,9 +251,9 @@ private fun MessageCard(
                 ) {
                     Text(
                         message.title,
-                        style = LocalAppTypography.current.bodyLarge,
+                        style = ElyonTheme.textStyles.body1,
                         fontWeight = FontWeight.SemiBold,
-                        color = c.textPrimary,
+                        color = c.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
@@ -258,15 +261,15 @@ private fun MessageCard(
                     Spacer(Modifier.width(spacing.sm))
                     Text(
                         relativeTime(message.createTime),
-                        style = LocalAppTypography.current.labelMedium,
-                        color = c.textTertiary,
+                        style = ElyonTheme.textStyles.footnote1,
+                        color = c.onSurfaceVariantSummary,
                     )
                 }
                 Spacer(Modifier.height(spacing.xs))
                 Text(
                     message.content,
-                    style = LocalAppTypography.current.bodyMedium,
-                    color = c.textSecondary,
+                    style = ElyonTheme.textStyles.body2,
+                    color = c.onSurfaceVariantSummary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -281,15 +284,15 @@ private fun MessageCard(
                         Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(c.danger),
+                            .background(c.error),
                     )
                 } else {
-                    Text("已读", style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
+                    Text("已读", style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary)
                 }
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "删除",
-                    tint = c.textTertiary,
+                    tint = c.onSurfaceVariantSummary,
                     modifier = Modifier
                         .size(16.dp)
                         .clickable(onClick = onDelete),
@@ -301,14 +304,14 @@ private fun MessageCard(
 
 @Composable
 private fun MessageLeadingIcon(message: AppMessage) {
-    val c = LocalAppColors.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val shapes = com.babytracker.core.ui.AppShapes
     when (message.type) {
         MessageType.INTERACTION -> {
             val initial = message.title.take(1)
             val avatarColors = listOf(
-                c.error, c.warning, c.primary,
-                c.success, c.secondary, c.danger,
+                c.error, c.secondary, c.primary,
+                c.tertiaryContainer, c.secondary, c.error,
             )
             val pickColor = avatarColors[initial.hashCode().let { ((it % avatarColors.size) + avatarColors.size) % avatarColors.size }]
             Box(
@@ -320,7 +323,7 @@ private fun MessageLeadingIcon(message: AppMessage) {
             ) {
                 Text(
                     initial,
-                    style = LocalAppTypography.current.titleLarge,
+                    style = ElyonTheme.textStyles.title1,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                 )

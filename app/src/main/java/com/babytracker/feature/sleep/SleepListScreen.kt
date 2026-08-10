@@ -1,4 +1,6 @@
 package com.babytracker.feature.sleep
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 
 import android.content.SharedPreferences
 import androidx.compose.foundation.*
@@ -58,9 +60,9 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SleepListScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val sleepRepo: SleepRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -114,7 +116,7 @@ fun SleepListScreen(navigator: Navigator) {
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
                         contentDescription = "选择日期",
-                        tint = c.textPrimary,
+                        tint = c.onSurface,
                     )
                 },
             )
@@ -125,7 +127,7 @@ fun SleepListScreen(navigator: Navigator) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             // —— 日期选择器 ——
             Row(
@@ -137,15 +139,15 @@ fun SleepListScreen(navigator: Navigator) {
             ) {
                 Text(
                     "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = LocalAppTypography.current.titleSmall,
+                    style = ElyonTheme.textStyles.subtitle,
                     fontWeight = FontWeight.Medium,
-                    color = c.textPrimary,
+                    color = c.onSurface,
                 )
                 Spacer(Modifier.width(spacing.xs))
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = c.textTertiary,
+                    tint = c.onSurfaceVariantSummary,
                     modifier = Modifier.size(18.dp),
                 )
             }
@@ -193,11 +195,11 @@ fun SleepListScreen(navigator: Navigator) {
                                             .clip(RoundedCornerShape(shapes.medium))
                                             .background(Color.White.copy(alpha = 0.25f)),
                                         contentAlignment = Alignment.Center,
-                                    ) { Text("\uD83C\uDF19", style = LocalAppTypography.current.titleMedium) }
+                                    ) { Text("\uD83C\uDF19", style = ElyonTheme.textStyles.title3) }
                                     Spacer(Modifier.width(spacing.sm))
                                     Text(
                                         "夜间睡眠",
-                                        style = LocalAppTypography.current.titleMedium,
+                                        style = ElyonTheme.textStyles.title3,
                                         fontWeight = FontWeight.Medium,
                                         color = Color.White.copy(alpha = 0.9f),
                                     )
@@ -205,14 +207,14 @@ fun SleepListScreen(navigator: Navigator) {
                                 Spacer(Modifier.height(20.dp))
                                 Text(
                                     DateUtils.durationFullText(durSec),
-                                    style = LocalAppTypography.current.headlineMedium,
+                                    style = ElyonTheme.textStyles.headline2,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
                                 )
                                 Spacer(Modifier.height(spacing.xs))
                                 Text(
                                     timeRange,
-                                    style = LocalAppTypography.current.bodyMedium,
+                                    style = ElyonTheme.textStyles.body2,
                                     color = Color.White.copy(alpha = 0.75f),
                                 )
                             }
@@ -231,9 +233,9 @@ fun SleepListScreen(navigator: Navigator) {
                         Column(Modifier.padding(spacing.md)) {
                             Text(
                                 "睡眠详情",
-                                style = LocalAppTypography.current.titleSmall,
+                                style = ElyonTheme.textStyles.subtitle,
                                 fontWeight = FontWeight.SemiBold,
-                                color = c.textPrimary,
+                                color = c.onSurface,
                             )
                             Spacer(Modifier.height(spacing.md))
                             Row(Modifier.fillMaxWidth()) {
@@ -266,9 +268,9 @@ fun SleepListScreen(navigator: Navigator) {
                 if (naps.isNotEmpty()) {
                     Text(
                         "小睡记录",
-                        style = LocalAppTypography.current.titleSmall,
+                        style = ElyonTheme.textStyles.subtitle,
                         fontWeight = FontWeight.SemiBold,
-                        color = c.textPrimary,
+                        color = c.onSurface,
                         modifier = Modifier.padding(horizontal = spacing.md, vertical = 0.dp)
                             .padding(bottom = 12.dp),
                     )
@@ -304,27 +306,27 @@ fun SleepListScreen(navigator: Navigator) {
                                     showForm = true
                                 },
                                 modifier = Modifier.padding(bottom = spacing.sm),
-                                accentColor = c.warning,
+                                accentColor = c.secondary,
                             ) {
                                 Box(
                                     Modifier
                                         .size(40.dp)
                                         .clip(RoundedCornerShape(shapes.large))
-                                        .background(c.warning.copy(alpha = 0.12f)),
+                                        .background(c.secondary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
-                                ) { Text("\u2600\uFE0F", style = LocalAppTypography.current.titleLarge) }
+                                ) { Text("\u2600\uFE0F", style = ElyonTheme.textStyles.title1) }
                                 Spacer(Modifier.width(12.dp))
                                 Text(
                                     range,
-                                    style = LocalAppTypography.current.titleSmall,
-                                    color = c.textPrimary,
+                                    style = ElyonTheme.textStyles.subtitle,
+                                    color = c.onSurface,
                                     fontWeight = FontWeight.Medium,
                                     modifier = Modifier.weight(1f),
                                 )
                                 Text(
                                     DateUtils.durationFullText(durSec),
-                                    style = LocalAppTypography.current.titleSmall,
-                                    color = c.warning,
+                                    style = ElyonTheme.textStyles.subtitle,
+                                    color = c.secondary,
                                     fontWeight = FontWeight.Bold,
                                 )
                             }
@@ -399,7 +401,7 @@ fun SleepFormDialog(
     onDismiss: () -> Unit,
     onSave: (Sleep) -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     val isEdit = editEntity != null
     var selectedType by remember { mutableStateOf(editEntity?.let { SleepType.raw(it.type) } ?: "night") }
     val now = LocalDateTime.now()
@@ -508,9 +510,9 @@ fun SleepFormDialog(
         ) {
             Text(
                 text = timerDisplay,
-                style = LocalAppTypography.current.headlineMedium,
+                style = ElyonTheme.textStyles.headline2,
                 fontWeight = FontWeight.Bold,
-                color = if (timerRunning) LocalAppColors.current.primary else LocalAppColors.current.textSecondary,
+                color = if (timerRunning)  ElyonTheme.colorScheme.primary else  ElyonTheme.colorScheme.onSurfaceVariantSummary,
                 modifier = Modifier.weight(1f).widthIn(min = 100.dp),
                 textAlign = TextAlign.Start,
             )
@@ -567,9 +569,9 @@ private fun SleepStatCell(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
-    c: AppColors,
+    c: io.elyon.kmp.theme.Colors,
 ) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     Column(
         modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -577,15 +579,15 @@ private fun SleepStatCell(
     ) {
         Text(
             value,
-            style = LocalAppTypography.current.titleMedium,
+            style = ElyonTheme.textStyles.title3,
             fontWeight = FontWeight.Bold,
-            color = c.textPrimary,
+            color = c.onSurface,
         )
         Spacer(Modifier.height(spacing.xxs))
         Text(
             label,
-            style = LocalAppTypography.current.bodySmall,
-            color = c.textSecondary,
+            style = ElyonTheme.textStyles.footnote1,
+            color = c.onSurfaceVariantSummary,
         )
     }
 }

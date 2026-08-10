@@ -1,4 +1,7 @@
 package com.babytracker.feature.feeding
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import android.content.SharedPreferences
 import androidx.compose.foundation.*
@@ -57,9 +60,9 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FeedingListScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val feedingRepo: FeedingRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -103,7 +106,7 @@ fun FeedingListScreen(navigator: Navigator) {
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
                         contentDescription = "选择日期",
-                        tint = c.textPrimary,
+                        tint = c.onSurface,
                     )
                 },
             )
@@ -114,7 +117,7 @@ fun FeedingListScreen(navigator: Navigator) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             // —— 日期选择器 ——
             Row(
@@ -126,15 +129,15 @@ fun FeedingListScreen(navigator: Navigator) {
             ) {
                 Text(
                     "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = LocalAppTypography.current.titleSmall,
+                    style = ElyonTheme.textStyles.subtitle,
                     fontWeight = FontWeight.Medium,
-                    color = c.textPrimary,
+                    color = c.onSurface,
                 )
                 Spacer(Modifier.width(spacing.xs))
                 Icon(
                     Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                    tint = c.textTertiary,
+                    tint = c.onSurfaceVariantSummary,
                     modifier = Modifier.size(18.dp),
                 )
             }
@@ -231,11 +234,11 @@ fun FeedingListScreen(navigator: Navigator) {
 // ═══════════════════════════════════════════════════════════
 
 /** 喂养类型对应的颜色 */
-private fun feedingColor(type: FeedingType, c: AppColors): Color = when (type) {
-    FeedingType.BREAST -> c.danger
+private fun feedingColor(type: FeedingType, c: io.elyon.kmp.theme.Colors): Color = when (type) {
+    FeedingType.BREAST -> c.error
     FeedingType.FORMULA -> c.primary
-    FeedingType.FOOD -> c.warning
-    else -> c.info
+    FeedingType.FOOD -> c.secondary
+    else -> c.primary
 }
 
 /** 喂养类型对应的 emoji */
@@ -274,9 +277,9 @@ private fun FeedingTimeline(
     onEdit: (Feeding) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -308,8 +311,8 @@ private fun FeedingTimeline(
                 ) {
                     Text(
                         time,
-                        style = LocalAppTypography.current.labelSmall,
-                        color = c.textTertiary,
+                        style = ElyonTheme.textStyles.footnote2,
+                        color = c.onSurfaceVariantSummary,
                     )
                     Spacer(Modifier.height(6.dp))
                     Box(
@@ -323,7 +326,7 @@ private fun FeedingTimeline(
                         Modifier
                             .width(spacing.xxs)
                             .weight(1f)
-                            .background(c.divider),
+                            .background(c.dividerLine),
                     )
                 }
 
@@ -345,19 +348,19 @@ private fun FeedingTimeline(
                             .clip(RoundedCornerShape(shapes.large))
                             .background(color.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center,
-                    ) { Text(emoji, style = LocalAppTypography.current.titleLarge) }
+                    ) { Text(emoji, style = ElyonTheme.textStyles.title1) }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
                             typeLabel,
-                            style = LocalAppTypography.current.titleSmall,
-                            color = c.textPrimary,
+                            style = ElyonTheme.textStyles.subtitle,
+                            color = c.onSurface,
                             fontWeight = FontWeight.Medium,
                         )
                         Text(
                             feedingSummary(f),
-                            style = LocalAppTypography.current.bodySmall,
-                            color = c.textSecondary,
+                            style = ElyonTheme.textStyles.footnote1,
+                            color = c.onSurfaceVariantSummary,
                         )
                     }
                 }
@@ -374,8 +377,8 @@ fun FeedingFormDialog(
     onDismiss: () -> Unit,
     onSave: (Feeding) -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     val isEdit = editEntity != null
     var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
     var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
@@ -499,9 +502,9 @@ fun FeedingFormDialog(
                 ) {
                     Text(
                         text = timerDisplay,
-                        style = LocalAppTypography.current.headlineMedium,
+                        style = ElyonTheme.textStyles.headline2,
                         fontWeight = FontWeight.Bold,
-                        color = if (timerRunning) c.primary else c.textSecondary,
+                        color = if (timerRunning) c.primary else c.onSurfaceVariantSummary,
                         modifier = Modifier.weight(1f).widthIn(min = 100.dp),
                         textAlign = TextAlign.Start,
                     )
@@ -541,7 +544,7 @@ fun FeedingFormDialog(
                     value = durationMin,
                     onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
                     label = "时长 (分钟)",
-                    leadingIcon = { Text("⏱", style = LocalAppTypography.current.titleLarge) },
+                    leadingIcon = { Text("⏱", style = ElyonTheme.textStyles.title1) },
                     isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
                     errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) "请输入 0-600 之间的数字" else null,
                     keyboardType = KeyboardType.Number,
@@ -553,7 +556,7 @@ fun FeedingFormDialog(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
                     label = "奶量 (ml)",
-                    leadingIcon = { Text("💧", style = LocalAppTypography.current.titleLarge) },
+                    leadingIcon = { Text("💧", style = ElyonTheme.textStyles.title1) },
                     isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
                     errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) "请输入 1-500 之间的数字" else null,
                     keyboardType = KeyboardType.Number,
@@ -571,7 +574,7 @@ fun FeedingFormDialog(
                     value = foodName,
                     onValueChange = { foodName = it },
                     label = "食物名称",
-                    leadingIcon = { Text("🥣", style = LocalAppTypography.current.titleLarge) },
+                    leadingIcon = { Text("🥣", style = ElyonTheme.textStyles.title1) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AppInput(
@@ -589,7 +592,7 @@ fun FeedingFormDialog(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
                     label = "饮水量 (ml)",
-                    leadingIcon = { Text("🥤", style = LocalAppTypography.current.titleLarge) },
+                    leadingIcon = { Text("🥤", style = ElyonTheme.textStyles.title1) },
                     isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
                     errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
                     keyboardType = KeyboardType.Number,

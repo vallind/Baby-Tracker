@@ -1,4 +1,6 @@
 package com.babytracker.feature.development
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -56,12 +58,12 @@ private data class AbilityMeta(
 
 @Composable
 private fun abilities(): List<AbilityMeta> {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     return listOf(
-        AbilityMeta("大运动", "\uD83C\uDFC3", c.warning, Icons.AutoMirrored.Filled.DirectionsRun) { it.grossMotor },
-        AbilityMeta("精细动作", "\u270B", c.danger, Icons.Default.PanTool) { it.fineMotor },
+        AbilityMeta("大运动", "\uD83C\uDFC3", c.secondary, Icons.AutoMirrored.Filled.DirectionsRun) { it.grossMotor },
+        AbilityMeta("精细动作", "\u270B", c.error, Icons.Default.PanTool) { it.fineMotor },
         AbilityMeta("语言能力", "\uD83D\uDCAC", c.primary, Icons.Default.RecordVoiceOver) { it.language },
-        AbilityMeta("社交能力", "\uD83E\uDD1D", c.success, Icons.Default.Group) { it.social },
+        AbilityMeta("社交能力", "\uD83E\uDD1D", c.tertiaryContainer, Icons.Default.Group) { it.social },
         AbilityMeta("认知能力", "\uD83E\uDDE0", c.secondary, Icons.Default.Psychology) { it.cognitive },
     )
 }
@@ -76,13 +78,13 @@ private fun scoreLabel(score: Int): String = when (score) {
 
 @Composable
 private fun scoreColor(score: Int): Color {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     return when (score) {
-        0 -> c.textDisabled
-        1 -> c.warning
-        2 -> c.success
+        0 -> c.disabledOnSurface
+        1 -> c.secondary
+        2 -> c.tertiaryContainer
         3 -> c.primary
-        else -> c.textDisabled
+        else -> c.disabledOnSurface
     }
 }
 
@@ -158,9 +160,9 @@ private fun babyAgeMonths(birthDate: String): Int {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DevelopmentAssessmentScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val viewModel: DevelopmentAssessmentViewModel = koinViewModel()
@@ -193,7 +195,7 @@ fun DevelopmentAssessmentScreen(navigator: Navigator) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             BabyHeader(baby)
 
@@ -236,8 +238,8 @@ fun DevelopmentAssessmentScreen(navigator: Navigator) {
 
 @Composable
 private fun BabyHeader(baby: Baby) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     Box(
         Modifier
             .fillMaxWidth()
@@ -255,21 +257,21 @@ private fun BabyHeader(baby: Baby) {
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("\uD83D\uDC76", style = LocalAppTypography.current.displayLarge)
+                Text("\uD83D\uDC76", style = ElyonTheme.textStyles.headline1)
             }
             Spacer(Modifier.width(spacing.md))
             Column {
                 Text(
                     baby.name,
-                    style = LocalAppTypography.current.titleLarge,
+                    style = ElyonTheme.textStyles.title1,
                     fontWeight = FontWeight.Bold,
-                    color = c.textPrimary,
+                    color = c.onSurface,
                 )
                 Spacer(Modifier.height(spacing.xs))
                 Text(
                     babyAgeDetail(baby.birthDate),
-                    style = LocalAppTypography.current.bodyMedium,
-                    color = c.textSecondary,
+                    style = ElyonTheme.textStyles.body2,
+                    color = c.onSurfaceVariantSummary,
                 )
             }
         }
@@ -278,7 +280,7 @@ private fun BabyHeader(baby: Baby) {
 
 @Composable
 private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     Column(Modifier.padding(horizontal = spacing.md)) {
         abilities().forEachIndexed { index, meta ->
             AssessmentItemCard(
@@ -301,9 +303,9 @@ private fun AssessmentItemCard(
     score: Int,
     description: String,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val statusColor = scoreColor(score)
     AppCard(
         elevation = 2.dp,
@@ -319,14 +321,14 @@ private fun AssessmentItemCard(
                         .background(bgColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(emoji, style = LocalAppTypography.current.titleLarge)
+                    Text(emoji, style = ElyonTheme.textStyles.title1)
                 }
                 Spacer(Modifier.width(12.dp))
                 Row(
                     Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(title, style = LocalAppTypography.current.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                    Text(title, style = ElyonTheme.textStyles.title3, fontWeight = FontWeight.SemiBold, color = c.onSurface)
                     Spacer(Modifier.width(10.dp))
                     Box(
                         Modifier
@@ -334,23 +336,23 @@ private fun AssessmentItemCard(
                             .background(statusColor.copy(alpha = 0.12f))
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
-                        Text(scoreLabel(score), style = LocalAppTypography.current.labelMedium, fontWeight = FontWeight.SemiBold, color = statusColor)
+                        Text(scoreLabel(score), style = ElyonTheme.textStyles.footnote1, fontWeight = FontWeight.SemiBold, color = statusColor)
                     }
                 }
                 Spacer(Modifier.width(spacing.xs))
-                Text("\u203A", style = LocalAppTypography.current.titleLarge, color = c.textTertiary)
+                Text("\u203A", style = ElyonTheme.textStyles.title1, color = c.onSurfaceVariantSummary)
             }
             Spacer(Modifier.height(spacing.sm))
-            Text(description, style = LocalAppTypography.current.bodyMedium.copy(lineHeight = 20.sp), color = c.textSecondary)
+            Text(description, style = ElyonTheme.textStyles.body2.copy(lineHeight = 20.sp), color = c.onSurfaceVariantSummary)
         }
     }
 }
 
 @Composable
 private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val nextDateText = remember(latest.assessDate) {
         latest.assessDate.plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
@@ -361,9 +363,9 @@ private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Uni
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text("下次评估时间", style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
+            Text("下次评估时间", style = ElyonTheme.textStyles.body2, color = c.onSurfaceVariantSummary)
             Spacer(Modifier.height(spacing.xxs))
-            Text("1个月后（$nextDateText）", style = LocalAppTypography.current.bodyLarge.copy(fontWeight = FontWeight.Medium), color = c.textPrimary)
+            Text("1个月后（$nextDateText）", style = ElyonTheme.textStyles.body1.copy(fontWeight = FontWeight.Medium), color = c.onSurface)
         }
         Spacer(Modifier.width(spacing.md))
         Box(
@@ -378,7 +380,7 @@ private fun BottomActionRow(latest: DevelopmentAssessment, onReassess: () -> Uni
             Text(
                 "重新评估",
                 color = c.onPrimary,
-                style = LocalAppTypography.current.bodyLarge,
+                style = ElyonTheme.textStyles.body1,
                 fontWeight = FontWeight.SemiBold,
             )
         }
@@ -393,9 +395,9 @@ private fun AssessmentFormDialog(
     onDismiss: () -> Unit,
     onSubmit: (DevelopmentAssessment) -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val scores = remember {
         mutableStateListOf(2, 2, 2, 2, 2)
     }
@@ -412,9 +414,9 @@ private fun AssessmentFormDialog(
                 .padding(bottom = spacing.lg)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text("发育评估", style = LocalAppTypography.current.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            Text("发育评估", style = ElyonTheme.textStyles.title1, fontWeight = FontWeight.Bold, color = c.onSurface)
             Spacer(Modifier.height(spacing.xs))
-            Text("为宝宝 5 项能力打分（未观察/落后/正常/超前）", style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
+            Text("为宝宝 5 项能力打分（未观察/落后/正常/超前）", style = ElyonTheme.textStyles.body2, color = c.onSurfaceVariantSummary)
             Spacer(Modifier.height(spacing.md))
 
             abilities().forEachIndexed { index, meta ->
@@ -461,7 +463,7 @@ private fun AssessmentFormDialog(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("保存评估", color = c.onPrimary, style = LocalAppTypography.current.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text("保存评估", color = c.onPrimary, style = ElyonTheme.textStyles.title3, fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -475,10 +477,10 @@ private fun ScoreSelector(
     onSelect: (Int) -> Unit,
     useAccent: Boolean,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    val tint = if (useAccent) c.warning else c.primary
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
+    val tint = if (useAccent) c.secondary else c.primary
     val options = listOf(
         0 to "未观察",
         1 to "落后",
@@ -498,8 +500,8 @@ private fun ScoreSelector(
             }
             Spacer(Modifier.width(10.dp))
             Column {
-                Text(title, style = LocalAppTypography.current.bodyLarge, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Text(abilityDescription(title, selected), style = LocalAppTypography.current.labelMedium, color = c.textSecondary)
+                Text(title, style = ElyonTheme.textStyles.body1, fontWeight = FontWeight.SemiBold, color = c.onSurface)
+                Text(abilityDescription(title, selected), style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary)
             }
         }
         Spacer(Modifier.height(spacing.sm))
@@ -518,9 +520,9 @@ private fun ScoreSelector(
                 ) {
                     Text(
                         label,
-                        style = LocalAppTypography.current.labelMedium,
+                        style = ElyonTheme.textStyles.footnote1,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) Color.White else c.textSecondary,
+                        color = if (isSelected) Color.White else c.onSurfaceVariantSummary,
                     )
                 }
             }

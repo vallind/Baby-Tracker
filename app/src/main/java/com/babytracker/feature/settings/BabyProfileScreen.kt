@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,16 +20,17 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.GrowthRepository
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.button.ButtonVariant
-import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.divider.AppDivider
-import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppElevation
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.components.scaffold.AppScaffold
+import io.elyon.kmp.basic.ButtonDefaults
+import io.elyon.kmp.basic.Card
+import io.elyon.kmp.basic.CardDefaults
+import io.elyon.kmp.basic.HorizontalDivider
+import io.elyon.kmp.basic.Icon
+import io.elyon.kmp.basic.IconButton
+import io.elyon.kmp.basic.Scaffold
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.TextButton
+import io.elyon.kmp.basic.TopAppBar
+import io.elyon.kmp.theme.ElyonTheme
 import com.babytracker.navigation.Route
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
@@ -39,10 +40,8 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun BabyProfileScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val typography = LocalAppTypography.current
-    val spacing = LocalAppSpacing.current
-    val elev = LocalAppElevation.current
+    val c = ElyonTheme.colorScheme
+    val typography = ElyonTheme.textStyles
 
     val babyCtrl: BabyController = koinInject()
     val babyRepo: BabyRepository = koinInject()
@@ -63,16 +62,22 @@ fun BabyProfileScreen(navigator: Navigator) {
 
     if (baby == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("请先添加宝宝", color = c.textTertiary)
+            Text("请先添加宝宝", color = c.onSurfaceVariantSummary)
         }
         return
     }
 
-    AppScaffold(
+    Scaffold(
         topBar = {
-            AppTopBar(
+            TopAppBar(
                 title = "宝宝信息",
-                onBack = { navigator.pop() },
+                color = c.primaryContainer,
+                titleColor = c.onPrimaryContainer,
+                navigationIcon = {
+                    IconButton(onClick = { navigator.pop() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                    }
+                },
             )
         },
     ) { padding ->
@@ -85,8 +90,8 @@ fun BabyProfileScreen(navigator: Navigator) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .background(c.pageBackground)
-                    .padding(vertical = spacing.xl),
+                    .background(c.background)
+                    .padding(vertical = 32.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -103,7 +108,7 @@ fun BabyProfileScreen(navigator: Navigator) {
                         ) {
                             Text(
                                 baby.name.take(1),
-                                style = typography.displayLarge,
+                                style = typography.headline1,
                                 color = c.primary,
                             )
                         }
@@ -115,16 +120,16 @@ fun BabyProfileScreen(navigator: Navigator) {
                                 .border(2.dp, c.surface, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("📷", style = typography.bodyMedium)
+                            Text("📷", style = typography.body2)
                         }
                     }
 
-                    Spacer(Modifier.height(spacing.md))
+                    Spacer(Modifier.height(16.dp))
 
                     Text(
                         baby.name,
-                        style = typography.headlineLarge,
-                        color = c.textPrimary,
+                        style = typography.headline2,
+                        color = c.onSurface,
                     )
 
                     Spacer(Modifier.height(6.dp))
@@ -140,17 +145,17 @@ fun BabyProfileScreen(navigator: Navigator) {
                     ) {
                         Text(
                             if (baby.gender == "男") "👦" else "👧",
-                            style = typography.titleMedium,
+                            style = typography.title3,
                         )
-                        Spacer(Modifier.width(spacing.xs))
+                        Spacer(Modifier.width(4.dp))
                         Text(
                             "${if (baby.gender == "男") "男宝" else "女宝"}",
-                            style = typography.bodyLarge,
-                            color = c.textSecondary,
+                            style = typography.body1,
+                            color = c.onSurfaceVariantSummary,
                         )
                         if (ageText.isNotEmpty()) {
-                            Text(" · ", style = typography.bodyLarge, color = c.textTertiary)
-                            Text(ageText, style = typography.bodyLarge, color = c.textSecondary)
+                            Text(" · ", style = typography.body1, color = c.onSurfaceVariantSummary)
+                            Text(ageText, style = typography.body1, color = c.onSurfaceVariantSummary)
                         }
                     }
                 }
@@ -158,14 +163,14 @@ fun BabyProfileScreen(navigator: Navigator) {
 
             SectionHeader("出生信息")
 
-            AppCard(
-                containerColor = c.surface,
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.md),
-                elevation = elev.level2,
+                    .padding(horizontal = 16.dp),
+                cornerRadius = 16.dp,
+                colors = CardDefaults.defaultColors(color = c.surface),
             ) {
-                Column(Modifier.padding(spacing.md)) {
+                Column(Modifier.padding(16.dp)) {
                     InfoRow("出生日期", baby.birthDate)
                     BirthInfoDivider()
                     InfoRow("出生身高", baby.birthHeight?.let { "${it}cm" } ?: "未记录")
@@ -174,18 +179,18 @@ fun BabyProfileScreen(navigator: Navigator) {
                 }
             }
 
-            Spacer(Modifier.height(spacing.lg))
+            Spacer(Modifier.height(24.dp))
 
             SectionHeader("当前生长数据")
 
-            AppCard(
-                containerColor = c.surface,
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.md),
-                elevation = elev.level2,
+                    .padding(horizontal = 16.dp),
+                cornerRadius = 16.dp,
+                colors = CardDefaults.defaultColors(color = c.surface),
             ) {
-                Column(Modifier.padding(spacing.md)) {
+                Column(Modifier.padding(16.dp)) {
                     GrowthValueRow(
                         label = "当前身高",
                         value = latestHeight?.let { "${it.value}cm" } ?: "未记录",
@@ -206,28 +211,28 @@ fun BabyProfileScreen(navigator: Navigator) {
                 }
             }
 
-            Spacer(Modifier.height(spacing.lg))
+            Spacer(Modifier.height(24.dp))
 
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AppButton(
-                    variant = ButtonVariant.Text,
+                TextButton(
+                    text = "管理全部宝宝",
                     onClick = { navigator.navigate(Route.BabyManagement) },
-                    label = "管理全部宝宝",
-                    contentColor = c.textSecondary,
+                    colors = ButtonDefaults.textButtonColors(
+                        textColor = c.onSurfaceVariantSummary,
+                    ),
                 )
-                Text("·", color = c.textTertiary, style = typography.bodyMedium)
-                AppButton(
-                    variant = ButtonVariant.Text,
+                Text("·", color = c.onSurfaceVariantSummary, style = typography.body2)
+                TextButton(
+                    text = "编辑资料",
                     onClick = { showEdit = true },
-                    label = "编辑资料",
                 )
             }
 
-            Spacer(Modifier.height(spacing.xl))
+            Spacer(Modifier.height(32.dp))
         }
     }
 
@@ -247,19 +252,17 @@ fun BabyProfileScreen(navigator: Navigator) {
 
 @Composable
 private fun SectionHeader(title: String) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
     Text(
         title,
-        style = LocalAppTypography.current.bodyMedium,
-        color = c.textSecondary,
-        modifier = Modifier.padding(start = spacing.md, bottom = spacing.sm),
+        style = ElyonTheme.textStyles.body2,
+        color = ElyonTheme.colorScheme.onSurfaceVariantSummary,
+        modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
     )
 }
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     Row(
         Modifier
             .fillMaxWidth()
@@ -267,11 +270,11 @@ private fun InfoRow(label: String, value: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
+        Text(label, style = ElyonTheme.textStyles.body1, color = c.onSurface)
         Text(
             value,
-            style = LocalAppTypography.current.bodyLarge,
-            color = c.textSecondary,
+            style = ElyonTheme.textStyles.body1,
+            color = c.onSurfaceVariantSummary,
             textAlign = TextAlign.End,
         )
     }
@@ -279,7 +282,7 @@ private fun InfoRow(label: String, value: String) {
 
 @Composable
 private fun GrowthValueRow(label: String, value: String, date: String?) {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     Row(
         Modifier
             .fillMaxWidth()
@@ -287,11 +290,11 @@ private fun GrowthValueRow(label: String, value: String, date: String?) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
+        Text(label, style = ElyonTheme.textStyles.body1, color = c.onSurface)
         Column(horizontalAlignment = Alignment.End) {
-            Text(value, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
+            Text(value, style = ElyonTheme.textStyles.body1, color = c.onSurface)
             if (date != null) {
-                Text(date, style = LocalAppTypography.current.labelSmall, color = c.textTertiary)
+                Text(date, style = ElyonTheme.textStyles.footnote2, color = c.onSurfaceVariantSummary)
             }
         }
     }
@@ -299,9 +302,8 @@ private fun GrowthValueRow(label: String, value: String, date: String?) {
 
 @Composable
 private fun BirthInfoDivider() {
-    val c = LocalAppColors.current
-    AppDivider(
-        color = c.divider,
+    HorizontalDivider(
+        color = ElyonTheme.colorScheme.dividerLine,
         thickness = 0.5.dp,
     )
 }

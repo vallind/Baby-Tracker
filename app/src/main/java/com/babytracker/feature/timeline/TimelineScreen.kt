@@ -1,4 +1,7 @@
 package com.babytracker.feature.timeline
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -51,10 +54,10 @@ import org.koin.compose.viewmodel.koinViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimelineScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
     val viewModel: TimelineViewModel = koinViewModel()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -81,10 +84,10 @@ fun TimelineScreen(navigator: Navigator) {
     // 类型 → 颜色映射
     val typeColor: (String) -> Color = {
         when (it) {
-            "feeding" -> c.warning
+            "feeding" -> c.secondary
             "sleep" -> c.secondary
-            "diaper" -> c.tertiary
-            "growth" -> c.success
+            "diaper" -> c.tertiaryContainer
+            "growth" -> c.tertiaryContainer
             "health" -> c.primary
             else -> c.primary
         }
@@ -116,7 +119,7 @@ fun TimelineScreen(navigator: Navigator) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             // —— 类型筛选 Tab ——
             val filterKeys = listOf("", "feeding", "sleep", "diaper", "growth", "health")
@@ -128,7 +131,7 @@ fun TimelineScreen(navigator: Navigator) {
                     .fillMaxWidth()
                     .padding(horizontal = spacing.md, vertical = 6.dp),
             )
-            AppDivider(color = c.divider, thickness = 0.5.dp)
+            AppDivider(color = c.dividerLine, thickness = 0.5.dp)
 
             if (state.loading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -190,20 +193,20 @@ fun TimelineScreen(navigator: Navigator) {
                                 ) {
                                     Text(
                                         text = DateUtils.relativeDate(date),
-                                        style = typography.labelMedium,
-                                        color = c.textSecondary,
+                                        style = typography.footnote1,
+                                        color = c.onSurfaceVariantSummary,
                                     )
                                     Spacer(Modifier.width(6.dp))
                                     Box(
                                         Modifier
                                             .clip(RoundedCornerShape(shapes.full))
-                                            .background(c.divider)
+                                            .background(c.dividerLine)
                                             .padding(horizontal = 6.dp, vertical = 1.dp),
                                     ) {
                                         Text(
                                             "${records.size}次",
-                                            style = typography.labelMedium,
-                                            color = c.textTertiary,
+                                            style = typography.footnote1,
+                                            color = c.onSurfaceVariantSummary,
                                         )
                                     }
                                 }
@@ -241,27 +244,27 @@ fun TimelineScreen(navigator: Navigator) {
                                     ) {
                                         Text(
                                             record.emoji,
-                                            style = typography.titleLarge,
+                                            style = typography.title1,
                                         )
                                     }
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(
                                             record.title,
-                                            style = typography.titleMedium,
-                                            color = c.textPrimary,
+                                            style = typography.title3,
+                                            color = c.onSurface,
                                         )
                                         Text(
                                             record.subtitle,
-                                            style = typography.labelMedium,
-                                            color = c.textSecondary,
+                                            style = typography.footnote1,
+                                            color = c.onSurfaceVariantSummary,
                                         )
                                     }
                                     if (record.time.isNotEmpty()) {
                                         Text(
                                             record.time,
-                                            style = typography.labelMedium,
-                                            color = c.textTertiary,
+                                            style = typography.footnote1,
+                                            color = c.onSurfaceVariantSummary,
                                         )
                                     }
                                 }
@@ -282,7 +285,7 @@ fun TimelineScreen(navigator: Navigator) {
             Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.sm)) {
                 Text(
                     "选择记录类型",
-                    style = typography.headlineMedium,
+                    style = typography.headline2,
                     modifier = Modifier.padding(bottom = spacing.md),
                 )
                 val types = listOf(

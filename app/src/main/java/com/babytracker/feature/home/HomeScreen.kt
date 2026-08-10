@@ -1,4 +1,6 @@
 package com.babytracker.feature.home
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -44,8 +46,8 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val viewModel: HomeViewModel = org.koin.androidx.compose.koinViewModel()
@@ -80,7 +82,7 @@ fun HomeScreen(navigator: Navigator) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             // —— 顶部宝宝信息区（浅蓝渐变背景 + 圆形头像）——
             BabyHeader(baby, onClickProfile = { navigator.navigate(Route.BabyProfile) })
@@ -109,10 +111,10 @@ fun HomeScreen(navigator: Navigator) {
 
 @Composable
 private fun AiAssistantEntryCard(navigator: Navigator) {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
+    val colors =  ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
     AppCard(
         modifier = Modifier
             .padding(horizontal = spacing.md)
@@ -131,25 +133,25 @@ private fun AiAssistantEntryCard(navigator: Navigator) {
                     .background(colors.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("✨", style = typography.headlineMedium)
+                Text("✨", style = typography.headline2)
             }
             Spacer(Modifier.width(spacing.md))
             Column(Modifier.weight(1f)) {
-                Text(AppStrings.aiAssistant, style = typography.titleMedium, color = colors.textPrimary)
+                Text(AppStrings.aiAssistant, style = typography.title3, color = colors.onSurface)
                 Spacer(Modifier.height(spacing.xs))
-                Text(AppStrings.aiAssistantSubtitle, style = typography.bodyMedium, color = colors.textSecondary)
+                Text(AppStrings.aiAssistantSubtitle, style = typography.body2, color = colors.onSurfaceVariantSummary)
             }
-            Text("→", style = typography.titleMedium, color = colors.primary)
+            Text("→", style = typography.title3, color = colors.primary)
         }
     }
 }
 
 @Composable
 private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
     Box(
         Modifier
             .fillMaxWidth()
@@ -167,14 +169,14 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         baby.name,
-                        style = typography.headlineMedium,
-                        color = c.textPrimary,
+                        style = typography.headline2,
+                        color = c.onSurface,
                     )
                     Spacer(Modifier.width(spacing.sm))
                     Text(
                         DateUtils.monthAge(java.time.LocalDate.parse(baby.birthDate)),
-                        style = typography.bodyMedium,
-                        color = c.textSecondary,
+                        style = typography.body2,
+                        color = c.onSurfaceVariantSummary,
                     )
                 }
                 Spacer(Modifier.height(6.dp))
@@ -184,10 +186,10 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                 ) {
                     Text(
                         "宝宝资料",
-                        style = typography.bodyLarge,
+                        style = typography.body1,
                         color = c.primary,
                     )
-                    Text(" →", style = typography.bodyLarge, color = c.primary)
+                    Text(" →", style = typography.body1, color = c.primary)
                 }
             }
             // 卡通宝宝插图（emoji 组合）
@@ -198,7 +200,7 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("👶", style = typography.displayLarge)
+                Text("👶", style = typography.headline1)
             }
         }
     }
@@ -206,9 +208,9 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
 
 @Composable
 fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formulaTotalMl: Int, sleepHours: String, diaperCount: Int) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
     val animatedBreast by androidx.compose.animation.core.animateIntAsState(targetValue = breastFeedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "breast")
     val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
@@ -221,7 +223,7 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
             .fillMaxWidth(),
     ) {
         Column(Modifier.padding(spacing.md)) {
-            Text("今日概览", style = typography.titleMedium, color = c.textPrimary)
+            Text("今日概览", style = typography.title3, color = c.onSurface)
             Spacer(Modifier.height(spacing.md))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (showBreast) {
@@ -246,35 +248,35 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
 
 @Composable
 fun RowScope.TextStatCell(value: String, unit: String, label: String) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     Column(
         Modifier.weight(1f),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(value, style = typography.headlineMedium, color = c.primary)
+            Text(value, style = typography.headline2, color = c.primary)
             if (unit.isNotEmpty()) {
                 Spacer(Modifier.width(spacing.xxs))
-                Text(unit, style = typography.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.xxs))
+                Text(unit, style = typography.footnote1, color = c.onSurfaceVariantSummary, modifier = Modifier.padding(bottom = spacing.xxs))
             }
         }
         Spacer(Modifier.height(spacing.xs))
-        Text(label, style = typography.labelMedium, color = c.textTertiary)
+        Text(label, style = typography.footnote1, color = c.onSurfaceVariantSummary)
     }
 }
 
 @Composable
 fun RowScope.StatDivider() {
-    val c = LocalAppColors.current
-    Box(Modifier.width(1.dp).height(40.dp).align(Alignment.CenterVertically).background(c.divider))
+    val c = ElyonTheme.colorScheme
+    Box(Modifier.width(1.dp).height(40.dp).align(Alignment.CenterVertically).background(c.dividerLine))
 }
 
 @Composable
 fun FeatureGrid(navigator: Navigator) {
-    val spacing = LocalAppSpacing.current
+    val spacing = com.babytracker.core.ui.AppSpacing
     val items = listOf(
         FeatureGridItemData(Route.Feeding, "🍼", "喂养记录"),
         FeatureGridItemData(Route.Sleep, "🌙", "睡眠记录"),
@@ -310,11 +312,11 @@ private fun FeatureGridItem(
     navigator: Navigator,
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
-    val tint = if (useAccent) c.warning else c.primary
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
+    val tint = if (useAccent) c.secondary else c.primary
     Column(
         modifier
             .clip(RoundedCornerShape(shapes.large))
@@ -333,10 +335,10 @@ private fun FeatureGridItem(
                 .background(tint.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(item.emoji, style = typography.headlineMedium)
+            Text(item.emoji, style = typography.headline2)
         }
         Spacer(Modifier.height(6.dp))
-        Text(item.label, style = typography.labelMedium, color = c.textPrimary)
+        Text(item.label, style = typography.footnote1, color = c.onSurface)
     }
 }
 
@@ -348,10 +350,10 @@ private data class FeatureGridItemData(
 
 @Composable
 fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
     AppCard(
         modifier = Modifier.padding(horizontal = spacing.md).fillMaxWidth(),
     ) {
@@ -361,7 +363,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("最近记录", style = typography.titleMedium, color = c.textPrimary)
+                Text("最近记录", style = typography.title3, color = c.onSurface)
                 AppButton(variant = ButtonVariant.Text, onClick = onSeeAll, label = "查看全部")
             }
             Spacer(Modifier.height(spacing.sm))
@@ -380,8 +382,8 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 if (showDates) {
                     Text(
                         date,
-                        style = typography.labelMedium,
-                        color = c.textSecondary,
+                        style = typography.footnote1,
+                        color = c.onSurfaceVariantSummary,
                         modifier = Modifier.padding(top = if (isFirst) spacing.none else 12.dp, bottom = spacing.xs),
                     )
                     isFirst = false
@@ -389,7 +391,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 groupItems.forEach { item ->
                     TimelineRecordRow(item)
                     if (item != groupItems.last()) {
-                        AppDivider(color = c.divider, thickness = 0.5.dp, modifier = Modifier.padding(start = 28.dp))
+                        AppDivider(color = c.dividerLine, thickness = 0.5.dp, modifier = Modifier.padding(start = 28.dp))
                     }
                 }
             }
@@ -399,10 +401,10 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
 
 @Composable
 private fun TimelineRecordRow(item: Any) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
+    val shapes = com.babytracker.core.ui.AppShapes
     Row(Modifier.fillMaxWidth().padding(vertical = spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         // 时间轴小圆点（primary 色）
         Box(
@@ -414,19 +416,19 @@ private fun TimelineRecordRow(item: Any) {
         Spacer(Modifier.width(12.dp))
         when (item) {
             is Feeding -> {
-                Text(when (item.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" }, style = typography.titleLarge)
+                Text(when (item.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" }, style = typography.title1)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), style = typography.bodyLarge, color = c.textPrimary)
-                    Text(if (item.type == FeedingType.BREAST) "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", style = typography.labelMedium, color = c.textSecondary)
+                    Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), style = typography.body1, color = c.onSurface)
+                    Text(if (item.type == FeedingType.BREAST) "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", style = typography.footnote1, color = c.onSurfaceVariantSummary)
                 }
-                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)
+                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             is Sleep -> {
-                Text(if (item.type == SleepType.NIGHT) "🌙" else "☀️", style = typography.titleLarge)
+                Text(if (item.type == SleepType.NIGHT) "🌙" else "☀️", style = typography.title1)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(if (item.type == SleepType.NIGHT) "夜间睡眠" else "小睡", style = typography.bodyLarge, color = c.textPrimary)
+                    Text(if (item.type == SleepType.NIGHT) "夜间睡眠" else "小睡", style = typography.body1, color = c.onSurface)
                     Text(
                         DateUtils.durationFullText(
                             DateUtils.durationToTotalSeconds(
@@ -434,20 +436,20 @@ private fun TimelineRecordRow(item: Any) {
                                 LocalDateTime.parse(item.endTime, DateTimeFormatter.ISO_DATE_TIME),
                             )
                         ),
-                        style = typography.labelMedium,
-                        color = c.textSecondary,
+                        style = typography.footnote1,
+                        color = c.onSurfaceVariantSummary,
                     )
                 }
-                Text(item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)
+                Text(item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             is Diaper -> {
-                Text("🧷", style = typography.titleLarge)
+                Text("🧷", style = typography.title1)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("换尿布", style = typography.bodyLarge, color = c.textPrimary)
-                    Text(DateUtils.diaperTypeLabel(com.babytracker.core.domain.model.DiaperType.raw(item.type)), style = typography.labelMedium, color = c.textSecondary)
+                    Text("换尿布", style = typography.body1, color = c.onSurface)
+                    Text(DateUtils.diaperTypeLabel(com.babytracker.core.domain.model.DiaperType.raw(item.type)), style = typography.footnote1, color = c.onSurfaceVariantSummary)
                 }
-                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)
+                Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
         }
     }

@@ -1,4 +1,6 @@
 package com.babytracker.feature.reminder
+import com.babytracker.core.ui.AppShapes
+import com.babytracker.core.ui.AppSpacing
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -51,7 +53,7 @@ import java.time.temporal.ChronoUnit
  */
 @Composable
 fun ReminderScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
+    val c = ElyonTheme.colorScheme
     val viewModel: ReminderViewModel = org.koin.androidx.compose.koinViewModel()
     val babyCtrl: BabyController = koinInject()
     val reminderRepo: ReminderRepository = koinInject()
@@ -83,7 +85,7 @@ fun ReminderScreen(navigator: Navigator) {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .background(c.pageBackground),
+                .background(c.background),
         ) {
             ReminderHeader(onBack = { navigator.pop() })
 
@@ -134,9 +136,9 @@ fun ReminderScreen(navigator: Navigator) {
 
 @Composable
 private fun ReminderHeader(onBack: () -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     Box(
         Modifier
             .fillMaxWidth()
@@ -159,15 +161,15 @@ private fun ReminderHeader(onBack: () -> Unit) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "返回",
-                    tint = c.textPrimary,
+                    tint = c.onSurface,
                 )
             }
             Spacer(Modifier.width(spacing.xs))
             Text(
                 "提醒中心",
-                style = LocalAppTypography.current.titleLarge,
+                style = ElyonTheme.textStyles.title1,
                 fontWeight = FontWeight.Bold,
-                color = c.textPrimary,
+                color = c.onSurface,
             )
         }
     }
@@ -175,9 +177,9 @@ private fun ReminderHeader(onBack: () -> Unit) {
 
 @Composable
 private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     Row(
         Modifier
             .fillMaxWidth()
@@ -194,9 +196,9 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
             ) {
                 Text(
                     if (t == ReminderTab.PENDING) "待办提醒" else "历史提醒",
-                    style = LocalAppTypography.current.bodyLarge,
+                    style = ElyonTheme.textStyles.body1,
                     fontWeight = if (tab == t) FontWeight.Bold else FontWeight.Normal,
-                    color = if (tab == t) c.primary else c.textSecondary,
+                    color = if (tab == t) c.primary else c.onSurfaceVariantSummary,
                 )
                 Spacer(Modifier.height(6.dp))
                 Box(
@@ -218,9 +220,9 @@ private fun PendingReminderCard(
     onToggleEnabled: (Boolean) -> Unit,
     onDelete: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val (emoji, typeColor) = reminder.type.toVisual(c)
 
     RecordCard(
@@ -234,15 +236,15 @@ private fun PendingReminderCard(
                 .background(typeColor.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(emoji, style = LocalAppTypography.current.titleLarge)
+            Text(emoji, style = ElyonTheme.textStyles.title1)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 reminder.title,
-                style = LocalAppTypography.current.bodyLarge,
+                style = ElyonTheme.textStyles.body1,
                 fontWeight = FontWeight.SemiBold,
-                color = c.textPrimary,
+                color = c.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -250,8 +252,8 @@ private fun PendingReminderCard(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     reminder.description,
-                    style = LocalAppTypography.current.labelMedium,
-                    color = c.textSecondary,
+                    style = ElyonTheme.textStyles.footnote1,
+                    color = c.onSurfaceVariantSummary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -260,8 +262,8 @@ private fun PendingReminderCard(
                 Spacer(Modifier.height(2.dp))
                 Text(
                     reminder.repeatRule,
-                    style = LocalAppTypography.current.labelMedium,
-                    color = c.textTertiary,
+                    style = ElyonTheme.textStyles.footnote1,
+                    color = c.onSurfaceVariantSummary,
                 )
             }
         }
@@ -279,15 +281,15 @@ private fun PendingReminderCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         countdown,
-                        style = LocalAppTypography.current.bodyMedium,
+                        style = ElyonTheme.textStyles.body2,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (overdue) c.danger else c.primary,
+                        color = if (overdue) c.error else c.primary,
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
                         DateUtils.formatDate(reminder.dueDate),
-                        style = LocalAppTypography.current.labelMedium,
-                        color = c.textTertiary,
+                        style = ElyonTheme.textStyles.footnote1,
+                        color = c.onSurfaceVariantSummary,
                     )
                 }
                 Spacer(Modifier.width(spacing.xs))
@@ -301,7 +303,7 @@ private fun PendingReminderCard(
                     Icon(
                         Icons.Default.Check,
                         contentDescription = "标记完成",
-                        tint = c.success,
+                        tint = c.tertiaryContainer,
                         modifier = Modifier.size(18.dp),
                     )
                 }
@@ -315,9 +317,9 @@ private fun HistoryReminderCard(
     reminder: Reminder,
     onDelete: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val shapes = com.babytracker.core.ui.AppShapes
     val (emoji, typeColor) = reminder.type.toVisual(c)
     val doneText = reminder.doneDate?.let { "完成于 ${DateUtils.formatDate(it)}" } ?: "已完成"
 
@@ -333,31 +335,31 @@ private fun HistoryReminderCard(
                 .background(typeColor.copy(alpha = 0.10f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(emoji, style = LocalAppTypography.current.titleLarge)
+            Text(emoji, style = ElyonTheme.textStyles.title1)
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 reminder.title,
-                style = LocalAppTypography.current.bodyLarge,
+                style = ElyonTheme.textStyles.body1,
                 fontWeight = FontWeight.Medium,
-                color = c.textSecondary,
+                color = c.onSurfaceVariantSummary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(2.dp))
-            Text(doneText, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
+            Text(doneText, style = ElyonTheme.textStyles.footnote1, color = c.onSurfaceVariantSummary)
         }
-        Text("\u2705", style = LocalAppTypography.current.titleLarge)
+        Text("\u2705", style = ElyonTheme.textStyles.title1)
     }
 }
 
-private fun ReminderType.toVisual(c: AppColors): Pair<String, Color> = when (this) {
-    ReminderType.VACCINE    -> "\uD83D\uDC89" to c.warning
+private fun ReminderType.toVisual(c: io.elyon.kmp.theme.Colors): Pair<String, Color> = when (this) {
+    ReminderType.VACCINE    -> "\uD83D\uDC89" to c.secondary
     ReminderType.CHECKUP    -> "\uD83C\uDFE5" to c.primary
-    ReminderType.MEDICATION -> "\uD83D\uDC8A" to c.success
+    ReminderType.MEDICATION -> "\uD83D\uDC8A" to c.tertiaryContainer
     ReminderType.ASSESSMENT -> "\uD83D\uDCCB" to c.secondary
-    ReminderType.OTHER      -> "\uD83D\uDCCC" to c.textTertiary
+    ReminderType.OTHER      -> "\uD83D\uDCCC" to c.onSurfaceVariantSummary
 }
 
 private fun Reminder.isOverdue(): Boolean {

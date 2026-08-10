@@ -1,4 +1,6 @@
 package com.babytracker.feature.health
+import com.babytracker.core.ui.AppSpacing
+import io.elyon.kmp.theme.ElyonTheme
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
@@ -62,14 +64,14 @@ private data class HealthCategoryMeta(
 internal fun completedVaccinationCount(vaccinations: List<Vaccination>): Int =
     vaccinations.count { it.status == VaccinationStatus.DONE }
 
-private fun healthCategories(c: AppColors) = listOf(
+private fun healthCategories(c: io.elyon.kmp.theme.Colors) = listOf(
     HealthCategoryMeta("birth_info", "出生信息", "🍼", c.secondary),
-    HealthCategoryMeta("allergy", "过敏史", "🤧", c.tertiary),
-    HealthCategoryMeta("medicalHistory", "既往病史", "📋", c.success),
+    HealthCategoryMeta("allergy", "过敏史", "🤧", c.tertiaryContainer),
+    HealthCategoryMeta("medicalHistory", "既往病史", "📋", c.tertiaryContainer),
     HealthCategoryMeta("visit", "就诊记录", "🏥", c.error),
     HealthCategoryMeta("medication", "用药记录", "💊", c.primary),
-    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", c.warning),
-    HealthCategoryMeta("doctor_note", "医生备注", "📋", c.danger),
+    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", c.secondary),
+    HealthCategoryMeta("doctor_note", "医生备注", "📋", c.error),
 )
 
 private fun categorySummary(category: String, items: List<HealthRecord>): String {
@@ -86,9 +88,9 @@ private fun categorySummary(category: String, items: List<HealthRecord>): String
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(navigator: Navigator) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val healthRepo: HealthRepository = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
@@ -128,7 +130,7 @@ fun HealthScreen(navigator: Navigator) {
             }
         } else {
             LazyColumn(
-                Modifier.fillMaxSize().padding(padding).background(c.pageBackground),
+                Modifier.fillMaxSize().padding(padding).background(c.background),
                 contentPadding = PaddingValues(top = 12.dp, bottom = 80.dp),
             ) {
                 healthCategories(c).forEach { meta ->
@@ -214,9 +216,9 @@ private fun HealthCategorySummaryCard(
     isExpanded: Boolean,
     onClick: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     AppCard(
         elevation = 2.dp,
         containerColor = c.surface,
@@ -236,21 +238,21 @@ private fun HealthCategorySummaryCard(
                     .background(bgColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, style = typography.titleLarge)
+                Text(emoji, style = typography.title1)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Text(label, style = typography.title3, fontWeight = FontWeight.SemiBold, color = c.onSurface)
                 Spacer(Modifier.height(spacing.xxs))
                 Text(
                     summary,
-                    style = typography.bodyMedium,
-                    color = if (hasItems) c.textSecondary else c.textTertiary,
+                    style = typography.body2,
+                    color = if (hasItems) c.onSurfaceVariantSummary else c.onSurfaceVariantSummary,
                     maxLines = 1,
                 )
             }
             Spacer(Modifier.width(spacing.sm))
-            Text("›", style = typography.titleLarge, color = c.textTertiary)
+            Text("›", style = typography.title1, color = c.onSurfaceVariantSummary)
         }
     }
 }
@@ -263,9 +265,9 @@ private fun VaccinationSummaryCard(
     count: Int,
     onClick: () -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
     AppCard(
         elevation = 2.dp,
@@ -286,20 +288,20 @@ private fun VaccinationSummaryCard(
                     .background(bgColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, style = typography.titleLarge)
+                Text(emoji, style = typography.title1)
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                Text(label, style = typography.title3, fontWeight = FontWeight.SemiBold, color = c.onSurface)
                 Spacer(Modifier.height(spacing.xxs))
                 Text(
                     summary,
-                    style = typography.bodyMedium,
-                    color = if (count > 0) c.textSecondary else c.textTertiary,
+                    style = typography.body2,
+                    color = if (count > 0) c.onSurfaceVariantSummary else c.onSurfaceVariantSummary,
                 )
             }
             Spacer(Modifier.width(spacing.sm))
-            Text("›", style = typography.titleLarge, color = c.textTertiary)
+            Text("›", style = typography.title1, color = c.onSurfaceVariantSummary)
         }
     }
 }
@@ -310,9 +312,9 @@ private fun ExpandedCategoryItems(
     onEdit: (HealthRecord) -> Unit,
     onDelete: (HealthRecord) -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
+    val typography = ElyonTheme.textStyles
     val sorted = remember(items) { items.sortedByDescending { it.recordDate } }
     Column(Modifier.padding(horizontal = spacing.md)) {
         sorted.forEachIndexed { i, r ->
@@ -325,20 +327,20 @@ private fun ExpandedCategoryItems(
             ) {
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(r.description, style = typography.bodyLarge, fontWeight = FontWeight.Medium, color = c.textPrimary)
+                        Text(r.description, style = typography.body1, fontWeight = FontWeight.Medium, color = c.onSurface)
                         Spacer(Modifier.weight(1f))
                         val dateText = try {
                             DateUtils.formatDate(LocalDateTime.parse(r.recordDate, DateTimeFormatter.ISO_DATE_TIME))
                         } catch (_: Exception) { r.recordDate.take(10) }
-                        Text(dateText, style = typography.labelMedium, color = c.textSecondary)
+                        Text(dateText, style = typography.footnote1, color = c.onSurfaceVariantSummary)
                     }
                     if (!r.doctorName.isNullOrBlank()) {
                         Spacer(Modifier.height(spacing.xs))
-                        Text("👨‍⚕️ ${r.doctorName}", style = typography.labelMedium, color = c.textSecondary)
+                        Text("👨‍⚕️ ${r.doctorName}", style = typography.footnote1, color = c.onSurfaceVariantSummary)
                     }
                     if (!r.note.isNullOrBlank()) {
                         Spacer(Modifier.height(spacing.xxs))
-                        Text(r.note, style = typography.labelMedium, color = c.textSecondary, maxLines = 2)
+                        Text(r.note, style = typography.footnote1, color = c.onSurfaceVariantSummary, maxLines = 2)
                     }
                 }
             }
@@ -354,8 +356,8 @@ fun HealthFormDialog(
     onDismiss: () -> Unit,
     onSave: (HealthRecord) -> Unit,
 ) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
+    val c = ElyonTheme.colorScheme
+    val spacing = com.babytracker.core.ui.AppSpacing
     val isEdit = editEntity != null
     var category by remember { mutableStateOf(editEntity?.category ?: "birth_info") }
     var description by remember { mutableStateOf(editEntity?.description ?: "") }
