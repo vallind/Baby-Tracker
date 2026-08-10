@@ -19,11 +19,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
-import com.babytracker.designsystem.theme.BabyTrackerTheme
+import com.babytracker.core.ui.BabyTrackerElyonTheme
+import com.babytracker.core.ui.ElyonThemeResolver
 import com.babytracker.designsystem.theme.DensityController
 import com.babytracker.designsystem.theme.ThemeController
-import com.babytracker.designsystem.theme.toColorScheme
 import com.babytracker.navigation.AppNavigation
+import io.elyon.kmp.theme.ElyonTheme
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
@@ -37,19 +38,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             val theme = themeController.currentTheme
             val density = densityController.currentDensity
-            val darkTheme = theme.name == "night"
-            val colorScheme = theme.toColorScheme(isDark = darkTheme)
-            // 状态栏颜色跟随 primaryLight（所有页面顶部区域统一使用此颜色）
-            val statusBarColor = if (darkTheme) colorScheme.surface else colorScheme.primaryContainer
+            val themeName = theme.name
 
-            // 系统级：状态栏图标颜色（浅/深），始终跟随主题
-            if (Build.VERSION.SDK_INT >= 21) {
-                SideEffect {
-                    WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
+            BabyTrackerElyonTheme(themeName, density = density) {
+                val darkTheme = ElyonThemeResolver.isDark(themeName)
+                val scheme = ElyonTheme.colorScheme
+                // 状态栏颜色跟随 primaryContainer（所有页面顶部区域统一使用此颜色）
+                val statusBarColor = if (darkTheme) scheme.surface else scheme.primaryContainer
+
+                // 系统级：状态栏图标颜色（浅/深），始终跟随主题
+                if (Build.VERSION.SDK_INT >= 21) {
+                    SideEffect {
+                        WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !darkTheme
+                    }
                 }
-            }
 
-            BabyTrackerTheme(theme, density = density) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     // ── 页面内容（底层）──
                     Surface(modifier = Modifier.fillMaxSize()) {

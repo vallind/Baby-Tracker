@@ -281,3 +281,12 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 **规则：** detekt `Rule` 子类里**禁止**在 `issue` 初始化之前（init 块、或 `issue` 声明之前的属性初始化器）调用任何 `ConfigAware` 的 `valueOrDefault`/`subConfig`；`issue` 声明必须放在任何自定义 init 块之前。错误写法：`init { valueOrDefault("active", false) }`；正确写法：不做 init 块，或把 `issue` 声明提到最前。
 
+---
+
+## 20. AGP 9 复合构建：AGP 版本必须全局唯一，included build 项目路径带前缀
+
+**现象：** 应用（AGP 9.2.1）通过 `includeBuild("../elegant")` 引入 Elyon（AGP 9.3.1）后，`implementation(project(":elyon-core"))` 报 `Project with path ':elyon-core' could not be found`；改成 `project(":elegant:elyon-core")` 后变体解析又报 `Using multiple versions of the Android Gradle plugin(9.3.1, 9.2.1) in the same build is not allowed`。
+
+**原因：** Gradle 9 把 included build 的项目以 `<included-build-名>:<项目名>` 暴露（任务输出可见 `:elegant:elyon-blur`），裸项目名查不到；AGP 9 额外强制整个复合构建树使用同一个 AGP 版本，跨构建混版本直接判不兼容。
+
+**规则：** 复合构建引入 Android 库时，先统一根构建与 included build 的 AGP 版本；依赖写成 `implementation(project(":<included-build-名>:<项目名>"))`；库的传递依赖要求更高 compileSdk 时同步提升应用 compileSdk（Elyon 要求 37，blur 要求 minSdk 33）。

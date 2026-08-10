@@ -17,5 +17,9 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "MyApp"
+
+// Elyon（vide/elegant，Compose Multiplatform UI 库）以复合构建方式接入
+includeBuild("../elegant")
+
 include(":app")
 include(":detekt-rules")

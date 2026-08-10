@@ -15,6 +15,7 @@ app/src/main/java/com/babytracker/
 │   ├── i18n/                    # AppStrings
 │   ├── foundation/              # BorderContainer/CenterVerticallyRow
 │   └── util/                    # AppDefaults 快照
+├── core/ui/                     # Elyon 迁移层（ElyonAppTheme 主题根 / ElyonThemeResolver 主题映射 / BlurPolicy 毛玻璃策略）
 ├── core/                        # 业务基础设施
 │   ├── ai/                      # AI 配置协调/供应商适配/回答安全校验
 │   ├── auth/                    # AuthService
@@ -32,7 +33,7 @@ app/src/main/java/com/babytracker/
 │   ├── message/development/reminder/settings/
 │   │   └── settings/            # SettingsMenuScreen（使用偏好：界面密度入口）/ SettingsScreen（DensityPickerSheet/ThemePickerSheet）/ SettingsViewModel
 │   └── ai/auth/family/
-└── navigation/                  # 导航（AppNavigation.kt，sealed class Screen 25+ 路由）
+└── navigation/                  # 导航（AppNavigation.kt，sealed class Screen 25+ 路由；Elyon 迁移：Route sealed interface + Navigator + AppRouteGraph）
 ```
 
 仓库根级模块与构建配置：
@@ -85,13 +86,13 @@ designsystem/
 
 | 层面 | 选型 |
 |---|---|
-| UI | Jetpack Compose + Material 3 |
-| 导航 | Navigation Compose（sealed class Screen，25+ 路由） |
+| UI | Jetpack Compose + Material 3，**Elyon 迁移中**（vide/elegant 复合构建：elyon-core/ui/effects/blur/nav，主题根已切换 BabyTrackerElyonTheme） |
+| 导航 | Navigation Compose（迁移中）→ elyon-nav（Route/Navigator/AppRouteGraph 已就绪） |
 | 数据库 | Room 2.8.4 + KSP（version 8，15 张 @Entity，exportSchema 开启） |
 | DI | Koin 4.2.1（`viewModel { }` 注册） |
 | 异步 | Coroutines + Flow |
 | 网络 | Retrofit 3.0.0 + OkHttp 5.4.0（WebDAV） + Supabase Kotlin BOM 3.6.0 |
 | 文件 | DocumentFile 1.0.1（SAF） |
 | 设置存储 | Jetpack DataStore + kotlinx.serialization（AppSettings） |
-| 构建 | Java 17 / compileSdk 36 / minSdk 24 |
+| 构建 | Java 17 / compileSdk 37 / minSdk 33（elyon-blur 要求）/ AGP 9.3.1（与 Elyon 复合构建统一） |
 | 静态分析 | detekt 1.23.8（report-only，config/detekt/detekt.yml 显式枚举）+ :detekt-rules 自定义规则模块 |

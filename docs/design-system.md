@@ -4,6 +4,12 @@
 >
 > 从 AGENTS.md 拆分，供需要深入了解设计系统时查阅。
 
+> ⚠️ **弃用迁移中**：本设计系统（`com.babytracker.designsystem`）正在被 Elyon
+> （`vide/elegant` 复合构建，elyon-core/ui/effects/blur/nav）整体取代。主题根已切换为
+> `core/ui/ElyonAppTheme`（ElyonTheme 驱动 + 旧令牌兼容映射），屏幕与组件将逐文件迁移；
+> 迁移完成后删除本设计系统包与本文档。新增 UI 代码优先使用 Elyon 组件，
+> 禁止再向旧 designsystem 增加新组件/令牌。
+
 ## 令牌驱动架构
 
 ```

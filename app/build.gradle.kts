@@ -9,11 +9,13 @@ plugins {
 
 android {
     namespace = "com.babytracker"
-    compileSdk = 36
+    // Elyon 及其传递依赖（lifecycle 2.11 / material-color-utilities 5.0）要求 37
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.babytracker"
-        minSdk = 24
+        // elyon-blur 要求 Android 13+（minSdk 33），全面启用毛玻璃效果必须同步提升
+        minSdk = 33
         targetSdk = 36
         versionCode = 22
         versionName = "1.7.11"
@@ -62,6 +64,13 @@ dependencies {
 
     // Navigation
     implementation(libs.navigation.compose)
+
+    // Elyon UI 基座（vide/elegant 复合构建）
+    implementation(project(":elegant:elyon-core"))
+    implementation(project(":elegant:elyon-ui"))
+    implementation(project(":elegant:elyon-effects"))
+    implementation(project(":elegant:elyon-blur"))
+    implementation(project(":elegant:elyon-nav"))
 
     // Koin
     implementation(libs.koin.android)
