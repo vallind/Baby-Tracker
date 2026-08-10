@@ -145,22 +145,3 @@ detekt {
     ignoreFailures = true
 }
 
-// —— 令牌审计门禁：themeTokenAudit（共享 TokenAuditChecker，双路复用）——
-// debugCompileClasspath 带 Android 变体属性，直接引用其解析结果可避免拖入缺失缓存的 JVM 变体依赖
-tasks.register<JavaExec>("themeTokenAudit") {
-    group = "verification"
-    description = "令牌化静态审计：扫描全部 Kotlin 源码，拦截 M3 令牌直用/硬编码颜色/令牌绕过"
-    dependsOn("compileDebugKotlin")
-    // AGP 9 无 sourceSets 容器，主类输出取 compileDebugKotlin 的目标目录（本项目无 Java 源码）
-    val kotlinClasses = tasks.named("compileDebugKotlin")
-        .flatMap { (it as org.jetbrains.kotlin.gradle.tasks.KotlinCompile).destinationDirectory }
-        .map { it.asFile }
-    classpath = configurations.getByName("debugCompileClasspath") + files(kotlinClasses)
-    mainClass = "com.babytracker.core.util.TokenAuditCheckerKt"
-    args(
-        project.file("src/main/java").absolutePath,
-        "com/babytracker/designsystem/theme",
-        "com/babytracker/designsystem/components",
-        project.file("src/main/java/com/babytracker/designsystem/theme/AppComponentTokens.kt").absolutePath,
-    )
-}

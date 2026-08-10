@@ -1,6 +1,6 @@
 # 项目结构与模块索引
 
-> 最后更新：2026-08-08 · 对应版本：1.8.0
+> 最后更新：2026-08-11 · 旧自建设计系统已删除，UI 基座为 Elyon
 >
 > 从 AGENTS.md 拆分，供需要定位代码时查阅。
 
@@ -8,15 +8,15 @@
 
 ```
 app/src/main/java/com/babytracker/
-├── designsystem/                # 设计系统（主题令牌 + 可复用组件 + Hooks + i18n）
-│   ├── theme/                   # AppTokens（核心令牌）/ AppComponentTokens（组件令牌）/ AppDensity 密度体系（含 DensityController.kt）/ Theme.kt
-│   ├── components/              # 可复用组件（26 个目录 + 根级组件，含 Defaults）
-│   ├── hooks/                   # useDebounce/useState/useLatestState + Logic 类
-│   ├── i18n/                    # AppStrings
-│   ├── foundation/              # BorderContainer/CenterVerticallyRow
-│   └── util/                    # AppDefaults 快照
-├── core/ui/                     # Elyon 迁移层（ElyonAppTheme 主题根 / ElyonThemeResolver 主题映射 / BlurPolicy 毛玻璃策略）
 ├── core/                        # 业务基础设施
+│   ├── ui/                      # Elyon UI 基座
+│   │   ├── ElyonAppTheme.kt     # 主题根（ElyonTheme 驱动）
+│   │   ├── ElyonThemeResolver.kt# 主题名 → Elyon ThemeController 参数映射
+│   │   ├── ThemeController.kt / DensityController.kt
+│   │   ├── BlurPolicy.kt        # 毛玻璃启用策略（API 33 + 运行时着色器）
+│   │   ├── AppDimens.kt         # AppSpacing / AppShapes（纯 dp 常量）
+│   │   ├── Gradients.kt         # 渐变 Brush（消费 Elyon Colors）
+│   │   └── components/          # 应用级组件（RecordCard/TimePicker/DateTimeCascade/AppInput/Snackbar/BottomNavBar…）
 │   ├── ai/                      # AI 配置协调/供应商适配/回答安全校验
 │   ├── auth/                    # AuthService
 │   ├── backup/                  # BackupManager
@@ -26,35 +26,35 @@ app/src/main/java/com/babytracker/
 │   ├── domain/                  # Domain Models
 │   ├── settings/                # AppSettings（DataStore 设置聚合）
 │   ├── sync/                    # SyncEngine / SyncTrigger / RealtimeManager / SyncWorker
-│   └── util/                    # BabyController/DateUtils/VaccineSchedule/NetworkMonitor/TokenAuditChecker（令牌审计检查器，Gradle 任务与 JVM 单测双路复用）
+│   └── util/                    # BabyController/DateUtils/VaccineSchedule/NetworkMonitor
+├── i18n/                        # AppStrings（全部用户可见文案）
 ├── feature/                     # 业务功能（16 个模块）
 │   ├── home/feeding/sleep/diaper/growth/
 │   ├── vaccination/health/stats/timeline/
 │   ├── message/development/reminder/settings/
-│   │   └── settings/            # SettingsMenuScreen（使用偏好：界面密度入口）/ SettingsScreen（DensityPickerSheet/ThemePickerSheet）/ SettingsViewModel
+│   │   └── settings/            # SettingsMenuScreen（主题/密度入口）/ SettingsScreen（DensityPickerSheet/ThemePickerSheet）/ SettingsViewModel
 │   └── ai/auth/family/
-└── navigation/                  # elyon-nav 导航（AppNavigation.kt：NavDisplay + 25 条 Route + Navigator + AppRouteGraph；已移除 AndroidX Navigation）
+└── navigation/                  # elyon-nav 导航（AppNavigation.kt：NavDisplay + 25 条 Route + Navigator + AppRouteGraph）
 ```
 
 仓库根级模块与构建配置：
 
 ```
-detekt-rules/                    # detekt 自定义规则模块（HardcodedColor/TokenBypass，ServiceLoader 注册；单测 HardcodedColorRuleTest/TokenBypassRuleTest）
-config/detekt/detekt.yml         # detekt 显式枚举配置（Termux 下 buildUponDefaultConfig 全量规则超时，见文件头注释）
+detekt-rules/                    # detekt 自定义规则模块（HardcodedColor/TokenBypass，ServiceLoader 注册）
+config/detekt/detekt.yml         # detekt 显式枚举配置（Termux 下 buildUponDefaultConfig 全量规则超时）
+../elegant/                      # Elyon 复合构建（includeBuild，elyon-core/ui/effects/blur/nav）
 ```
 
-令牌审计门禁：`app/build.gradle.kts` 注册 `themeTokenAudit` JavaExec 任务（group verification），classpath 直接引用 `debugCompileClasspath`（AGP 9 无 sourceSets 容器，lessons #17），详见 `docs/design-system.md`「令牌审计门禁」。
-
-设计系统相关测试（`app/src/test/java/com/babytracker/`）：
+退役门禁（`app/src/test/java/com/babytracker/`）：
 
 ```
-designsystem/
-├── theme/                       # DensityTokensTest / ComponentTokensStateAuditTest / ThemeTokenizationStaticAuditTest / TypographyTokensTest
-├── components/                  # A11ySemanticsAuditTest（自定义可交互组件语义静态审计）
-└── core/util/                   # TokenAuditCheckerTest（共享检查器拦截/白名单/防呆样本）
+core/ui/DesignSystemRetirementTest.kt   # 主源码禁止再出现 com.babytracker.designsystem
+navigation/NavigationMigrationTest.kt   # 主源码禁止再出现 androidx.navigation.*
+navigation/RouteGraphTest.kt            # 路由注册表完整性（25 条唯一）
+core/ui/ElyonThemeResolverTest.kt       # 主题名 → Elyon 参数映射
+core/ui/BlurPolicyTest.kt               # 毛玻璃启用策略
+navigation/NavigatorTest.kt             # Navigator 栈语义
 ```
-
-无障碍基线文档：`docs/a11y-baseline.md`（组件语义承诺表 + 装饰隔离 + 审计说明）。
 
 ## 核心模块索引
 
@@ -65,12 +65,10 @@ designsystem/
 | 睡眠统计 | `feature/sleep/SleepListScreen.kt` + `feature/home/HomeViewModel.kt` |
 | 生长图表 | `feature/growth/GrowthScreen.kt`（Canvas + WHO 参考线） |
 | 疫苗计划 | `core/util/VaccineSchedule.kt`（21 条预设） |
-| 核心令牌 | `designsystem/theme/AppTokens.kt` — AppColors(39字段)/Spacing/Shapes/Elevation/Opacity/Motion/Typography |
-| 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 33 种组件令牌（derive{} 部分覆盖为 TODO，未实现）；AppDensityTokens 为非组件令牌（见 design-system.md） |
-| 密度/无障碍 | `designsystem/theme/DensityController.kt` + `DensityPickerSheet`（`feature/settings/SettingsScreen.kt`）；`docs/a11y-baseline.md` |
-| 组件库 | `designsystem/components/`（26 个组件目录 + 根级组件，含 Defaults） |
-| 国际化 | `designsystem/i18n/AppStrings.kt` |
-| Hooks/Logic | `designsystem/hooks/Hooks.kt` + `ButtonLogic.kt`/`FormLogic.kt`/`TableLogic.kt` |
+| 主题/色板/排版 | `core/ui/ElyonAppTheme.kt` + `ElyonThemeResolver.kt`；颜色 `ElyonTheme.colorScheme`，排版 `ElyonTheme.textStyles` |
+| 密度/无障碍 | `core/ui/DensityController.kt` + `DensityPickerSheet`（`feature/settings/SettingsScreen.kt`） |
+| 应用级组件 | `core/ui/components/` |
+| 国际化 | `i18n/AppStrings.kt` |
 | 备份逻辑 | `core/backup/BackupManager.kt` |
 | 数据库升级 | `core/database/AppDatabase.kt`（同步写 Migration + schema JSON） |
 | 同步引擎 | `core/sync/SyncEngine.kt`（push/pull/fullSync/markExistingPending） |
@@ -80,19 +78,19 @@ designsystem/
 | 家庭/登录 | `core/data/FamilyService.kt` / `core/auth/AuthService.kt` |
 | 导航/路由 | `navigation/AppNavigation.kt` |
 | DI | `core/di/Modules.kt` |
-| 令牌审计门禁 | `core/util/TokenAuditChecker.kt` + `app/build.gradle.kts`（themeTokenAudit 任务）+ `detekt-rules/`（HardcodedColor/TokenBypass）+ `config/detekt/detekt.yml` |
+| 毛玻璃策略 | `core/ui/BlurPolicy.kt` + `core/ui/components/BottomNavBar.kt` |
 
 ## 技术栈
 
 | 层面 | 选型 |
 |---|---|
-| UI | Jetpack Compose + Material 3，**Elyon 迁移中**（vide/elegant 复合构建：elyon-core/ui/effects/blur/nav，主题根已切换 BabyTrackerElyonTheme） |
-| 导航 | elyon-nav（Route sealed interface + Navigator + NavDisplay，已移除 Navigation Compose） |
+| UI | Jetpack Compose + Elyon（vide/elegant 复合构建：elyon-core/ui/effects/blur/nav） |
+| 导航 | elyon-nav（Route sealed interface + Navigator + NavDisplay） |
 | 数据库 | Room 2.8.4 + KSP（version 8，15 张 @Entity，exportSchema 开启） |
 | DI | Koin 4.2.1（`viewModel { }` 注册） |
 | 异步 | Coroutines + Flow |
 | 网络 | Retrofit 3.0.0 + OkHttp 5.4.0（WebDAV） + Supabase Kotlin BOM 3.6.0 |
 | 文件 | DocumentFile 1.0.1（SAF） |
 | 设置存储 | Jetpack DataStore + kotlinx.serialization（AppSettings） |
-| 构建 | Java 17 / compileSdk 37 / minSdk 33（elyon-blur 要求）/ AGP 9.3.1（与 Elyon 复合构建统一） |
+| 构建 | Java 21 / compileSdk 37 / minSdk 33（elyon-blur 要求）/ AGP 9.3.1（与 Elyon 复合构建统一） |
 | 静态分析 | detekt 1.23.8（report-only，config/detekt/detekt.yml 显式枚举）+ :detekt-rules 自定义规则模块 |

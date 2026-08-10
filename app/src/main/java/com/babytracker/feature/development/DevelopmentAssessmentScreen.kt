@@ -25,14 +25,9 @@ import androidx.compose.ui.unit.sp
 import com.babytracker.navigation.Navigator
 import io.elyon.kmp.theme.ElyonTheme
 import com.babytracker.core.domain.model.Baby
-import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.AppColors
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.core.ui.Gradients
+import com.babytracker.core.ui.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.card.AppCard
 import com.babytracker.core.ui.components.sheet.AppBottomSheet
 import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.core.util.BabyController
@@ -40,7 +35,7 @@ import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.AssessmentItem
 import com.babytracker.core.domain.model.DevelopmentAssessment
 import com.babytracker.core.ui.components.EmptyState
-import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.core.ui.components.topbar.AppTopBar
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.time.LocalDate

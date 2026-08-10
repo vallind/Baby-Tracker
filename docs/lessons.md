@@ -290,3 +290,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 **原因：** Gradle 9 把 included build 的项目以 `<included-build-名>:<项目名>` 暴露（任务输出可见 `:elegant:elyon-blur`），裸项目名查不到；AGP 9 额外强制整个复合构建树使用同一个 AGP 版本，跨构建混版本直接判不兼容。
 
 **规则：** 复合构建引入 Android 库时，先统一根构建与 included build 的 AGP 版本；依赖写成 `implementation(project(":<included-build-名>:<项目名>"))`；库的传递依赖要求更高 compileSdk 时同步提升应用 compileSdk（Elyon 要求 37，blur 要求 minSdk 33）；库的 inline 函数以更高 JVM target 编译时，应用必须同步 `sourceCompatibility`/`jvmTarget`（Elyon 为 21，否则报 `Cannot inline bytecode built with JVM target 21`）。
+
+---
+
+## 21. 对 CRLF 文件用 sed 在 package 行后插入 import 会截断包名
+
+**现象：** 批量给源码文件补 import 时用 `sed -i '0,/^package /s//&\nimport .../'`，结果文件变成 `package ` 空行 + import 列表 + `io.elyon.kmp.theme.ElyonThemecom.babytracker.feature.ai`，编译报 `Package name must be a '.'-separated identifier list`。
+
+**原因：** sed 的 `s//&.../` 只替换匹配到的 `package ` 前缀，包名剩余部分（`com.babytracker.feature.ai`）被顶到最后一个插入行末尾；CRLF 文件（行尾 `\r`）还会让 `$` 锚点失效，包名行替换失败。
+
+**规则：** 对源码做“在 package 行后插入 import”的批量操作时，先检查文件行尾（`file`/`od -c`），CRLF 文件改用无 `$` 锚点的替换或直接重写文件头；插入后必须用 `rg` 校验 `^package [a-z]` 与无 `ElyonThemecom\.` 之类的拼接痕迹，再编译。

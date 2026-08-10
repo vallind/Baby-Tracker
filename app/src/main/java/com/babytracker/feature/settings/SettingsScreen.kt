@@ -32,39 +32,33 @@ import androidx.compose.ui.unit.dp
 import com.babytracker.navigation.Navigator
 import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.domain.model.Baby
-import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppElevation
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.iconbutton.AppIconButton
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.button.ButtonVariant
+import com.babytracker.core.ui.Gradients
+import com.babytracker.core.ui.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.iconbutton.AppIconButton
+import com.babytracker.core.ui.components.button.AppButton
+import com.babytracker.core.ui.components.button.ButtonVariant
 import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.core.ui.components.dialog.AppDialog
-import com.babytracker.designsystem.components.divider.AppDivider
+import com.babytracker.core.ui.components.divider.AppDivider
 import com.babytracker.core.ui.components.sheet.AppBottomSheet
-import com.babytracker.designsystem.components.surface.AppSurface
+import com.babytracker.core.ui.components.surface.AppSurface
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.backup.BackupManager
-import com.babytracker.designsystem.theme.AppDensity
-import com.babytracker.designsystem.theme.AppTheme
-import com.babytracker.designsystem.theme.DensityController
-import com.babytracker.designsystem.theme.ThemeController
+import com.babytracker.core.ui.AppDensity
+import com.babytracker.core.ui.DensityController
+import com.babytracker.core.ui.ThemeController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.VaccineSchedule
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.data.repository.VaccinationRepository
 import com.babytracker.core.ui.components.BottomNavBar
-import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.core.ui.components.card.AppCard
 import com.babytracker.core.ui.components.cardgroup.AppCardGroup
 import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.core.ui.components.fab.AppFAB
-import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.core.ui.components.topbar.AppTopBar
 import com.babytracker.core.ui.components.section.AppListItem
 import com.babytracker.navigation.Route
 import com.babytracker.core.auth.AuthService
@@ -242,14 +236,14 @@ private fun UserInfoCard(
 ) {
     val c = ElyonTheme.colorScheme
     val spacing = com.babytracker.core.ui.AppSpacing
-    val elev = LocalAppElevation.current
+    val elev = 2.dp
     val displayName = nickname ?: displayAccount ?: babyName
 
     AppCard(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        elevation = elev.level2,
+        elevation = elev,
         containerColor = c.surface,
     ) {
         Row(
@@ -336,14 +330,29 @@ private fun SettingsSectionTitle(title: String) {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+private data class ThemeOption(
+    val name: String,
+    val label: String,
+    val primary: Color,
+    val card: Color,
+    val text: Color,
+)
+
+private val ThemeOptions = listOf(
+    ThemeOption("pure", "纯净蓝", Color(0xFF2563EB), Color.White, Color(0xFF09090B)),
+    ThemeOption("aurora", "极光紫", Color(0xFF7C3AED), Color.White, Color(0xFF09090B)),
+    ThemeOption("warm", "暖阳粉", Color(0xFFFF8A80), Color(0xFFFFFBF7), Color(0xFF09090B)),
+    ThemeOption("sunny", "阳光黄", Color(0xFFF59E0B), Color(0xFFFFFAF0), Color(0xFF09090B)),
+    ThemeOption("night", "暗夜深", Color(0xFF5C6BC0), Color(0xFF1E1E32), Color.White),
+    ThemeOption("morandi", "莫兰迪", Color(0xFF94A3B8), Color(0xFFFAFAFA), Color(0xFF09090B)),
+)
+
 @Composable
 fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
     val c = ElyonTheme.colorScheme
     val spacing = com.babytracker.core.ui.AppSpacing
     val shapes = com.babytracker.core.ui.AppShapes
-    val elev = LocalAppElevation.current
-    val names = mapOf("pure" to "纯净蓝", "aurora" to "极光紫", "warm" to "暖阳粉", "sunny" to "阳光黄", "night" to "暗夜深", "morandi" to "莫兰迪")
+    val elev = 2.dp
     AppBottomSheet(
         show = true,
         onDismiss = onDismiss,
@@ -351,8 +360,8 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
         Column(Modifier.padding(spacing.md)) {
             Text("选择主题", style = ElyonTheme.textStyles.title1, modifier = Modifier.padding(bottom = 20.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AppTheme.all.forEach { theme ->
-                    val selected = themeCtrl.currentTheme.name == theme.name
+                ThemeOptions.forEach { theme ->
+                    val selected = themeCtrl.currentThemeName == theme.name
                     AppCard(
                         modifier = Modifier
                             .width(120.dp)
@@ -362,14 +371,14 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                                 RoundedCornerShape(shapes.large),
                             )
                             .clickable { themeCtrl.switchTheme(theme.name) },
-                        elevation = elev.level1,
-                        containerColor = theme.colors.card,
+                        elevation = 1.dp,
+                        containerColor = theme.card,
                     ) {
                         Box(Modifier.fillMaxSize().padding(12.dp)) {
                             Column {
-                                Box(Modifier.size(36.dp).clip(RoundedCornerShape(shapes.large)).background(theme.colors.primary))
+                                Box(Modifier.size(36.dp).clip(RoundedCornerShape(shapes.large)).background(theme.primary))
                                 Spacer(Modifier.height(6.dp))
-                                Text(names[theme.name] ?: theme.name, style = ElyonTheme.textStyles.footnote1, color = theme.colors.textPrimary)
+                                Text(theme.label, style = ElyonTheme.textStyles.footnote1, color = theme.text)
                             }
                             if (selected) {
                                 Icon(Icons.Default.Check, contentDescription = null, tint = c.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))
@@ -389,7 +398,7 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
     val c = ElyonTheme.colorScheme
     val spacing = com.babytracker.core.ui.AppSpacing
     val shapes = com.babytracker.core.ui.AppShapes
-    val elev = LocalAppElevation.current
+    val elev = 2.dp
     AppBottomSheet(
         show = true,
         onDismiss = onDismiss,
@@ -408,7 +417,7 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
                                 RoundedCornerShape(shapes.large),
                             )
                             .clickable { ctrl.switchDensity(density) },
-                        elevation = elev.level1,
+                        elevation = 1.dp,
                     ) {
                         Box(Modifier.fillMaxSize().padding(12.dp)) {
                             Column {
@@ -522,7 +531,7 @@ fun BabyManagementScreen(navigator: Navigator) {
     val c = ElyonTheme.colorScheme
     val spacing = com.babytracker.core.ui.AppSpacing
     val shapes = com.babytracker.core.ui.AppShapes
-    val elev = LocalAppElevation.current
+    val elev = 2.dp
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val vacRepo: VaccinationRepository = koinInject()
@@ -567,7 +576,7 @@ fun BabyManagementScreen(navigator: Navigator) {
                                 RoundedCornerShape(shapes.large),
                             )
                             .clickable { editingBaby = b; showForm = true },
-                        elevation = elev.level1,
+                        elevation = 1.dp,
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(44.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {
@@ -617,7 +626,7 @@ fun BabyManagementScreen(navigator: Navigator) {
                         deletedBabies.forEach { b ->
                             AppCard(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs),
-                                elevation = elev.level1,
+                                elevation = 1.dp,
                             ) {
                                 Row(Modifier.padding(spacing.md), verticalAlignment = Alignment.CenterVertically) {
                                     Box(Modifier.size(36.dp).clip(CircleShape).background(c.onSurfaceVariantSummary), contentAlignment = Alignment.Center) {
@@ -828,7 +837,7 @@ fun BackupScreen(navigator: Navigator) {
     val c = ElyonTheme.colorScheme
     val spacing = com.babytracker.core.ui.AppSpacing
     val shapes = com.babytracker.core.ui.AppShapes
-    val elev = LocalAppElevation.current
+    val elev = 2.dp
     AppScaffold(topBar = {
         AppTopBar(
             title = "备份管理",
@@ -838,7 +847,7 @@ fun BackupScreen(navigator: Navigator) {
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md, vertical = spacing.md)) {
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = elev.level1,
+                elevation = 1.dp,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -892,7 +901,7 @@ fun BackupScreen(navigator: Navigator) {
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = elev.level1,
+                elevation = 1.dp,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -942,7 +951,7 @@ fun BackupScreen(navigator: Navigator) {
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = elev.level1,
+                elevation = 1.dp,
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

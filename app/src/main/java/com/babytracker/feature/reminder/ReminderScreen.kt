@@ -24,14 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.navigation.Navigator
 import io.elyon.kmp.theme.ElyonTheme
-import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.AppColors
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.core.ui.Gradients
+import com.babytracker.core.ui.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.card.AppCard
 import com.babytracker.core.ui.components.switchcontrol.AppSwitch
 import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.core.ui.components.recordcard.RecordCard

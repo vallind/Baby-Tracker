@@ -10,9 +10,9 @@
 
 ## 一、项目概览
 
-Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Material 3，MVVM + Koin + Room + Supabase 同步。
+Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Elyon UI（`vide/elegant` 复合构建），MVVM + Koin + Room + Supabase 同步。
 
-分层：`designsystem`（设计系统）/ `core`（数据库、DI、备份、同步引擎、AI、工具）/ `feature`（业务模块）/ `navigation`（路由）。模块索引与路由见 `docs/project-structure.md`。
+分层：`core`（数据库、DI、备份、同步引擎、AI、工具、UI 基座 `core/ui`）/ `feature`（业务模块）/ `navigation`（路由）。模块索引与路由见 `docs/project-structure.md`。
 
 ## 二、开发命令
 
@@ -61,7 +61,7 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 | 4 | **ViewModel 获取** | `get()` | `koinViewModel()` |
 | 5 | **按 ID 加载数据** | 构造函数里直接 `flow` | `_trigger` + `flatMapLatest` 模式（防竞态/陈旧数据，宝宝切换时能重建数据流） |
 | 6 | **Composable 嵌套定义** | `@Composable fun A() { @Composable fun B() {} }` | 所有 `@Composable` 定义在文件**顶层** |
-| 7 | **AlertDialog 平级** | 弹窗套在其他 if 块内部 | 所有 `AlertDialog` 在顶层 `Column` 中**平级**独立 `if`（DS 迁移完成、全项目无 M3 AlertDialog 后本条自动失效） |
+| 7 | **弹窗平级** | 弹窗套在其他 if 块内部 | 所有弹窗（OverlayDialog/OverlayBottomSheet 等）在顶层 `Column` 中**平级**独立 `if` |
 | 8 | **暗色主题来源** | `isSystemInDarkTheme()` | 只读 `theme.name == "night"` |
 | 9 | **硬编码路径** | `"/data/data/..."` | 用 `context.filesDir` 等环境变量 |
 | 10 | **改共享 API 不查调用方**（流程规则） | 直接改 DAO/Repository/工具类方法签名或行为 | **先全局搜索所有调用方**，评估影响后再改；改签名需按第六节走 🔴 确认 |
@@ -99,19 +99,12 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 
 ---
 
-## 八、设计系统与 i18n
+## 八、UI 体系与 i18n
 
-- **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button`/`OutlinedButton`/`TextButton` → `AppButton`（variant 枚举 Primary/Secondary/Text），`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`HorizontalDivider` → `AppDivider`，`Surface` → `AppSurface`，`SnackbarHost` → `AppSnackbarHost`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
-- **DS 组件缺失时的决策路径**：
-  1. 满足新增标准（见下）→ 新增组件，走完整流程并更新 `docs/design-system.md`
-  2. 不满足新增标准 → 允许临时用原生 M3，但必须留下 `// TODO: 迁移到 DS 组件` 注释
-- **新增组件判断标准**（两者同时满足才新增）：
-  1. 同一视觉形态在项目中已出现 ≥ 2 处（跨功能重复算，按视觉形态计数，不是调用次数）
-  2. 需要封装设计令牌（颜色/圆角/间距），而非纯布局组合
-- **新增组件流程**：判断标准 → 定义令牌（标注与 AppShapes 的对应关系，如 `// shapes.medium * 2`）→ 写 Defaults → 组件本体 → 注册到 `AppComponentTokens` → 更新 `docs/design-system.md`。
-- **令牌设计参照 shadcn/ui**：
-  - 颜色：containerColor + contentColor 成对出现（surface/foreground 约定）
-  - 圆角：组件 cornerRadius 从 AppShapes 基准派生（medium/large/extraSmall），通过 AppShapes.radiusScale 全局缩放
+- **UI 基座为 Elyon**（`vide/elegant` 复合构建：elyon-core/ui/effects/blur/nav）。禁止再造自建设计系统/令牌层，也禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）；组件一律用 `io.elyon.kmp.basic.*` / `io.elyon.kmp.overlay.*`。
+- **主题**：根组件为 `BabyTrackerElyonTheme`（core/ui），颜色用 `ElyonTheme.colorScheme.*`，排版用 `ElyonTheme.textStyles.*`，禁止读 `isSystemInDarkTheme()` 判断应用暗色（红线 8 仍以主题名为准）。
+- **应用级组件**：仅当 Elyon 缺失且跨功能重复时才在 `core/ui/components` 新增（如 RecordCard/TimePicker/DateTimeCascade/AppInput-error 态）；组件内部只消费 Elyon 原语与 `ElyonTheme`，不建令牌体系。
+- **Elyon 缺失时的决策路径**：允许临时用原生 M3，但必须留下 `// TODO: 迁移到 Elyon 组件` 注释（当前存量：AppInput 的 error 态、M3 DatePickerDialog、RecordCard 的 SwipeToDismissBox）。
 - **i18n**：新增用户可见文本必须写入 `AppStrings`，禁止硬编码中文。存量硬编码文本按批次迁移。
 - **Snackbar** 用 `snackbar.showUndo(onUndo = { ... })` 模式。
 
@@ -135,7 +128,7 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 | 改了什么 | 要更新的文档 |
 |---|---|
 | 目录结构/模块/路由 | `docs/project-structure.md` |
-| 组件/令牌/DS 约束 | `docs/design-system.md` |
+| UI 体系/组件约定 | `docs/design-system.md` |
 | 同步流程/sync_metadata 表 | `docs/sync-architecture.md` |
 | 数据模型/Room 表 | `docs/data-architecture.md` |
 
@@ -158,12 +151,11 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 |---|---|
 | `README.md` | 项目介绍、功能列表 |
 | `docs/project-structure.md` | 完整目录结构、模块索引、技术栈 |
-| `docs/design-system.md` | 令牌架构、组件用法、新增组件指引 |
+| `docs/design-system.md` | Elyon 组件约定、应用级组件、i18n 规则 |
 | `docs/sync-architecture.md` | 同步引擎完整链路 |
 | `docs/data-architecture.md` | 数据架构 |
 | `docs/architecture.md` | 总体架构 |
 | `docs/room-supabase-architecture.md` | Room 与 Supabase 对接 |
 | `docs/lessons.md` | 开发教训（任务前必读） |
-| `docs/Palette组件库设计深度分析报告.md` | 设计系统审计报告 |
 | `docs/aapt2-termux-fix.md` | Termux AAPT2 兼容问题 |
 | `CHANGELOG.md` | 变更日志 |

@@ -16,13 +16,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.babytracker.navigation.Navigator
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.button.ButtonVariant
-import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.button.AppButton
+import com.babytracker.core.ui.components.button.ButtonVariant
+import com.babytracker.core.ui.components.topbar.AppTopBar
+import com.babytracker.core.ui.components.scaffold.AppScaffold
 import com.babytracker.core.ui.components.input.AppInput
 import org.koin.compose.koinInject
 

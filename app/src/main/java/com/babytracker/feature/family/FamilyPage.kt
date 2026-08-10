@@ -25,21 +25,17 @@ import com.babytracker.navigation.Navigator
 import io.elyon.kmp.theme.ElyonTheme
 import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilyMember
-import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.button.ButtonVariant
+import com.babytracker.core.ui.components.card.AppCard
+import com.babytracker.core.ui.components.topbar.AppTopBar
+import com.babytracker.core.ui.Gradients
+import com.babytracker.core.ui.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.button.AppButton
+import com.babytracker.core.ui.components.button.ButtonVariant
 import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.core.ui.components.progress.AppCircularProgress
 import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.core.ui.components.dialog.AppDialog
-import com.babytracker.designsystem.components.divider.AppDivider
+import com.babytracker.core.ui.components.divider.AppDivider
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

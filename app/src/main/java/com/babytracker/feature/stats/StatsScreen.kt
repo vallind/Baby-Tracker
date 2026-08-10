@@ -36,14 +36,10 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.ui.components.SegmentedControl
 import com.babytracker.core.ui.components.EmptyState
 import com.babytracker.core.ui.components.BottomNavBar
-import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.core.ui.components.card.AppCard
 import com.babytracker.core.ui.components.progress.AppCircularProgress
-import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.topbar.AppTopBar
+import com.babytracker.core.ui.components.scaffold.AppScaffold
 import org.koin.compose.koinInject
 
 @Composable

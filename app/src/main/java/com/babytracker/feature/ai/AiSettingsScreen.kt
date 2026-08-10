@@ -32,14 +32,11 @@ import com.babytracker.core.ai.settings.AiThinkingMode
 import com.babytracker.core.ui.components.chip.AppChip
 import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.core.ui.components.input.AppInput
-import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.scaffold.AppScaffold
 import com.babytracker.core.ui.components.slider.AppSlider
 import com.babytracker.core.ui.components.switchcontrol.AppSwitch
-import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.core.ui.components.topbar.AppTopBar
 import com.babytracker.i18n.AppStrings
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.feature.settings.SettingsCard
 import com.babytracker.feature.settings.SettingsDivider
 import com.babytracker.feature.settings.SettingsRow

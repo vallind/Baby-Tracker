@@ -21,26 +21,22 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.babytracker.core.ui.BabyTrackerElyonTheme
 import com.babytracker.core.ui.ElyonThemeResolver
-import com.babytracker.designsystem.theme.DensityController
-import com.babytracker.designsystem.theme.ThemeController
+import com.babytracker.core.ui.ThemeController
 import com.babytracker.navigation.AppNavigation
 import io.elyon.kmp.theme.ElyonTheme
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
     private val themeController: ThemeController by inject()
-    private val densityController: DensityController by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val theme = themeController.currentTheme
-            val density = densityController.currentDensity
-            val themeName = theme.name
+            val themeName = themeController.currentThemeName
 
-            BabyTrackerElyonTheme(themeName, density = density) {
+            BabyTrackerElyonTheme(themeName) {
                 val darkTheme = ElyonThemeResolver.isDark(themeName)
                 val scheme = ElyonTheme.colorScheme
                 // 状态栏颜色跟随 primaryContainer（所有页面顶部区域统一使用此颜色）

@@ -18,13 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.babytracker.navigation.Navigator
-import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.core.ui.components.scaffold.AppScaffold
 import com.babytracker.core.ui.components.switchcontrol.AppSwitch
-import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.core.ui.components.topbar.AppTopBar
 import com.babytracker.i18n.AppStrings
-import com.babytracker.designsystem.theme.DensityController
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.ThemeController
+import com.babytracker.core.ui.DensityController
+import com.babytracker.core.ui.ThemeController
 import com.babytracker.navigation.Route
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -45,7 +44,7 @@ fun PreferenceSettingsScreen(navigator: Navigator) {
             SettingsRow(
                 emoji = "🎨",
                 label = "主题模式",
-                subtitle = themeCtrl.currentTheme.displayName(),
+                subtitle = themeNameLabel(themeCtrl.currentThemeName),
                 onClick = { showThemePicker = true },
             )
             SettingsDivider()
@@ -204,7 +203,7 @@ private fun SettingsMenuScaffold(
     }
 }
 
-private fun com.babytracker.designsystem.theme.AppTheme.displayName(): String = when (name) {
+private fun themeNameLabel(name: String): String = when (name) {
     "pure" -> "纯净蓝"
     "aurora" -> "极光紫"
     "warm" -> "暖阳粉"

@@ -18,41 +18,29 @@ Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koi
 | 消息中心 | 互动/系统/服务通知分类（仅本机，不同步） |
 | 设置 | 主题（6 套 + 自定义主色）· 同步策略 · 备份（本地/SAF/WebDAV）· 日志查看器 |
 
-## 设计系统
+## UI 体系
 
-`designsystem/` 自建设计系统：
+UI 基座为 **Elyon**（`vide/elegant` 复合构建：elyon-core/ui/effects/blur/nav），
+主题由 `BabyTrackerElyonTheme` 驱动，导航走 elyon-nav，底部导航启用毛玻璃
+（`textureBlur` + `layerBackdrop`）。应用级组件在 `core/ui/components`，
+间距/圆角常量在 `core/ui/AppDimens.kt`，i18n 在 `com.babytracker.i18n.AppStrings`。
 
-```kotlin
-// AppTokens.kt — 核心语义令牌
-AppColors.light()/dark()          // 39 字段，AppColors.derive(primary) 自动派生
-LocalAppSpacing.current           // 0/2/4/8/16/24/32/48 间距令牌
-LocalAppShapes.current            // 圆角令牌 + radiusScale 全局缩放
-
-// AppComponentTokens.kt — 组件令牌（21+ 种）
-AppComponentTokens.default(colors) // 从 AppColors 自动派生组件颜色
-
-// 组件（designsystem/components/）
-AppCard / AppTopBar / PrimaryButton / AppInput / AppDialog /
-AppConfirmDialog / AppBottomSheet / AppIconButton / AppRadioButton /
-AppSwitch / AppChip / AppSlider / RecordCard / AppMarkdownText ...
-```
-
-6 套主题（纯净/极光/暖阳/阳光黄/暗夜/莫兰迪）+ 自定义主色。业务代码禁止直接使用原生 M3 组件（见 AGENTS.md 红线与 docs/design-system.md）。
+6 套主题（纯净/极光/暖阳/阳光黄/暗夜/莫兰迪）。业务代码禁止直接使用原生 M3 组件（存量 TODO 除外，见 AGENTS.md 与 docs/design-system.md）。
 
 ## 技术栈
 
 | 层面 | 选型 |
 |---|---|
-| UI | Jetpack Compose + Material 3 |
+| UI | Jetpack Compose + Elyon UI（vide/elegant 复合构建） |
 | 启动屏 | androidx.core:core-splashscreen 1.2.0 |
-| 导航 | Navigation Compose 2.9.1（25+ 路由，无动画跳转） |
+| 导航 | elyon-nav（25+ 路由，含圆角裁剪/压暗/毛玻璃底栏） |
 | 数据库 | Room 2.8.4 + KSP 2.3.9（version 8，15 张表，exportSchema 开启） |
 | DI | Koin 4.2.1（ViewModel 用 `viewModel { }` + `koinViewModel()`） |
 | 架构 | MVVM + ViewModel + StateFlow |
 | 异步 | Kotlin Coroutines + Flow |
 | 网络 | Retrofit 3.0.0 + OkHttp 5.4.0（WebDAV）+ Supabase Kotlin BOM 3.6.0 |
 | 图片 | Coil 2.7.0 |
-| 构建 | Gradle + AGP, Java 17, compileSdk 36, minSdk 24 |
+| 构建 | Gradle + AGP 9.3.1, Java 21, compileSdk 37, minSdk 33（elyon-blur 要求） |
 
 ## 构建
 
@@ -67,7 +55,7 @@ AppSwitch / AppChip / AppSlider / RecordCard / AppMarkdownText ...
 
 ```
 app/src/main/java/com/babytracker/
-├── designsystem/             # 设计系统：主题令牌 + 组件 + Hooks + AppStrings
+├── core/ui/                  # Elyon 主题根、毛玻璃底栏、应用级组件、尺寸常量
 ├── core/                     # 业务基础设施
 │   ├── ai/                   # AI 配置/供应商适配/安全校验
 │   ├── auth/                 # 登录（AuthService）
