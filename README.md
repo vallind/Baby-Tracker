@@ -16,7 +16,7 @@ Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koi
 | 家庭共享 | 创建/加入家庭（邀请码 RPC）· 成员管理 · 宝宝数据云同步 |
 | 同步 | 手动/自动/退后台/周期（WorkManager）· Realtime 增量 · sync_version 游标 · 重试退避 |
 | 消息中心 | 互动/系统/服务通知分类（仅本机，不同步） |
-| 设置 | 主题（6 套 + 自定义主色）· 同步策略 · 备份（本地/SAF/WebDAV）· 日志查看器 |
+| 设置 | 主题（6 套，Elyon Monet 色板）· 同步策略 · 备份（本地/SAF/WebDAV）· 日志查看器 |
 
 ## UI 体系
 
