@@ -2,16 +2,16 @@ package com.babytracker.designsystem.components.progress
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import io.elyon.kmp.basic.CircularProgressIndicator
+import io.elyon.kmp.basic.LinearProgressIndicator
+import io.elyon.kmp.basic.ProgressIndicatorDefaults
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 线性进度条 — 对标 Palette Progress，消费 AppComponentTokens.progress。
@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.Dp
 @Composable
 fun AppLinearProgress(
     progress: Float?,  // 0f ~ 1f，null 表示不确定
-    height: Dp = ProgressDefaults.height(),
-    trackColor: Color = ProgressDefaults.trackColor(),
-    indicatorColor: Color = ProgressDefaults.indicatorColor(),
+    height: Dp = 6.dp,
+    trackColor: Color = ElyonTheme.colorScheme.secondaryContainer,
+    indicatorColor: Color = ElyonTheme.colorScheme.primary,
     modifier: Modifier = Modifier,
 ) {
     val animatedProgress by animateFloatAsState(
@@ -33,30 +33,15 @@ fun AppLinearProgress(
         animationSpec = tween(durationMillis = 300),
     )
 
-    if (progress == null) {
-        LinearProgressIndicator(
-            modifier = modifier
-                .clip(RoundedCornerShape(height / 2))
-                .then(Modifier.size(
-                    width = Dp.Unspecified,
-                    height = height,
-                )),
-            color = indicatorColor,
-            trackColor = trackColor,
-        )
-    } else {
-        LinearProgressIndicator(
-            progress = { animatedProgress },
-            modifier = modifier
-                .clip(RoundedCornerShape(height / 2))
-                .then(Modifier.size(
-                    width = Dp.Unspecified,
-                    height = height,
-                )),
-            color = indicatorColor,
-            trackColor = trackColor,
-        )
-    }
+    LinearProgressIndicator(
+        modifier = modifier,
+        progress = if (progress == null) null else animatedProgress,
+        height = height,
+        colors = ProgressIndicatorDefaults.progressIndicatorColors(
+            foregroundColor = indicatorColor,
+            backgroundColor = trackColor,
+        ),
+    )
 }
 
 /**
@@ -69,10 +54,10 @@ fun AppLinearProgress(
 @Composable
 fun AppCircularProgress(
     progress: Float? = null,  // 0f ~ 1f，null 表示不确定
-    size: Dp = ProgressDefaults.circularSize(),
-    strokeWidth: Dp = ProgressDefaults.strokeWidth(),
-    trackColor: Color = ProgressDefaults.trackColor(),
-    indicatorColor: Color = ProgressDefaults.indicatorColor(),
+    size: Dp = 30.dp,
+    strokeWidth: Dp = 4.dp,
+    trackColor: Color = ElyonTheme.colorScheme.secondaryContainer,
+    indicatorColor: Color = ElyonTheme.colorScheme.primary,
     modifier: Modifier = Modifier,
 ) {
     val animatedProgress by animateFloatAsState(
@@ -80,20 +65,14 @@ fun AppCircularProgress(
         animationSpec = tween(durationMillis = 300),
     )
 
-    if (progress == null) {
-        CircularProgressIndicator(
-            modifier = modifier.size(size),
-            color = indicatorColor,
-            strokeWidth = strokeWidth,
-            trackColor = trackColor,
-        )
-    } else {
-        CircularProgressIndicator(
-            progress = { animatedProgress },
-            modifier = modifier.size(size),
-            color = indicatorColor,
-            strokeWidth = strokeWidth,
-            trackColor = trackColor,
-        )
-    }
+    CircularProgressIndicator(
+        modifier = modifier,
+        progress = if (progress == null) null else animatedProgress,
+        colors = ProgressIndicatorDefaults.progressIndicatorColors(
+            foregroundColor = indicatorColor,
+            backgroundColor = trackColor,
+        ),
+        strokeWidth = strokeWidth,
+        size = size,
+    )
 }

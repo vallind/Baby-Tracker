@@ -1,13 +1,13 @@
 package com.babytracker.designsystem.components.switchcontrol
 
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults as M3SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import com.babytracker.designsystem.components.switchcontrol.SwitchDefaults
+import androidx.compose.ui.unit.dp
+import io.elyon.kmp.basic.Switch
+import io.elyon.kmp.basic.SwitchDefaults
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 主题化 Switch — 对标 Palette Switch，消费 AppComponentTokens.switch。
@@ -21,8 +21,8 @@ fun AppSwitch(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     enabled: Boolean = true,
-    checkedColor: Color = SwitchDefaults.checkedColor(),
-    uncheckedColor: Color = SwitchDefaults.uncheckedColor(),
+    checkedColor: Color = ElyonTheme.colorScheme.primary,
+    uncheckedColor: Color = ElyonTheme.colorScheme.onSecondary,
     modifier: Modifier = Modifier,
 ) {
     Switch(
@@ -30,15 +30,11 @@ fun AppSwitch(
         onCheckedChange = onCheckedChange,
         enabled = enabled,
         modifier = modifier,
-        colors = M3SwitchDefaults.colors(
+        colors = SwitchDefaults.switchColors(
             checkedThumbColor = checkedColor,
-            checkedTrackColor = checkedColor.copy(alpha = 0.38f),
             uncheckedThumbColor = uncheckedColor,
-            uncheckedTrackColor = uncheckedColor.copy(alpha = 0.38f),
-            disabledCheckedThumbColor = checkedColor.copy(alpha = 0.38f),
-            disabledCheckedTrackColor = checkedColor.copy(alpha = 0.12f),
-            disabledUncheckedThumbColor = uncheckedColor.copy(alpha = 0.38f),
-            disabledUncheckedTrackColor = uncheckedColor.copy(alpha = 0.12f),
+            checkedTrackColor = checkedColor,
+            uncheckedTrackColor = uncheckedColor,
         ),
     )
 }

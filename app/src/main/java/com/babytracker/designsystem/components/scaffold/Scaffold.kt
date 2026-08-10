@@ -2,14 +2,14 @@ package com.babytracker.designsystem.components.scaffold
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import com.babytracker.core.ui.components.LocalScaffoldBackdrop
 import io.elyon.kmp.blur.layerBackdrop
 import io.elyon.kmp.blur.rememberLayerBackdrop
-import com.babytracker.designsystem.components.scaffold.ScaffoldDefaults as AppScaffoldDefaults
+import io.elyon.kmp.basic.Scaffold
+import io.elyon.kmp.theme.ElyonTheme
 
 @Composable
 fun AppScaffold(
@@ -21,18 +21,18 @@ fun AppScaffold(
     content: @Composable (androidx.compose.foundation.layout.PaddingValues) -> Unit,
 ) {
     // 页面内容捕获为 backdrop，供底部导航毛玻璃使用（过渡期实现，迁移完成后由 Elyon Scaffold 接管）
-    val containerColor = AppScaffoldDefaults.containerColor()
+    val containerColor = ElyonTheme.colorScheme.surface
     val backdrop = rememberLayerBackdrop {
         drawRect(containerColor)
         drawContent()
     }
     Scaffold(
-        containerColor = containerColor,
         topBar = topBar ?: {},
         bottomBar = bottomBar ?: {},
         floatingActionButton = fab ?: {},
         snackbarHost = snackbarHost ?: {},
         modifier = modifier,
+        containerColor = containerColor,
     ) { padding ->
         CompositionLocalProvider(LocalScaffoldBackdrop provides backdrop) {
             Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {

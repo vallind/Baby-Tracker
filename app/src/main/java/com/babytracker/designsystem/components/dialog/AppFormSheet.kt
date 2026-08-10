@@ -4,14 +4,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.components.sheet.SheetDefaults as AppSheetDefaults
-import com.babytracker.designsystem.theme.LocalAppColors
+import io.elyon.kmp.basic.Button
+import io.elyon.kmp.basic.ButtonDefaults
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.overlay.OverlayBottomSheet
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 通用表单底部弹层 — 消除 5 个 XxxFormDialog 的 ModalBottomSheet 样板。
@@ -29,7 +30,6 @@ import com.babytracker.designsystem.theme.LocalAppColors
  *       // 业务表单字段...
  *   }
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppFormSheet(
     title: String,
@@ -38,33 +38,23 @@ fun AppFormSheet(
     modifier: Modifier = Modifier,
     saveText: String = "保存",
     saveEnabled: Boolean = true,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    containerColor: Color = AppSheetDefaults.containerColor(),
-    contentColor: Color = AppSheetDefaults.contentColor(),
-    content: @Composable ColumnScope.() -> Unit,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
+    content: @Composable () -> Unit,
 ) {
-    val c = LocalAppColors.current
-
-    ModalBottomSheet(
+    OverlayBottomSheet(
+        show = true,
+        title = title,
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = containerColor,
-        contentColor = contentColor,
+        backgroundColor = containerColor,
+        modifier = modifier,
     ) {
         Column(
-            modifier
+            Modifier
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            // 标题
-            Text(
-                title,
-                style = LocalAppTypography.current.headlineSmall,
-                color = c.textPrimary,
-            )
-            Spacer(Modifier.height(16.dp))
-
             // 业务表单字段
             content()
 
@@ -72,12 +62,11 @@ fun AppFormSheet(
             Spacer(Modifier.height(24.dp))
             Button(
                 onClick = onSave,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 enabled = saveEnabled,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = c.primary,
-                    contentColor = Color.White,
+                    color = ElyonTheme.colorScheme.primary,
+                    contentColor = ElyonTheme.colorScheme.onPrimary,
                 ),
             ) {
                 Text(saveText)

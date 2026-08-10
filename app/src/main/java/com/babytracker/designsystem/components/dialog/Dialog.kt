@@ -1,16 +1,19 @@
 package com.babytracker.designsystem.components.dialog
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import com.babytracker.designsystem.components.dialog.DialogDefaults as AppDialogDefaults
+import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.designsystem.theme.LocalAppColors
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.TextButton
+import io.elyon.kmp.overlay.OverlayDialog
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 确认删除对话框 — 消除 6+ 处重复的 AlertDialog 样板
@@ -33,32 +36,36 @@ fun AppConfirmDialog(
     cancelText: String = AppStrings.cancel,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    containerColor: Color = AppDialogDefaults.containerColor(),
-    contentColor: Color = AppDialogDefaults.contentColor(),
-    cornerRadius: Dp = AppDialogDefaults.cornerRadius(),
-    elevation: Dp = AppDialogDefaults.elevation(),
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
+    cornerRadius: Dp = 24.dp,
+    elevation: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
-    if (!show) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
+    OverlayDialog(
+        show = show,
         modifier = modifier,
-        shape = RoundedCornerShape(cornerRadius),
-        containerColor = containerColor,
-        textContentColor = contentColor,
-        tonalElevation = elevation,
-        title = { Text(title) },
-        text = { Text(message) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(confirmText, color = LocalAppColors.current.danger)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(cancelText)
-            }
-        },
-    )
+        title = title,
+        summary = message,
+        backgroundColor = containerColor,
+        cornerRadius = cornerRadius,
+        onDismissRequest = onDismiss,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(
+                text = confirmText,
+                onClick = onConfirm,
+                colors = io.elyon.kmp.basic.ButtonDefaults.textButtonColors(
+                    textColor = ElyonTheme.colorScheme.error,
+                ),
+            )
+            TextButton(
+                text = cancelText,
+                onClick = onDismiss,
+            )
+        }
+    }
 }

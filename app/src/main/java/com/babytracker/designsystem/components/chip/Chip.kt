@@ -3,10 +3,6 @@ package com.babytracker.designsystem.components.chip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,7 +12,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.LocalAppColors
+import androidx.compose.ui.unit.sp
+import io.elyon.kmp.basic.Surface
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 标签组件 — 对标 Palette Tag/Chip 组件，消费 AppComponentTokens.chip
@@ -28,13 +27,13 @@ import com.babytracker.designsystem.theme.LocalAppColors
 @Composable
 fun AppChip(
     label: String,
-    backgroundColor: Color = ChipDefaults.backgroundColor(),
-    textColor: Color = ChipDefaults.textColor(),
-    cornerRadius: Dp = ChipDefaults.cornerRadius(),
-    fontSize: TextUnit = ChipDefaults.fontSize(),
-    fontWeight: FontWeight = ChipDefaults.fontWeight(),
-    horizontalPadding: Dp = ChipDefaults.horizontalPadding(),
-    verticalPadding: Dp = ChipDefaults.verticalPadding(),
+    backgroundColor: Color = ElyonTheme.colorScheme.secondaryContainer,
+    textColor: Color = ElyonTheme.colorScheme.onSecondaryContainer,
+    cornerRadius: Dp = 20.dp,
+    fontSize: TextUnit = 12.sp,
+    fontWeight: FontWeight = FontWeight.Medium,
+    horizontalPadding: Dp = 10.dp,
+    verticalPadding: Dp = 4.dp,
     modifier: Modifier = Modifier,
 ) {
     Text(
@@ -60,7 +59,6 @@ fun AppChip(
  *   AppFilterChip(selected = type == "wet", onClick = { type = "wet" }, label = "小便")
  *   AppFilterChip(selected = true, onClick = {}, label = "警告", selectedColor = c.warning)
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppFilterChip(
     selected: Boolean,
@@ -70,22 +68,14 @@ fun AppFilterChip(
     shape: Shape = RoundedCornerShape(8.dp),
     modifier: Modifier = Modifier,
 ) {
-    val c = LocalAppColors.current
-    val activeColor = selectedColor ?: c.primary
-
-    val colors = FilterChipDefaults.filterChipColors(
-        selectedContainerColor = activeColor.copy(alpha = 0.16f),
-        selectedLabelColor = activeColor,
-        labelColor = c.textSecondary,
-        containerColor = Color.Transparent,
-    )
-
-    FilterChip(
-        selected = selected,
+    val activeColor = selectedColor ?: ElyonTheme.colorScheme.primary
+    Surface(
         onClick = onClick,
-        label = { Text(label) },
-        colors = colors,
         shape = shape,
+        color = if (selected) activeColor.copy(alpha = 0.16f) else Color.Transparent,
+        contentColor = if (selected) activeColor else ElyonTheme.colorScheme.onSurfaceVariantSummary,
         modifier = modifier,
-    )
+    ) {
+        Text(label, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp))
+    }
 }

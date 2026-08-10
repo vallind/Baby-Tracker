@@ -2,12 +2,16 @@ package com.babytracker.designsystem.components.dialog
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.TextButton
+import io.elyon.kmp.overlay.OverlayDialog
+import io.elyon.kmp.overlay.OverlayBottomSheet
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 通用对话框组件 — 对标 Palette Dialog，消费 AppComponentTokens.dialog。
@@ -43,34 +47,40 @@ fun AppDialog(
     confirmEnabled: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    cornerRadius: Dp = DialogDefaults.cornerRadius(),
-    containerColor: Color = DialogDefaults.containerColor(),
-    contentColor: Color = DialogDefaults.contentColor(),
-    elevation: Dp = DialogDefaults.elevation(),
+    cornerRadius: Dp = 24.dp,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
+    elevation: Dp = 0.dp,
     modifier: Modifier = Modifier,
 ) {
-    if (!show) return
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
+    OverlayDialog(
+        show = show,
         modifier = modifier,
-        shape = RoundedCornerShape(cornerRadius),
-        containerColor = containerColor,
-        textContentColor = contentColor,
-        tonalElevation = elevation,
-        title = { Text(title) },
-        text = content ?: text?.let { { Text(it) } },
-        confirmButton = {
-            TextButton(onClick = onConfirm, enabled = confirmEnabled) {
-                Text(confirmText)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(cancelText)
-            }
-        },
-    )
+        title = title,
+        backgroundColor = containerColor,
+        cornerRadius = cornerRadius,
+        onDismissRequest = onDismiss,
+    ) {
+        if (content != null) {
+            content()
+        } else if (text != null) {
+            Text(text, color = contentColor)
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            TextButton(
+                text = confirmText,
+                onClick = onConfirm,
+                enabled = confirmEnabled,
+            )
+            TextButton(
+                text = cancelText,
+                onClick = onDismiss,
+            )
+        }
+    }
 }
 
 /**
@@ -91,45 +101,35 @@ fun AppActionSheet(
     actions: List<Pair<String, () -> Unit>>,
     cancelText: String = "取消",
     onDismiss: () -> Unit,
-    cornerRadius: Dp = DialogDefaults.cornerRadius(),
-    containerColor: Color = DialogDefaults.containerColor(),
-    contentColor: Color = DialogDefaults.contentColor(),
+    cornerRadius: Dp = 24.dp,
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
     modifier: Modifier = Modifier,
 ) {
-    if (!show) return
-
-    AlertDialog(
+    OverlayBottomSheet(
+        show = show,
+        title = title,
+        backgroundColor = containerColor,
+        cornerRadius = cornerRadius,
         onDismissRequest = onDismiss,
         modifier = modifier,
-        shape = RoundedCornerShape(
-            topStart = cornerRadius,
-            topEnd = cornerRadius,
-            bottomStart = 0.dp,
-            bottomEnd = 0.dp,
-        ),
-        containerColor = containerColor,
-        textContentColor = contentColor,
-        confirmButton = {},
-        title = title?.let { { Text(it) } },
-        text = {
-            Column {
-                actions.forEach { (label, onClick) ->
-                    TextButton(
-                        onClick = {
-                            onDismiss()
-                            onClick()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(label, modifier = Modifier.fillMaxWidth())
-                    }
-                }
+    ) {
+        Column {
+            actions.forEach { (label, onClick) ->
+                TextButton(
+                    text = label,
+                    onClick = {
+                        onDismiss()
+                        onClick()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(cancelText)
-            }
-        },
-    )
+            TextButton(
+                text = cancelText,
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }

@@ -1,9 +1,9 @@
 package com.babytracker.designsystem.components.snackbar
 
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import com.babytracker.designsystem.i18n.AppStrings
+import io.elyon.kmp.basic.SnackbarDuration
+import io.elyon.kmp.basic.SnackbarHostState
+import io.elyon.kmp.basic.SnackbarResult
 
 /**
  * 撤销 Snackbar 辅助 — 消除 7 处重复的 showSnackbar + ActionPerformed 样板

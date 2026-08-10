@@ -4,9 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults as M3SliderDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +12,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.theme.LocalAppColors
+import io.elyon.kmp.basic.Slider
+import io.elyon.kmp.basic.SliderDefaults
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 主题化滑块 — 对标 Palette Slider，消费 AppComponentTokens.slider。
@@ -30,10 +30,10 @@ fun AppSlider(
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     enabled: Boolean = true,
     steps: Int = 0,
-    trackHeight: Dp = SliderDefaults.trackHeight(),
-    thumbSize: Dp = SliderDefaults.thumbSize(),
-    activeColor: Color = SliderDefaults.activeColor(),
-    inactiveColor: Color = SliderDefaults.inactiveColor(),
+    trackHeight: Dp = 4.dp,
+    thumbSize: Dp = 20.dp,
+    activeColor: Color = ElyonTheme.colorScheme.primary,
+    inactiveColor: Color = ElyonTheme.colorScheme.secondary,
     modifier: Modifier = Modifier,
 ) {
     Slider(
@@ -43,13 +43,9 @@ fun AppSlider(
         enabled = enabled,
         steps = steps,
         modifier = modifier,
-        colors = M3SliderDefaults.colors(
-            thumbColor = activeColor,
-            activeTrackColor = activeColor,
-            inactiveTrackColor = inactiveColor,
-            disabledThumbColor = inactiveColor,
-            disabledActiveTrackColor = activeColor.copy(alpha = 0.38f),
-            disabledInactiveTrackColor = inactiveColor.copy(alpha = 0.38f),
+        colors = SliderDefaults.sliderColors(
+            foregroundColor = activeColor,
+            backgroundColor = inactiveColor,
         ),
     )
 }
@@ -70,7 +66,7 @@ fun AppLabeledSlider(
     valueSuffix: String = "",
     modifier: Modifier = Modifier,
 ) {
-    val textColor = LocalAppColors.current.textPrimary
+    val textColor = ElyonTheme.colorScheme.onSurface
 
     Column(modifier = modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {

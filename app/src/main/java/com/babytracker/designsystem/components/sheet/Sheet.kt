@@ -1,14 +1,11 @@
 package com.babytracker.designsystem.components.sheet
 
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import com.babytracker.designsystem.components.sheet.SheetDefaults as AppSheetDefaults
+import androidx.compose.ui.unit.dp
+import io.elyon.kmp.overlay.OverlayBottomSheet
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 表单底部弹层 — 对标 Palette Dialog/ActionSheet 组件体系
@@ -20,28 +17,22 @@ import com.babytracker.designsystem.components.sheet.SheetDefaults as AppSheetDe
  *       // 表单内容
  *   }
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppBottomSheet(
     show: Boolean,
     onDismiss: () -> Unit,
     skipPartiallyExpanded: Boolean = true,
-    containerColor: Color = AppSheetDefaults.containerColor(),
-    contentColor: Color = AppSheetDefaults.contentColor(),
-    cornerRadius: Dp = AppSheetDefaults.cornerRadius(),
+    containerColor: Color = ElyonTheme.colorScheme.surfaceContainer,
+    contentColor: Color = ElyonTheme.colorScheme.onSurfaceContainer,
+    cornerRadius: Dp = 28.dp,
     modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable () -> Unit,
 ) {
-    if (!show) return
-
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
-
-    ModalBottomSheet(
+    OverlayBottomSheet(
+        show = show,
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = containerColor,
-        contentColor = contentColor,
-        shape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius),
+        backgroundColor = containerColor,
+        cornerRadius = cornerRadius,
         modifier = modifier,
         content = content,
     )

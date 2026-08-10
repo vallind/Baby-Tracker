@@ -1,11 +1,13 @@
 package com.babytracker.designsystem.components.surface
 
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import io.elyon.kmp.basic.Surface
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 表面容器 — 对标 M3 Surface，消费 AppComponentTokens.surface。
@@ -17,16 +19,16 @@ import androidx.compose.ui.unit.Dp
 @Composable
 fun AppSurface(
     modifier: Modifier = Modifier,
-    color: Color = SurfaceDefaults.color(),
-    shape: Shape = SurfaceDefaults.shape(),
-    tonalElevation: Dp = SurfaceDefaults.tonalElevation(),
+    color: Color = ElyonTheme.colorScheme.surface,
+    shape: Shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+    tonalElevation: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
     Surface(
         modifier = modifier,
         color = color,
         shape = shape,
-        tonalElevation = tonalElevation,
+        shadowElevation = tonalElevation,
         content = content,
     )
 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,8 +13,10 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.theme.LocalAppTypography
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.theme.ElyonTheme
 
 /**
  * 统一空状态组件。所有列表页为空时调用此组件，避免散落各处的 "无数据" 文案。
@@ -41,19 +42,19 @@ fun EmptyState(
         verticalArrangement = Arrangement.Center,
     ) {
         // 主题 emoji 纯装饰，对读屏静默；title/subtitle 保持可朗读
-        Text(emoji, fontSize = EmptyStateDefaults.emojiSize(), modifier = Modifier.clearAndSetSemantics {})
+        Text(emoji, fontSize = 48.sp, modifier = Modifier.clearAndSetSemantics {})
         Spacer(Modifier.height(16.dp))
         Text(
             title,
-            style = LocalAppTypography.current.titleMedium,
+            style = ElyonTheme.textStyles.title2,
             fontWeight = FontWeight.SemiBold,
-            color = EmptyStateDefaults.titleColor(),
+            color = ElyonTheme.colorScheme.onSurface,
         )
         Spacer(Modifier.height(8.dp))
         Text(
             subtitle,
-            style = LocalAppTypography.current.bodySmall,
-            color = EmptyStateDefaults.subtitleColor(),
+            style = ElyonTheme.textStyles.body2,
+            color = ElyonTheme.colorScheme.onSurfaceVariantSummary,
             textAlign = TextAlign.Center,
         )
         if (actionText != null && onAction != null) {
