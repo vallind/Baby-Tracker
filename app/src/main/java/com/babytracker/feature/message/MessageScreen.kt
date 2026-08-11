@@ -32,10 +32,12 @@ import com.babytracker.core.domain.model.MessageType
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.i18n.AppStrings
 import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 private data class CategoryOverview(
     val type: MessageType,
@@ -49,9 +51,9 @@ private data class CategoryOverview(
 private fun categoryOverviews(): List<CategoryOverview> {
     val c = LocalAppColors.current
     return listOf(
-        CategoryOverview(MessageType.INTERACTION, "互动消息", "\uD83D\uDCAC", c.primary, c.onPrimary),
-        CategoryOverview(MessageType.SYSTEM, "系统通知", "\uD83D\uDD14", c.primary, c.onPrimary),
-        CategoryOverview(MessageType.SERVICE, "服务通知", "\u2B50", c.secondary, c.onSecondary),
+        CategoryOverview(MessageType.INTERACTION, AppStrings.messageCategoryInteraction, "\uD83D\uDCAC", c.primary, c.onPrimary),
+        CategoryOverview(MessageType.SYSTEM, AppStrings.messageCategorySystem, "\uD83D\uDD14", c.primary, c.onPrimary),
+        CategoryOverview(MessageType.SERVICE, AppStrings.messageCategoryService, "\u2B50", c.secondary, c.onSecondary),
     )
 }
 
@@ -73,11 +75,11 @@ fun MessageScreen(navController: NavController) {
     AppScaffold(
         topBar = {
             AppTopBar(
-                title = "消息中心",
+                title = AppStrings.messageCenter,
                 actions = {
                     val canMarkAll = state.totalUnread > 0
                     Text(
-                        "全部已读",
+                        AppStrings.markAllRead,
                         style = LocalAppTypography.current.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = if (canMarkAll) c.primary else c.textTertiary,
@@ -115,8 +117,8 @@ fun MessageScreen(navController: NavController) {
                 ) {
                     EmptyState(
                         emoji = "\uD83D\uDCED",
-                        title = "暂无消息",
-                        subtitle = if (filterType != null) "该分类暂无消息" else "新的消息会在这里显示",
+                        title = AppStrings.messageNoData,
+                        subtitle = if (filterType != null) AppStrings.messageEmptyFiltered else AppStrings.messageEmptyAll,
                     )
                 }
             } else {
@@ -283,11 +285,11 @@ private fun MessageCard(
                             .background(c.danger),
                     )
                 } else {
-                    Text("已读", style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
+                    Text(AppStrings.messageRead, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
                 }
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = "删除",
+                    contentDescription = AppStrings.delete,
                     tint = c.textTertiary,
                     modifier = Modifier
                         .size(16.dp)
@@ -363,8 +365,8 @@ private fun MessageLeadingIcon(message: AppMessage) {
 private fun relativeTime(dt: LocalDateTime): String {
     val now = LocalDateTime.now()
     val mins = ChronoUnit.MINUTES.between(dt, now)
-    if (mins < 1) return "刚刚"
-    if (mins < 60) return "${mins}分钟前"
+    if (mins < 1) return AppStrings.timeJustNow
+    if (mins < 60) return String.format(Locale.US, AppStrings.timeMinutesAgo, mins)
     if (dt.toLocalDate() == now.toLocalDate()) {
         return dt.format(DateTimeFormatter.ofPattern("HH:mm"))
     }

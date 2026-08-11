@@ -22,6 +22,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.i18n.AppStrings
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,7 +41,7 @@ fun LoginScreen(navController: NavController) {
 
     AppScaffold(
         topBar = {
-            AppTopBar(title = "账户", onBack = { navController.popBackStack() })
+            AppTopBar(title = AppStrings.accountPage, onBack = { navController.popBackStack() })
         },
     ) { padding ->
         Column(
@@ -54,20 +55,20 @@ fun LoginScreen(navController: NavController) {
             Spacer(Modifier.height(40.dp))
 
             Text(
-                text = if (uiState.isRegisterMode) "创建账户" else "登录账户",
+                text = if (uiState.isRegisterMode) AppStrings.registerTitle else AppStrings.loginTitle,
                 style = typography.headlineLarge, color = c.textPrimary,
             )
             Spacer(Modifier.height(spacing.sm))
             Text(
-                text = if (uiState.isRegisterMode) "注册后可开启云同步和家庭共享" else "登录后同步数据到云端",
+                text = if (uiState.isRegisterMode) AppStrings.registerSubtitle else AppStrings.loginSubtitle,
                 style = typography.bodyLarge, color = c.textSecondary,
             )
             Spacer(Modifier.height(spacing.xl))
 
             AppInput(
                 value = uiState.account, onValueChange = vm::onAccountChange,
-                label = "账户名",
-                placeholder = "请输入账户名",
+                label = AppStrings.accountLabel,
+                placeholder = AppStrings.accountPlaceholder,
                 keyboardType = KeyboardType.Text,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
@@ -76,8 +77,8 @@ fun LoginScreen(navController: NavController) {
 
             AppInput(
                 value = uiState.password, onValueChange = vm::onPasswordChange,
-                label = "密码",
-                placeholder = "请输入密码（至少 6 位）",
+                label = AppStrings.passwordLabel,
+                placeholder = AppStrings.passwordPlaceholder,
                 isPassword = true,
                 keyboardType = KeyboardType.Password,
                 modifier = Modifier.fillMaxWidth(),
@@ -94,17 +95,17 @@ fun LoginScreen(navController: NavController) {
                 onClick = vm::submit,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading,
-                label = if (uiState.isLoading) "..." else if (uiState.isRegisterMode) "注册" else "登录",
+                label = if (uiState.isLoading) "..." else if (uiState.isRegisterMode) AppStrings.register else AppStrings.login,
             )
             Spacer(Modifier.height(spacing.md))
 
             AppButton(
                 variant = ButtonVariant.Text,
                 onClick = vm::toggleMode,
-                label = if (uiState.isRegisterMode) "已有账户？去登录" else "没有账户？去注册",
+                label = if (uiState.isRegisterMode) AppStrings.toLogin else AppStrings.toRegister,
             )
             Spacer(Modifier.height(spacing.xl))
-            Text("登录为可选操作，不登录不影响本地使用", style = typography.labelSmall, color = c.textTertiary)
+            Text(AppStrings.loginOptional, style = typography.labelSmall, color = c.textTertiary)
             Spacer(Modifier.height(spacing.md))
         }
     }

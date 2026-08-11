@@ -32,6 +32,24 @@ object AppStrings {
     const val editNickname = "修改昵称"
     const val nicknameHint = "请输入昵称"
     const val nicknameSaved = "昵称已保存"
+    const val accountPage = "账户"
+    const val loginTitle = "登录账户"
+    const val registerTitle = "创建账户"
+    const val loginSubtitle = "登录后同步数据到云端"
+    const val registerSubtitle = "注册后可开启云同步和家庭共享"
+    const val accountLabel = "账户名"
+    const val accountPlaceholder = "请输入账户名"
+    const val passwordLabel = "密码"
+    const val passwordPlaceholder = "请输入密码（至少 6 位）"
+    const val login = "登录"
+    const val register = "注册"
+    const val toRegister = "没有账户？去注册"
+    const val toLogin = "已有账户？去登录"
+    const val loginOptional = "登录为可选操作，不登录不影响本地使用"
+    const val loginRequiredError = "账户名和密码不能为空"
+    const val passwordTooShortError = "密码长度至少 6 位"
+    const val registerFailed = "注册失败，请重试"
+    const val loginFailed = "登录失败，请检查账户名和密码"
 
     // —— 表单 ——
     const val pleaseSelect = "请选择"
@@ -110,12 +128,38 @@ object AppStrings {
 
     // —— 消息 ——
     const val markAllRead = "全部已读"
+    const val messageCenter = "消息中心"
+    const val messageNoData = "暂无消息"
+    const val messageEmptyFiltered = "该分类暂无消息"
+    const val messageEmptyAll = "新的消息会在这里显示"
+    const val messageCategoryInteraction = "互动消息"
+    const val messageCategorySystem = "系统通知"
+    const val messageCategoryService = "服务通知"
+    const val messageRead = "已读"
 
     // —— 发育评估 ——
     const val developmentAssessment = "发育评估"
 
     // —— 提醒 ——
     const val reminder = "提醒"
+    const val reminderCenter = "提醒中心"
+    const val reminderPending = "待办提醒"
+    const val reminderHistory = "历史提醒"
+    const val reminderNoPending = "暂无待办提醒"
+    const val reminderNoHistory = "暂无历史提醒"
+    const val reminderNoBabySubtitle = "添加宝宝后即可查看提醒"
+    const val reminderNoPendingSubtitle = "疫苗 / 体检 / 用药 / 发育评估到期后会出现在这里"
+    const val reminderNoHistorySubtitle = "完成的提醒会归档至此"
+    const val reminderDeleted = "已删除「%1\$s」"
+    const val reminderMarkDone = "标记完成"
+    const val reminderDoneAt = "完成于 %1\$s"
+    const val reminderDone = "已完成"
+    const val reminderDaysLeft = "还有%1\$d天"
+    const val reminderOverdueDays = "已逾期%1\$d天"
+
+    // —— 时间 ——
+    const val timeJustNow = "刚刚"
+    const val timeMinutesAgo = "%1\$d分钟前"
 
     // —— AI 育儿助手 ——
     const val aiAssistant = "AI 育儿助手"

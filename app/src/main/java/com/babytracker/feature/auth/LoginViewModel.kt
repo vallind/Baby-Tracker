@@ -3,6 +3,7 @@ package com.babytracker.feature.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.auth.AuthService
+import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,11 +46,11 @@ class LoginViewModel(
     fun submit() {
         val state = _uiState.value
         if (state.account.isBlank() || state.password.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "账户名和密码不能为空") }
+            _uiState.update { it.copy(errorMessage = AppStrings.loginRequiredError) }
             return
         }
         if (state.password.length < 6) {
-            _uiState.update { it.copy(errorMessage = "密码长度至少 6 位") }
+            _uiState.update { it.copy(errorMessage = AppStrings.passwordTooShortError) }
             return
         }
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -62,7 +63,7 @@ class LoginViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "注册失败，请重试",
+                                errorMessage = e.message ?: AppStrings.registerFailed,
                             )
                         }
                     }
@@ -73,7 +74,7 @@ class LoginViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: "登录失败，请检查账户名和密码",
+                                errorMessage = e.message ?: AppStrings.loginFailed,
                             )
                         }
                     }

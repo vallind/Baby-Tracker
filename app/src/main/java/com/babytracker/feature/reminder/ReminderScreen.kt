@@ -39,10 +39,12 @@ import com.babytracker.core.data.repository.ReminderRepository
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.i18n.AppStrings
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 /**
  * 提醒中心 —— 待办提醒 + 历史提醒。
@@ -67,7 +69,7 @@ fun ReminderScreen(navController: NavController) {
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = "提醒中心",
+                title = AppStrings.reminderCenter,
                 onBack = { navController.popBackStack() },
             )
         },
@@ -75,8 +77,8 @@ fun ReminderScreen(navController: NavController) {
         if (babyId == 0) {
             EmptyState(
                 emoji = "\uD83C\uDF7C",
-                title = "还没有添加宝宝",
-                subtitle = "添加宝宝后即可查看提醒",
+                title = AppStrings.noBabyTitle,
+                subtitle = AppStrings.reminderNoBabySubtitle,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -95,11 +97,11 @@ fun ReminderScreen(navController: NavController) {
             if (list.isEmpty()) {
                 EmptyState(
                     emoji = if (state.tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
-                    title = if (state.tab == ReminderTab.PENDING) "暂无待办提醒" else "暂无历史提醒",
+                    title = if (state.tab == ReminderTab.PENDING) AppStrings.reminderNoPending else AppStrings.reminderNoHistory,
                     subtitle = if (state.tab == ReminderTab.PENDING)
-                        "疫苗 / 体检 / 用药 / 发育评估到期后会出现在这里"
+                        AppStrings.reminderNoPendingSubtitle
                     else
-                        "完成的提醒会归档至此",
+                        AppStrings.reminderNoHistorySubtitle,
                 )
             } else {
                 list.forEach { reminder ->
@@ -111,7 +113,9 @@ fun ReminderScreen(navController: NavController) {
                             onDelete = {
                                 scope.launch {
                                     reminderRepo.delete(reminder)
-                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.update(reminder) }
+                                    appSnackbar.showUndo(
+                                        message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
+                                    ) { reminderRepo.update(reminder) }
                                 }
                             },
                         )
@@ -121,7 +125,9 @@ fun ReminderScreen(navController: NavController) {
                             onDelete = {
                                 scope.launch {
                                     reminderRepo.delete(reminder)
-                                    appSnackbar.showUndo(message = "已删除「${reminder.title}」") { reminderRepo.update(reminder) }
+                                    appSnackbar.showUndo(
+                                        message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
+                                    ) { reminderRepo.update(reminder) }
                                 }
                             },
                         )
@@ -143,7 +149,7 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
             .padding(horizontal = spacing.md, vertical = spacing.sm),
     ) {
         SegmentedControl(
-            labels = listOf("待办提醒", "历史提醒"),
+            labels = listOf(AppStrings.reminderPending, AppStrings.reminderHistory),
             selectedIndex = if (tab == ReminderTab.PENDING) 0 else 1,
             onSelect = { idx -> onSwitch(if (idx == 0) ReminderTab.PENDING else ReminderTab.HISTORY) },
             modifier = Modifier.fillMaxWidth(),
@@ -240,7 +246,7 @@ private fun PendingReminderCard(
                 ) {
                     Icon(
                         Icons.Default.Check,
-                        contentDescription = "标记完成",
+                        contentDescription = AppStrings.reminderMarkDone,
                         tint = c.success,
                         modifier = Modifier.size(18.dp),
                     )
@@ -259,7 +265,8 @@ private fun HistoryReminderCard(
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
-    val doneText = reminder.doneDate?.let { "完成于 ${DateUtils.formatDate(it)}" } ?: "已完成"
+    val doneText = reminder.doneDate?.let { String.format(Locale.US, AppStrings.reminderDoneAt, DateUtils.formatDate(it)) }
+        ?: AppStrings.reminderDone
 
     RecordCard(
         onDelete = onDelete,
@@ -309,8 +316,8 @@ private fun Reminder.countdownText(): String {
     val today = LocalDate.now()
     val days = ChronoUnit.DAYS.between(today, dueDate.toLocalDate())
     return when {
-        days > 0 -> "还有${days}天"
-        days == 0L -> "今天"
-        else -> "已逾期${-days}天"
+        days > 0 -> String.format(Locale.US, AppStrings.reminderDaysLeft, days)
+        days == 0L -> AppStrings.today
+        else -> String.format(Locale.US, AppStrings.reminderOverdueDays, -days)
     }
 }
