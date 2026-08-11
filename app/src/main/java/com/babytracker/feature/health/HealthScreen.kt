@@ -138,7 +138,7 @@ fun HealthScreen(navController: NavController) {
                                 bgColor = meta.bgColor,
                                 label = meta.label,
                                 count = vaccinatedCount,
-                                onClick = { navController.navigate(com.babytracker.navigation.Screen.Vaccination.route) },
+                                onClick = { navController.navigate(com.babytracker.navigation.Vaccination) },
                             )
                         } else {
                             val items = grouped[meta.key].orEmpty()

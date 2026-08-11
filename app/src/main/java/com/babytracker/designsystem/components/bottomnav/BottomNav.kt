@@ -25,18 +25,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.babytracker.designsystem.components.bottomnav.BottomBarDefaults
 import com.babytracker.core.data.repository.MessageRepository
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Home
+import com.babytracker.navigation.Message
+import com.babytracker.navigation.Settings
+import com.babytracker.navigation.Stats
+import com.babytracker.navigation.Timeline
+import com.babytracker.navigation.navigateToRoot
 import org.koin.compose.koinInject
 
 /**
  * 共享底部导航栏 — 5 Tab（首页 / 记录 / 统计 / 消息 / 我的）
  *
  * 修正历史 bug：原先 "消息" Tab 错误地路由到 Vaccination，
- * 现在正确路由到 `Screen.Message.route`。
+ * 现在正确路由到类型安全路由 `Message`。
  *
  * 用法：
  *   Scaffold(bottomBar = { BottomNavBar(navController) }) { ... }
@@ -46,7 +53,7 @@ fun BottomNavBar(navController: NavController) {
     val messageRepo: MessageRepository = koinInject()
     val unreadCount by messageRepo.watchUnreadCount().collectAsState(initial = 0)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(
         containerColor = BottomBarDefaults.containerColor(),
@@ -57,11 +64,41 @@ fun BottomNavBar(navController: NavController) {
             .navigationBarsPadding(),
     ) {
         val tabs = listOf(
-            BottomTab("首页", Icons.Outlined.Home, Screen.Home.route, badgeCount = 0),
-            BottomTab("记录", Icons.AutoMirrored.Outlined.List, Screen.Timeline.route, badgeCount = 0),
-            BottomTab("统计", Icons.Outlined.BarChart, Screen.Stats.route, badgeCount = 0),
-            BottomTab("消息", Icons.AutoMirrored.Outlined.Message, Screen.Message.route, badgeCount = unreadCount),
-            BottomTab("我的", Icons.Outlined.Person, Screen.Settings.route, badgeCount = 0),
+            BottomTab(
+                label = "首页",
+                icon = Icons.Outlined.Home,
+                badgeCount = 0,
+                isSelected = { it?.hierarchy?.any { d -> d.hasRoute<Home>() } == true },
+                onSelected = { it.navigateToRoot(Home) },
+            ),
+            BottomTab(
+                label = "记录",
+                icon = Icons.AutoMirrored.Outlined.List,
+                badgeCount = 0,
+                isSelected = { it?.hierarchy?.any { d -> d.hasRoute<Timeline>() } == true },
+                onSelected = { it.navigateToRoot(Timeline) },
+            ),
+            BottomTab(
+                label = "统计",
+                icon = Icons.Outlined.BarChart,
+                badgeCount = 0,
+                isSelected = { it?.hierarchy?.any { d -> d.hasRoute<Stats>() } == true },
+                onSelected = { it.navigateToRoot(Stats) },
+            ),
+            BottomTab(
+                label = "消息",
+                icon = Icons.AutoMirrored.Outlined.Message,
+                badgeCount = unreadCount,
+                isSelected = { it?.hierarchy?.any { d -> d.hasRoute<Message>() } == true },
+                onSelected = { it.navigateToRoot(Message) },
+            ),
+            BottomTab(
+                label = "我的",
+                icon = Icons.Outlined.Person,
+                badgeCount = 0,
+                isSelected = { it?.hierarchy?.any { d -> d.hasRoute<Settings>() } == true },
+                onSelected = { it.navigateToRoot(Settings) },
+            ),
         )
         tabs.forEach { tab ->
             NavigationBarItem(
@@ -75,16 +112,8 @@ fun BottomNavBar(navController: NavController) {
                     }
                 },
                 label = { Text(tab.label, style = LocalAppTypography.current.labelSmall) },
-                selected = currentRoute == tab.route,
-                onClick = {
-                    navController.navigate(tab.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+                selected = tab.isSelected(currentDestination),
+                onClick = { tab.onSelected(navController) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = BottomBarDefaults.selectedColor(),
                     selectedTextColor = BottomBarDefaults.selectedColor(),
@@ -100,6 +129,7 @@ fun BottomNavBar(navController: NavController) {
 private data class BottomTab(
     val label: String,
     val icon: ImageVector,
-    val route: String,
     val badgeCount: Int = 0,
+    val isSelected: (NavDestination?) -> Boolean,
+    val onSelected: (NavController) -> Unit,
 )

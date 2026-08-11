@@ -1,25 +1,25 @@
 # BabyTracker 前后端架构
 
-> 最后更新：2026-08-08 · 对应版本：1.7.11
+> 最后更新：2026-08-11 · 对应版本：1.7.11
 
 ## Android App (前端)
 
 ### UI Layer (Compose)
 
-路由定义在 `navigation/AppNavigation.kt`（sealed class Screen，25 条，无动画 instantComposable 跳转）：
+路由定义在 `navigation/AppNavigation.kt`（Navigation 2.9 类型安全路由：25 个 `@Serializable data object`，无动画 instantComposable 跳转）：
 
-| 页面 | 路由 |
+| 页面 | 类型安全路由对象 |
 |------|------|
-| Home | `/` |
-| Timeline | `/timeline` |
-| Feeding / Sleep / Growth / Diaper | `/feeding` `/sleep` `/growth` `/diaper` |
-| Vaccination / Health / Stats | `/vaccination` `/health` `/stats` |
-| Message | `/message` |
-| DevelopmentAssessment / Reminder | `/development_assessment` `/reminder` |
-| Settings 主 / 使用偏好 / 数据与同步 / 帮助与关于 | `/settings` `/settings/preferences` `/settings/data` `/settings/support` |
-| BabyManagement / BabyProfile / Backup / LogViewer / SyncSettings / Family | `/settings/babies` `/settings/baby/profile` `/settings/backup` `/settings/logviewer` `/settings/sync` `/settings/family` |
-| Login | `/login` |
-| AiAssistant / AiSettings | `/ai-assistant` `/ai-assistant/settings` |
+| Home | `Home` |
+| Timeline | `Timeline` |
+| Feeding / Sleep / Growth / Diaper | `Feeding` `Sleep` `Growth` `Diaper` |
+| Vaccination / Health / Stats | `Vaccination` `Health` `Stats` |
+| Message | `Message` |
+| DevelopmentAssessment / Reminder | `DevelopmentAssessment` `Reminder` |
+| Settings 主 / 使用偏好 / 数据与同步 / 帮助与关于 | `Settings` `PreferenceSettings` `DataSettings` `SupportSettings` |
+| BabyManagement / BabyProfile / Backup / LogViewer / SyncSettings / Family | `BabyManagement` `BabyProfile` `Backup` `LogViewer` `SyncSettings` `Family` |
+| Login | `Login` |
+| AiAssistant / AiSettings | `AiAssistant` `AiSettings` |
 
 ### ViewModel Layer（全部 `viewModel { }` 注册，Screen 用 `koinViewModel()`）
 

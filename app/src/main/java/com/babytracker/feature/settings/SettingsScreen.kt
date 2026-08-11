@@ -63,7 +63,13 @@ import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.section.AppListItem
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.BabyManagement
+import com.babytracker.navigation.DataSettings
+import com.babytracker.navigation.Family
+import com.babytracker.navigation.Login
+import com.babytracker.navigation.PreferenceSettings
+import com.babytracker.navigation.Reminder
+import com.babytracker.navigation.SupportSettings
 import com.babytracker.core.auth.AuthService
 import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.launch
@@ -113,9 +119,9 @@ fun SettingsScreen(navController: NavController) {
                 isLoggedIn = isLoggedIn,
                 onClick = {
                     if (isLoggedIn) {
-                        navController.navigate(Screen.Family.route)
+                        navController.navigate(Family)
                     } else {
-                        navController.navigate(Screen.Login.route)
+                        navController.navigate(Login)
                     }
                 },
                 onEditNickname = if (isLoggedIn) {
@@ -131,7 +137,7 @@ fun SettingsScreen(navController: NavController) {
                     emoji = "👶",
                     label = "宝宝管理",
                     subtitle = "资料、成长信息与宝宝切换",
-                    onClick = { navController.navigate(Screen.BabyManagement.route) },
+                    onClick = { navController.navigate(BabyManagement) },
                 )
                 SettingsDivider()
                 SettingsRow(
@@ -140,7 +146,7 @@ fun SettingsScreen(navController: NavController) {
                     subtitle = if (isLoggedIn) "成员管理与账号信息" else "登录后与家人共享记录",
                     onClick = {
                         navController.navigate(
-                            if (isLoggedIn) Screen.Family.route else Screen.Login.route
+                            if (isLoggedIn) Family else Login
                         )
                     },
                 )
@@ -149,7 +155,7 @@ fun SettingsScreen(navController: NavController) {
                     emoji = "🔔",
                     label = "提醒设置",
                     subtitle = "喂养、睡眠与护理提醒",
-                    onClick = { navController.navigate(Screen.Reminder.route) },
+                    onClick = { navController.navigate(Reminder) },
                 )
             }
 
@@ -161,21 +167,21 @@ fun SettingsScreen(navController: NavController) {
                     emoji = "🎨",
                     label = "使用偏好",
                     subtitle = "主题与 AI 助手",
-                    onClick = { navController.navigate(Screen.PreferenceSettings.route) },
+                    onClick = { navController.navigate(PreferenceSettings) },
                 )
                 SettingsDivider()
                 SettingsRow(
                     emoji = "🔒",
                     label = "数据与同步",
                     subtitle = "云同步、备份与隐私",
-                    onClick = { navController.navigate(Screen.DataSettings.route) },
+                    onClick = { navController.navigate(DataSettings) },
                 )
                 SettingsDivider()
                 SettingsRow(
                     emoji = "❓",
                     label = "帮助与关于",
                     subtitle = "问题反馈、运行日志与版本信息",
-                    onClick = { navController.navigate(Screen.SupportSettings.route) },
+                    onClick = { navController.navigate(SupportSettings) },
                 )
             }
 

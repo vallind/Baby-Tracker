@@ -43,7 +43,9 @@ import com.babytracker.feature.feeding.FeedingFormDialog
 import com.babytracker.feature.growth.GrowthFormDialog
 import com.babytracker.feature.health.HealthFormDialog
 import com.babytracker.feature.sleep.SleepFormDialog
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.Growth as GrowthRoute
+import com.babytracker.navigation.Health
+import com.babytracker.navigation.Vaccination
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -286,24 +288,19 @@ fun TimelineScreen(navController: NavController) {
                     modifier = Modifier.padding(bottom = spacing.md),
                 )
                 val types = listOf(
-                    Screen.Feeding to "🤱 喂养",
-                    Screen.Sleep to "😴 睡眠",
-                    Screen.Diaper to "🧷 尿布",
-                    Screen.Growth to "📏 生长",
-                    Screen.Vaccination to "💉 疫苗",
-                    Screen.Health to "❤️ 健康",
+                    "🤱 喂养" to { showAddFeeding = true },
+                    "😴 睡眠" to { showAddSleep = true },
+                    "🧷 尿布" to { showAddDiaper = true },
+                    "📏 生长" to { navController.navigate(GrowthRoute) },
+                    "💉 疫苗" to { navController.navigate(Vaccination) },
+                    "❤️ 健康" to { navController.navigate(Health) },
                 )
-                types.forEach { (screen, label) ->
+                types.forEach { (label, onSelect) ->
                     AppButton(
                         variant = ButtonVariant.Text,
                         onClick = {
                             showTypePicker = false
-                            when (screen) {
-                                Screen.Feeding -> showAddFeeding = true
-                                Screen.Sleep -> showAddSleep = true
-                                Screen.Diaper -> showAddDiaper = true
-                                else -> navController.navigate(screen.route)
-                            }
+                            onSelect()
                         },
                         label = label,
                         modifier = Modifier.fillMaxWidth().height(52.dp),

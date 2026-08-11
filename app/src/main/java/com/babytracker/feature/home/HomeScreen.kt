@@ -13,7 +13,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppShapes
@@ -29,7 +28,19 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.AiAssistant
+import com.babytracker.navigation.BabyManagement
+import com.babytracker.navigation.BabyProfile
+import com.babytracker.navigation.DevelopmentAssessment
+import com.babytracker.navigation.Diaper as DiaperRoute
+import com.babytracker.navigation.Feeding as FeedingRoute
+import com.babytracker.navigation.Growth
+import com.babytracker.navigation.Health
+import com.babytracker.navigation.Sleep as SleepRoute
+import com.babytracker.navigation.Stats
+import com.babytracker.navigation.Timeline
+import com.babytracker.navigation.Vaccination
+import com.babytracker.navigation.navigateToRoot
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.Sleep
@@ -69,7 +80,7 @@ fun HomeScreen(navController: NavController) {
                 title = "还没有添加宝宝",
                 subtitle = "点击下方按钮，记录宝宝成长的每一个瞬间",
                 actionText = "添加宝宝",
-                onAction = { navController.navigate(Screen.BabyManagement.route) },
+                onAction = { navController.navigate(BabyManagement) },
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -83,7 +94,7 @@ fun HomeScreen(navController: NavController) {
                 .background(c.pageBackground),
         ) {
             // —— 顶部宝宝信息区（浅蓝渐变背景 + 圆形头像）——
-            BabyHeader(baby, onClickProfile = { navController.navigate(Screen.BabyProfile.route) })
+            BabyHeader(baby, onClickProfile = { navController.navigate(BabyProfile) })
 
             Spacer(Modifier.height(spacing.md))
             FeatureGrid(navController)
@@ -98,7 +109,7 @@ fun HomeScreen(navController: NavController) {
                 Spacer(Modifier.height(spacing.md))
                 RecentRecordsSection(
                     items = state.recentItems,
-                    onSeeAll = { navController.navigate(Screen.Timeline.route) },
+                    onSeeAll = { navController.navigate(Timeline) },
                 )
             }
 
@@ -117,7 +128,7 @@ private fun AiAssistantEntryCard(navController: NavController) {
         modifier = Modifier
             .padding(horizontal = spacing.md)
             .fillMaxWidth()
-            .clickable { navController.navigate(Screen.AiAssistant.route) },
+            .clickable { navController.navigate(AiAssistant) },
         containerColor = colors.primaryContainer,
     ) {
         Row(
@@ -276,28 +287,28 @@ fun RowScope.StatDivider() {
 fun FeatureGrid(navController: NavController) {
     val spacing = LocalAppSpacing.current
     val items = listOf(
-        FeatureGridItemData(Screen.Feeding, "🍼", "喂养记录"),
-        FeatureGridItemData(Screen.Sleep, "🌙", "睡眠记录"),
-        FeatureGridItemData(Screen.Diaper, "🧷", "尿布更换"),
-        FeatureGridItemData(Screen.Growth, "📏", "生长记录"),
-        FeatureGridItemData(Screen.DevelopmentAssessment, "🧠", "发育评估"),
-        FeatureGridItemData(Screen.Vaccination, "💉", "疫苗接种"),
-        FeatureGridItemData(Screen.Health, "❤️", "健康档案"),
-        FeatureGridItemData(Screen.Stats, "📊", "统计分析"),
+        FeatureGridItemData({ navController.navigateToRoot(FeedingRoute) }, "🍼", "喂养记录"),
+        FeatureGridItemData({ navController.navigateToRoot(SleepRoute) }, "🌙", "睡眠记录"),
+        FeatureGridItemData({ navController.navigateToRoot(DiaperRoute) }, "🧷", "尿布更换"),
+        FeatureGridItemData({ navController.navigateToRoot(Growth) }, "📏", "生长记录"),
+        FeatureGridItemData({ navController.navigateToRoot(DevelopmentAssessment) }, "🧠", "发育评估"),
+        FeatureGridItemData({ navController.navigateToRoot(Vaccination) }, "💉", "疫苗接种"),
+        FeatureGridItemData({ navController.navigateToRoot(Health) }, "❤️", "健康档案"),
+        FeatureGridItemData({ navController.navigateToRoot(Stats) }, "📊", "统计分析"),
     )
     Column(Modifier.padding(horizontal = spacing.md)) {
         Spacer(Modifier.height(14.dp))
         // 第一行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             items.subList(0, 4).forEachIndexed { i, item ->
-                FeatureGridItem(item, useAccent = i % 2 == 1, navController, Modifier.weight(1f))
+                FeatureGridItem(item, useAccent = i % 2 == 1, Modifier.weight(1f))
             }
         }
         Spacer(Modifier.height(spacing.sm))
         // 第二行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             items.subList(4, 8).forEachIndexed { i, item ->
-                FeatureGridItem(item, useAccent = i % 2 == 1, navController, Modifier.weight(1f))
+                FeatureGridItem(item, useAccent = i % 2 == 1, Modifier.weight(1f))
             }
         }
     }
@@ -307,7 +318,6 @@ fun FeatureGrid(navController: NavController) {
 private fun FeatureGridItem(
     item: FeatureGridItemData,
     useAccent: Boolean,
-    navController: NavController,
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
@@ -319,14 +329,8 @@ private fun FeatureGridItem(
         modifier
             .clip(RoundedCornerShape(shapes.large))
             .clickable {
-                    navController.navigate(item.screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                }
+                item.navigate()
+            }
             .padding(vertical = spacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -346,7 +350,7 @@ private fun FeatureGridItem(
 }
 
 private data class FeatureGridItemData(
-    val screen: com.babytracker.navigation.Screen,
+    val navigate: () -> Unit,
     val emoji: String,
     val label: String,
 )

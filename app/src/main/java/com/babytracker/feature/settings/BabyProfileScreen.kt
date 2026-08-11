@@ -30,7 +30,7 @@ import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.BabyManagement
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -215,7 +215,7 @@ fun BabyProfileScreen(navController: NavController) {
             ) {
                 AppButton(
                     variant = ButtonVariant.Text,
-                    onClick = { navController.navigate(Screen.BabyManagement.route) },
+                    onClick = { navController.navigate(BabyManagement) },
                     label = "管理全部宝宝",
                     contentColor = c.textSecondary,
                 )

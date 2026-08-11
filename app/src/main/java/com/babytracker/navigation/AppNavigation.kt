@@ -3,10 +3,13 @@ package com.babytracker.navigation
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.runtime.*
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.serialization.Serializable
 import com.babytracker.feature.home.HomeScreen
 import com.babytracker.feature.feeding.FeedingListScreen
 import com.babytracker.feature.timeline.TimelineScreen
@@ -33,63 +36,65 @@ import com.babytracker.feature.family.FamilyPage
 import com.babytracker.feature.ai.AiChatScreen
 import com.babytracker.feature.ai.AiSettingsScreen
 
-sealed class Screen(val route: String) {
-    object Home : Screen("/")
-    object Timeline : Screen("/timeline")
-    object Feeding : Screen("/feeding")
-    object Sleep : Screen("/sleep")
-    object Growth : Screen("/growth")
-    object Vaccination : Screen("/vaccination")
-    object Health : Screen("/health")
-    object Diaper : Screen("/diaper")
-    object Stats : Screen("/stats")
-    object Settings : Screen("/settings")
-    object PreferenceSettings : Screen("/settings/preferences")
-    object DataSettings : Screen("/settings/data")
-    object SupportSettings : Screen("/settings/support")
-    object BabyManagement : Screen("/settings/babies")
-    object BabyProfile : Screen("/settings/baby/profile")
-    object Backup : Screen("/settings/backup")
-    object LogViewer : Screen("/settings/logviewer")
-    object SyncSettings : Screen("/settings/sync")
-    object Family : Screen("/settings/family")
-    object Message : Screen("/message")
-    object DevelopmentAssessment : Screen("/development_assessment")
-    object Reminder : Screen("/reminder")
-    object Login : Screen("/login")
-    object AiAssistant : Screen("/ai-assistant")
-    object AiSettings : Screen("/ai-assistant/settings")
-}
+/**
+ * 类型安全路由：每个页面一个 @Serializable data object，
+ * 由 Navigation 2.8+ 在编译期生成路由，杜绝手写字符串拼错。
+ */
+@Serializable data object Home
+@Serializable data object Timeline
+@Serializable data object Feeding
+@Serializable data object Sleep
+@Serializable data object Growth
+@Serializable data object Vaccination
+@Serializable data object Health
+@Serializable data object Diaper
+@Serializable data object Stats
+@Serializable data object Settings
+@Serializable data object PreferenceSettings
+@Serializable data object DataSettings
+@Serializable data object SupportSettings
+@Serializable data object BabyManagement
+@Serializable data object BabyProfile
+@Serializable data object Backup
+@Serializable data object LogViewer
+@Serializable data object SyncSettings
+@Serializable data object Family
+@Serializable data object Message
+@Serializable data object DevelopmentAssessment
+@Serializable data object Reminder
+@Serializable data object Login
+@Serializable data object AiAssistant
+@Serializable data object AiSettings
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    NavHost(navController, startDestination = Screen.Home.route) {
-        instantComposable(Screen.Home.route) { HomeScreen(navController) }
-        instantComposable(Screen.Timeline.route) { TimelineScreen(navController) }
-        instantComposable(Screen.Feeding.route) { FeedingListScreen(navController) }
-        instantComposable(Screen.Sleep.route) { SleepListScreen(navController) }
-        instantComposable(Screen.Growth.route) { GrowthScreen(navController) }
-        instantComposable(Screen.Vaccination.route) { VaccinationListScreen(navController) }
-        instantComposable(Screen.Health.route) { HealthScreen(navController) }
-        instantComposable(Screen.Diaper.route) { DiaperListScreen(navController) }
-        instantComposable(Screen.Stats.route) { StatsScreen(navController) }
-        instantComposable(Screen.Settings.route) { SettingsScreen(navController) }
-        instantComposable(Screen.PreferenceSettings.route) { PreferenceSettingsScreen(navController) }
-        instantComposable(Screen.DataSettings.route) { DataSettingsScreen(navController) }
-        instantComposable(Screen.SupportSettings.route) { SupportSettingsScreen(navController) }
-        instantComposable(Screen.BabyManagement.route) { BabyManagementScreen(navController) }
-        instantComposable(Screen.BabyProfile.route) { BabyProfileScreen(navController) }
-        instantComposable(Screen.Backup.route) { BackupScreen(navController) }
-        instantComposable(Screen.LogViewer.route) { LogViewerScreen(navController) }
-        instantComposable(Screen.SyncSettings.route) { SyncSettingsScreen(navController) }
-        instantComposable(Screen.Family.route) { FamilyPage(navController) }
-        instantComposable(Screen.Message.route) { MessageScreen(navController) }
-        instantComposable(Screen.DevelopmentAssessment.route) { DevelopmentAssessmentScreen(navController) }
-        instantComposable(Screen.Reminder.route) { ReminderScreen(navController) }
-        instantComposable(Screen.Login.route) { LoginScreen(navController) }
-        instantComposable(Screen.AiAssistant.route) { AiChatScreen(navController) }
-        instantComposable(Screen.AiSettings.route) { AiSettingsScreen(navController) }
+    NavHost(navController, startDestination = Home) {
+        instantComposable<Home> { HomeScreen(navController) }
+        instantComposable<Timeline> { TimelineScreen(navController) }
+        instantComposable<Feeding> { FeedingListScreen(navController) }
+        instantComposable<Sleep> { SleepListScreen(navController) }
+        instantComposable<Growth> { GrowthScreen(navController) }
+        instantComposable<Vaccination> { VaccinationListScreen(navController) }
+        instantComposable<Health> { HealthScreen(navController) }
+        instantComposable<Diaper> { DiaperListScreen(navController) }
+        instantComposable<Stats> { StatsScreen(navController) }
+        instantComposable<Settings> { SettingsScreen(navController) }
+        instantComposable<PreferenceSettings> { PreferenceSettingsScreen(navController) }
+        instantComposable<DataSettings> { DataSettingsScreen(navController) }
+        instantComposable<SupportSettings> { SupportSettingsScreen(navController) }
+        instantComposable<BabyManagement> { BabyManagementScreen(navController) }
+        instantComposable<BabyProfile> { BabyProfileScreen(navController) }
+        instantComposable<Backup> { BackupScreen(navController) }
+        instantComposable<LogViewer> { LogViewerScreen(navController) }
+        instantComposable<SyncSettings> { SyncSettingsScreen(navController) }
+        instantComposable<Family> { FamilyPage(navController) }
+        instantComposable<Message> { MessageScreen(navController) }
+        instantComposable<DevelopmentAssessment> { DevelopmentAssessmentScreen(navController) }
+        instantComposable<Reminder> { ReminderScreen(navController) }
+        instantComposable<Login> { LoginScreen(navController) }
+        instantComposable<AiAssistant> { AiChatScreen(navController) }
+        instantComposable<AiSettings> { AiSettingsScreen(navController) }
     }
 }
 
@@ -97,16 +102,29 @@ fun AppNavigation() {
  * 无动画 composable 封装：切页面立即显示，不等待过渡动画。
  * 解决默认 fade 动画在低端设备或复杂页面上的卡顿问题。
  */
-private fun NavGraphBuilder.instantComposable(
-    route: String,
-    content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
+private inline fun <reified T : Any> NavGraphBuilder.instantComposable(
+    noinline content: @Composable AnimatedContentScope.(NavBackStackEntry) -> Unit,
 ) {
-    composable(
-        route = route,
+    composable<T>(
         enterTransition = { null },
         exitTransition = { null },
         popEnterTransition = { null },
         popExitTransition = { null },
         content = content,
     )
+}
+
+/**
+ * 以根级 Tab 语义导航：弹栈到起始页（保存状态）+ 单顶复用。
+ * 首页宫格与底部导航共用，避免导航选项四处复制。
+ */
+internal fun <T : Any> NavController.navigateToRoot(route: T) {
+    val startDestinationId = graph.findStartDestination().id
+    navigate(route) {
+        popUpTo(startDestinationId) {
+            saveState = true
+        }
+        launchSingleTop = true
+        restoreState = true
+    }
 }

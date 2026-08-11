@@ -45,7 +45,7 @@ AppSwitch / AppChip / AppSlider / RecordCard / AppMarkdownText ...
 |---|---|
 | UI | Jetpack Compose + Material 3 |
 | 启动屏 | androidx.core:core-splashscreen 1.2.0 |
-| 导航 | Navigation Compose 2.9.1（25+ 路由，无动画跳转） |
+| 导航 | Navigation Compose 2.9.1（类型安全 @Serializable 路由，无动画跳转） |
 | 数据库 | Room 2.8.4 + KSP 2.3.9（version 8，15 张表，exportSchema 开启） |
 | DI | Koin 4.2.1（ViewModel 用 `viewModel { }` + `koinViewModel()`） |
 | 架构 | MVVM + ViewModel + StateFlow |
@@ -82,7 +82,7 @@ app/src/main/java/com/babytracker/
 ├── feature/                  # 16 个业务模块（home/feeding/sleep/diaper/growth/
 │                             #   vaccination/health/stats/timeline/message/
 │                             #   development/reminder/settings/ai/auth/family）
-└── navigation/               # AppNavigation.kt（25 条路由）
+└── navigation/               # AppNavigation.kt（25 条类型安全路由）
 ```
 
 详细索引见 `docs/project-structure.md`。

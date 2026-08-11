@@ -64,7 +64,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.AiSettings
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
@@ -119,7 +119,7 @@ fun AiChatScreen(navController: NavController) {
                 onBack = { navController.popBackStack() },
                 actions = {
                     AppIconButton(icon = Icons.Default.History, onClick = { showHistory = true }, contentDescription = AppStrings.aiHistory)
-                    AppIconButton(icon = Icons.Default.Settings, onClick = { navController.navigate(Screen.AiSettings.route) }, contentDescription = AppStrings.aiSettings)
+                    AppIconButton(icon = Icons.Default.Settings, onClick = { navController.navigate(AiSettings) }, contentDescription = AppStrings.aiSettings)
                 },
             )
         },

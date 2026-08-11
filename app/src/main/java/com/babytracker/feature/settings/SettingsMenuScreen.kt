@@ -24,7 +24,10 @@ import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.DensityController
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.ThemeController
-import com.babytracker.navigation.Screen
+import com.babytracker.navigation.AiSettings
+import com.babytracker.navigation.Backup
+import com.babytracker.navigation.LogViewer
+import com.babytracker.navigation.SyncSettings
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
@@ -59,7 +62,7 @@ fun PreferenceSettingsScreen(navController: NavController) {
                 emoji = "✨",
                 label = AppStrings.aiSettings,
                 subtitle = "模型、宝宝数据与回答偏好",
-                onClick = { navController.navigate(Screen.AiSettings.route) },
+                onClick = { navController.navigate(AiSettings) },
             )
         }
         Spacer(Modifier.height(spacing.md))
@@ -94,14 +97,14 @@ fun DataSettingsScreen(navController: NavController) {
                 } else {
                     "已关闭"
                 },
-                onClick = { navController.navigate(Screen.SyncSettings.route) },
+                onClick = { navController.navigate(SyncSettings) },
             )
             SettingsDivider()
             SettingsRow(
                 emoji = "📦",
                 label = "备份与恢复",
                 subtitle = "本地备份、WebDAV 与数据恢复",
-                onClick = { navController.navigate(Screen.Backup.route) },
+                onClick = { navController.navigate(Backup) },
             )
             SettingsDivider()
             SettingsRow(
@@ -164,7 +167,7 @@ fun SupportSettingsScreen(navController: NavController) {
                         },
                     )
                 },
-                onClick = { navController.navigate(Screen.LogViewer.route) },
+                onClick = { navController.navigate(LogViewer) },
             )
             SettingsDivider()
             SettingsRow(
