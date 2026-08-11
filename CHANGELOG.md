@@ -23,6 +23,11 @@
 - 移除 `TimelineItem.emoji` 死字段（TimelineScreen 已改用 typeIcon）
 - 全项目用户可见 emoji 清零（仅剩同步/日志的文本对勾与 KDoc 示例）
 
+**Elyon 示例对齐 Phase 3（宽屏导航 + 动效）：**
+- 新增 `shouldShowSplitPane()` 宽屏判定（与 Elyon 示例同规则：≥840dp 或 ≥600dp 横屏）
+- 宽屏下 `AppNavigation` 显示 NavigationRail 双栏导航，`BottomNavBar` 自动隐藏，避免双导航条
+- `NavDisplay` 保持 Elyon 默认转场与圆角裁剪/压暗效果（当前 elyon-nav 版本不支持示例的侧滑返回参数，已按可用 API 对齐）
+
 **设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
 - Typography 双体系统一：LocalAppTypography 改供自建 AppTypography，新增 8 级补齐至自建 12 级单体系（displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall），删除裸字段与 LocalAppTypographyStyle，禁止组件层暴露 M3 令牌类型（仅 theme 层桥接），迁移 31 文件与 13 处 M3 直用
 - Button 家族收敛为 AppButton + ButtonVariant 枚举（Primary/Secondary/Text），迁移 58 处调用方，颜色改走 ButtonTokens

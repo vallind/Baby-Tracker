@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.babytracker.core.data.repository.MessageRepository
 import com.babytracker.core.ui.BlurPolicy
+import com.babytracker.core.ui.shouldShowSplitPane
 import com.babytracker.i18n.AppStrings
 import com.babytracker.navigation.Navigator
 import com.babytracker.navigation.Route
@@ -44,6 +45,9 @@ fun BottomNavBar(
     navigator: Navigator,
     modifier: Modifier = Modifier,
 ) {
+    // 宽屏下由 AppNavigation 的 NavigationRail 接管导航，避免双导航条
+    if (shouldShowSplitPane()) return
+
     val messageRepo: MessageRepository = koinInject()
     val unreadCount by messageRepo.watchUnreadCount().collectAsState(initial = 0)
     val currentRoute = navigator.current()
