@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import io.elyon.kmp.basic.SnackbarHostState
@@ -356,7 +358,7 @@ private fun ExpandedCategoryItems(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun HealthFormDialog(
     babyId: Int,
@@ -416,13 +418,16 @@ fun HealthFormDialog(
         saveText = if (isEdit) "更新" else "保存",
         saveEnabled = description.isNotBlank(),
     ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+        FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(spacing.sm),
+        ) {
             categories.forEach { (key, label) ->
                 AppFilterChip(
                     selected = category == key,
                     onClick = { category = key },
                     label = label,
-                    modifier = Modifier.weight(1f),
                 )
             }
         }
