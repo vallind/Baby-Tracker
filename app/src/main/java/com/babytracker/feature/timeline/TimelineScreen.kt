@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import io.elyon.kmp.basic.SnackbarHostState
-import androidx.compose.material3.Text
+import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +19,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BabyChangingStation
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Vaccines
+import androidx.compose.ui.graphics.vector.ImageVector
+import io.elyon.kmp.basic.Icon
 import com.babytracker.navigation.Navigator
 import com.babytracker.core.ui.components.scaffold.AppScaffold
 import com.babytracker.core.ui.components.sheet.AppBottomSheet
@@ -101,6 +109,18 @@ fun TimelineScreen(navigator: Navigator) {
         }
     }
 
+    // 记录类型 → 矢量图标（替代 emoji，保证跨设备观感一致）
+    val typeIcon: (String) -> ImageVector = {
+        when (it) {
+            "feeding" -> Icons.Filled.Restaurant
+            "sleep" -> Icons.Filled.Bedtime
+            "diaper" -> Icons.Filled.BabyChangingStation
+            "growth" -> Icons.Filled.MonitorWeight
+            "health" -> Icons.Filled.Favorite
+            else -> Icons.Filled.Add
+        }
+    }
+
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
@@ -120,7 +140,7 @@ fun TimelineScreen(navigator: Navigator) {
             // —— 类型筛选 Tab ——
             val filterKeys = listOf("", "feeding", "sleep", "diaper", "growth", "health")
             SegmentedControl(
-                labels = listOf("全部", "🤱喂", "😴睡", "🧷尿", "📏长", "❤️健"),
+                labels = listOf("全部", "喂", "睡", "尿", "长", "健"),
                 selectedIndex = filterKeys.indexOf(typeFilter).coerceAtLeast(0),
                 onSelect = { typeFilter = filterKeys[it] },
                 modifier = Modifier
@@ -238,9 +258,11 @@ fun TimelineScreen(navigator: Navigator) {
                                             .background(accent.copy(alpha = 0.12f)),
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        Text(
-                                            record.emoji,
-                                            style = typography.title1,
+                                        Icon(
+                                            typeIcon(record.recordType),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp),
+                                            tint = accent,
                                         )
                                     }
                                     Spacer(Modifier.width(12.dp))
@@ -285,14 +307,14 @@ fun TimelineScreen(navigator: Navigator) {
                     modifier = Modifier.padding(bottom = spacing.md),
                 )
                 val types = listOf(
-                    Route.Feeding to "🤱 喂养",
-                    Route.Sleep to "😴 睡眠",
-                    Route.Diaper to "🧷 尿布",
-                    Route.Growth to "📏 生长",
-                    Route.Vaccination to "💉 疫苗",
-                    Route.Health to "❤️ 健康",
+                    Triple(Route.Feeding, Icons.Filled.Restaurant, "喂养"),
+                    Triple(Route.Sleep, Icons.Filled.Bedtime, "睡眠"),
+                    Triple(Route.Diaper, Icons.Filled.BabyChangingStation, "尿布"),
+                    Triple(Route.Growth, Icons.Filled.MonitorWeight, "生长"),
+                    Triple(Route.Vaccination, Icons.Filled.Vaccines, "疫苗"),
+                    Triple(Route.Health, Icons.Filled.Favorite, "健康"),
                 )
-                types.forEach { (screen, label) ->
+                types.forEach { (screen, icon, label) ->
                     AppButton(
                         variant = ButtonVariant.Text,
                         onClick = {
@@ -305,6 +327,7 @@ fun TimelineScreen(navigator: Navigator) {
                             }
                         },
                         label = label,
+                        icon = icon,
                         modifier = Modifier.fillMaxWidth().height(52.dp),
                     )
                 }

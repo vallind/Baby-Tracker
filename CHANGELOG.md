@@ -10,6 +10,13 @@
 - 修复睡眠/尿布汇总卡白字浅底对比度问题：改读 `onSecondaryContainer`/`onTertiaryContainer`
 - 更新 `ElyonThemeResolverTest` 断言固定色板契约
 
+**Elyon 示例对齐 Phase 2（组件 Elyon 化 + 图标清理）：**
+- `AppInput` 从 M3 OutlinedTextField 迁移到 Elyon TextField：label 兼作 placeholder，error 态用 errorContainer 背景 + 错误边框 + 下方错误文案表达
+- `AppButton`/`AppCard`/`AppTopBar` 去掉自建覆盖参数（强制高度/圆角/字号/阴影/primaryContainer 背景），改走 Elyon 默认值
+- 清理 M3 组件：feature 16 处 M3 Text、10 处 M3 Icon、MainActivity M3 Surface、健康/疫苗 M3 DatePicker 全部替换为 Elyon 原语（RecordCard SwipeToDismissBox 仍为登记 TODO）
+- 主界面 emoji 图标迁移为矢量图标：首页宫格/最近记录、时间轴筛选与类型选择、统计卡、设置主列表、喂养/睡眠/尿布/生长/健康记录卡
+- `SettingsRow` 增加 icon 参数并保留 emoji 兼容入口，存量设置子页后续批次继续迁移
+
 **设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
 - Typography 双体系统一：LocalAppTypography 改供自建 AppTypography，新增 8 级补齐至自建 12 级单体系（displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall），删除裸字段与 LocalAppTypographyStyle，禁止组件层暴露 M3 令牌类型（仅 theme 层桥接），迁移 31 文件与 13 处 M3 直用
 - Button 家族收敛为 AppButton + ButtonVariant 枚举（Primary/Secondary/Text），迁移 58 处调用方，颜色改走 ButtonTokens

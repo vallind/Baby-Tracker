@@ -10,10 +10,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.SnackbarHostState
 import io.elyon.kmp.theme.ElyonTheme
-import androidx.compose.material3.Text
+import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -190,7 +190,14 @@ fun SleepListScreen(navigator: Navigator) {
                                             .clip(RoundedCornerShape(shapes.medium))
                                             .background(c.onSecondaryContainer.copy(alpha = 0.12f)),
                                         contentAlignment = Alignment.Center,
-                                    ) { Text("\uD83C\uDF19", style = ElyonTheme.textStyles.title3) }
+                                    ) {
+                                        Icon(
+                                            Icons.Filled.Bedtime,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(28.dp),
+                                            tint = c.onSecondaryContainer,
+                                        )
+                                    }
                                     Spacer(Modifier.width(spacing.sm))
                                     Text(
                                         "夜间睡眠",
@@ -303,13 +310,20 @@ fun SleepListScreen(navigator: Navigator) {
                                 modifier = Modifier.padding(bottom = spacing.sm),
                                 accentColor = c.secondary,
                             ) {
-                                Box(
-                                    Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(shapes.large))
-                                        .background(c.secondary.copy(alpha = 0.12f)),
+                                    Box(
+                                        Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(shapes.large))
+                                            .background(c.secondary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
-                                ) { Text("\u2600\uFE0F", style = ElyonTheme.textStyles.title1) }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.WbSunny,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = c.secondary,
+                                    )
+                                }
                                 Spacer(Modifier.width(12.dp))
                                 Text(
                                     range,
@@ -493,8 +507,8 @@ fun SleepFormDialog(
         saveText = if (isEdit) "更新" else "保存",
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            AppFilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = "\uD83C\uDF19 夜间睡眠", modifier = Modifier.weight(1f))
-            AppFilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = "\u2600\uFE0F 小睡", modifier = Modifier.weight(1f))
+            AppFilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = "夜间睡眠", modifier = Modifier.weight(1f))
+            AppFilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = "小睡", modifier = Modifier.weight(1f))
         }
         Spacer(Modifier.height(spacing.md))
         // 计时器 UI

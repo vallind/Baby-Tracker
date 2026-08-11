@@ -1,32 +1,35 @@
 package com.babytracker.core.ui.components.input
 
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.babytracker.i18n.AppStrings
+import io.elyon.kmp.basic.Icon
+import io.elyon.kmp.basic.IconButton
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.TextField
+import io.elyon.kmp.basic.TextFieldDefaults
 import io.elyon.kmp.theme.ElyonTheme
 
 /**
- * 统一输入框组件 — 对标 Palette TextField，消费 AppComponentTokens.input
+ * 统一输入框组件 — Elyon TextField 封装。
+ *
+ * Elyon TextField 暂无原生 error 态/独立 placeholder，因此：
+ * - label 兼作 placeholder（空态内嵌、聚焦后浮动）；
+ * - error 态通过 errorContainer 背景 + error 边框/标签 + 下方错误文案表达。
  *
  * 用法：
  *   AppInput(value = text, onValueChange = { text = it }, label = "姓名")
@@ -49,54 +52,50 @@ fun AppInput(
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    height: Dp = 48.dp,
-    cornerRadius: Dp = 12.dp,
-    fontSize: TextUnit = 15.sp,
-    borderWidth: Dp = 1.dp,
-    borderWidthFocus: Dp = 2.dp,
-    iconSize: Dp = 20.dp,
     modifier: Modifier = Modifier,
 ) {
-    // TODO: 迁移到 Elyon TextField（Elyon 当前无 error 态/支持文本，迁移前保留 M3）
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        enabled = enabled,
-        isError = isError,
-        label = { androidx.compose.material3.Text(label) },
-        placeholder = placeholder?.let { { androidx.compose.material3.Text(it) } },
-        leadingIcon = leadingIcon,
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(onClick = { onPasswordToggle?.invoke() }) {
-                    Icon(
-                        if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) AppStrings.hidePassword else AppStrings.showPassword,
-                        modifier = Modifier.size(iconSize),
-                    )
+    val c = ElyonTheme.colorScheme
+    Column(modifier) {
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = if (isError) c.errorContainer else c.secondaryContainer,
+                labelColor = if (isError) c.error else c.onSecondaryContainer,
+                borderColor = if (isError) c.error else c.primary,
+            ),
+            label = label,
+            // Elyon 无独立 placeholder，label 空态内嵌、聚焦后浮动，符合 Elyon 输入框风格
+            useLabelAsPlaceholder = true,
+            enabled = enabled,
+            textStyle = ElyonTheme.textStyles.main,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            leadingIcon = leadingIcon,
+            trailingIcon = if (isPassword) {
+                {
+                    IconButton(onClick = { onPasswordToggle?.invoke() }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (passwordVisible) AppStrings.hidePassword else AppStrings.showPassword,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
-            }
-        } else null,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = singleLine,
-        minLines = minLines,
-        maxLines = maxLines,
-        shape = RoundedCornerShape(cornerRadius),
-        modifier = modifier.defaultMinSize(minHeight = height),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = ElyonTheme.colorScheme.primary,
-            unfocusedBorderColor = ElyonTheme.colorScheme.outline,
-            errorBorderColor = ElyonTheme.colorScheme.error,
-            focusedContainerColor = ElyonTheme.colorScheme.surfaceContainer,
-            unfocusedContainerColor = ElyonTheme.colorScheme.surfaceContainer,
-            errorContainerColor = ElyonTheme.colorScheme.surfaceContainer,
-            cursorColor = ElyonTheme.colorScheme.primary,
-            focusedLabelColor = ElyonTheme.colorScheme.primary,
-            unfocusedLabelColor = ElyonTheme.colorScheme.onSurfaceVariantSummary,
-            errorLabelColor = ElyonTheme.colorScheme.error,
-        ),
-        supportingText = if (isError && errorMessage != null) {
-            { androidx.compose.material3.Text(errorMessage, color = ElyonTheme.colorScheme.error) }
-        } else null,
-    )
+            } else null,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
+            visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
+        )
+        if (isError && errorMessage != null) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                errorMessage,
+                style = ElyonTheme.textStyles.footnote2,
+                color = c.error,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
+    }
 }

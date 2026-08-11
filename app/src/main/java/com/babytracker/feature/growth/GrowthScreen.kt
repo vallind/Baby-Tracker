@@ -14,10 +14,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.SnackbarHostState
 import io.elyon.kmp.theme.ElyonTheme
-import androidx.compose.material3.Text
+import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -434,13 +435,15 @@ fun GrowthScreen(navigator: Navigator) {
                                         .background(c.primary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text(
+                                    Icon(
                                         when (g.type) {
-                                            GrowthType.HEIGHT -> "📏"
-                                            GrowthType.WEIGHT -> "⚖️"
-                                            GrowthType.HEAD -> "📐"
+                                            GrowthType.HEIGHT -> Icons.Filled.Height
+                                            GrowthType.WEIGHT -> Icons.Filled.MonitorWeight
+                                            GrowthType.HEAD -> Icons.Filled.Straighten
                                         },
-                                        style = ElyonTheme.textStyles.title1,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp),
+                                        tint = c.primary,
                                     )
                                 }
                                 Spacer(Modifier.width(12.dp))
@@ -477,7 +480,6 @@ fun GrowthScreen(navigator: Navigator) {
                     },
                     label = "记录${tabs[tab]}",
                     icon = Icons.Default.Add,
-                    height = 48.dp,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -578,7 +580,7 @@ fun GrowthFormDialog(
         saveText = if (isEdit) "更新" else "保存",
     ) {
         Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("height" to "📏 身高", "weight" to "⚖️ 体重", "head" to "📐 头围").forEach { (t, label) ->
+            listOf("height" to "身高", "weight" to "体重", "head" to "头围").forEach { (t, label) ->
                 AppFilterChip(
                     selected = type == t,
                     onClick = { type = t },

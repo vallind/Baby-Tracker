@@ -29,7 +29,7 @@ HorizontalDivider/FloatingActionButton/NavigationBar…），弹层用 `io.elyon
 | `recordcard/RecordCard` | 滑动删除 + 点击编辑记录卡片（M3 SwipeToDismissBox 为 TODO） |
 | `dialog/AppDialog`、`AppConfirmDialog`、`AppFormSheet`、`AppActionSheet` | Elyon Overlay 封装 |
 | `sheet/AppBottomSheet` | OverlayBottomSheet 封装 |
-| `input/AppInput` | 支持 error 态/支持文本（Elyon TextField 暂无 error 态，内部 M3 TODO） |
+| `input/AppInput` | Elyon TextField 封装；error 态用 errorContainer 背景 + 错误边框 + 下方错误文案表达（Elyon 暂无原生 error 态） |
 | `timepicker/*`、`datetimecascade/*` | 滚轮时间/级联日期时间（纯 Elyon 原语） |
 | `snackbar/AppSnackbar`、`AppSnackbarHost` | Elyon Snackbar 封装，`showUndo` 模式 |
 | `EmptyState`、`SegmentedControl`、`AppCardGroup`、`Section`、`AppChip`/`AppFilterChip`、`AppMarkdownText`、`AppSwitch`/`AppRadioButton`/`AppCheckbox`、`AppSlider`、`AppFAB`、`AppProgress` | 应用级组合组件 |

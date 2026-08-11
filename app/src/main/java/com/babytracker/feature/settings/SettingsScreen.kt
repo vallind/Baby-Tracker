@@ -16,8 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.material3.Icon
+import io.elyon.kmp.basic.Text
+import io.elyon.kmp.basic.Icon
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.babytracker.navigation.Navigator
 import androidx.documentfile.provider.DocumentFile
 import com.babytracker.core.domain.model.Baby
@@ -43,6 +44,7 @@ import com.babytracker.core.ui.components.divider.AppDivider
 import com.babytracker.core.ui.components.sheet.AppBottomSheet
 import com.babytracker.core.ui.components.surface.AppSurface
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.core.ui.AppDensity
@@ -126,14 +128,14 @@ fun SettingsScreen(navigator: Navigator) {
             SettingsSectionTitle("宝宝与家庭")
             SettingsCard {
                 SettingsRow(
-                    emoji = "👶",
+                    icon = Icons.Filled.ChildCare,
                     label = "宝宝管理",
                     subtitle = "资料、成长信息与宝宝切换",
                     onClick = { navigator.navigate(Route.BabyManagement) },
                 )
                 SettingsDivider()
                 SettingsRow(
-                    emoji = "👨‍👩‍👧",
+                    icon = Icons.Filled.Group,
                     label = "家庭与账号",
                     subtitle = if (isLoggedIn) "成员管理与账号信息" else "登录后与家人共享记录",
                     onClick = {
@@ -144,7 +146,7 @@ fun SettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 SettingsRow(
-                    emoji = "🔔",
+                    icon = Icons.Filled.Notifications,
                     label = "提醒设置",
                     subtitle = "喂养、睡眠与护理提醒",
                     onClick = { navigator.navigate(Route.Reminder) },
@@ -156,21 +158,21 @@ fun SettingsScreen(navigator: Navigator) {
             SettingsSectionTitle("更多设置")
             SettingsCard {
                 SettingsRow(
-                    emoji = "🎨",
+                    icon = Icons.Filled.Palette,
                     label = "使用偏好",
                     subtitle = "主题与 AI 助手",
                     onClick = { navigator.navigate(Route.PreferenceSettings) },
                 )
                 SettingsDivider()
                 SettingsRow(
-                    emoji = "🔒",
+                    icon = Icons.Filled.Lock,
                     label = "数据与同步",
                     subtitle = "云同步、备份与隐私",
                     onClick = { navigator.navigate(Route.DataSettings) },
                 )
                 SettingsDivider()
                 SettingsRow(
-                    emoji = "❓",
+                    icon = Icons.AutoMirrored.Filled.Help,
                     label = "帮助与关于",
                     subtitle = "问题反馈、运行日志与版本信息",
                     onClick = { navigator.navigate(Route.SupportSettings) },
@@ -461,7 +463,15 @@ fun SettingsDivider() {
 }
 
 @Composable
-fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing: @Composable (() -> Unit)? = null, onClick: (() -> Unit)? = null) {
+fun SettingsRow(
+    label: String,
+    subtitle: String? = null,
+    trailing: @Composable (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
+    icon: ImageVector? = null,
+    // 存量页面仍用 emoji 作行图标，未迁移完前保留兼容；迁移后移除
+    emoji: String? = null,
+) {
     val c = io.elyon.kmp.theme.ElyonTheme.colorScheme
     Row(
         modifier = Modifier
@@ -479,10 +489,19 @@ fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing
                 .background(c.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
-            io.elyon.kmp.basic.Text(
-                emoji,
-                style = io.elyon.kmp.theme.ElyonTheme.textStyles.title3,
-            )
+            if (icon != null) {
+                io.elyon.kmp.basic.Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = c.onPrimaryContainer,
+                    modifier = Modifier.size(22.dp),
+                )
+            } else if (emoji != null) {
+                io.elyon.kmp.basic.Text(
+                    emoji,
+                    style = io.elyon.kmp.theme.ElyonTheme.textStyles.title3,
+                )
+            }
         }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {

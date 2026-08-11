@@ -5,15 +5,28 @@ import com.babytracker.core.ui.AppSpacing
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.BabyChangingStation
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.ChildCare
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Vaccines
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
+import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import io.elyon.kmp.basic.Icon
 import com.babytracker.core.ui.Gradients
 import com.babytracker.core.ui.components.scaffold.AppScaffold
 import com.babytracker.core.ui.components.button.AppButton
@@ -129,7 +142,12 @@ private fun AiAssistantEntryCard(navigator: Navigator) {
                     .background(colors.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("✨", style = typography.headline2)
+                Icon(
+                    Icons.Filled.AutoAwesome,
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = colors.primary,
+                )
             }
             Spacer(Modifier.width(spacing.md))
             Column(Modifier.weight(1f)) {
@@ -196,7 +214,12 @@ private fun BabyHeader(baby: Baby, onClickProfile: () -> Unit) {
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("👶", style = typography.headline1)
+                Icon(
+                    Icons.Filled.ChildCare,
+                    contentDescription = null,
+                    modifier = Modifier.size(44.dp),
+                    tint = c.primary,
+                )
             }
         }
     }
@@ -274,14 +297,14 @@ fun RowScope.StatDivider() {
 fun FeatureGrid(navigator: Navigator) {
     val spacing = com.babytracker.core.ui.AppSpacing
     val items = listOf(
-        FeatureGridItemData(Route.Feeding, "🍼", "喂养记录"),
-        FeatureGridItemData(Route.Sleep, "🌙", "睡眠记录"),
-        FeatureGridItemData(Route.Diaper, "🧷", "尿布更换"),
-        FeatureGridItemData(Route.Growth, "📏", "生长记录"),
-        FeatureGridItemData(Route.DevelopmentAssessment, "🧠", "发育评估"),
-        FeatureGridItemData(Route.Vaccination, "💉", "疫苗接种"),
-        FeatureGridItemData(Route.Health, "❤️", "健康档案"),
-        FeatureGridItemData(Route.Stats, "📊", "统计分析"),
+        FeatureGridItemData(Route.Feeding, Icons.Filled.Restaurant, "喂养记录"),
+        FeatureGridItemData(Route.Sleep, Icons.Filled.Bedtime, "睡眠记录"),
+        FeatureGridItemData(Route.Diaper, Icons.Filled.BabyChangingStation, "尿布更换"),
+        FeatureGridItemData(Route.Growth, Icons.Filled.MonitorWeight, "生长记录"),
+        FeatureGridItemData(Route.DevelopmentAssessment, Icons.Filled.Psychology, "发育评估"),
+        FeatureGridItemData(Route.Vaccination, Icons.Filled.Vaccines, "疫苗接种"),
+        FeatureGridItemData(Route.Health, Icons.Filled.Favorite, "健康档案"),
+        FeatureGridItemData(Route.Stats, Icons.Filled.BarChart, "统计分析"),
     )
     Column(Modifier.padding(horizontal = spacing.md)) {
         Spacer(Modifier.height(14.dp))
@@ -331,7 +354,12 @@ private fun FeatureGridItem(
                 .background(tint.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Text(item.emoji, style = typography.headline2)
+            Icon(
+                item.icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = tint,
+            )
         }
         Spacer(Modifier.height(6.dp))
         Text(item.label, style = typography.footnote1, color = c.onSurface)
@@ -340,7 +368,7 @@ private fun FeatureGridItem(
 
 private data class FeatureGridItemData(
     val route: Route,
-    val emoji: String,
+    val icon: ImageVector,
     val label: String,
 )
 
@@ -412,7 +440,12 @@ private fun TimelineRecordRow(item: Any) {
         Spacer(Modifier.width(12.dp))
         when (item) {
             is Feeding -> {
-                Text(when (item.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" }, style = typography.title1)
+                Icon(
+                    Icons.Filled.Restaurant,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = c.primary,
+                )
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), style = typography.body1, color = c.onSurface)
@@ -421,7 +454,12 @@ private fun TimelineRecordRow(item: Any) {
                 Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             is Sleep -> {
-                Text(if (item.type == SleepType.NIGHT) "🌙" else "☀️", style = typography.title1)
+                Icon(
+                    Icons.Filled.Bedtime,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = c.primary,
+                )
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(if (item.type == SleepType.NIGHT) "夜间睡眠" else "小睡", style = typography.body1, color = c.onSurface)
@@ -439,7 +477,12 @@ private fun TimelineRecordRow(item: Any) {
                 Text(item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
             is Diaper -> {
-                Text("🧷", style = typography.title1)
+                Icon(
+                    Icons.Filled.BabyChangingStation,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = c.primary,
+                )
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text("换尿布", style = typography.body1, color = c.onSurface)

@@ -5,13 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import com.babytracker.core.ui.AppShapes
 import com.babytracker.core.ui.AppSpacing
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberDatePickerState
 import io.elyon.kmp.basic.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,6 +26,7 @@ import androidx.compose.material.icons.filled.*
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.core.ui.components.recordcard.RecordCard
+import com.babytracker.core.ui.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.core.ui.components.dialog.AppConfirmDialog
 import com.babytracker.core.ui.components.input.AppInput
 import com.babytracker.core.ui.components.sheet.AppBottomSheet
@@ -509,34 +507,28 @@ fun VaccinationFormDialog(
     }
 
     if (showScheduledDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showScheduledDatePicker = false }, confirmButton = {
-            TextButton(text = "确定", onClick = {
+        DateTimeCascadeDialog(
+            show = true,
+            initialDateTime = "${scheduledDate.ifBlank { java.time.LocalDate.now().toString() }} 00:00",
+            dateOnly = true,
+            onConfirm = { dt ->
+                scheduledDate = dt.take(10)
                 showScheduledDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    scheduledDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
-                        .toLocalDate().toString()
-                }
-            })
-            }, dismissButton = { TextButton(text = "取消", onClick = { showScheduledDatePicker = false }) }) {
-            DatePicker(state = datePickerState)
-        }
+            },
+            onDismiss = { showScheduledDatePicker = false },
+        )
     }
 
     if (showAdministeredDatePicker) {
-        val datePickerState = rememberDatePickerState()
-        DatePickerDialog(onDismissRequest = { showAdministeredDatePicker = false }, confirmButton = {
-            TextButton(text = "确定", onClick = {
+        DateTimeCascadeDialog(
+            show = true,
+            initialDateTime = "${administeredDate.ifBlank { java.time.LocalDate.now().toString() }} 00:00",
+            dateOnly = true,
+            onConfirm = { dt ->
+                administeredDate = dt.take(10)
                 showAdministeredDatePicker = false
-                datePickerState.selectedDateMillis?.let { millis ->
-                    val instant = java.time.Instant.ofEpochMilli(millis)
-                    administeredDate = LocalDateTime.ofInstant(instant, java.time.ZoneId.systemDefault())
-                        .toLocalDate().toString()
-                }
-            })
-            }, dismissButton = { TextButton(text = "取消", onClick = { showAdministeredDatePicker = false }) }) {
-            DatePicker(state = datePickerState)
-        }
+            },
+            onDismiss = { showAdministeredDatePicker = false },
+        )
     }
 }

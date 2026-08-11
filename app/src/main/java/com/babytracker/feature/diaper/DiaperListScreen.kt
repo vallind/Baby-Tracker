@@ -9,15 +9,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.SnackbarHostState
 import io.elyon.kmp.theme.ElyonTheme
-import androidx.compose.material3.Text
+import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.babytracker.navigation.Navigator
@@ -175,13 +176,20 @@ fun DiaperListScreen(navigator: Navigator) {
                     ) {
                         Column(Modifier.padding(20.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    Modifier
-                                        .size(spacing.xl)
-                                        .clip(RoundedCornerShape(shapes.medium))
-                                        .background(c.onTertiaryContainer.copy(alpha = 0.12f)),
+                                    Box(
+                                        Modifier
+                                            .size(spacing.xl)
+                                            .clip(RoundedCornerShape(shapes.medium))
+                                            .background(c.onTertiaryContainer.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
-                                ) { Text("🧷", style = ElyonTheme.textStyles.title3) }
+                                ) {
+                                    Icon(
+                                        Icons.Filled.BabyChangingStation,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(28.dp),
+                                        tint = c.onTertiaryContainer,
+                                    )
+                                }
                                 Spacer(Modifier.width(spacing.sm))
                                 Text(
                                     "今日尿布",
@@ -199,7 +207,7 @@ fun DiaperListScreen(navigator: Navigator) {
                             )
                             Spacer(Modifier.height(spacing.xs))
                             Text(
-                                "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
+                                "湿 $wetCount  ·  便 $poopCount  ·  混 $bothCount",
                                 style = ElyonTheme.textStyles.body2,
                                 color = c.onTertiaryContainer.copy(alpha = 0.75f),
                             )
@@ -226,21 +234,21 @@ fun DiaperListScreen(navigator: Navigator) {
                         Spacer(Modifier.height(spacing.md))
                         Row(Modifier.fillMaxWidth()) {
                             DiaperStatCell(
-                                emoji = "💧",
+                                icon = Icons.Filled.WaterDrop,
                                 label = "小便",
                                 value = "${wetCount}次",
                                 modifier = Modifier.weight(1f),
                                 c = c,
                             )
                             DiaperStatCell(
-                                emoji = "💩",
+                                icon = Icons.Filled.BabyChangingStation,
                                 label = "大便",
                                 value = "${poopCount}次",
                                 modifier = Modifier.weight(1f),
                                 c = c,
                             )
                             DiaperStatCell(
-                                emoji = "🔄",
+                                icon = Icons.Filled.Sync,
                                 label = "混合",
                                 value = "${bothCount}次",
                                 modifier = Modifier.weight(1f),
@@ -267,10 +275,10 @@ fun DiaperListScreen(navigator: Navigator) {
                             LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME)
                                 .format(DateTimeFormatter.ofPattern("HH:mm"))
                         } catch (_: Exception) { "" }
-                        val typeEmoji = when (d.type) {
-                            DiaperType.WET -> "💧"
-                            DiaperType.POOP -> "💩"
-                            DiaperType.BOTH -> "🔄"
+                        val typeIcon = when (d.type) {
+                            DiaperType.WET -> Icons.Filled.WaterDrop
+                            DiaperType.POOP -> Icons.Filled.BabyChangingStation
+                            DiaperType.BOTH -> Icons.Filled.Sync
                         }
                         val accentColor = when (d.type) {
                             DiaperType.WET -> c.primary
@@ -298,7 +306,14 @@ fun DiaperListScreen(navigator: Navigator) {
                                     .clip(RoundedCornerShape(shapes.large))
                                     .background(accentColor.copy(alpha = 0.12f)),
                                 contentAlignment = Alignment.Center,
-                            ) { Text(typeEmoji, style = ElyonTheme.textStyles.title1) }
+                            ) {
+                                Icon(
+                                    typeIcon,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = accentColor,
+                                )
+                            }
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
@@ -432,7 +447,7 @@ fun DiaperFormDialog(
         saveText = if (isEdit) "更新" else "保存",
     ) {
         Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("wet" to "💧 小便", "poop" to "💩 大便", "both" to "🔄 混合").forEach { (t, label) ->
+            listOf("wet" to "小便", "poop" to "大便", "both" to "混合").forEach { (t, label) ->
                 AppFilterChip(
                     selected = selectedType == t,
                     onClick = { selectedType = t },
@@ -469,7 +484,7 @@ fun DiaperFormDialog(
 
 @Composable
 private fun DiaperStatCell(
-    emoji: String,
+    icon: ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier,
@@ -481,7 +496,12 @@ private fun DiaperStatCell(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(emoji, style = ElyonTheme.textStyles.title1)
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = c.primary,
+        )
         Spacer(Modifier.height(spacing.xs))
         Text(
             value,

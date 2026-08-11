@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsTopHeight
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,6 +22,7 @@ import com.babytracker.core.ui.BabyTrackerElyonTheme
 import com.babytracker.core.ui.ElyonThemeResolver
 import com.babytracker.core.ui.ThemeController
 import com.babytracker.navigation.AppNavigation
+import io.elyon.kmp.basic.Surface
 import io.elyon.kmp.theme.ElyonTheme
 import org.koin.android.ext.android.inject
 

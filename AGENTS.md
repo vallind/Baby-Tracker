@@ -104,7 +104,7 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Elyon
 - **UI 基座为 Elyon**（`vide/elegant` 复合构建：elyon-core/ui/effects/blur/nav）。禁止再造自建设计系统/令牌层，也禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）；组件一律用 `io.elyon.kmp.basic.*` / `io.elyon.kmp.overlay.*`。
 - **主题**：根组件为 `BabyTrackerElyonTheme`（core/ui），颜色用 `ElyonTheme.colorScheme.*`，排版用 `ElyonTheme.textStyles.*`，禁止读 `isSystemInDarkTheme()` 判断应用暗色（红线 8 仍以主题名为准）。
 - **应用级组件**：仅当 Elyon 缺失且跨功能重复时才在 `core/ui/components` 新增（如 RecordCard/TimePicker/DateTimeCascade/AppInput-error 态）；组件内部只消费 Elyon 原语与 `ElyonTheme`，不建令牌体系。
-- **Elyon 缺失时的决策路径**：允许临时用原生 M3，但必须留下 `// TODO: 迁移到 Elyon 组件` 注释（当前存量：AppInput 的 error 态、M3 DatePickerDialog、RecordCard 的 SwipeToDismissBox）。
+- **Elyon 缺失时的决策路径**：允许临时用原生 M3，但必须留下 `// TODO: 迁移到 Elyon 组件` 注释（当前存量：RecordCard 的 SwipeToDismissBox）。
 - **i18n**：新增用户可见文本必须写入 `AppStrings`，禁止硬编码中文。存量硬编码文本按批次迁移。
 - **Snackbar** 用 `snackbar.showUndo(onUndo = { ... })` 模式。
 

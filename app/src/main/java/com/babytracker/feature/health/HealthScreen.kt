@@ -8,23 +8,22 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberDatePickerState
 import io.elyon.kmp.basic.SnackbarHostState
-import androidx.compose.material3.Text
+import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.babytracker.navigation.Navigator
 import com.babytracker.navigation.Route
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.ui.Gradients
 import com.babytracker.core.ui.components.scaffold.AppScaffold
@@ -47,13 +46,14 @@ import com.babytracker.core.ui.components.snackbar.AppSnackbar
 import com.babytracker.core.ui.components.snackbar.AppSnackbarHost
 import com.babytracker.core.ui.components.datetimecascade.DateTimeCascadeDialog
 import org.koin.compose.koinInject
+import io.elyon.kmp.basic.Icon
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 private data class HealthCategoryMeta(
     val key: String,
     val label: String,
-    val emoji: String,
+    val icon: ImageVector,
     val bgColor: Color,
 )
 
@@ -61,13 +61,13 @@ internal fun completedVaccinationCount(vaccinations: List<Vaccination>): Int =
     vaccinations.count { it.status == VaccinationStatus.DONE }
 
 private fun healthCategories(c: io.elyon.kmp.theme.Colors) = listOf(
-    HealthCategoryMeta("birth_info", "出生信息", "🍼", c.secondary),
-    HealthCategoryMeta("allergy", "过敏史", "🤧", c.tertiaryContainer),
-    HealthCategoryMeta("medicalHistory", "既往病史", "📋", c.tertiaryContainer),
-    HealthCategoryMeta("visit", "就诊记录", "🏥", c.error),
-    HealthCategoryMeta("medication", "用药记录", "💊", c.primary),
-    HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", c.secondary),
-    HealthCategoryMeta("doctor_note", "医生备注", "📋", c.error),
+    HealthCategoryMeta("birth_info", "出生信息", Icons.Filled.ChildCare, c.secondary),
+    HealthCategoryMeta("allergy", "过敏史", Icons.Filled.MedicalServices, c.tertiaryContainer),
+    HealthCategoryMeta("medicalHistory", "既往病史", Icons.Filled.Description, c.tertiaryContainer),
+    HealthCategoryMeta("visit", "就诊记录", Icons.Filled.LocalHospital, c.error),
+    HealthCategoryMeta("medication", "用药记录", Icons.Filled.Medication, c.primary),
+    HealthCategoryMeta("vaccination", "疫苗接种记录", Icons.Filled.Vaccines, c.secondary),
+    HealthCategoryMeta("doctor_note", "医生备注", Icons.AutoMirrored.Filled.Note, c.error),
 )
 
 private fun categorySummary(category: String, items: List<HealthRecord>): String {
@@ -134,7 +134,7 @@ fun HealthScreen(navigator: Navigator) {
                     item(key = meta.key) {
                         if (meta.key == "vaccination") {
                             VaccinationSummaryCard(
-                                emoji = meta.emoji,
+                                icon = meta.icon,
                                 bgColor = meta.bgColor,
                                 label = meta.label,
                                 count = vaccinatedCount,
@@ -145,7 +145,7 @@ fun HealthScreen(navigator: Navigator) {
                             val summary = categorySummary(meta.key, items)
                             val isExpanded = expandedCategory == meta.key
                             HealthCategorySummaryCard(
-                                emoji = meta.emoji,
+                                icon = meta.icon,
                                 bgColor = meta.bgColor,
                                 label = meta.label,
                                 summary = summary,
@@ -205,7 +205,7 @@ fun HealthScreen(navigator: Navigator) {
 
 @Composable
 private fun HealthCategorySummaryCard(
-    emoji: String,
+    icon: ImageVector,
     bgColor: Color,
     label: String,
     summary: String,
@@ -235,7 +235,12 @@ private fun HealthCategorySummaryCard(
                     .background(bgColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, style = typography.title1)
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = bgColor,
+                )
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -256,7 +261,7 @@ private fun HealthCategorySummaryCard(
 
 @Composable
 private fun VaccinationSummaryCard(
-    emoji: String,
+    icon: ImageVector,
     bgColor: Color,
     label: String,
     count: Int,
@@ -285,7 +290,12 @@ private fun VaccinationSummaryCard(
                     .background(bgColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(emoji, style = typography.title1)
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = bgColor,
+                )
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -333,7 +343,7 @@ private fun ExpandedCategoryItems(
                     }
                     if (!r.doctorName.isNullOrBlank()) {
                         Spacer(Modifier.height(spacing.xs))
-                        Text("👨‍⚕️ ${r.doctorName}", style = typography.footnote1, color = c.onSurfaceVariantSummary)
+                        Text("医生：${r.doctorName}", style = typography.footnote1, color = c.onSurfaceVariantSummary)
                     }
                     if (!r.note.isNullOrBlank()) {
                         Spacer(Modifier.height(spacing.xxs))
@@ -369,12 +379,12 @@ fun HealthFormDialog(
     var showDatePicker by remember { mutableStateOf(false) }
 
     val categories = listOf(
-        "birth_info" to "🍼 出生信息",
-        "allergy" to "🤧 过敏史",
-        "medicalHistory" to "📋 既往病史",
-        "visit" to "🏥 就诊记录",
-        "medication" to "💊 用药记录",
-        "doctor_note" to "📋 医生备注",
+        "birth_info" to "出生信息",
+        "allergy" to "过敏史",
+        "medicalHistory" to "既往病史",
+        "visit" to "就诊记录",
+        "medication" to "用药记录",
+        "doctor_note" to "医生备注",
     )
 
     val buildEntity = {

@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -19,6 +18,8 @@ import io.elyon.kmp.theme.ElyonTheme
  *
  * 优先级模型：
  *   显式参数 > CardDefaults（令牌） > M3 默认值
+ *
+ * 对齐 Elyon 示例：卡片默认扁平无阴影（elevation 参数保留兼容，但不再应用 shadow）。
  *
  * 用法：
  *   AppCard { Text("内容") }
@@ -37,7 +38,6 @@ fun AppCard(
     val shape = RoundedCornerShape(cornerRadius)
     Card(
         modifier = modifier
-            .shadow(elevation = elevation, shape = shape)
             .then(
                 if (borderWidth > 0.dp) {
                     Modifier.border(borderWidth, borderColor, shape)

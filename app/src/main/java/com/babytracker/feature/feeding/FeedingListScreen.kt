@@ -16,15 +16,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.SnackbarHostState
-import androidx.compose.material3.Text
+import io.elyon.kmp.basic.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.navigation.Navigator
@@ -236,12 +237,12 @@ private fun feedingColor(type: FeedingType, c: io.elyon.kmp.theme.Colors): Color
     else -> c.primary
 }
 
-/** 喂养类型对应的 emoji */
-private fun feedingEmoji(type: FeedingType): String = when (type) {
-    FeedingType.BREAST -> "\uD83E\uDD31"
-    FeedingType.FORMULA -> "\uD83C\uDF7C"
-    FeedingType.FOOD -> "\uD83E\uDD63"
-    else -> "\uD83E\uDD64"
+/** 喂养类型对应的矢量图标 */
+private fun feedingIcon(type: FeedingType): ImageVector = when (type) {
+    FeedingType.BREAST -> Icons.Filled.ChildCare
+    FeedingType.FORMULA -> Icons.Filled.LocalDrink
+    FeedingType.FOOD -> Icons.Filled.Restaurant
+    else -> Icons.Filled.WaterDrop
 }
 
 /** 喂养记录摘要文本 */
@@ -287,7 +288,7 @@ private fun FeedingTimeline(
     ) {
         items(items = feedings, key = { it.id }) { f ->
             val color = feedingColor(f.type, c)
-            val emoji = feedingEmoji(f.type)
+            val icon = feedingIcon(f.type)
             val time = try {
                 LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME)
                     .format(DateTimeFormatter.ofPattern("HH:mm"))
@@ -343,7 +344,14 @@ private fun FeedingTimeline(
                             .clip(RoundedCornerShape(shapes.large))
                             .background(color.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center,
-                    ) { Text(emoji, style = ElyonTheme.textStyles.title1) }
+                    ) {
+                        Icon(
+                            icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            tint = color,
+                        )
+                    }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
@@ -472,7 +480,7 @@ fun FeedingFormDialog(
         saveText = if (isEdit) "更新" else "保存",
     ) {
         Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("breast" to "🤱 母乳", "formula" to "💧 配方", "food" to "🥣 辅食", "water" to "🥤 饮水").forEach { (t, label) ->
+            listOf("breast" to "母乳", "formula" to "配方", "food" to "辅食", "water" to "饮水").forEach { (t, label) ->
                 AppFilterChip(
                     selected = type == t,
                     onClick = { type = t },
@@ -551,7 +559,14 @@ fun FeedingFormDialog(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
                     label = "奶量 (ml)",
-                    leadingIcon = { Text("💧", style = ElyonTheme.textStyles.title1) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Filled.LocalDrink,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = ElyonTheme.colorScheme.primary,
+                        )
+                    },
                     isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
                     errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) "请输入 1-500 之间的数字" else null,
                     keyboardType = KeyboardType.Number,
@@ -569,7 +584,14 @@ fun FeedingFormDialog(
                     value = foodName,
                     onValueChange = { foodName = it },
                     label = "食物名称",
-                    leadingIcon = { Text("🥣", style = ElyonTheme.textStyles.title1) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Filled.Restaurant,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = ElyonTheme.colorScheme.primary,
+                        )
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AppInput(
@@ -587,7 +609,14 @@ fun FeedingFormDialog(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
                     label = "饮水量 (ml)",
-                    leadingIcon = { Text("🥤", style = ElyonTheme.textStyles.title1) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Filled.WaterDrop,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = ElyonTheme.colorScheme.primary,
+                        )
+                    },
                     isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
                     errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
                     keyboardType = KeyboardType.Number,

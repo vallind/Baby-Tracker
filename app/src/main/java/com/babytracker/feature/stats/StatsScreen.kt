@@ -12,10 +12,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Height
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.ui.graphics.vector.ImageVector
+import io.elyon.kmp.basic.Icon
+import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -254,7 +259,7 @@ private fun FeedingCard(
             verticalAlignment = Alignment.Top,
         ) {
             Column {
-                StatCardIcon("🍼", c.secondary)
+                StatCardIcon(Icons.Filled.Restaurant, c.secondary)
                 Spacer(Modifier.height(spacing.sm))
                 Text("喂养", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
@@ -303,7 +308,7 @@ private fun SleepCard(
             verticalAlignment = Alignment.Top,
         ) {
             Column {
-                StatCardIcon("🌙", c.secondary)
+                StatCardIcon(Icons.Filled.Bedtime, c.secondary)
                 Spacer(Modifier.height(spacing.sm))
                 Text("睡眠时长", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
@@ -341,7 +346,7 @@ private fun HeightCard(
             verticalAlignment = Alignment.Top,
         ) {
             Column {
-                StatCardIcon("📏", c.primary)
+                StatCardIcon(Icons.Filled.Height, c.primary)
                 Spacer(Modifier.height(spacing.sm))
                 Text("身高增长", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
@@ -379,7 +384,7 @@ private fun WeightCard(
             verticalAlignment = Alignment.Top,
         ) {
             Column {
-                StatCardIcon("⚖️", c.tertiaryContainer)
+                StatCardIcon(Icons.Filled.MonitorWeight, c.tertiaryContainer)
                 Spacer(Modifier.height(spacing.sm))
                 Text("体重增长", style = typography.footnote1, color = c.onSurfaceVariantSummary)
             }
@@ -438,9 +443,8 @@ private fun StatCardFrame(
 }
 
 @Composable
-private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifier) {
+private fun StatCardIcon(icon: ImageVector, tint: Color, modifier: Modifier = Modifier) {
     val spacing = com.babytracker.core.ui.AppSpacing
-    val typography = ElyonTheme.textStyles
     Box(
         modifier
             .size(spacing.xl)
@@ -448,7 +452,12 @@ private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifi
             .background(tint.copy(alpha = 0.12f)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(emoji, style = typography.title3)
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = tint,
+        )
     }
 }
 
