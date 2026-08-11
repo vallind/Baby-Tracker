@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.theme.LocalAppColors
+import java.util.Locale
 
 /**
  * 主题化滑块 — 对标 Palette Slider，消费 AppComponentTokens.slider。
@@ -77,7 +78,7 @@ fun AppLabeledSlider(
             Text(label, color = textColor)
             Spacer(Modifier.width(8.dp))
             Text(
-                text = if (valueRange.endInclusive <= 100f) "${value.toInt()}$valueSuffix" else String.format("%.1f$valueSuffix", value),
+                text = if (valueRange.endInclusive <= 100f) "${value.toInt()}$valueSuffix" else String.format(Locale.US, "%.1f$valueSuffix", value),
                 color = textColor.copy(alpha = 0.64f),
             )
         }

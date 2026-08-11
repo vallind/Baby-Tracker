@@ -368,7 +368,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                             )
                             .clickable { themeCtrl.switchTheme(theme.name) },
                         elevation = elev.level1,
-                        containerColor = theme.colors.card,
+                        containerColor = theme.colors.surface,
                     ) {
                         Box(Modifier.fillMaxSize().padding(12.dp)) {
                             Column {

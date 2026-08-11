@@ -56,6 +56,7 @@ import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -198,8 +199,8 @@ fun GrowthScreen(navController: NavController) {
                         item {
                             val valText = when {
                                 latest.value == latest.value.toLong().toDouble() && latest.value != 0.0 ->
-                                    String.format("%.0f", latest.value)
-                                else -> String.format("%.1f", latest.value)
+                                    String.format(Locale.US, "%.0f", latest.value)
+                                else -> String.format(Locale.US, "%.1f", latest.value)
                             }
                             val measuredDate = try {
                                 LocalDateTime.parse(latest.measuredAt, DateTimeFormatter.ISO_DATE_TIME)
@@ -264,7 +265,7 @@ fun GrowthScreen(navController: NavController) {
                         val yLabels = remember(minVal, maxVal) {
                             (0..3).map { i ->
                                 val v = maxVal - (range * i / 3)
-                                String.format("%.1f", v)
+                                String.format(Locale.US, "%.1f", v)
                             }
                         }
 
@@ -403,7 +404,7 @@ fun GrowthScreen(navController: NavController) {
                         }
                         items(items = items, key = { it.id }) { g ->
                             val label = DateUtils.growthTypeLabel(GrowthType.raw(g.type))
-                            val valStr = String.format("%.1f", g.value)
+                            val valStr = String.format(Locale.US, "%.1f", g.value)
                             val dateStr = try {
                                 LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME)
                                     .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
@@ -533,7 +534,7 @@ fun GrowthFormDialog(
     var value by remember {
         mutableStateOf(
             editEntity?.value?.let {
-                if (it == it.toLong().toDouble() && it == 0.0) "" else String.format("%.1f", it)
+                if (it == it.toLong().toDouble() && it == 0.0) "" else String.format(Locale.US, "%.1f", it)
             } ?: "",
         )
     }

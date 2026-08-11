@@ -44,6 +44,7 @@ import com.babytracker.feature.settings.SettingsRow
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -203,7 +204,7 @@ fun AiSettingsScreen(navController: NavController) {
                             modifier = Modifier.padding(horizontal = spacing.md),
                         )
                         Text(
-                            text = String.format("%.1f", preferences.temperatureTenths / 10f),
+                            text = String.format(Locale.US, "%.1f", preferences.temperatureTenths / 10f),
                             style = LocalAppTypography.current.bodyMedium,
                             color = LocalAppColors.current.textSecondary,
                             modifier = Modifier.padding(

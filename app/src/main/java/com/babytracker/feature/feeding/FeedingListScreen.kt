@@ -53,6 +53,7 @@ import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -428,7 +429,7 @@ fun FeedingFormDialog(
         }
     }
 
-    val timerDisplay = String.format("%02d:%02d", elapsed / 60, elapsed % 60)
+    val timerDisplay = String.format(Locale.US, "%02d:%02d", elapsed / 60, elapsed % 60)
 
     val buildEntity = {
         if (timerRunning) {
