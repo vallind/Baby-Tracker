@@ -179,7 +179,7 @@ fun DiaperListScreen(navigator: Navigator) {
                                     Modifier
                                         .size(spacing.xl)
                                         .clip(RoundedCornerShape(shapes.medium))
-                                        .background(Color.White.copy(alpha = 0.25f)),
+                                        .background(c.onTertiaryContainer.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) { Text("🧷", style = ElyonTheme.textStyles.title3) }
                                 Spacer(Modifier.width(spacing.sm))
@@ -187,7 +187,7 @@ fun DiaperListScreen(navigator: Navigator) {
                                     "今日尿布",
                                     style = ElyonTheme.textStyles.title3,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color.White.copy(alpha = 0.9f),
+                                    color = c.onTertiaryContainer,
                                 )
                             }
                             Spacer(Modifier.height(20.dp))
@@ -195,13 +195,13 @@ fun DiaperListScreen(navigator: Navigator) {
                                 "${filtered.size} 次",
                                 style = ElyonTheme.textStyles.headline2,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = c.onTertiaryContainer,
                             )
                             Spacer(Modifier.height(spacing.xs))
                             Text(
                                 "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
                                 style = ElyonTheme.textStyles.body2,
-                                color = Color.White.copy(alpha = 0.75f),
+                                color = c.onTertiaryContainer.copy(alpha = 0.75f),
                             )
                         }
                     }

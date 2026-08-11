@@ -10,6 +10,7 @@
 根组件：`core/ui/ElyonAppTheme.kt` 的 `BabyTrackerElyonTheme(themeName)`。
 
 - 主题名 → Elyon `ThemeController` 参数的映射在 `core/ui/ElyonThemeResolver.kt`（纯函数，有单测）；
+- 固定色板定义在 `core/ui/BabyTrackerPalettes.kt`（旧 6 套主题配色直接映射 Elyon `Colors`，不走 Monet 动态色板）；
 - 颜色：`ElyonTheme.colorScheme.*`；排版：`ElyonTheme.textStyles.*`；
 - 暗色判定只读主题名（`ElyonThemeResolver.isDark`），不读系统暗色；
 - 控制器：`core/ui/ThemeController.kt` / `core/ui/DensityController.kt`（Koin `single` 注册）。

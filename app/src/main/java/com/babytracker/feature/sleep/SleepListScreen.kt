@@ -188,7 +188,7 @@ fun SleepListScreen(navigator: Navigator) {
                                         Modifier
                                             .size(spacing.xl)
                                             .clip(RoundedCornerShape(shapes.medium))
-                                            .background(Color.White.copy(alpha = 0.25f)),
+                                            .background(c.onSecondaryContainer.copy(alpha = 0.12f)),
                                         contentAlignment = Alignment.Center,
                                     ) { Text("\uD83C\uDF19", style = ElyonTheme.textStyles.title3) }
                                     Spacer(Modifier.width(spacing.sm))
@@ -196,7 +196,7 @@ fun SleepListScreen(navigator: Navigator) {
                                         "夜间睡眠",
                                         style = ElyonTheme.textStyles.title3,
                                         fontWeight = FontWeight.Medium,
-                                        color = Color.White.copy(alpha = 0.9f),
+                                        color = c.onSecondaryContainer,
                                     )
                                 }
                                 Spacer(Modifier.height(20.dp))
@@ -204,13 +204,13 @@ fun SleepListScreen(navigator: Navigator) {
                                     DateUtils.durationFullText(durSec),
                                     style = ElyonTheme.textStyles.headline2,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White,
+                                    color = c.onSecondaryContainer,
                                 )
                                 Spacer(Modifier.height(spacing.xs))
                                 Text(
                                     timeRange,
                                     style = ElyonTheme.textStyles.body2,
-                                    color = Color.White.copy(alpha = 0.75f),
+                                    color = c.onSecondaryContainer.copy(alpha = 0.75f),
                                 )
                             }
                         }

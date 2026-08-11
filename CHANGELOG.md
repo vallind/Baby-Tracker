@@ -4,6 +4,12 @@
 
 ### [1.8.0] — 2026-08-08
 
+**Elyon 示例对齐 Phase 1（固定主题色板）：**
+- 主题从 Monet 动态色板切回固定色板：新增 `BabyTrackerPalettes`，按旧 6 套主题的 primary/background/card/accent 差异项派生完整 Elyon `Colors`，`ElyonThemeResolver` 改为 `Light/Dark` + 固定色板，night 保持强制暗色
+- 主题选择器预览与真实主题同源：`ThemeOptions`/`ThemeDots` 直接读取 `BabyTrackerPalettes`，消除预览色与渲染色不一致
+- 修复睡眠/尿布汇总卡白字浅底对比度问题：改读 `onSecondaryContainer`/`onTertiaryContainer`
+- 更新 `ElyonThemeResolverTest` 断言固定色板契约
+
 **设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
 - Typography 双体系统一：LocalAppTypography 改供自建 AppTypography，新增 8 级补齐至自建 12 级单体系（displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall），删除裸字段与 LocalAppTypographyStyle，禁止组件层暴露 M3 令牌类型（仅 theme 层桥接），迁移 31 文件与 13 处 M3 直用
 - Button 家族收敛为 AppButton + ButtonVariant 枚举（Primary/Secondary/Text），迁移 58 处调用方，颜色改走 ButtonTokens

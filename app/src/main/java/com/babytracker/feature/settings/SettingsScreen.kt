@@ -46,6 +46,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.core.ui.AppDensity
+import com.babytracker.core.ui.BabyTrackerPalettes
 import com.babytracker.core.ui.DensityController
 import com.babytracker.core.ui.ThemeController
 import com.babytracker.core.util.DateUtils
@@ -340,12 +341,12 @@ private data class ThemeOption(
 )
 
 private val ThemeOptions = listOf(
-    ThemeOption("pure", "纯净蓝", Color(0xFF2563EB), Color.White, Color(0xFF09090B)),
-    ThemeOption("aurora", "极光紫", Color(0xFF7C3AED), Color.White, Color(0xFF09090B)),
-    ThemeOption("warm", "暖阳粉", Color(0xFFFF8A80), Color(0xFFFFFBF7), Color(0xFF09090B)),
-    ThemeOption("sunny", "阳光黄", Color(0xFFF59E0B), Color(0xFFFFFAF0), Color(0xFF09090B)),
-    ThemeOption("night", "暗夜深", Color(0xFF5C6BC0), Color(0xFF1E1E32), Color.White),
-    ThemeOption("morandi", "莫兰迪", Color(0xFF94A3B8), Color(0xFFFAFAFA), Color(0xFF09090B)),
+    ThemeOption("pure", "纯净蓝", BabyTrackerPalettes.pure.primary, BabyTrackerPalettes.pure.surface, BabyTrackerPalettes.pure.onSurface),
+    ThemeOption("aurora", "极光紫", BabyTrackerPalettes.aurora.primary, BabyTrackerPalettes.aurora.surface, BabyTrackerPalettes.aurora.onSurface),
+    ThemeOption("warm", "暖阳粉", BabyTrackerPalettes.warm.primary, BabyTrackerPalettes.warm.surface, BabyTrackerPalettes.warm.onSurface),
+    ThemeOption("sunny", "阳光黄", BabyTrackerPalettes.sunny.primary, BabyTrackerPalettes.sunny.surface, BabyTrackerPalettes.sunny.onSurface),
+    ThemeOption("night", "暗夜深", BabyTrackerPalettes.night.primary, BabyTrackerPalettes.night.surface, BabyTrackerPalettes.night.onSurface),
+    ThemeOption("morandi", "莫兰迪", BabyTrackerPalettes.morandi.primary, BabyTrackerPalettes.morandi.surface, BabyTrackerPalettes.morandi.onSurface),
 )
 
 @Composable
@@ -515,13 +516,17 @@ fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing
 fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
     val c = ElyonTheme.colorScheme
     val themesColors = mapOf(
-        "pure" to 0xFF2563EB, "aurora" to 0xFF7C3AED, "warm" to 0xFFFF8A80,
-        "sunny" to 0xFFF59E0B, "night" to 0xFF1E293B, "morandi" to 0xFF94A3B8,
+        "pure" to BabyTrackerPalettes.pure.primary,
+        "aurora" to BabyTrackerPalettes.aurora.primary,
+        "warm" to BabyTrackerPalettes.warm.primary,
+        "sunny" to BabyTrackerPalettes.sunny.primary,
+        "night" to BabyTrackerPalettes.night.primary,
+        "morandi" to BabyTrackerPalettes.morandi.primary,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        themesColors.forEach { (name, colorInt) ->
+        themesColors.forEach { (name, color) ->
             Box(
-                Modifier.size(20.dp).clip(CircleShape).background(Color(colorInt))
+                Modifier.size(20.dp).clip(CircleShape).background(color)
                     .then(if (name == currentTheme) Modifier.border(2.dp, c.primary, CircleShape) else Modifier),
             )
         }

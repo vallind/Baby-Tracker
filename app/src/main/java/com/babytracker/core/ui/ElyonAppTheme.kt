@@ -8,8 +8,8 @@ import io.elyon.kmp.theme.ThemeController as ElyonThemeController
 /**
  * Elyon 驱动的应用主题根。
  *
- * 旧设计系统已整体移除：主题参数只保留主题名，由 ElyonThemeResolver 映射到
- * Elyon ThemeController（Monet 动态色板）。界面密度暂不参与缩放（TODO：
+ * 主题参数只保留主题名，由 ElyonThemeResolver 映射到固定色板
+ * （旧 6 套主题配色，不再走 Monet 动态色板）。界面密度暂不参与缩放（TODO：
  * 后续在 Elyon 排版/间距体系上重新实现密度档位）。
  */
 @Composable
@@ -19,7 +19,11 @@ fun BabyTrackerElyonTheme(
 ) {
     val spec = remember(themeName) { ElyonThemeResolver.resolve(themeName) }
     val controller = remember(spec) {
-        ElyonThemeController(colorSchemeMode = spec.mode, keyColor = spec.keyColor)
+        ElyonThemeController(
+            colorSchemeMode = spec.mode,
+            lightColors = spec.lightColors,
+            darkColors = spec.darkColors,
+        )
     }
     ElyonTheme(controller = controller) {
         content()
