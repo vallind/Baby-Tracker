@@ -170,10 +170,15 @@ fun GrowthScreen(navigator: Navigator) {
             if (chartData.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = when (tab) { 0 -> "📏"; 1 -> "⚖️"; else -> "📐" },
+                        emoji = "",
                         title = "还没有${tabs[tab]}记录",
                         subtitle = "点击底部按钮，记录宝宝的${tabs[tab]}变化",
                         actionText = "记录${tabs[tab]}",
+                        icon = when (tab) {
+                            0 -> Icons.Filled.Height
+                            1 -> Icons.Filled.MonitorWeight
+                            else -> Icons.Filled.Straighten
+                        },
                         onAction = {
                             editingGrowth = null
                             showForm = true
@@ -371,7 +376,12 @@ fun GrowthScreen(navigator: Navigator) {
                                         .background(c.primary.copy(alpha = 0.12f)),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    Text("📊", style = typography.title3)
+                                    Icon(
+                                        Icons.Filled.BarChart,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = c.primary,
+                                    )
                                 }
                                 Spacer(Modifier.width(12.dp))
                                 Column {

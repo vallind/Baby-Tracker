@@ -150,10 +150,11 @@ fun SleepListScreen(navigator: Navigator) {
             if (filteredSleeps.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = "\uD83D\uDE34",
+                        emoji = "",
                         title = "还没有睡眠记录",
                         subtitle = "点击底部按钮，记录宝宝的睡眠时间",
                         actionText = "记录睡眠",
+                        icon = Icons.Filled.Bedtime,
                         onAction = {
                             editingSleep = null
                             showForm = true

@@ -15,7 +15,6 @@ import java.time.format.DateTimeFormatter
 data class TimelineItem(
     val id: Int,
     val recordType: String,
-    val emoji: String,
     val title: String,
     val subtitle: String,
     val time: String,
@@ -174,7 +173,6 @@ internal fun toTimelineItems(
             TimelineItem(
                 id = f.id,
                 recordType = "feeding",
-                emoji = when (f.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" },
                 title = DateUtils.feedingTypeLabel(FeedingType.raw(f.type)),
                 subtitle = when (f.type) {
                     FeedingType.BREAST -> "${f.breastSide?.let { BreastSide.raw(it) } ?: "双侧"} · ${f.durationMin}分钟"
@@ -201,7 +199,6 @@ internal fun toTimelineItems(
             TimelineItem(
                 id = s.id,
                 recordType = "sleep",
-                emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
                 title = if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡",
                 subtitle = buildString {
                     append("${timePart(s.startTime)}-${timePart(s.endTime)}")
@@ -220,7 +217,6 @@ internal fun toTimelineItems(
             TimelineItem(
                 id = d.id,
                 recordType = "diaper",
-                emoji = "🧷",
                 title = "换尿布",
                 subtitle = DateUtils.diaperTypeLabel(DiaperType.raw(d.type)),
                 time = timePart(d.timestamp),
@@ -237,7 +233,6 @@ internal fun toTimelineItems(
             TimelineItem(
                 id = g.id,
                 recordType = "growth",
-                emoji = "📏",
                 title = DateUtils.growthTypeLabel(GrowthType.raw(g.type)),
                 subtitle = "${g.value}$unit",
                 time = timePart(g.measuredAt),
@@ -253,7 +248,6 @@ internal fun toTimelineItems(
             TimelineItem(
                 id = rec.id,
                 recordType = "health",
-                emoji = "❤️",
                 title = rec.description.take(30),
                 subtitle = rec.category,
                 time = timePart(rec.recordDate),

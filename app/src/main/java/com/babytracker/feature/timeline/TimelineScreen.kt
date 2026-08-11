@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BabyChangingStation
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Restaurant
@@ -97,18 +98,6 @@ fun TimelineScreen(navigator: Navigator) {
         }
     }
 
-    // 类型 → emoji 映射
-    val typeEmoji: (String) -> String = {
-        when (it) {
-            "feeding" -> "🤱"
-            "sleep" -> "🌙"
-            "diaper" -> "🧷"
-            "growth" -> "📏"
-            "health" -> "❤️"
-            else -> "📝"
-        }
-    }
-
     // 记录类型 → 矢量图标（替代 emoji，保证跨设备观感一致）
     val typeIcon: (String) -> ImageVector = {
         when (it) {
@@ -156,11 +145,12 @@ fun TimelineScreen(navigator: Navigator) {
             } else if (state.items.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = "📝",
+                        emoji = "",
                         title = "还没有记录",
                         subtitle = "点击右下角按钮，记录宝宝的每一次成长",
                         actionText = "开始记录",
                         onAction = { showTypePicker = true },
+                        icon = Icons.Filled.EditNote,
                     )
                 }
             } else {
@@ -172,7 +162,7 @@ fun TimelineScreen(navigator: Navigator) {
                 if (filtered.isEmpty()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         EmptyState(
-                            emoji = typeEmoji(typeFilter),
+                            emoji = "",
                             title = "没有${when (typeFilter) {
                                 "feeding" -> "喂养"
                                 "sleep" -> "睡眠"
@@ -182,6 +172,7 @@ fun TimelineScreen(navigator: Navigator) {
                                 else -> ""
                             }}记录",
                             subtitle = "点击右下角按钮开始记录",
+                            icon = typeIcon(typeFilter),
                         )
                     }
                 } else {

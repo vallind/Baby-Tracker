@@ -12,8 +12,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BabyChangingStation
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.ChildCare
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Extension
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Numbers
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.Thermostat
+import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -22,7 +48,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import com.babytracker.navigation.Navigator
 import com.babytracker.core.ai.AiModelOption
 import com.babytracker.core.ai.settings.AiAnswerDetail
@@ -74,7 +103,7 @@ fun AiSettingsScreen(navigator: Navigator) {
             AiSettingsSectionTitle(AppStrings.aiSettingsGeneral)
             SettingsCard {
                 AiSwitchRow(
-                    emoji = "✨",
+                    icon = Icons.Filled.Star,
                     label = AppStrings.aiSettingsEnabled,
                     subtitle = AppStrings.aiSettingsEnabledSubtitle,
                     checked = preferences.assistantEnabled,
@@ -85,7 +114,7 @@ fun AiSettingsScreen(navigator: Navigator) {
             AiSettingsSectionTitle(AppStrings.aiSettingsModelAndAnswer)
             SettingsCard {
                 AiChoiceSetting(
-                    emoji = "🧠",
+                    icon = Icons.Filled.SmartToy,
                     label = AppStrings.aiSettingsDefaultModel,
                     options = state.modelOptions.map { it.id to it.name },
                     selectedId = state.selectedModelId,
@@ -95,7 +124,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 AiCapabilitySetting(state.selectedModel)
                 SettingsDivider()
                 AiChoiceSetting(
-                    emoji = "🧩",
+                    icon = Icons.Filled.Extension,
                     label = AppStrings.aiSettingsContextRounds,
                     subtitle = AppStrings.aiSettingsContextRoundsSubtitle,
                     options = listOf(0, 2, 5, 10, 20).map { rounds ->
@@ -110,7 +139,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiChoiceSetting(
-                    emoji = "🔢",
+                    icon = Icons.Filled.Numbers,
                     label = AppStrings.aiSettingsMaxTokens,
                     subtitle = AppStrings.aiSettingsMaxTokensSubtitle,
                     options = listOf(0, 1_024, 2_048, 4_096, 8_192, 16_384).map { tokens ->
@@ -138,7 +167,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiSwitchRow(
-                    emoji = "⚡",
+                    icon = Icons.Filled.Bolt,
                     label = AppStrings.aiSettingsStreaming,
                     subtitle = if (capabilities?.streaming == true) {
                         AppStrings.aiSettingsStreamingSubtitle
@@ -152,7 +181,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 SettingsDivider()
                 if (capabilities?.thinking == true) {
                     AiChoiceSetting(
-                        emoji = "💭",
+                        icon = Icons.Filled.Psychology,
                         label = AppStrings.aiSettingsThinking,
                         options = AiThinkingMode.entries.map { it.name to thinkingLabel(it) },
                         selectedId = preferences.thinkingMode.name,
@@ -162,7 +191,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                     if (supportedEfforts.isNotEmpty()) {
                         SettingsDivider()
                         AiChoiceSetting(
-                            emoji = "⚙️",
+                            icon = Icons.Filled.Settings,
                             label = AppStrings.aiSettingsReasoningEffort,
                             options = AiReasoningEffort.entries
                                 .filter {
@@ -178,7 +207,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                     }
                 } else {
                     SettingsRow(
-                        emoji = "💭",
+                        icon = Icons.Filled.Psychology,
                         label = AppStrings.aiSettingsThinking,
                         subtitle = AppStrings.aiSettingsUnsupported,
                         trailing = { },
@@ -187,7 +216,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 if (capabilities?.temperature == true) {
                     SettingsDivider()
                     AiSwitchRow(
-                        emoji = "🌡️",
+                        icon = Icons.Filled.Thermostat,
                         label = AppStrings.aiSettingsTemperature,
                         subtitle = AppStrings.aiSettingsTemperatureSubtitle,
                         checked = preferences.customTemperature,
@@ -218,7 +247,7 @@ fun AiSettingsScreen(navigator: Navigator) {
             AiSettingsSectionTitle(AppStrings.aiSettingsAnswerPreference)
             SettingsCard {
                 AiChoiceSetting(
-                    emoji = "📏",
+                    icon = Icons.Filled.Straighten,
                     label = AppStrings.aiSettingsDetail,
                     options = AiAnswerDetail.entries.map { it.name to detailLabel(it) },
                     selectedId = preferences.answerDetail.name,
@@ -226,7 +255,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiChoiceSetting(
-                    emoji = "💬",
+                    icon = Icons.Filled.ChatBubble,
                     label = AppStrings.aiSettingsTone,
                     options = AiAnswerTone.entries.map { it.name to toneLabel(it) },
                     selectedId = preferences.answerTone.name,
@@ -234,7 +263,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiSwitchRow(
-                    emoji = "✅",
+                    icon = Icons.Filled.CheckCircle,
                     label = AppStrings.aiSettingsChecklist,
                     checked = preferences.includeActionChecklist,
                     onCheckedChange = viewModel::setActionChecklist,
@@ -244,7 +273,7 @@ fun AiSettingsScreen(navigator: Navigator) {
             AiSettingsSectionTitle(AppStrings.aiSettingsBabyData)
             SettingsCard {
                 AiSwitchRow(
-                    emoji = "📊",
+                    icon = Icons.Filled.BarChart,
                     label = AppStrings.aiSettingsUseRecords,
                     subtitle = AppStrings.aiSettingsUseRecordsSubtitle,
                     checked = preferences.useRecentRecords,
@@ -252,7 +281,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiSwitchRow(
-                    emoji = "🍼",
+                    icon = Icons.Filled.ChildCare,
                     label = AppStrings.aiSettingsFeeding,
                     checked = preferences.useFeedingRecords,
                     enabled = preferences.useRecentRecords,
@@ -260,7 +289,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiSwitchRow(
-                    emoji = "🌙",
+                    icon = Icons.Filled.Bedtime,
                     label = AppStrings.aiSettingsSleep,
                     checked = preferences.useSleepRecords,
                     enabled = preferences.useRecentRecords,
@@ -268,7 +297,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiSwitchRow(
-                    emoji = "🧷",
+                    icon = Icons.Filled.BabyChangingStation,
                     label = AppStrings.aiSettingsDiaper,
                     checked = preferences.useDiaperRecords,
                     enabled = preferences.useRecentRecords,
@@ -276,7 +305,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiSwitchRow(
-                    emoji = "📏",
+                    icon = Icons.Filled.Straighten,
                     label = AppStrings.aiSettingsGrowth,
                     checked = preferences.useGrowthRecords,
                     enabled = preferences.useRecentRecords,
@@ -284,7 +313,7 @@ fun AiSettingsScreen(navigator: Navigator) {
                 )
                 SettingsDivider()
                 AiSwitchRow(
-                    emoji = "❤️",
+                    icon = Icons.Filled.Favorite,
                     label = AppStrings.aiSettingsHealth,
                     checked = preferences.useHealthRecords,
                     enabled = preferences.useRecentRecords,
@@ -295,7 +324,7 @@ fun AiSettingsScreen(navigator: Navigator) {
             AiSettingsSectionTitle(AppStrings.aiSettingsExperience)
             SettingsCard {
                 AiSwitchRow(
-                    emoji = "💡",
+                    icon = Icons.Filled.Lightbulb,
                     label = AppStrings.aiSettingsRecommended,
                     checked = preferences.showRecommendedQuestions,
                     onCheckedChange = viewModel::setRecommendedQuestions,
@@ -305,28 +334,28 @@ fun AiSettingsScreen(navigator: Navigator) {
             AiSettingsSectionTitle(AppStrings.aiSettingsPrivacyAndStatus)
             SettingsCard {
                 SettingsRow(
-                    emoji = "🛡️",
+                    icon = Icons.Filled.Security,
                     label = AppStrings.aiSettingsSafety,
                     subtitle = AppStrings.aiSettingsSafetySubtitle,
                     trailing = { Text(AppStrings.aiSettingsAlwaysOn) },
                 )
                 SettingsDivider()
                 SettingsRow(
-                    emoji = "🔐",
+                    icon = Icons.Filled.Lock,
                     label = AppStrings.aiSettingsDataNotice,
                     subtitle = AppStrings.aiSettingsDataNoticeSubtitle,
                     trailing = { },
                 )
                 SettingsDivider()
                 SettingsRow(
-                    emoji = "☁️",
+                    icon = Icons.Filled.Cloud,
                     label = AppStrings.aiSettingsConfigStatus,
                     subtitle = configStatus(state),
                     onClick = viewModel::refreshConfig,
                 )
                 SettingsDivider()
                 SettingsRow(
-                    emoji = "🗑️",
+                    icon = Icons.Filled.Delete,
                     label = AppStrings.aiSettingsClearChat,
                     subtitle = AppStrings.aiSettingsClearChatSubtitle,
                     onClick = { showClearConfirm = true },
@@ -361,7 +390,7 @@ private fun AiSettingsSectionTitle(title: String) {
 
 @Composable
 private fun AiSwitchRow(
-    emoji: String,
+    icon: ImageVector,
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
@@ -369,7 +398,7 @@ private fun AiSwitchRow(
     enabled: Boolean = true,
 ) {
     SettingsRow(
-        emoji = emoji,
+        icon = icon,
         label = label,
         subtitle = subtitle,
         trailing = {
@@ -387,7 +416,7 @@ private fun AiSwitchRow(
 
 @Composable
 private fun AiChoiceSetting(
-    emoji: String,
+    icon: ImageVector,
     label: String,
     options: List<Pair<String, String>>,
     selectedId: String?,
@@ -398,11 +427,20 @@ private fun AiChoiceSetting(
     val spacing = com.babytracker.core.ui.AppSpacing
     val colors =  ElyonTheme.colorScheme
     Column(Modifier.fillMaxWidth().padding(horizontal = spacing.md, vertical = spacing.sm)) {
-        Text(
-            text = "$emoji  $label",
-            style = ElyonTheme.textStyles.body1,
-            color = colors.onSurface,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = colors.primary,
+            )
+            Spacer(Modifier.width(spacing.sm))
+            Text(
+                text = label,
+                style = ElyonTheme.textStyles.body1,
+                color = colors.onSurface,
+            )
+        }
         if (subtitle != null) {
             Text(
                 text = subtitle,
@@ -451,7 +489,7 @@ private fun AiCapabilitySetting(model: AiModelOption?) {
         if (isEmpty()) add(AppStrings.aiCapabilityBasic)
     }
     AiChoiceSetting(
-        emoji = "✨",
+        icon = Icons.Filled.Star,
         label = AppStrings.aiSettingsModelCapabilities,
         options = labels.map { it to it },
         selectedId = null,

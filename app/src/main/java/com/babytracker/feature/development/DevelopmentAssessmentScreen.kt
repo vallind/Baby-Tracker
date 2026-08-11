@@ -177,9 +177,10 @@ fun DevelopmentAssessmentScreen(navigator: Navigator) {
     ) { padding ->
         if (baby == null) {
             EmptyState(
-                emoji = "\uD83D\uDC76",
+                emoji = "",
                 title = "还没有添加宝宝",
                 subtitle = "请先在设置中添加宝宝信息",
+                icon = Icons.Filled.ChildCare,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -200,11 +201,12 @@ fun DevelopmentAssessmentScreen(navigator: Navigator) {
 
             if (latest == null) {
                 EmptyState(
-                    emoji = "\uD83D\uDCDD",
+                    emoji = "",
                     title = "还没有发育评估记录",
                     subtitle = "评估宝宝 5 项能力发展，了解成长进度",
                     actionText = "开始评估",
                     onAction = { showForm = true },
+                    icon = Icons.Filled.EditNote,
                 )
             } else {
                 AssessmentItemsSection(latest)
@@ -252,7 +254,12 @@ private fun BabyHeader(baby: Baby) {
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("\uD83D\uDC76", style = ElyonTheme.textStyles.headline1)
+                Icon(
+                    Icons.Filled.ChildCare,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = c.primary,
+                )
             }
             Spacer(Modifier.width(spacing.md))
             Column {
@@ -279,7 +286,7 @@ private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
     Column(Modifier.padding(horizontal = spacing.md)) {
         abilities().forEachIndexed { index, meta ->
             AssessmentItemCard(
-                emoji = meta.emoji,
+                icon = meta.icon,
                 bgColor = meta.bgColor,
                 title = meta.title,
                 score = meta.score(latest),
@@ -292,7 +299,7 @@ private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
 
 @Composable
 private fun AssessmentItemCard(
-    emoji: String,
+    icon: ImageVector,
     bgColor: Color,
     title: String,
     score: Int,
@@ -316,7 +323,12 @@ private fun AssessmentItemCard(
                         .background(bgColor.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(emoji, style = ElyonTheme.textStyles.title1)
+                    Icon(
+                        icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        tint = bgColor,
+                    )
                 }
                 Spacer(Modifier.width(12.dp))
                 Row(

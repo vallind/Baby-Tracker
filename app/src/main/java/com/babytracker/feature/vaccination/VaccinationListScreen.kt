@@ -232,15 +232,16 @@ fun VaccinationListScreen(navigator: Navigator) {
             if (filtered.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = if (tab == "plan") "\uD83D\uDC89" else "\u2705",
+                        emoji = "",
                         title = if (tab == "plan") "暂无接种计划" else "暂无接种记录",
                         subtitle = when {
                             tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING } ->
                                 "点击下方按钮生成默认接种计划，或手动添加"
-                            statusFilter == "expired" -> "暂无过期疫苗，继续保持 \uD83D\uDC4F"
+                            statusFilter == "expired" -> "暂无过期疫苗，继续保持"
                             statusFilter == "pending" -> "所有计划疫苗均已按时接种或已过期"
                             else -> ""
                         },
+                        icon = if (tab == "plan") Icons.Filled.Vaccines else Icons.Filled.CheckCircle,
                         actionText = if (tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING }) "生成接种计划" else null,
                         onAction = if (tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING }) ({ showGenerateConfirm = true }) else null,
                     )

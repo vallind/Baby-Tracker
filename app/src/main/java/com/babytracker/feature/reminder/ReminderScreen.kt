@@ -7,7 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.foundation.ExperimentalFoundationApi
 import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.SnackbarHostState
@@ -67,9 +70,10 @@ fun ReminderScreen(navigator: Navigator) {
     ) { padding ->
         if (babyId == 0) {
             EmptyState(
-                emoji = "\uD83C\uDF7C",
+                emoji = "",
                 title = "还没有添加宝宝",
                 subtitle = "添加宝宝后即可查看提醒",
+                icon = Icons.Filled.ChildCare,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -89,12 +93,13 @@ fun ReminderScreen(navigator: Navigator) {
             val list = if (state.tab == ReminderTab.PENDING) state.pending else state.history
             if (list.isEmpty()) {
                 EmptyState(
-                    emoji = if (state.tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
+                    emoji = "",
                     title = if (state.tab == ReminderTab.PENDING) "暂无待办提醒" else "暂无历史提醒",
                     subtitle = if (state.tab == ReminderTab.PENDING)
                         "疫苗 / 体检 / 用药 / 发育评估到期后会出现在这里"
                     else
                         "完成的提醒会归档至此",
+                    icon = if (state.tab == ReminderTab.PENDING) Icons.Filled.Notifications else Icons.Filled.Description,
                 )
             } else {
                 list.forEach { reminder ->

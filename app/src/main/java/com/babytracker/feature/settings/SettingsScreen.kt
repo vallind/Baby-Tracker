@@ -898,7 +898,12 @@ fun BackupScreen(navigator: Navigator) {
                     if (selectedDirName.isNotEmpty()) {
                         Spacer(Modifier.height(spacing.sm))
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(shapes.medium)).background(c.surfaceContainerHigh).padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("📁", style = ElyonTheme.textStyles.body2)
+                            Icon(
+                                Icons.Filled.FolderOpen,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = c.onSurfaceVariantSummary,
+                            )
                             Spacer(Modifier.width(spacing.sm))
                             Text(selectedDirName, style = ElyonTheme.textStyles.footnote1, modifier = Modifier.weight(1f), maxLines = 1)
                         }
@@ -933,7 +938,12 @@ fun BackupScreen(navigator: Navigator) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.tertiaryContainer.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
-                            Text("☁️", style = ElyonTheme.textStyles.title3)
+                            Icon(
+                                Icons.Filled.Cloud,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                                tint = c.primary,
+                            )
                         }
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {

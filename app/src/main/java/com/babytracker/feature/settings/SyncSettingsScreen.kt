@@ -4,6 +4,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,7 +75,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
 
             SettingsCard {
                 SettingsRow(
-                    emoji = "🔄",
+                    icon = Icons.Filled.Sync,
                     label = "自动同步",
                     trailing = {
                         Switch(
@@ -84,7 +89,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                 SettingsDivider()
 
                 SettingsRow(
-                    emoji = "⏱",
+                    icon = Icons.Filled.Timer,
                     label = "同步延迟",
                     subtitle = config.syncDelay.label,
                     onClick = { showDelaySheet = true },
@@ -92,7 +97,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                 SettingsDivider()
 
                 SettingsRow(
-                    emoji = "📅",
+                    icon = Icons.Filled.DateRange,
                     label = "后台同步",
                     subtitle = config.bgInterval.label,
                     onClick = { showBgSheet = true },
@@ -100,7 +105,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                 SettingsDivider()
 
                 SettingsRow(
-                    emoji = "🚪",
+                    icon = Icons.AutoMirrored.Filled.ExitToApp,
                     label = "退出时同步",
                     trailing = {
                         Switch(
@@ -114,7 +119,7 @@ fun SyncSettingsScreen(navigator: Navigator) {
                 SettingsDivider()
 
                 SettingsRow(
-                    emoji = "📶",
+                    icon = Icons.Filled.Wifi,
                     label = "仅 Wi‑Fi",
                     trailing = {
                         Switch(

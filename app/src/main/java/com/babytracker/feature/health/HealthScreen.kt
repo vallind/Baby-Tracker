@@ -120,9 +120,10 @@ fun HealthScreen(navigator: Navigator) {
                 contentAlignment = Alignment.Center,
             ) {
                 EmptyState(
-                    emoji = "❤️",
+                    emoji = "",
                     title = "还没有健康记录",
                     subtitle = "点击右下角按钮，添加宝宝的健康信息",
+                    icon = Icons.Filled.Favorite,
                 )
             }
         } else {

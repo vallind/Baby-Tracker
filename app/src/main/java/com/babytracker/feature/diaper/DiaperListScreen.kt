@@ -147,10 +147,11 @@ fun DiaperListScreen(navigator: Navigator) {
             if (filtered.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = "🧷",
+                        emoji = "",
                         title = "还没有尿布记录",
                         subtitle = "点击底部按钮，记录宝宝每次换尿布",
                         actionText = "记录尿布",
+                        icon = Icons.Filled.BabyChangingStation,
                         onAction = {
                             editingDiaper = null
                             showForm = true

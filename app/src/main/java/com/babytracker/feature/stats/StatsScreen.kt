@@ -12,12 +12,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Height
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.vector.ImageVector
 import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.Text
@@ -121,18 +123,20 @@ fun StatsScreen(navigator: Navigator) {
                 state.isLoading -> StatsLoadingState()
                 state.errorMessage != null -> {
                     EmptyState(
-                        emoji = "⚠️",
+                        emoji = "",
                         title = "统计数据加载失败",
                         subtitle = state.errorMessage.orEmpty(),
                         actionText = "重新加载",
                         onAction = viewModel::retry,
+                        icon = Icons.Filled.Warning,
                     )
                 }
                 !state.hasAnyData -> {
                     EmptyState(
-                        emoji = "📊",
+                        emoji = "",
                         title = "本周期暂无统计数据",
                         subtitle = "完成喂养、睡眠或生长记录后，这里会显示对应趋势",
+                        icon = Icons.Filled.BarChart,
                     )
                 }
                 else -> {

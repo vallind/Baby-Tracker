@@ -8,9 +8,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -120,7 +122,12 @@ fun BabyProfileScreen(navigator: Navigator) {
                                 .border(2.dp, c.surface, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text("📷", style = typography.body2)
+                            Icon(
+                                Icons.Filled.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = Color.White,
+                            )
                         }
                     }
 
@@ -143,11 +150,6 @@ fun BabyProfileScreen(navigator: Navigator) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center,
                     ) {
-                        Text(
-                            if (baby.gender == "男") "👦" else "👧",
-                            style = typography.title3,
-                        )
-                        Spacer(Modifier.width(4.dp))
                         Text(
                             "${if (baby.gender == "男") "男宝" else "女宝"}",
                             style = typography.body1,

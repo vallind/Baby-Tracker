@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,7 +40,7 @@ import java.time.temporal.ChronoUnit
 private data class CategoryOverview(
     val type: MessageType,
     val label: String,
-    val emoji: String,
+    val icon: ImageVector,
     val bgColor: Color,
 )
 
@@ -47,9 +48,9 @@ private data class CategoryOverview(
 private fun categoryOverviews(): List<CategoryOverview> {
     val c = ElyonTheme.colorScheme
     return listOf(
-        CategoryOverview(MessageType.INTERACTION, "互动消息", "\uD83D\uDCAC", c.primary),
-        CategoryOverview(MessageType.SYSTEM, "系统通知", "\uD83D\uDD14", c.primary),
-        CategoryOverview(MessageType.SERVICE, "服务通知", "\u2B50", c.secondary),
+        CategoryOverview(MessageType.INTERACTION, "互动消息", Icons.Filled.ChatBubble, c.primary),
+        CategoryOverview(MessageType.SYSTEM, "系统通知", Icons.Filled.Notifications, c.primary),
+        CategoryOverview(MessageType.SERVICE, "服务通知", Icons.Filled.Star, c.secondary),
     )
 }
 
@@ -112,9 +113,10 @@ fun MessageScreen(navigator: Navigator) {
                     contentAlignment = Alignment.Center,
                 ) {
                     EmptyState(
-                        emoji = "\uD83D\uDCED",
+                        emoji = "",
                         title = "暂无消息",
                         subtitle = if (filterType != null) "该分类暂无消息" else "新的消息会在这里显示",
+                        icon = Icons.Filled.Email,
                     )
                 }
             } else {
@@ -182,9 +184,11 @@ private fun CategoryOverviewBar(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Column {
-                        Text(
-                            cat.emoji,
-                            style = ElyonTheme.textStyles.title1,
+                        Icon(
+                            cat.icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp),
+                            tint = cat.bgColor,
                         )
                         Spacer(Modifier.height(spacing.xs))
                         Text(

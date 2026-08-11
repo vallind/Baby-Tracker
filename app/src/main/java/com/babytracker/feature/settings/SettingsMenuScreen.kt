@@ -17,6 +17,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.Sync
 import com.babytracker.navigation.Navigator
 import com.babytracker.core.ui.components.scaffold.AppScaffold
 import com.babytracker.core.ui.components.switchcontrol.AppSwitch
@@ -42,21 +52,21 @@ fun PreferenceSettingsScreen(navigator: Navigator) {
     ) {
         SettingsCard {
             SettingsRow(
-                emoji = "🎨",
+                icon = Icons.Filled.Palette,
                 label = "主题模式",
                 subtitle = themeNameLabel(themeCtrl.currentThemeName),
                 onClick = { showThemePicker = true },
             )
             SettingsDivider()
             SettingsRow(
-                emoji = "📐",
+                icon = Icons.Filled.Straighten,
                 label = AppStrings.densityLabel,
                 subtitle = densityCtrl.currentDensity.label,
                 onClick = { showDensityPicker = true },
             )
             SettingsDivider()
             SettingsRow(
-                emoji = "✨",
+                icon = Icons.Filled.Star,
                 label = AppStrings.aiSettings,
                 subtitle = "模型、宝宝数据与回答偏好",
                 onClick = { navigator.navigate(Route.AiSettings) },
@@ -87,7 +97,7 @@ fun DataSettingsScreen(navigator: Navigator) {
     ) {
         SettingsCard {
             SettingsRow(
-                emoji = "🔄",
+                icon = Icons.Filled.Sync,
                 label = "同步设置",
                 subtitle = if (syncConfig.autoSync) {
                     "已开启 / 延迟 ${syncConfig.syncDelay.label}"
@@ -98,14 +108,14 @@ fun DataSettingsScreen(navigator: Navigator) {
             )
             SettingsDivider()
             SettingsRow(
-                emoji = "📦",
+                icon = Icons.Filled.Archive,
                 label = "备份与恢复",
                 subtitle = "本地备份、WebDAV 与数据恢复",
                 onClick = { navigator.navigate(Route.Backup) },
             )
             SettingsDivider()
             SettingsRow(
-                emoji = "🔐",
+                icon = Icons.Filled.Lock,
                 label = "隐私设置",
                 subtitle = "管理数据与隐私选项",
                 onClick = {
@@ -136,7 +146,7 @@ fun SupportSettingsScreen(navigator: Navigator) {
     ) {
         SettingsCard {
             SettingsRow(
-                emoji = "❓",
+                icon = Icons.AutoMirrored.Filled.Help,
                 label = "帮助与反馈",
                 subtitle = "使用问题与意见反馈",
                 onClick = {
@@ -145,7 +155,7 @@ fun SupportSettingsScreen(navigator: Navigator) {
             )
             SettingsDivider()
             SettingsRow(
-                emoji = "📋",
+                icon = Icons.Filled.Description,
                 label = "运行日志",
                 subtitle = if (logCaptureEnabled) "日志抓取中，点击查看" else "已关闭",
                 trailing = {
@@ -168,7 +178,7 @@ fun SupportSettingsScreen(navigator: Navigator) {
             )
             SettingsDivider()
             SettingsRow(
-                emoji = "ℹ️",
+                icon = Icons.Filled.Info,
                 label = "关于 Baby Tracker",
                 subtitle = "版本 $versionName",
             )

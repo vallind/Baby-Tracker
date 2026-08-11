@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import io.elyon.kmp.basic.Icon
 import io.elyon.kmp.basic.Text
 import com.babytracker.core.ui.components.chip.AppFilterChip
 import androidx.compose.runtime.*
@@ -231,7 +232,12 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
 
     Box(Modifier.fillMaxWidth().padding(vertical = 60.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("👨‍👩‍👧", style = typography.headline1)
+            Icon(
+                Icons.Filled.Group,
+                contentDescription = null,
+                modifier = Modifier.size(64.dp),
+                tint = ElyonTheme.colorScheme.primary,
+            )
             Spacer(Modifier.height(spacing.md))
             Text(
                 "创建或加入家庭\n与家人共享宝宝的成长记录",
@@ -276,7 +282,12 @@ private fun FamilyDetailView(
                         .background(Gradients.primary(ElyonTheme.colorScheme)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("👨‍👩‍👧", style = typography.headline2)
+                    Icon(
+                        Icons.Filled.Group,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = ElyonTheme.colorScheme.onPrimary,
+                    )
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
@@ -339,9 +350,11 @@ private fun FamilyDetailView(
                                 .background(if (member.role == "owner") c.primary else c.primaryContainer),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                if (member.role == "owner") "👑" else "👤",
-                                style = typography.title3,
+                            Icon(
+                                if (member.role == "owner") Icons.Filled.Star else Icons.Filled.Person,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = if (member.role == "owner") c.onPrimary else c.onPrimaryContainer,
                             )
                         }
                         Spacer(Modifier.width(10.dp))

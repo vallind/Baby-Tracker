@@ -76,11 +76,12 @@ fun HomeScreen(navigator: Navigator) {
     ) { padding ->
         if (baby == null) {
             EmptyState(
-                emoji = "🍼",
+                emoji = "",
                 title = "还没有添加宝宝",
                 subtitle = "点击下方按钮，记录宝宝成长的每一个瞬间",
                 actionText = "添加宝宝",
                 onAction = { navigator.navigate(Route.BabyManagement) },
+                icon = Icons.Filled.ChildCare,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold

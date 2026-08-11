@@ -17,6 +17,12 @@
 - 主界面 emoji 图标迁移为矢量图标：首页宫格/最近记录、时间轴筛选与类型选择、统计卡、设置主列表、喂养/睡眠/尿布/生长/健康记录卡
 - `SettingsRow` 增加 icon 参数并保留 emoji 兼容入口，存量设置子页后续批次继续迁移
 
+**Elyon 示例对齐 Phase 2b（emoji 清零）：**
+- 剩余设置子页（AI 设置/偏好设置/同步设置）、消息分类、家庭页、宝宝资料、发育评估、提醒、疫苗、全部空状态迁移为矢量图标
+- `EmptyState` 增加 icon 参数（emoji 参数保留兼容），各页面空态改走主题色矢量图标
+- 移除 `TimelineItem.emoji` 死字段（TimelineScreen 已改用 typeIcon）
+- 全项目用户可见 emoji 清零（仅剩同步/日志的文本对勾与 KDoc 示例）
+
 **设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
 - Typography 双体系统一：LocalAppTypography 改供自建 AppTypography，新增 8 级补齐至自建 12 级单体系（displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall），删除裸字段与 LocalAppTypographyStyle，禁止组件层暴露 M3 令牌类型（仅 theme 层桥接），迁移 31 文件与 13 处 M3 直用
 - Button 家族收敛为 AppButton + ButtonVariant 枚举（Primary/Secondary/Text），迁移 58 处调用方，颜色改走 ButtonTokens

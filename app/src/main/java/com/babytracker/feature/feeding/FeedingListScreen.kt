@@ -141,10 +141,11 @@ fun FeedingListScreen(navigator: Navigator) {
             if (filteredFeedings.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = "\uD83C\uDF7C",
+                        emoji = "",
                         title = "还没有喂养记录",
                         subtitle = "点击底部按钮，记录宝宝的每一次进食",
                         actionText = "记录喂养",
+                        icon = Icons.Filled.ChildCare,
                         onAction = {
                             editingFeeding = null
                             showForm = true
