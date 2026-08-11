@@ -24,7 +24,7 @@ Android 原生宝宝护理记录 App。Jetpack Compose + Material 3，MVVM + Koi
 
 ```kotlin
 // AppTokens.kt — 核心语义令牌
-AppColors.light()/dark()          // 39 字段，AppColors.derive(primary) 自动派生
+AppColors.light()/dark()          // 42 字段，AppColors.derive(primary) 自动派生
 LocalAppSpacing.current           // 0/2/4/8/16/24/32/48 间距令牌
 LocalAppShapes.current            // 圆角令牌 + radiusScale 全局缩放
 

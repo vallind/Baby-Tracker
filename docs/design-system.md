@@ -34,7 +34,7 @@ Typography 自建 12 级：displayLarge/headlineLarge/headlineMedium/headlineSma
 ## derive() 模式
 
 ```kotlin
-AppColors.derive(primary) → HSL 色相位移，自动重算所有 39 个字段（✅ 已实现）
+AppColors.derive(primary) → 语义派生，自动重算全部 42 个字段（✅ 已实现）
 AppComponentTokens.default(colors) → 从 AppColors 自动派生组件令牌颜色（✅ 已实现）
 tokens.derive { field = value } → 部分覆盖语法糖（⏳ TODO，TT-032，尚未实现，需逐个字段手动覆盖）
 ```
