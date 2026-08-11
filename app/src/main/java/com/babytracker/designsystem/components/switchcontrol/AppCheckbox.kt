@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
  * 主题化复选框 — 对标 Palette Checkbox，消费 AppComponentTokens.selectionControl。
@@ -33,7 +34,7 @@ fun AppCheckbox(
         colors = M3CheckboxDefaults.colors(
             checkedColor = checkedColor,
             uncheckedColor = uncheckedColor,
-            checkmarkColor = Color.White,
+            checkmarkColor = LocalAppColors.current.onPrimary,
             disabledCheckedColor = disabledColor,
             disabledUncheckedColor = disabledColor,
         ),

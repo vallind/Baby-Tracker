@@ -39,7 +39,7 @@ fun BadgeIcon(
             ) {
                 Text(
                     text,
-                    color = Color.White,
+                    color = LocalAppColors.current.onError,
                     fontSize = if (count > 99) 9.sp else 11.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,

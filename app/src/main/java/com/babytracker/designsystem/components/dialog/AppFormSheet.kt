@@ -77,7 +77,7 @@ fun AppFormSheet(
                 enabled = saveEnabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = c.primary,
-                    contentColor = Color.White,
+                    contentColor = c.onPrimary,
                 ),
             ) {
                 Text(saveText)

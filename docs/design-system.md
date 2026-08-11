@@ -11,7 +11,7 @@
   显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
 
 三层令牌：
-  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 40字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
+  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 42字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
   designsystem/theme/AppComponentTokens.kt  — 组件令牌（34 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/SummaryCard/EmptyState；AppDensityTokens 为非组件令牌，不在计数内）
   designsystem/util/AppDefaults.kt          — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
 

@@ -181,7 +181,7 @@ fun LogViewerScreen(navController: NavController) {
                     Text(
                         text = "已选 ${selectedIds.size} 条，点击图标复制",
                         style = LocalAppTypography.current.labelSmall,
-                        color = c.onPrimary,
+                        color = c.primary,
                         modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
                     )
                 }

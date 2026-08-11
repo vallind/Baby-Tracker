@@ -33,19 +33,19 @@ fun CountdownChip(
         val today = LocalDate.now()
         val days = ChronoUnit.DAYS.between(today, localDate).toInt()
         when {
-            days < 0 -> Pair(colors.danger, "已过期 ${-days} 天")
-            days == 0 -> Pair(colors.warning, "今天")
-            days <= 7 -> Pair(colors.primary, "还有 ${days} 天")
+            days < 0 -> Triple(colors.danger, colors.onError, "已过期 ${-days} 天")
+            days == 0 -> Triple(colors.warning, colors.onWarning, "今天")
+            days <= 7 -> Triple(colors.primary, colors.onPrimary, "还有 ${days} 天")
             else -> return@remember null
         }
     }
 
     if (result == null) return
-    val (bgColor, label) = result
+    val (bgColor, contentColor, label) = result
 
     Text(
         label,
-        color = Color.White,
+        color = contentColor,
         style = LocalAppTypography.current.labelSmall,
         fontWeight = FontWeight.Bold,
         modifier = modifier

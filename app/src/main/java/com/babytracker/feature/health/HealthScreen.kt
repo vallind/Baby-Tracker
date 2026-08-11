@@ -6,11 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -217,7 +214,6 @@ private fun HealthCategorySummaryCard(
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     AppCard(
-        elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
             .padding(horizontal = spacing.md)
@@ -267,7 +263,6 @@ private fun VaccinationSummaryCard(
     val typography = LocalAppTypography.current
     val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
     AppCard(
-        elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
             .padding(horizontal = spacing.md)

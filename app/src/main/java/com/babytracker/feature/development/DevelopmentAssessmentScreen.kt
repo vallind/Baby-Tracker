@@ -85,6 +85,14 @@ private fun scoreColor(score: Int): Color {
     }
 }
 
+/** 选中评分格的内容色：与 chipColor 成对，避免硬编码白字 */
+private fun selectedScoreColor(c: AppColors, score: Int): Color = when (score) {
+    1 -> c.onWarning
+    2 -> c.onSuccess
+    3 -> c.onPrimary
+    else -> c.textPrimary
+}
+
 private fun abilityDescription(title: String, score: Int): String = when (title) {
     "大运动" -> when (score) {
         0 -> "尚未观察大运动表现"
@@ -305,7 +313,6 @@ private fun AssessmentItemCard(
     val shapes = LocalAppShapes.current
     val statusColor = scoreColor(score)
     AppCard(
-        elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -519,7 +526,7 @@ private fun ScoreSelector(
                         label,
                         style = LocalAppTypography.current.labelMedium,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) Color.White else c.textSecondary,
+                        color = if (isSelected) selectedScoreColor(c, value) else c.textSecondary,
                     )
                 }
             }

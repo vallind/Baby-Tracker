@@ -42,15 +42,16 @@ private data class CategoryOverview(
     val label: String,
     val emoji: String,
     val bgColor: Color,
+    val contentColor: Color,
 )
 
 @Composable
 private fun categoryOverviews(): List<CategoryOverview> {
     val c = LocalAppColors.current
     return listOf(
-        CategoryOverview(MessageType.INTERACTION, "互动消息", "\uD83D\uDCAC", c.primary),
-        CategoryOverview(MessageType.SYSTEM, "系统通知", "\uD83D\uDD14", c.primary),
-        CategoryOverview(MessageType.SERVICE, "服务通知", "\u2B50", c.secondary),
+        CategoryOverview(MessageType.INTERACTION, "互动消息", "\uD83D\uDCAC", c.primary, c.onPrimary),
+        CategoryOverview(MessageType.SYSTEM, "系统通知", "\uD83D\uDD14", c.primary, c.onPrimary),
+        CategoryOverview(MessageType.SERVICE, "服务通知", "\u2B50", c.secondary, c.onSecondary),
     )
 }
 
@@ -126,7 +127,7 @@ fun MessageScreen(navController: NavController) {
                     contentPadding = PaddingValues(
                         start = spacing.md,
                         end = spacing.md,
-                        top = 12.dp,
+                        top = spacing.sm,
                         bottom = spacing.md,
                     ),
                     verticalArrangement = Arrangement.spacedBy(spacing.sm),
@@ -170,7 +171,6 @@ private fun CategoryOverviewBar(
             val unread = unreadMap[cat.type] ?: 0
             val selected = selectedType == cat.type
             AppCard(
-                elevation = 2.dp,
                 containerColor = if (selected) cat.bgColor else c.surface,
                 modifier = Modifier
                     .weight(1f)
@@ -192,7 +192,7 @@ private fun CategoryOverviewBar(
                             cat.label,
                             style = LocalAppTypography.current.bodyMedium,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                            color = if (selected) Color.White else c.textPrimary,
+                            color = if (selected) cat.contentColor else c.textPrimary,
                         )
                     }
                     if (unread > 0) {
@@ -201,7 +201,7 @@ private fun CategoryOverviewBar(
                                 .size(20.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (selected) Color.White.copy(alpha = 0.3f) else c.danger,
+                                    if (selected) cat.contentColor.copy(alpha = 0.3f) else c.danger,
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -209,7 +209,7 @@ private fun CategoryOverviewBar(
                                 if (unread > 99) "99+" else unread.toString(),
                                 style = LocalAppTypography.current.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (selected) Color.White else Color.White,
+                                color = if (selected) cat.contentColor else c.onError,
                             )
                         }
                     }
@@ -228,7 +228,6 @@ private fun MessageCard(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     AppCard(
-        elevation = 2.dp,
         containerColor = c.surface,
         modifier = Modifier
             .fillMaxWidth()
@@ -315,14 +314,14 @@ private fun MessageLeadingIcon(message: AppMessage) {
                 Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(pickColor),
+                    .background(pickColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     initial,
                     style = LocalAppTypography.current.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = pickColor,
                 )
             }
         }

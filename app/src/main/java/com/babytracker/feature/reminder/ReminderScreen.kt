@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.Icon
@@ -14,14 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -40,6 +37,8 @@ import com.babytracker.core.domain.model.Reminder
 import com.babytracker.core.domain.model.ReminderType
 import com.babytracker.core.data.repository.ReminderRepository
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.SegmentedControl
+import com.babytracker.designsystem.components.topbar.AppTopBar
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -66,6 +65,12 @@ fun ReminderScreen(navController: NavController) {
 
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
+        topBar = {
+            AppTopBar(
+                title = "提醒中心",
+                onBack = { navController.popBackStack() },
+            )
+        },
     ) { padding ->
         if (babyId == 0) {
             EmptyState(
@@ -84,8 +89,6 @@ fun ReminderScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            ReminderHeader(onBack = { navController.popBackStack() })
-
             ReminderTabBar(tab = state.tab, onSwitch = viewModel::switchTab)
 
             val list = if (state.tab == ReminderTab.PENDING) state.pending else state.history
@@ -132,81 +135,19 @@ fun ReminderScreen(navController: NavController) {
 }
 
 @Composable
-private fun ReminderHeader(onBack: () -> Unit) {
-    val c = LocalAppColors.current
+private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     Box(
         Modifier
             .fillMaxWidth()
-            .background(Gradients.pageHeader(c)),
+            .padding(horizontal = spacing.md, vertical = spacing.sm),
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(shapes.full))
-                    .clickable(onClick = onBack),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "返回",
-                    tint = c.textPrimary,
-                )
-            }
-            Spacer(Modifier.width(spacing.xs))
-            Text(
-                "提醒中心",
-                style = LocalAppTypography.current.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = c.textPrimary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.md, vertical = 12.dp),
-    ) {
-        ReminderTab.entries.forEach { t ->
-            Column(
-                Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(shapes.large))
-                    .clickable { onSwitch(t) }
-                    .padding(vertical = spacing.sm),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    if (t == ReminderTab.PENDING) "待办提醒" else "历史提醒",
-                    style = LocalAppTypography.current.bodyLarge,
-                    fontWeight = if (tab == t) FontWeight.Bold else FontWeight.Normal,
-                    color = if (tab == t) c.primary else c.textSecondary,
-                )
-                Spacer(Modifier.height(6.dp))
-                Box(
-                    Modifier
-                        .width(spacing.lg)
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(if (tab == t) c.primary else Color.Transparent),
-                )
-            }
-        }
+        SegmentedControl(
+            labels = listOf("待办提醒", "历史提醒"),
+            selectedIndex = if (tab == ReminderTab.PENDING) 0 else 1,
+            onSelect = { idx -> onSwitch(if (idx == 0) ReminderTab.PENDING else ReminderTab.HISTORY) },
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

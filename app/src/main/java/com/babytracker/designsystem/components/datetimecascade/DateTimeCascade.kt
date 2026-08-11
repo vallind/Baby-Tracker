@@ -110,7 +110,7 @@ fun DateTimeCascadeDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
+                .background(LocalAppColors.current.scrim)
                 .clickable(enabled = false) {},
             contentAlignment = Alignment.BottomCenter,
         ) {

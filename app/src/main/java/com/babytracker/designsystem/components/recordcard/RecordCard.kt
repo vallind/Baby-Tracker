@@ -96,7 +96,7 @@ fun RecordCard(
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = LocalAppColors.current.onError,
                         modifier = Modifier.clearAndSetSemantics {}, // 背景删除图标仅装饰，清空语义防止常驻无障碍树
                     )
                 }

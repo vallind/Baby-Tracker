@@ -199,7 +199,7 @@ private fun LocalDataView(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
-    AppCard(modifier = Modifier.fillMaxWidth(), elevation = 1.dp) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(spacing.lg)) {
             Text("本机数据", style = typography.titleMedium)
             Spacer(Modifier.height(spacing.sm))
@@ -266,7 +266,6 @@ private fun FamilyDetailView(
     // 家庭名称卡片
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        elevation = 1.dp,
     ) {
         Column(Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -323,7 +322,6 @@ private fun FamilyDetailView(
         Text("家庭成员", style = typography.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
         AppCard(
             modifier = Modifier.fillMaxWidth(),
-            elevation = 1.dp,
         ) {
             Column(Modifier.padding(horizontal = 12.dp)) {
                 members.forEachIndexed { index, member ->

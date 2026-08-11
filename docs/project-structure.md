@@ -64,7 +64,7 @@ designsystem/
 | 睡眠统计 | `feature/sleep/SleepListScreen.kt` + `feature/home/HomeViewModel.kt` |
 | 生长图表 | `feature/growth/GrowthScreen.kt`（Canvas + WHO 参考线） |
 | 疫苗计划 | `core/util/VaccineSchedule.kt`（21 条预设） |
-| 核心令牌 | `designsystem/theme/AppTokens.kt` — AppColors(40字段)/Spacing/Shapes/Elevation/Opacity/Motion/Typography |
+| 核心令牌 | `designsystem/theme/AppTokens.kt` — AppColors(42字段)/Spacing/Shapes/Elevation/Opacity/Motion/Typography |
 | 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 34 种组件令牌（derive{} 部分覆盖为 TODO，未实现）；AppDensityTokens 为非组件令牌（见 design-system.md） |
 | 密度/无障碍 | `designsystem/theme/DensityController.kt` + `DensityPickerSheet`（`feature/settings/SettingsScreen.kt`）；`docs/a11y-baseline.md` |
 | 组件库 | `designsystem/components/`（27 个组件目录 + 根级组件，含 Defaults） |
