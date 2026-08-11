@@ -606,8 +606,8 @@ fun BabyManagementScreen(navController: NavController) {
                                 elevation = elev.level1,
                             ) {
                                 Row(Modifier.padding(spacing.md), verticalAlignment = Alignment.CenterVertically) {
-                                    Box(Modifier.size(36.dp).clip(CircleShape).background(c.textTertiary), contentAlignment = Alignment.Center) {
-                                        Text(b.name.take(1), color = Color.White, fontWeight = FontWeight.SemiBold)
+                                    Box(Modifier.size(36.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {
+                                        Text(b.name.take(1), color = c.primary, fontWeight = FontWeight.SemiBold)
                                     }
                                     Spacer(Modifier.width(10.dp))
                                     Column(Modifier.weight(1f)) {
@@ -947,7 +947,7 @@ fun BackupScreen(navController: NavController) {
                         label = if (restoring) "恢复中..." else "选择备份文件",
                         enabled = !restoring,
                         containerColor = c.error,
-                        contentColor = Color.White,
+                        contentColor = c.onError,
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

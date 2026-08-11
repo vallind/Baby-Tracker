@@ -11,8 +11,8 @@
   显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
 
 三层令牌：
-  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 39字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
-  designsystem/theme/AppComponentTokens.kt  — 组件令牌（33 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/EmptyState；AppDensityTokens 为非组件令牌，不在计数内）
+  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 40字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
+  designsystem/theme/AppComponentTokens.kt  — 组件令牌（34 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/SummaryCard/EmptyState；AppDensityTokens 为非组件令牌，不在计数内）
   designsystem/util/AppDefaults.kt          — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
 
 Typography 自建 12 级：displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall（禁止直接使用 M3 Typography，仅 theme 层桥接）
@@ -61,6 +61,7 @@ AppSlider(value, onValueChange)                    // 滑块
 AppCircularProgress()                              // 加载指示器
 AppChip / AppFilterChip(label, selected, onClick)  // 标签/筛选胶囊
 AppListItem(emoji, label, onClick)                 // 列表项
+AppSummaryCard(emoji, title, value, subtitle, gradient, contentColor) // 渐变摘要卡（夜间睡眠/今日尿布等）
 AppMarkdownText(markdown = content)                // 安全渲染文本 Markdown，不加载远程图片或执行 HTML
 DateTimeCascadeDialog(...)                          // 级联日期时间选择（含 dateOnly 模式）
 RecordCard(record, ...)                             // 记录卡片（左滑删除 + Snackbar 撤销）
@@ -79,7 +80,7 @@ snackbar.showUndo(onUndo = { repo.update(r) })     // 替代 showSnackbar + Acti
 | 舒适（默认） | `comfortable` | 舒适 | 1.0f | 0dp（48dp） |
 | 宽松 | `large` | 宽松 | 1.15f | +8dp（48 → 56dp） |
 
-- 定义于 `designsystem/theme/AppTokens.kt`：`AppDensity` 枚举（含 `fromKey` 解析，未知 key 回退舒适档）+ `AppDensity.tokens` 扩展属性映射三档数值；`AppDensityTokens` 是**非组件令牌**（间距缩放系数 + 控件高度调整量），不进入 `AppComponentTokens` 聚合，不影响组件令牌 33 个聚合字段计数。
+- 定义于 `designsystem/theme/AppTokens.kt`：`AppDensity` 枚举（含 `fromKey` 解析，未知 key 回退舒适档）+ `AppDensity.tokens` 扩展属性映射三档数值；`AppDensityTokens` 是**非组件令牌**（间距缩放系数 + 控件高度调整量），不进入 `AppComponentTokens` 聚合，不影响组件令牌 34 个聚合字段计数。
 - `LocalAppDensity`（`staticCompositionLocalOf`，默认舒适档）暴露当前密度，`BabyTrackerTheme(density = ...)` 读取后统一缩放。
 - **缩放机制（零迁移）**：
   1. `AppSpacing().scaled(spacingScale)` — 全量间距令牌按系数缩放（`none` 不缩放），注入 `LocalAppSpacing`；

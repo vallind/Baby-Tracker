@@ -83,8 +83,7 @@ fun StatsScreen(navController: NavController) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.lg)
-                    .padding(top = spacing.md, bottom = 12.dp),
+                    .padding(horizontal = spacing.md, vertical = spacing.sm),
             ) {
                 SegmentedControl(
                     labels = periodLabels,
@@ -201,7 +200,7 @@ private fun DateRangeNav(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.lg),
+            .padding(horizontal = spacing.md),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {

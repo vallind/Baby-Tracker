@@ -938,6 +938,32 @@ data class SegmentedControlTokens(
 //  参照 PaletteComponentThemes.default()：统一接收所有基础令牌，分发到各组件
 // ═══════════════════════════════════════════════════════════
 
+// —— 渐变摘要卡（夜间睡眠 / 今日尿布等大数字摘要） ——
+@Immutable
+data class SummaryCardTokens(
+    val cornerRadius: Dp,
+    val innerPadding: Dp,
+    val contentColor: Color,
+    val iconContainerAlpha: Float,
+    val titleAlpha: Float,
+    val subtitleAlpha: Float,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            spacing: AppSpacing,
+        ): SummaryCardTokens = SummaryCardTokens(
+            cornerRadius = shapes.scaled(shapes.large),
+            innerPadding = spacing.lg,
+            contentColor = colors.onPrimary,
+            iconContainerAlpha = 0.25f,
+            titleAlpha = 0.90f,
+            subtitleAlpha = 0.75f,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -971,6 +997,7 @@ data class AppComponentTokens(
     val dateTimeCascade: DateTimeCascadeTokens,
     val sheet: SheetTokens,
     val segmentedControl: SegmentedControlTokens,
+    val summaryCard: SummaryCardTokens,
     val emptyState: EmptyStateTokens,
 ) {
     companion object {
@@ -1017,6 +1044,7 @@ data class AppComponentTokens(
             dateTimeCascade = DateTimeCascadeTokens.default(colors, shapes),
             sheet = SheetTokens.default(colors, shapes),
             segmentedControl = SegmentedControlTokens.default(colors, shapes, typography),
+            summaryCard = SummaryCardTokens.default(colors, shapes, spacing),
             emptyState = EmptyStateTokens.default(colors, spacing),
         )
     }

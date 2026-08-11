@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -46,6 +45,7 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
+import com.babytracker.designsystem.components.summarycard.AppSummaryCard
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -169,59 +169,23 @@ fun SleepListScreen(navController: NavController) {
                     val nightEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
                     val durSec = DateUtils.durationToTotalSeconds(nightStart, nightEnd)
                     val timeRange = "${nightStart.format(DateTimeFormatter.ofPattern("HH:mm"))}-${nightEnd.format(DateTimeFormatter.ofPattern("HH:mm"))}"
-                    val cardShape = RoundedCornerShape(shapes.large)
 
-                    AppCard(
-                        containerColor = Color.Transparent,
-                        elevation = 0.dp,
+                    AppSummaryCard(
+                        emoji = "\uD83C\uDF19",
+                        title = "夜间睡眠",
+                        value = DateUtils.durationFullText(durSec),
+                        subtitle = timeRange,
+                        gradient = Gradients.sleepHeader(c),
+                        contentColor = c.onSecondary,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = spacing.md)
                             .padding(bottom = spacing.md),
-                    ) {
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .background(Gradients.sleepHeader(c), cardShape)
-                        ) {
-                            Column(Modifier.padding(20.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        Modifier
-                                            .size(spacing.xl)
-                                            .clip(RoundedCornerShape(shapes.medium))
-                                            .background(Color.White.copy(alpha = 0.25f)),
-                                        contentAlignment = Alignment.Center,
-                                    ) { Text("\uD83C\uDF19", style = LocalAppTypography.current.titleMedium) }
-                                    Spacer(Modifier.width(spacing.sm))
-                                    Text(
-                                        "夜间睡眠",
-                                        style = LocalAppTypography.current.titleMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color.White.copy(alpha = 0.9f),
-                                    )
-                                }
-                                Spacer(Modifier.height(20.dp))
-                                Text(
-                                    DateUtils.durationFullText(durSec),
-                                    style = LocalAppTypography.current.headlineMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                )
-                                Spacer(Modifier.height(spacing.xs))
-                                Text(
-                                    timeRange,
-                                    style = LocalAppTypography.current.bodyMedium,
-                                    color = Color.White.copy(alpha = 0.75f),
-                                )
-                            }
-                        }
-                    }
+                    )
 
                     // —— 睡眠详情 ——
                     AppCard(
                         containerColor = c.surface,
-                        elevation = 0.dp,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = spacing.md)

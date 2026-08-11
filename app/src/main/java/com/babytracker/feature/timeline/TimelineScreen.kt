@@ -128,7 +128,7 @@ fun TimelineScreen(navController: NavController) {
                 onSelect = { typeFilter = filterKeys[it] },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.md, vertical = 6.dp),
+                    .padding(horizontal = spacing.md, vertical = spacing.sm),
             )
             AppDivider(color = c.divider, thickness = 0.5.dp)
 

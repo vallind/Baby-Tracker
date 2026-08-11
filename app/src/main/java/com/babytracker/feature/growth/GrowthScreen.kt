@@ -126,10 +126,11 @@ fun GrowthScreen(navController: NavController) {
             }
 
             val dateLabel = remember(selectedDate, today) {
-                when (selectedDate) {
-                    today -> "今天"
-                    today.minusDays(1) -> "昨天"
-                    else -> "选择日期"
+                when {
+                    selectedDate == today -> "今天"
+                    selectedDate == today.minusDays(1) -> "昨天"
+                    selectedDate == today.plusDays(1) -> "明天"
+                    else -> selectedDate.format(DateTimeFormatter.ofPattern("MM月dd日"))
                 }
             }
 
@@ -138,7 +139,7 @@ fun GrowthScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .clickable { showDatePicker = true }
-                    .padding(horizontal = spacing.md, vertical = 8.dp),
+                    .padding(horizontal = spacing.md, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -207,7 +208,6 @@ fun GrowthScreen(navController: NavController) {
 
                             AppCard(
                                 containerColor = c.surface,
-                                elevation = 0.dp,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = spacing.md),
@@ -270,7 +270,6 @@ fun GrowthScreen(navController: NavController) {
 
                         AppCard(
                             containerColor = c.surface,
-                            elevation = 2.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = spacing.md),
@@ -356,7 +355,6 @@ fun GrowthScreen(navController: NavController) {
                     item {
                         AppCard(
                             containerColor = c.surface,
-                            elevation = 0.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = spacing.md),

@@ -1,6 +1,7 @@
 package com.babytracker.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -68,5 +69,15 @@ class ComponentTokensStateAuditTest {
             "状态色不得为 Unspecified: $stateColors",
             stateColors.all { it != Color.Unspecified },
         )
+    }
+
+    @Test
+    fun `摘要卡片令牌必须从主题派生且透明度落在有效范围`() {
+        val t = tokens(darkTheme = false)
+        assertTrue(t.summaryCard.cornerRadius > 0.dp)
+        assertTrue(t.summaryCard.contentColor != Color.Unspecified)
+        assertTrue(t.summaryCard.iconContainerAlpha in 0f..1f)
+        assertTrue(t.summaryCard.titleAlpha in 0f..1f)
+        assertTrue(t.summaryCard.subtitleAlpha in 0f..1f)
     }
 }

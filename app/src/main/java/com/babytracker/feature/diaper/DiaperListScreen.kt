@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -45,6 +44,7 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
+import com.babytracker.designsystem.components.summarycard.AppSummaryCard
 import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -160,59 +160,23 @@ fun DiaperListScreen(navController: NavController) {
                 }
             } else {
                 // —— 今日汇总大卡：移出 LazyColumn，正常布局消除负 padding ——
-                val cardShape = RoundedCornerShape(shapes.large)
 
-                AppCard(
-                    containerColor = Color.Transparent,
-                    elevation = 0.dp,
+                AppSummaryCard(
+                    emoji = "🧷",
+                    title = "今日尿布",
+                    value = "${filtered.size} 次",
+                    subtitle = "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
+                    gradient = Gradients.diaperSummary(c),
+                    contentColor = c.onTertiary,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.md)
                         .padding(bottom = spacing.md),
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .background(Gradients.diaperSummary(c), cardShape)
-                    ) {
-                        Column(Modifier.padding(20.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    Modifier
-                                        .size(spacing.xl)
-                                        .clip(RoundedCornerShape(shapes.medium))
-                                        .background(Color.White.copy(alpha = 0.25f)),
-                                    contentAlignment = Alignment.Center,
-                                ) { Text("🧷", style = LocalAppTypography.current.titleMedium) }
-                                Spacer(Modifier.width(spacing.sm))
-                                Text(
-                                    "今日尿布",
-                                    style = LocalAppTypography.current.titleMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color.White.copy(alpha = 0.9f),
-                                )
-                            }
-                            Spacer(Modifier.height(20.dp))
-                            Text(
-                                "${filtered.size} 次",
-                                style = LocalAppTypography.current.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                            )
-                            Spacer(Modifier.height(spacing.xs))
-                            Text(
-                                "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
-                                style = LocalAppTypography.current.bodyMedium,
-                                color = Color.White.copy(alpha = 0.75f),
-                            )
-                        }
-                    }
-                }
+                )
 
                 // —— 换尿布详情 ——
                 AppCard(
                     containerColor = c.surface,
-                    elevation = 0.dp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.md)
