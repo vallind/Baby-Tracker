@@ -2,7 +2,7 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-### [1.8.0] — 2026-08-08
+### [1.8.0] — 2026-08-12
 
 **设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
 - Typography 双体系统一：LocalAppTypography 改供自建 AppTypography，新增 8 级补齐至自建 12 级单体系（displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall），删除裸字段与 LocalAppTypographyStyle，禁止组件层暴露 M3 令牌类型（仅 theme 层桥接），迁移 31 文件与 13 处 M3 直用
@@ -53,6 +53,22 @@
 - 版本规范修订：CHANGELOG 按批次累积，版本号仅在发布时提升，消除逐提交升版本的通胀
 - 新增 DS 组件缺失决策路径、i18n 硬编码禁令、lessons.md 闭环义务、文档同步义务表
 - 参考文档补全 sync/data/architecture 等 4 份文档
+
+**视觉统一收敛（类型安全路由 + 核心界面 + 全页面）：**
+- 路由迁移：`sealed class Screen` 改为 `@Serializable data object` 类型安全路由（BottomNav/首页宫格/设置/时间线等同步迁移），文档同步
+- 新增 `AppSummaryCard`（SummaryCardTokens）：夜间睡眠/今日尿布渐变摘要卡收敛，圆角/内边距/透明度走组件令牌
+- AppColors 补齐 `onTertiary`/`onSuccess`/`onWarning` 成对内容色（39 → 42 字段）
+- 全页面统一：疫苗/提醒 Tab 改 SegmentedControl，提醒中心改 AppTopBar，疫苗日期改 DateTimeCascadeDialog，消息分类卡/头像/角标语义色化，卡片阴影统一走令牌，SegmentedControl/日期行/边距统一
+- 硬编码颜色清零：组件层 7 处 + feature 17 处 `Color.White`/`Color.Black` 改语义令牌；detekt `HardcodedColor` 24 处 → 0
+
+**主题单源化：**
+- 删除 ThemeColors 双轨与 LocalThemeColors（无消费方），AppTheme 直接持有 AppColors；亮/暗主题统一派生规则，6 套主题种子不变
+- M3 ColorScheme 全量从 AppColors 映射（含成对内容色），M3 background 与 pageBackground 对齐
+
+**质量与 i18n：**
+- 9 处 `String.format` 显式 `Locale.US`，detekt 0 code smells
+- i18n 批次迁移：消息中心/提醒中心/登录页（含 ViewModel 提示）文案收归 AppStrings
+- 文档同步：design-system.md（42 字段/34 令牌）、project-structure.md、README、architecture 系列文档版本头
 
 ### [1.7.11] — 2026-08-08
 

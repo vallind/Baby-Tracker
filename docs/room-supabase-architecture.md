@@ -1,6 +1,6 @@
 # Room + Supabase 架构实现文档
 
-> 最后更新：2026-08-08 · 对应版本：1.7.11 · 项目：BabyTracker Android App
+> 最后更新：2026-08-12 · 对应版本：1.8.0 · 项目：BabyTracker Android App
 
 ---
 

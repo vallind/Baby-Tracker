@@ -105,8 +105,7 @@ class FamilyIsolationTest {
         val appVersion = Regex("""versionName\s*=\s*"([^"]+)"""").find(build)?.groupValues?.get(1)
         val changelogVersions = Regex("""### \[([^]]+)]""").findAll(changelog).map { it.groupValues[1] }.toList()
 
-        // 新规范：版本号只在发布时提升，CHANGELOG 可含未发布的后续批次条目
-        // 约束：已发布的 app 版本必须能在 CHANGELOG 中找到对应条目
+        // 新规范：每次提交前升版本号，CHANGELOG 对应版本必须与 build.gradle 一致
         assertNotNull("app 版本号未找到", appVersion)
         assertTrue("app 版本 $appVersion 未出现在 CHANGELOG 中", changelogVersions.contains(appVersion))
     }

@@ -94,8 +94,8 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 
 - 所有注释**必须中文**。Commit message **必须中文**。
 - 复杂逻辑写注释解释**为什么**（why），不重复代码表面意思（what）。
-- CHANGELOG.md 按**提交批次**累积条目，**版本号只在发布时提升**（与 `app/build.gradle.kts` 的 versionName/versionCode 同步）。禁止为每次提交都升版本号。
-- CHANGELOG 条目不允许留在 `[Unreleased]` 下提交；条目未分配版本号时，在当次发布批次统一挂版本。
+- **版本号在每次提交前变更**（与 `app/build.gradle.kts` 的 versionName/versionCode 同步）：versionCode 每次 +1；versionName 常规提交升 patch，功能级批次可升 minor。禁止提交前不升版本号。
+- 每次提交前把本批次条目写入 CHANGELOG 对应版本小节（版本号与 build.gradle 一致），不允许 `[Unreleased]` 或“未分配版本号”的条目提交。
 
 ---
 
