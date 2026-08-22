@@ -38,13 +38,8 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 - 单次用途的代码**不做抽象**（不抽 Manager / 不建 sealed class / 不写泛型工具，除非明确要求）。
 - 写完自问："这代码会被骂过度设计吗？"——如果是，立即简化。
 
-### 3. 手术刀式修改，不乱碰
 
-- **只改用户要求的地方**。不顺手"优化"旁边的代码。
-- 匹配文件现有风格。
-- **清理只限于自己改过的地方的副作用**（我删了函数导致变量没用 → 删掉它）。不删改动范围外的死代码，最多顺嘴提一句。
-
-### 4. 目标驱动，自我闭环
+### 3. 目标驱动，自我闭环
 
 - 把模糊描述转化成**可验证的具体目标**。
 - 多步骤任务先发简要计划，确认后一路执行到底。
@@ -55,16 +50,8 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 
 | # | 规则 | 错误写法 | 正确写法 |
 |---|---|---|---|
-| 1 | **百分比双向夹紧** | `.coerceAtMost(1f)` 或 `.coerceAtLeast(0f)` 单独出现 | `.coerceIn(0f, 1f)` |
-| 2 | **今日日期过滤** | `.firstOrNull { it.date == today }` 或 `startsWith(today)` 前缀比较 | `.filter { it.date.take(10) == today }` |
-| 3 | **ViewModel 注册** | `single { MyViewModel(...) }` | `viewModel { MyViewModel(...) }` |
-| 4 | **ViewModel 获取** | `get()` | `koinViewModel()` |
-| 5 | **按 ID 加载数据** | 构造函数里直接 `flow` | `_trigger` + `flatMapLatest` 模式（防竞态/陈旧数据，宝宝切换时能重建数据流） |
-| 6 | **Composable 嵌套定义** | `@Composable fun A() { @Composable fun B() {} }` | 所有 `@Composable` 定义在文件**顶层** |
-| 7 | **AlertDialog 平级** | 弹窗套在其他 if 块内部 | 所有 `AlertDialog` 在顶层 `Column` 中**平级**独立 `if`（DS 迁移完成、全项目无 M3 AlertDialog 后本条自动失效） |
-| 8 | **暗色主题来源** | `isSystemInDarkTheme()` | 只读 `theme.name == "night"` |
-| 9 | **硬编码路径** | `"/data/data/..."` | 用 `context.filesDir` 等环境变量 |
-| 10 | **改共享 API 不查调用方**（流程规则） | 直接改 DAO/Repository/工具类方法签名或行为 | **先全局搜索所有调用方**，评估影响后再改；改签名需按第六节走 🔴 确认 |
+| 1 | **硬编码路径** | `"/data/data/..."` | 用 `context.filesDir` 等环境变量 |
+| 2 | **改共享 API 不查调用方**（流程规则） | 直接改 DAO/Repository/工具类方法签名或行为 | **先全局搜索所有调用方**，评估影响后再改；改签名需走 🔴 确认 |
 
 ---
 
@@ -163,7 +150,4 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 | `docs/data-architecture.md` | 数据架构 |
 | `docs/architecture.md` | 总体架构 |
 | `docs/room-supabase-architecture.md` | Room 与 Supabase 对接 |
-| `docs/lessons.md` | 开发教训（任务前必读） |
-| `docs/Palette组件库设计深度分析报告.md` | 设计系统审计报告 |
-| `docs/aapt2-termux-fix.md` | Termux AAPT2 兼容问题 |
 | `CHANGELOG.md` | 变更日志 |

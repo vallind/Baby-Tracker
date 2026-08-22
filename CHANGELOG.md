@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.8.2] — 2026-08-22
+
+**文档清理：**
+- 删除未引用及级联孤儿文档 15 篇：AI 育儿助手 PRD 系列 7 篇、BabyTracker_Supabase 后端方案、aapt2-termux-fix、docs/superpowers 计划与设计稿 4 篇、.opencode log-viewer-plan、Palette 组件库设计深度分析报告（design-system.md 中引用同步移除）
+- AGENTS.md 红线表精简为硬编码路径与共享 API 两条，参考文档表同步收敛
+- 清理 .superpowers 头脑风暴会话遗留产物（html/pid 等）
+
 ### [1.8.1] — 2026-08-22
 
 **构建环境适配（ARM64 工具链升级）：**

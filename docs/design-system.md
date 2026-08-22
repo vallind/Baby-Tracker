@@ -210,7 +210,3 @@ data class XxxTokens(
 ### detekt 配置方案（Termux 约束）
 
 `config/detekt/detekt.yml` 采用**显式枚举**：detekt 1.23 移除 `@ActiveByDefault` 语义，独立 config 文件会整体替换默认配置，规则集/规则未显式列出的不激活（ruleset 级 `active` 不会级联到规则）。`buildUponDefaultConfig` 叠加默认配置虽免手写，但全量默认规则在 Termux 上分析 184 个文件超 20 分钟不结束，显式枚举实测 ~9 秒，故采用枚举方案（naming 规则集整体关闭 + potential-bugs 逐条对齐 1.23.8 默认激活规则 + 自定义规则集逐条列出）。
-
-## 详细报告
-
-参见 `docs/Palette组件库设计深度分析报告.md`。
