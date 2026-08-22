@@ -1,8 +1,8 @@
 [versions]
-# ── Plugins ──
-agp = "9.2.1"
-kotlin = "2.3.21"
-ksp = "2.3.9"
+# ── Plugins ──（本地已验证组合：Gradle 9.7.1 + AGP 9.3.1 + Kotlin 2.4.10 + KSP 2.3.11）
+agp = "9.3.1"
+kotlin = "2.4.10"
+ksp = "2.3.11"
 detekt = "1.23.8"
 
 # ── AndroidX Core ──

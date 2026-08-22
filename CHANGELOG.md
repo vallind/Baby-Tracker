@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.8.1] — 2026-08-22
+
+**构建环境适配（ARM64 工具链升级）：**
+- 插件升级：AGP 9.2.1 → 9.3.1、Kotlin 2.3.21 → 2.4.10、KSP 2.3.9 → 2.3.11（本地已验证组合 Gradle 9.7.1 + JDK 17 + compileSdk 36）
+- gradle.properties 移除 Termux aapt2 硬编码路径，改由全局 `~/.gradle/gradle.properties` 的 `android.aapt2FromMavenOverride` 提供 ARM64 原生覆盖；移除 nonProxyHosts 直连 workaround
+- settings.gradle.kts 移除 aliyun 镜像（对 KSP 新版 marker 返回 502），直连官方源
+
 ### [1.8.0] — 2026-08-12
 
 **设计系统升级 P1（Typography 单体系 + 组件收敛 + 令牌化收尾）：**
