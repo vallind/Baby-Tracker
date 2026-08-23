@@ -40,6 +40,7 @@ import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.actionbar.AppActionBar
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.datetimecascade.QuickTimeChipRow
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -493,6 +494,8 @@ fun SleepFormDialog(
                 )
             }
         }
+        QuickTimeChipRow(onPick = { startTime = it.format(timeFormatter) })
+        Spacer(Modifier.height(spacing.xs))
         AppInput(value = startTime, onValueChange = {}, label = "开始时间", enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showCascadePicker = true })
         Spacer(Modifier.height(12.dp))
         AppInput(value = endTime, onValueChange = {}, label = "结束时间", enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showCascadePicker = true })

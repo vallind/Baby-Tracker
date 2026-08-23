@@ -36,6 +36,7 @@ import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.datetimecascade.QuickTimeChipRow
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.actionbar.AppActionBar
@@ -394,6 +395,8 @@ fun DiaperFormDialog(
             }
         }
 
+        Spacer(Modifier.height(12.dp))
+        QuickTimeChipRow(onPick = { diaperDateTime = it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) })
         Spacer(Modifier.height(12.dp))
         AppInput(
             value = diaperDateTime,

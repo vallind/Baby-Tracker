@@ -4,7 +4,9 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +30,8 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.divider.AppDivider
+import com.babytracker.designsystem.components.snackbar.AppSnackbar
+import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.statcell.StatCell
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
@@ -35,16 +39,20 @@ import com.babytracker.navigation.AiAssistant
 import com.babytracker.navigation.BabyManagement
 import com.babytracker.navigation.BabyProfile
 import com.babytracker.navigation.DevelopmentAssessment
-import com.babytracker.navigation.Diaper as DiaperRoute
-import com.babytracker.navigation.Feeding as FeedingRoute
 import com.babytracker.navigation.Growth
 import com.babytracker.navigation.Health
-import com.babytracker.navigation.Sleep as SleepRoute
+import com.babytracker.navigation.Reminder
 import com.babytracker.navigation.Stats
 import com.babytracker.navigation.Timeline
 import com.babytracker.navigation.Vaccination
 import com.babytracker.navigation.navigateToRoot
 import com.babytracker.core.data.repository.BabyRepository
+import com.babytracker.core.data.repository.FeedingRepository
+import com.babytracker.core.data.repository.SleepRepository
+import com.babytracker.core.data.repository.DiaperRepository
+import com.babytracker.feature.feeding.FeedingFormDialog
+import com.babytracker.feature.sleep.SleepFormDialog
+import com.babytracker.feature.diaper.DiaperFormDialog
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.Sleep
 import com.babytracker.core.domain.model.Diaper
@@ -62,6 +70,10 @@ fun HomeScreen(navController: NavController) {
     val spacing = LocalAppSpacing.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
+    // 快捷记录三仓库（宫格直达表单用）
+    val feedingRepo: FeedingRepository = koinInject()
+    val sleepRepo: SleepRepository = koinInject()
+    val diaperRepo: DiaperRepository = koinInject()
     val viewModel: HomeViewModel = org.koin.androidx.compose.koinViewModel()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val currentBabyId = babyCtrl.currentBabyId
@@ -74,7 +86,14 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
+    // —— 快捷记录：宫格点击直接弹表单，省去"进列表页再点按钮"两步 ——
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
+    var quickRecord by remember { mutableStateOf<String?>(null) }
+
     AppScaffold(
+        snackbarHost = { AppSnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
         if (baby == null) {
@@ -100,7 +119,7 @@ fun HomeScreen(navController: NavController) {
             BabyHeader(baby, onClickProfile = { navController.navigate(BabyProfile) })
 
             Spacer(Modifier.height(spacing.md))
-            FeatureGrid(navController)
+            FeatureGrid(navController, onQuickRecord = { quickRecord = it })
 
             Spacer(Modifier.height(spacing.md))
             AiAssistantEntryCard(navController)
@@ -118,6 +137,48 @@ fun HomeScreen(navController: NavController) {
 
             Spacer(Modifier.height(80.dp))
         }
+    }
+
+    // —— 快捷记录表单：保存后留在首页（今日概览自动刷新），撤销即删除该条 ——
+    // grid 仅在 baby 非空时渲染，quickRecord 只能由其触发；此处仍显式判空兜底
+    val quickBabyId = baby?.id
+    if (quickBabyId != null && quickBabyId != 0) when (quickRecord) {
+        "feeding" -> FeedingFormDialog(
+            babyId = quickBabyId,
+            onDismiss = { quickRecord = null },
+            onSave = { f ->
+                scope.launch {
+                    feedingRepo.insert(f)
+                    quickRecord = null
+                    viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
+                    appSnackbar.showUndo(message = "已记录喂养") { feedingRepo.delete(f) }
+                }
+            },
+        )
+        "sleep" -> SleepFormDialog(
+            babyId = quickBabyId,
+            onDismiss = { quickRecord = null },
+            onSave = { sl ->
+                scope.launch {
+                    sleepRepo.insert(sl)
+                    quickRecord = null
+                    viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
+                    appSnackbar.showUndo(message = "已记录睡眠") { sleepRepo.delete(sl) }
+                }
+            },
+        )
+        "diaper" -> DiaperFormDialog(
+            babyId = quickBabyId,
+            onDismiss = { quickRecord = null },
+            onSave = { d ->
+                scope.launch {
+                    diaperRepo.insert(d)
+                    quickRecord = null
+                    viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
+                    appSnackbar.showUndo(message = "已记录换尿布") { diaperRepo.delete(d) }
+                }
+            },
+        )
     }
 }
 
@@ -265,17 +326,19 @@ fun RowScope.StatDivider() {
 }
 
 @Composable
-fun FeatureGrid(navController: NavController) {
+fun FeatureGrid(navController: NavController, onQuickRecord: (String) -> Unit = {}) {
     val spacing = LocalAppSpacing.current
     val items = listOf(
-        FeatureGridItemData({ navController.navigateToRoot(FeedingRoute) }, "🍼", "喂养记录"),
-        FeatureGridItemData({ navController.navigateToRoot(SleepRoute) }, "🌙", "睡眠记录"),
-        FeatureGridItemData({ navController.navigateToRoot(DiaperRoute) }, "🧷", "尿布更换"),
+        // 记录类三格点击直达表单（高频动作前置）；历史浏览走底部"记录"Tab，统计走底部"统计"Tab
+        FeatureGridItemData({ onQuickRecord("feeding") }, "🍼", "记喂养"),
+        FeatureGridItemData({ onQuickRecord("sleep") }, "🌙", "记睡眠"),
+        FeatureGridItemData({ onQuickRecord("diaper") }, "🧷", "记尿布"),
         FeatureGridItemData({ navController.navigateToRoot(Growth) }, "📏", "生长记录"),
         FeatureGridItemData({ navController.navigateToRoot(DevelopmentAssessment) }, "🧠", "发育评估"),
         FeatureGridItemData({ navController.navigateToRoot(Vaccination) }, "💉", "疫苗接种"),
         FeatureGridItemData({ navController.navigateToRoot(Health) }, "❤️", "健康档案"),
-        FeatureGridItemData({ navController.navigateToRoot(Stats) }, "📊", "统计分析"),
+        // 提醒中心原只有设置页一个深入口，宫格补位后可达性提升
+        FeatureGridItemData({ navController.navigateToRoot(Reminder) }, "⏰", "提醒中心"),
     )
     Column(Modifier.padding(horizontal = spacing.md)) {
         Spacer(Modifier.height(14.dp))

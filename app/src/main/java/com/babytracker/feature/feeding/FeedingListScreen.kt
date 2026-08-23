@@ -44,6 +44,7 @@ import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.actionbar.AppActionBar
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.datetimecascade.QuickTimeChipRow
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -546,6 +547,12 @@ fun FeedingFormDialog(
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                // 常用量一键填
+                Row(Modifier.fillMaxWidth().padding(top = spacing.xs), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+                    listOf("60", "90", "120", "180").forEach { v ->
+                        AppFilterChip(selected = amountMl == v, onClick = { amountMl = v }, label = "${v}ml", modifier = Modifier.weight(1f))
+                    }
+                }
                 AppInput(
                     value = brand,
                     onValueChange = { brand = it },
@@ -576,15 +583,25 @@ fun FeedingFormDialog(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
                     label = "饮水量 (ml)",
+                    // 饮水量预设由下方 chip 行提供
                     leadingIcon = { Text("🥤", style = LocalAppTypography.current.titleLarge) },
                     isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
                     errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                // 常用饮水量一键填
+                Row(Modifier.fillMaxWidth().padding(top = spacing.xs), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
+                    listOf("50", "100", "150", "200").forEach { v ->
+                        AppFilterChip(selected = amountMl == v, onClick = { amountMl = v }, label = "${v}ml", modifier = Modifier.weight(1f))
+                    }
+                }
             }
         }
 
+        Spacer(Modifier.height(12.dp))
+        // 高频场景免开滚轮：一键回填时间（精确调整仍点输入框开级联选择器）
+        QuickTimeChipRow(onPick = { feedingDateTime = it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) })
         Spacer(Modifier.height(12.dp))
         AppInput(
             value = feedingDateTime,
