@@ -25,6 +25,7 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
@@ -125,16 +126,39 @@ fun TimelineScreen(navController: NavController) {
                 .padding(padding)
                 .background(c.pageBackground),
         ) {
-            // —— 类型筛选 Tab ——
+            // —— 类型筛选行（2.1 H6：capsule chips + 分区色选中态，替换挤不下的 SegmentedControl） ——
             val filterKeys = listOf("", "feeding", "sleep", "diaper", "growth", "health")
-            SegmentedControl(
-                labels = listOf(AppStrings.filterAll, AppStrings.filterFeeding, AppStrings.filterSleep, AppStrings.filterDiaper, AppStrings.filterGrowth, AppStrings.filterHealth),
-                selectedIndex = filterKeys.indexOf(typeFilter).coerceAtLeast(0),
-                onSelect = { typeFilter = filterKeys[it] },
-                modifier = Modifier
+            Row(
+                Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = spacing.md, vertical = spacing.sm),
-            )
+                    .padding(horizontal = spacing.md, vertical = spacing.sm)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            ) {
+                filterKeys.forEach { key ->
+                    val selected = typeFilter == key
+                    AppFilterChip(
+                        selected = selected,
+                        onClick = { typeFilter = key },
+                        label = when (key) {
+                            "" -> AppStrings.filterAll
+                            "feeding" -> AppStrings.feeding
+                            "sleep" -> AppStrings.sleep
+                            "diaper" -> AppStrings.diaper
+                            "growth" -> AppStrings.growth
+                            else -> AppStrings.health
+                        },
+                        selectedColor = when (key) {
+                            "feeding" -> c.danger
+                            "sleep" -> c.secondary
+                            "diaper" -> c.tertiary
+                            "growth" -> c.success
+                            "health" -> c.primary
+                            else -> c.primary
+                        },
+                    )
+                }
+            }
             AppDivider(color = c.divider, thickness = 0.5.dp)
 
             if (state.loading) {

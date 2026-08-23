@@ -2,6 +2,18 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.1.5] — 2026-08-23
+
+**重设计批次 P1-C/P2-A：时间线筛选形态 + 发育头部统一 + 登录与设置打磨：**
+
+- 时间线（H6）：6 项 emoji 内嵌 SegmentedControl → 横滚 AppFilterChip 胶囊行
+  （全部/喂养/睡眠/尿布/生长/健康，选中用分区色）
+- 发育评估（C3）：删除自建渐变 BabyHeader，改标准宝宝摘要卡（AppCard + 首字头像），
+  页面头部全站只剩两档形态
+- 登录页：错误提示从独立 Text 并入密码输入框 errorMessage 通道；加载态文案走 AppStrings.loading
+- 设置主页（H7）：新增「快捷工具」组（备份与恢复/运行日志 上提，深层路由保留）
+- 版本号 2.1.4 → 2.1.5（versionCode 40 → 41）
+
 ### [2.1.4] — 2026-08-23
 
 **重设计批次 P1-B：首页信息架构 + 疫苗筛选 + 统计尿布卡：**

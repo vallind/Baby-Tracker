@@ -130,6 +130,9 @@ object AppStrings {
     const val theme = "主题"
     const val densityLabel = "界面密度"
     const val about = "关于"
+    const val logViewer = "运行日志"
+    const val backupManageSubtitle = "本地备份、WebDAV 与数据恢复"
+    const val logViewerSubtitle = "查看与导出运行日志"
 
     // —— 时间 ——
     const val today = "今天"

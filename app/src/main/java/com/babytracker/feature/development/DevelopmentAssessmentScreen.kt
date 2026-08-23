@@ -206,7 +206,12 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            BabyHeader(baby)
+            // 宝宝摘要卡（2.1 C3：替代自建渐变 BabyHeader，与其他页面头部体系统一）
+            BabySummaryCard(
+                name = baby.name,
+                ageDetail = babyAgeDetail(baby.birthDate),
+                modifier = Modifier.padding(horizontal = spacing.md).fillMaxWidth(),
+            )
 
             Spacer(Modifier.height(spacing.md))
 
@@ -246,39 +251,39 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
 }
 
 @Composable
-private fun BabyHeader(baby: Baby) {
+private fun BabySummaryCard(
+    name: String,
+    ageDetail: String,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .background(Gradients.pageHeader(c))
-            .padding(horizontal = spacing.md),
-    ) {
+    val shapes = LocalAppShapes.current
+    AppCard(modifier = modifier) {
         Row(
-            Modifier.padding(vertical = 20.dp),
+            Modifier.padding(spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 Modifier
-                    .size(72.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(c.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("\uD83D\uDC76", style = LocalAppTypography.current.displayLarge)
+                Text("\uD83D\uDC76", style = LocalAppTypography.current.headlineSmall)
             }
             Spacer(Modifier.width(spacing.md))
             Column {
                 Text(
-                    baby.name,
-                    style = LocalAppTypography.current.titleLarge,
+                    name,
+                    style = LocalAppTypography.current.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = c.textPrimary,
                 )
-                Spacer(Modifier.height(spacing.xs))
+                Spacer(Modifier.height(spacing.xxs))
                 Text(
-                    babyAgeDetail(baby.birthDate),
+                    ageDetail,
                     style = LocalAppTypography.current.bodyMedium,
                     color = c.textSecondary,
                 )

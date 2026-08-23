@@ -118,19 +118,18 @@ fun LoginScreen(navController: NavController) {
                         keyboardType = KeyboardType.Password,
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !uiState.isLoading,
+                        // 2.1：错误提示走输入框 errorMessage 通道（替代独立 Text）
+                        isError = uiState.errorMessage != null,
+                        errorMessage = uiState.errorMessage,
                     )
-                    Spacer(Modifier.height(spacing.sm))
-
-                    uiState.errorMessage?.let {
-                        Text(it, color = c.error, style = typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs))
-                    }
                     Spacer(Modifier.height(spacing.lg))
 
                     AppButton(
                         onClick = vm::submit,
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !uiState.isLoading,
-                        label = if (uiState.isLoading) "..." else if (uiState.isRegisterMode) AppStrings.register else AppStrings.login,
+                        label = if (uiState.isLoading) AppStrings.loading
+                        else if (uiState.isRegisterMode) AppStrings.register else AppStrings.login,
                     )
                     Spacer(Modifier.height(spacing.xs))
 

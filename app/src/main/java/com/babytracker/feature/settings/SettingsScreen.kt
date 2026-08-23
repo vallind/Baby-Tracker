@@ -65,6 +65,8 @@ import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.section.AppListItem
 import com.babytracker.navigation.BabyManagement
+import com.babytracker.navigation.Backup
+import com.babytracker.navigation.LogViewer
 import com.babytracker.navigation.DataSettings
 import com.babytracker.navigation.Family
 import com.babytracker.navigation.Login
@@ -157,6 +159,26 @@ fun SettingsScreen(navController: NavController) {
                     label = "提醒设置",
                     subtitle = "喂养、睡眠与护理提醒",
                     onClick = { navController.navigate(Reminder) },
+                )
+            }
+
+            Spacer(Modifier.height(spacing.md))
+
+            // 快捷工具组（2.1 H7：高频工具从深层上提，原深层路由保留）
+            SettingsSectionTitle("快捷工具")
+            SettingsCard {
+                SettingsRow(
+                    emoji = "📦",
+                    label = AppStrings.backupManage,
+                    subtitle = AppStrings.backupManageSubtitle,
+                    onClick = { navController.navigate(Backup) },
+                )
+                SettingsDivider()
+                SettingsRow(
+                    emoji = "📋",
+                    label = AppStrings.logViewer,
+                    subtitle = AppStrings.logViewerSubtitle,
+                    onClick = { navController.navigate(LogViewer) },
                 )
             }
 
