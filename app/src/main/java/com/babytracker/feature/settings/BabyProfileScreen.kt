@@ -92,33 +92,19 @@ fun BabyProfileScreen(navController: NavController) {
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // 2.1：删除头像上的假相机徽章（无换头像功能，避免假入口）
                     Box(
-                        Modifier.size(88.dp),
-                        contentAlignment = Alignment.BottomEnd,
+                        Modifier
+                            .size(88.dp)
+                            .clip(CircleShape)
+                            .background(AppColorScale.fromSeed(c.primary).tintContainer(c)),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Box(
-                            Modifier
-                                .size(88.dp)
-                                .clip(CircleShape)
-                                .background(AppColorScale.fromSeed(c.primary).tintContainer(c)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                baby.name.take(1),
-                                style = typography.displayLarge,
-                                color = c.primary,
-                            )
-                        }
-                        Box(
-                            Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(c.primary)
-                                .border(2.dp, c.surface, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text("📷", style = typography.bodyMedium)
-                        }
+                        Text(
+                            baby.name.take(1),
+                            style = typography.displayLarge,
+                            color = c.primary,
+                        )
                     }
 
                     Spacer(Modifier.height(spacing.md))

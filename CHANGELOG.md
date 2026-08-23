@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.1.6] — 2026-08-23
+
+**重设计批次 P2-B：宝宝资料页清理：**
+
+- 删除头像上的假相机徽章（无换头像功能，避免假入口误导）
+- 版本号 2.1.5 → 2.1.6（versionCode 41 → 42）
+
 ### [2.1.5] — 2026-08-23
 
 **重设计批次 P1-C/P2-A：时间线筛选形态 + 发育头部统一 + 登录与设置打磨：**
