@@ -2,6 +2,8 @@ package com.babytracker.designsystem.components.badge
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -22,24 +24,47 @@ import com.babytracker.designsystem.theme.LocalAppColors
  * `color.copy(alpha = 0.12f)` 现场调色。emoji 为装饰性内容，对读屏静默，
  * 语义由所在行的文本承担（见 docs/a11y-baseline.md 装饰隔离约定）。
  *
+ * twoTone：双色底（左右对半），用于同时表达两类属性的场景（如尿布「混合」= 青/琥珀），
+ * 传入后忽略 tint 的单一浅底。
+ *
  * 用法：
  *   AppEmojiBadge(emoji = "🍼", tint = c.primary)
+ *   AppEmojiBadge(emoji = "🔄", tint = c.tertiary, twoTone = c.tertiary to c.warning)
  */
 @Composable
 fun AppEmojiBadge(
     emoji: String,
     tint: Color,
+    twoTone: Pair<Color, Color>? = null,
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
+    val shape = RoundedCornerShape(BadgeDefaults.cornerRadius())
     Box(
         modifier
             .size(BadgeDefaults.size())
-            .clip(RoundedCornerShape(BadgeDefaults.cornerRadius()))
-            .background(AppColorScale.fromSeed(tint).tintContainer(c))
+            .clip(shape)
+            .background(if (twoTone == null) AppColorScale.fromSeed(tint).tintContainer(c) else Color.Transparent)
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
+        if (twoTone != null) {
+            // 双色底：左右两个半区（内角不裁切，外圆角由外层 clip 保证）
+            Row(Modifier.matchParentSize()) {
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .background(AppColorScale.fromSeed(twoTone.first).tintContainer(c)),
+                )
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .background(AppColorScale.fromSeed(twoTone.second).tintContainer(c)),
+                )
+            }
+        }
         Text(emoji, fontSize = BadgeDefaults.fontSize())
     }
 }

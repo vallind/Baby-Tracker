@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
@@ -95,13 +96,14 @@ fun DiaperListScreen(navController: NavController) {
         filtered.sortedByDescending { it.timestamp }
     }
 
-    // 日期显示文本
+    // 日期显示文本（简写：今天 · 8月23日，不再拼 ISO 日期）
     val dateLabel = remember(selectedDate, today) {
+        val md = selectedDate.format(DateTimeFormatter.ofPattern("M月d日"))
         when {
-            selectedDate == today -> "今天"
-            selectedDate == today.minusDays(1) -> "昨天"
-            selectedDate == today.plusDays(1) -> "明天"
-            else -> selectedDate.format(DateTimeFormatter.ofPattern("MM月dd日"))
+            selectedDate == today -> "${AppStrings.today} · $md"
+            selectedDate == today.minusDays(1) -> "${AppStrings.yesterday} · $md"
+            selectedDate == today.plusDays(1) -> "${AppStrings.tomorrow} · $md"
+            else -> md
         }
     }
 
@@ -130,70 +132,14 @@ fun DiaperListScreen(navController: NavController) {
                 .background(c.pageBackground),
         ) {
             // —— 日期选择器（现代胶囊行） ——
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = spacing.md),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // 前一天
-                AppIconButton(
-                    icon = Icons.Default.ChevronLeft,
-                    onClick = { selectedDate = selectedDate.minusDays(1) },
-                    contentDescription = "前一天",
-                    tint = c.textPrimary,
-                )
-                // 中间胶囊：点击开日期选择
-                Row(
-                    Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(c.surfaceMuted)
-                            .clickable { showDatePicker = true }
-                            .padding(horizontal = 18.dp, vertical = 10.dp),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                                style = LocalAppTypography.current.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = c.textPrimary,
-                            )
-                            Spacer(Modifier.width(spacing.xs))
-                            Icon(
-                                Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = c.textTertiary,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                }
-                // 非今天时提供一键回跳
-                if (selectedDate != today) {
-                    Text(
-                        AppStrings.today,
-                        style = LocalAppTypography.current.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = c.primaryScale.accentContent(c),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(c.primaryScale.tintContainer(c))
-                            .clickable { selectedDate = today }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                    )
-                    Spacer(Modifier.width(spacing.xs))
-                }
-                // 后一天
-                AppIconButton(
-                    icon = Icons.Default.ChevronRight,
-                    onClick = { selectedDate = selectedDate.plusDays(1) },
-                    contentDescription = "后一天",
-                    tint = c.textPrimary,
-                )
-            }
+            DateNavCapsule(
+                dateLabel = dateLabel,
+                onPrev = { selectedDate = selectedDate.minusDays(1) },
+                onNext = { selectedDate = selectedDate.plusDays(1) },
+                onOpenPicker = { showDatePicker = true },
+                onToday = if (selectedDate != today) ({ selectedDate = today }) else null,
+                modifier = Modifier.padding(horizontal = spacing.md),
+            )
 
             if (filtered.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -288,10 +234,11 @@ fun DiaperListScreen(navController: NavController) {
                             DiaperType.POOP -> "💩"
                             DiaperType.BOTH -> "🔄"
                         }
+                        // 分区色纪律：小便=青 / 大便=琥珀 / 混合=双色徽章（error 红退出尿布页）
                         val accentColor = when (d.type) {
-                            DiaperType.WET -> c.primary
+                            DiaperType.WET -> c.tertiary
                             DiaperType.POOP -> c.warning
-                            DiaperType.BOTH -> c.error
+                            DiaperType.BOTH -> c.tertiary
                         }
 
                         RecordCard(
@@ -308,7 +255,11 @@ fun DiaperListScreen(navController: NavController) {
                             },
                             modifier = Modifier.padding(bottom = spacing.sm),
                         ) {
-                            AppEmojiBadge(emoji = typeEmoji, tint = accentColor)
+                            AppEmojiBadge(
+                                emoji = typeEmoji,
+                                tint = accentColor,
+                                twoTone = if (d.type == DiaperType.BOTH) (c.tertiary to c.warning) else null,
+                            )
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
@@ -33,6 +34,8 @@ import com.babytracker.core.domain.model.GrowthType
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.GrowthRepository
+import com.babytracker.core.data.repository.BabyRepository
+import com.babytracker.core.util.GrowthReference
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
@@ -73,7 +76,10 @@ fun GrowthScreen(navController: NavController) {
     val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
     val growthRepo: GrowthRepository = koinInject()
+    val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
+    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
+    val baby = babies.find { it.id == babyCtrl.currentBabyId }
     val scope = rememberCoroutineScope()
     val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
@@ -90,12 +96,6 @@ fun GrowthScreen(navController: NavController) {
     val tabs = listOf("身高", "体重", "头围")
     val types = listOf(GrowthType.HEIGHT, GrowthType.WEIGHT, GrowthType.HEAD)
     val units = listOf("cm", "kg", "cm")
-    val normalRanges = listOf(
-        "71.2-85.1cm",
-        "8.1-12.5kg",
-        "44.0-49.0cm",
-    )
-
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
@@ -134,79 +134,24 @@ fun GrowthScreen(navController: NavController) {
             }
 
             val dateLabel = remember(selectedDate, today) {
+                val md = selectedDate.format(DateTimeFormatter.ofPattern("M月d日"))
                 when {
-                    selectedDate == today -> "今天"
-                    selectedDate == today.minusDays(1) -> "昨天"
-                    selectedDate == today.plusDays(1) -> "明天"
-                    else -> selectedDate.format(DateTimeFormatter.ofPattern("MM月dd日"))
+                    selectedDate == today -> "${AppStrings.today} · $md"
+                    selectedDate == today.minusDays(1) -> "${AppStrings.yesterday} · $md"
+                    selectedDate == today.plusDays(1) -> "${AppStrings.tomorrow} · $md"
+                    else -> md
                 }
             }
 
             // 日期选择行（现代胶囊行）
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = spacing.md),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // 前一天
-                AppIconButton(
-                    icon = Icons.Default.ChevronLeft,
-                    onClick = { selectedDate = selectedDate.minusDays(1) },
-                    contentDescription = "前一天",
-                    tint = c.textPrimary,
-                )
-                // 中间胶囊：点击开日期选择
-                Row(
-                    Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(c.surfaceMuted)
-                            .clickable { showDatePicker = true }
-                            .padding(horizontal = 18.dp, vertical = 10.dp),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                                style = LocalAppTypography.current.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = c.textPrimary,
-                            )
-                            Spacer(Modifier.width(spacing.xs))
-                            Icon(
-                                Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = c.textTertiary,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                }
-                // 非今天时提供一键回跳
-                if (selectedDate != today) {
-                    Text(
-                        AppStrings.today,
-                        style = LocalAppTypography.current.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = c.primaryScale.accentContent(c),
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(c.primaryScale.tintContainer(c))
-                            .clickable { selectedDate = today }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                    )
-                    Spacer(Modifier.width(spacing.xs))
-                }
-                // 后一天
-                AppIconButton(
-                    icon = Icons.Default.ChevronRight,
-                    onClick = { selectedDate = selectedDate.plusDays(1) },
-                    contentDescription = "后一天",
-                    tint = c.textPrimary,
-                )
-            }
+            DateNavCapsule(
+                dateLabel = dateLabel,
+                onPrev = { selectedDate = selectedDate.minusDays(1) },
+                onNext = { selectedDate = selectedDate.plusDays(1) },
+                onOpenPicker = { showDatePicker = true },
+                onToday = if (selectedDate != today) ({ selectedDate = today }) else null,
+                modifier = Modifier.padding(horizontal = spacing.md),
+            )
 
             val chartData = remember(growths, tab) {
                 growths.filter { it.type == types[tab] }.sortedBy { it.measuredAt }
@@ -257,6 +202,18 @@ fun GrowthScreen(navController: NavController) {
                                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                             } catch (_: Exception) { "" }
 
+                            // 动态参考区间（T4：按宝宝月龄取 GrowthReference，替代写死值）
+                            val ageMonths = remember(baby) {
+                                baby?.let {
+                                    val birth = java.time.LocalDate.parse(it.birthDate.take(10))
+                                    val p = java.time.Period.between(birth, java.time.LocalDate.now())
+                                    (p.years * 12 + p.months).coerceAtLeast(0)
+                                } ?: 0
+                            }
+                            val ref = GrowthReference.range(ageMonths, types[tab])
+                            val outOfRange = ref != null && (latest.value < ref.min || latest.value > ref.max)
+                            val referenceText = GrowthReference.rangeText(ageMonths, types[tab], units[tab])
+
                             AppCard(
                                 containerColor = c.surface,
                                 modifier = Modifier
@@ -293,6 +250,13 @@ fun GrowthScreen(navController: NavController) {
                                         "$measuredDate 测量",
                                         style = LocalAppTypography.current.bodySmall,
                                         color = c.textTertiary,
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        referenceText,
+                                        style = LocalAppTypography.current.labelMedium,
+                                        fontWeight = if (outOfRange) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = if (outOfRange) c.warning else c.textTertiary,
                                     )
                                 }
                             }
@@ -398,45 +362,6 @@ fun GrowthScreen(navController: NavController) {
                                             }
                                         }
                                     }
-                                }
-                            }
-                        }
-                    }
-
-                    item {
-                        AppCard(
-                            containerColor = c.surface,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = spacing.md),
-                        ) {
-                            Row(
-                                Modifier.padding(spacing.md),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Box(
-                                    Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(shapes.medium))
-                                        .background(AppColorScale.fromSeed(c.primary).tintContainer(c)),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text("📊", style = typography.titleMedium)
-                                }
-                                Spacer(Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        "${tabs[tab]}正常范围",
-                                        style = LocalAppTypography.current.bodySmall,
-                                        color = c.textSecondary,
-                                    )
-                                    Spacer(Modifier.height(spacing.xxs))
-                                    Text(
-                                        normalRanges[tab],
-                                        style = LocalAppTypography.current.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = c.textPrimary,
-                                    )
                                 }
                             }
                         }

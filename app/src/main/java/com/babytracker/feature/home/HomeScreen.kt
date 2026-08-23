@@ -70,6 +70,7 @@ import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.isDarkTheme
 import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.feature.diaper.DiaperFormDialog
+import com.babytracker.feature.common.feedingTone
 import com.babytracker.feature.feeding.FeedingFormDialog
 import com.babytracker.feature.sleep.SleepFormDialog
 import com.babytracker.navigation.AiAssistant
@@ -602,8 +603,7 @@ private fun TimelineRecordRow(item: Any) {
     val (emoji, tint, title) = when (item) {
         is Feeding -> {
             val type = FeedingType.raw(item.type)
-            val emoji = when (item.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "🍼"; FeedingType.FOOD -> "🥣"; else -> "🥤" }
-            val tint = when (item.type) { FeedingType.BREAST -> c.danger; FeedingType.FORMULA -> c.primary; FeedingType.FOOD -> c.warning; else -> c.primary }
+            val (emoji, tint) = feedingTone(item.type, c)
             Triple(emoji, tint, DateUtils.feedingTypeLabel(type))
         }
         is Sleep -> {

@@ -131,9 +131,13 @@ object AppStrings {
     // —— 时间 ——
     const val today = "今天"
     const val yesterday = "昨天"
+    const val tomorrow = "明天"
     const val recentRecords = "最近记录"
     const val expired = "已过期"
     const val days = "天"
+    const val prevDay = "前一天"
+    const val nextDay = "后一天"
+    const val selectDate = "选择日期"
 
     // —— 消息 ——
     const val markAllRead = "全部已读"

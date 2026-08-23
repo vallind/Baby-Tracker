@@ -33,6 +33,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
@@ -196,54 +197,15 @@ private fun DateRangeNav(
     onBack: () -> Unit,
     onForward: () -> Unit,
 ) {
-    val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.md, vertical = spacing.xs),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // 现代胶囊日期导航：中间柔底胶囊 + 两侧箭头
-        Icon(
-            Icons.Filled.ChevronLeft,
-            contentDescription = "上一周期",
-            tint = if (canGoBack) c.textSecondary else c.textDisabled,
-            modifier = Modifier
-                .size(30.dp)
-                .clip(CircleShape)
-                .background(if (canGoBack) c.surfaceMuted else c.surface.copy(alpha = 0.0f))
-                .clickable(enabled = canGoBack) { onBack() }
-                .padding(5.dp),
-        )
-        Box(
-            Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .background(c.surfaceMuted)
-                .padding(horizontal = 18.dp, vertical = 9.dp),
-        ) {
-            Text(
-                dateRangeText,
-                style = typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = c.textPrimary,
-                textAlign = TextAlign.Center,
-            )
-        }
-        Icon(
-            Icons.Filled.ChevronRight,
-            contentDescription = "下一周期",
-            tint = if (canGoForward) c.textSecondary else c.textDisabled,
-            modifier = Modifier
-                .size(30.dp)
-                .clip(CircleShape)
-                .background(if (canGoForward) c.surfaceMuted else c.surface.copy(alpha = 0.0f))
-                .clickable(enabled = canGoForward) { onForward() }
-                .padding(5.dp),
-        )
-    }
+    // 与记录四页统一为 DateNavCapsule 形态（无日期选择器，胶囊只读展示）
+    DateNavCapsule(
+        dateLabel = dateRangeText,
+        onPrev = { if (canGoBack) onBack() },
+        onNext = { if (canGoForward) onForward() },
+        onOpenPicker = {},
+        modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
+    )
 }
 
 @Composable

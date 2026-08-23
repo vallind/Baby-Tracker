@@ -2,6 +2,23 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.1.0] — 2026-08-23
+
+**UI/UX 重设计批次 P0-A：全局收敛（新条目标记 P0-A）**
+
+- 新增 DS 组件（`DateNavCapsule`/`QuickStatPill`/`RecordDetailSheet`/`AppEmojiBadge.twoTone`，令牌 37→40 组注册完成）：
+  - DateNavCapsule：喂养/睡眠/尿布/生长四页 80 行日期行复制收敛为统一组件，统计页 DateRangeNav 同款化（C1/C2）
+  - QuickStatPill：渐变卡白字统计格统一形态（今日概览/汇总卡）
+  - RecordDetailSheet：记录「单击=详情」契约的统一承载（只读字段 + 编辑 + 确认删除，删除路径与左滑一致）
+  - AppEmojiBadge.twoTone：双色底（尿布「混合」= 青/琥珀对半）
+- 色彩纪律（T1/T2）：尿布类型色 error 红退出（小便=青/大便=琥珀/混合=双色）；喂养类型映射收敛为全站唯一
+  `feature/common/RecordTone.kt`（母乳=珊瑚/配方=珊瑚深档/辅食=琥珀/饮水=青），替换首页与喂养页两份各自实现
+- 假数据下线（C6/T4）：睡眠「夜醒次数 -」移除；生长页写死 normalRanges 删除，新增 `core/util/GrowthReference.kt`
+  按月龄动态参考区间并在当前值卡副行展示（超区间琥珀提示）
+- 日期文案收敛：今天/昨天/明天走 AppStrings，显示「今天 · 8月23日」不再拼 ISO 日期
+- 文档同步：design-system.md 组件/令牌清单、project-structure.md 目录更新
+- 版本号 2.0.1 → 2.1.0（versionCode 35 → 36）
+
 ### [2.0.1] — 2026-08-23
 
 **现代化重构第二批：AI 会话与次要页面打磨：**

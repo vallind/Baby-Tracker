@@ -15,8 +15,8 @@ android {
         applicationId = "com.babytracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 35
-        versionName = "2.0.1"
+        versionCode = 36
+        versionName = "2.1.0"
     }
 
     buildTypes {

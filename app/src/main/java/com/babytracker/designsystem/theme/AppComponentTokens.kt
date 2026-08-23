@@ -1035,6 +1035,95 @@ data class SummaryCardTokens(
     }
 }
 
+// —— 日期导航胶囊（记录四页 + 统计页共用，收敛 80 行×4 的复制） ——
+@Immutable
+data class DateNavCapsuleTokens(
+    val capsuleColor: Color,
+    val textColor: Color,
+    val iconColor: Color,
+    val todayContainerColor: Color,
+    val todayContentColor: Color,
+    val cornerRadius: Dp,           // shapes.full（胶囊）
+    val horizontalPadding: Dp,
+    val verticalPadding: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+        ): DateNavCapsuleTokens = DateNavCapsuleTokens(
+            capsuleColor = colors.surfaceMuted,                 // 柔底胶囊
+            textColor = colors.textPrimary,
+            iconColor = colors.textTertiary,
+            todayContainerColor = colors.primaryScale.tintContainer(colors),
+            todayContentColor = colors.primaryScale.accentContent(colors),
+            cornerRadius = shapes.scaled(shapes.full),
+            horizontalPadding = 18.dp,
+            verticalPadding = 10.dp,
+        )
+    }
+}
+
+// —— 统计胶囊（渐变卡上的白字统计格：今日概览/尿布汇总等，全站统一） ——
+@Immutable
+data class QuickStatPillTokens(
+    val valueFontSize: TextUnit,
+    val valueFontWeight: FontWeight,
+    val unitFontSize: TextUnit,
+    val labelFontSize: TextUnit,
+    val valueAlpha: Float,
+    val unitAlpha: Float,
+    val labelAlpha: Float,
+    val innerSpacing: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): QuickStatPillTokens = QuickStatPillTokens(
+            valueFontSize = typography.headlineSmall.fontSize,
+            valueFontWeight = FontWeight.Bold,
+            unitFontSize = typography.labelMedium.fontSize,
+            labelFontSize = typography.labelMedium.fontSize,
+            valueAlpha = 1f,
+            unitAlpha = 0.78f,
+            labelAlpha = 0.70f,
+            innerSpacing = spacing.xs,
+        )
+    }
+}
+
+// —— 记录详情弹层（全站记录卡「单击=详情」契约的统一承载） ——
+@Immutable
+data class RecordDetailSheetTokens(
+    val titleSize: TextUnit,
+    val titleWeight: FontWeight,
+    val labelColor: Color,
+    val valueColor: Color,
+    val labelWidth: Dp,
+    val rowSpacing: Dp,
+    val deleteColor: Color,
+    val actionSpacing: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): RecordDetailSheetTokens = RecordDetailSheetTokens(
+            titleSize = typography.titleLarge.fontSize,
+            titleWeight = FontWeight.SemiBold,
+            labelColor = colors.textSecondary,
+            valueColor = colors.textPrimary,
+            labelWidth = 92.dp,
+            rowSpacing = spacing.md,
+            deleteColor = colors.danger,
+            actionSpacing = spacing.md,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1073,6 +1162,9 @@ data class AppComponentTokens(
     val badge: BadgeTokens,
     val statCell: StatCellTokens,
     val actionBar: ActionBarTokens,
+    val dateNavCapsule: DateNavCapsuleTokens,
+    val quickStatPill: QuickStatPillTokens,
+    val recordDetailSheet: RecordDetailSheetTokens,
 ) {
     companion object {
         fun default(
@@ -1123,6 +1215,9 @@ data class AppComponentTokens(
             badge = BadgeTokens.default(colors, shapes, typography),
             statCell = StatCellTokens.default(colors, typography, spacing),
             actionBar = ActionBarTokens.default(colors, spacing),
+            dateNavCapsule = DateNavCapsuleTokens.default(colors, shapes),
+            quickStatPill = QuickStatPillTokens.default(colors, typography, spacing),
+            recordDetailSheet = RecordDetailSheetTokens.default(colors, typography, spacing),
         )
     }
 }
