@@ -2,6 +2,16 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.9.0] — 2026-08-23
+
+**设计系统收敛批次一：分档色板（对标 HeroUI）：**
+- 新增 `AppColorScale` 分档色板（default + shade50~900）与 `HeroUiPalettes` 官方色阶常量，hex 逐档抄录自 @heroui/theme 2.4.26 源码；旗舰主题 pure/night 直接注入官方表，自定义主题由 `fromSeed` 自动生成同源色阶
+- 五个语义单点色切换 HeroUI 官方锚点：primary `#006FEE` / secondary `#7828C8` / success `#17C964` / warning `#F5A524` / danger `#F31260`；暗色主题不再柔和化状态色（与亮色同源，仅档位倒序）
+- 中性系统 zinc 化：页面底色 slate-50 → zinc-100，边框/分割线不再随品牌主色染色（移除 cardBorder 染色逻辑）
+- `AppColors` 新增 7 字段：五个语义分档 + `neutralScale` + `surfaceMuted`（次级表面层级，对标 HeroUI content2）；缺省 `primaryContainer` 由 alpha 叠加改为不透明 shade100
+- 新增 `AppColorScaleTest`（6 项）：官方锚点防篡改、fromSeed 单调性、derive 注入路径、surfaceMuted 亮暗派生
+- 文档同步：design-system.md 增补「分档色板」取用约定（shade100 浅底 / shade600 强调 / 禁止 alpha 叠加）
+
 ### [1.8.2] — 2026-08-22
 
 **文档清理：**

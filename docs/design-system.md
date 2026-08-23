@@ -1,6 +1,6 @@
 # 设计系统详细文档
 
-> 最后更新：2026-08-08 · 对应版本：1.8.0
+> 最后更新：2026-08-23 · 对应版本：1.9.0
 >
 > 从 AGENTS.md 拆分，供需要深入了解设计系统时查阅。
 
@@ -11,11 +11,31 @@
   显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
 
 三层令牌：
-  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 42字段/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
+  designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 42字段 + 分档色板/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
   designsystem/theme/AppComponentTokens.kt  — 组件令牌（34 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/SummaryCard/EmptyState；AppDensityTokens 为非组件令牌，不在计数内）
   designsystem/util/AppDefaults.kt          — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
 
 Typography 自建 12 级：displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall（禁止直接使用 M3 Typography，仅 theme 层桥接）
+
+## 分档色板（对标 HeroUI semantic scale）
+
+`AppColorScale`（designsystem/theme/AppColorScale.kt）：每个语义色一条 default + shade50~900 色阶，
+HeroUI 官方 hex 抄录于 `HeroUiPalettes`（blue/purple/green/yellow/red/zinc）。
+旗舰主题 pure/night 注入官方表；其余自定义主题由 `AppColorScale.fromSeed(种子)` 自动生成同源色阶。
+
+**统一取用约定（替代 alpha 叠加，全站强制）：**
+
+| 用途 | 取档 |
+|---|---|
+| 浅底/图标徽章底 | `scale.shade100` |
+| 选中底/hover 底 | `scale.shade200` |
+| 前景强调文字（浅色模式） | `scale.shade600` |
+| 主按钮容器 | `scale.default` |
+
+禁止再用 `.copy(alpha = 0.12f)` 现场伪造浅色底。中性场景一律用 `colors.neutralScale`（恒 zinc）与
+`colors.surfaceMuted`（次级表面层级，对标 HeroUI content2）；边框/分割线收敛为中性色，
+不再随品牌主色染色。
+
 
 ## 令牌设计约定（参照 shadcn/ui）
 

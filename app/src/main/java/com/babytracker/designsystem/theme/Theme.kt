@@ -33,7 +33,11 @@ data class AppTheme(
 ) {
     companion object {
         // 每个主题只需传入与默认值不同的种子，其余由 AppColors.derive() 自动派生
-        val pure = AppTheme("pure", lightThemeColors(primary = Color(0xFF4285F4)))
+        // pure/night 为旗舰主题：primary 锚定 HeroUI blue-500 并直接注入官方分档表
+        val pure = AppTheme("pure", lightThemeColors(
+            primary = Color(0xFF006FEE),
+            semanticScales = HeroUiPalettes.officialSemantics,
+        ))
 
         val aurora = AppTheme("aurora", lightThemeColors(
             primary = Color(0xFF7C6CF0),
@@ -47,7 +51,10 @@ data class AppTheme(
             warning = Color(0xFFE67A2E),
         ))
 
-        val night = AppTheme("night", nightThemeColors(primary = Color(0xFF5C6BC0)))
+        val night = AppTheme("night", nightThemeColors(
+            primary = Color(0xFF006FEE),
+            semanticScales = HeroUiPalettes.officialSemantics,
+        ))
 
         val morandi = AppTheme("morandi", lightThemeColors(
             primary = Color(0xFFB0BEC5),
@@ -58,28 +65,33 @@ data class AppTheme(
     }
 }
 
-/** 亮色主题统一派生：白卡片 + 暖中性文字，主色浅底作为容器色 */
+/** 亮色主题统一派生：白卡片 + 中性边框，主色浅档作为容器色 */
 private fun lightThemeColors(
     primary: Color,
-    warning: Color = Color(0xFFFFA500),
+    warning: Color = Color(0xFFF5A524),
+    semanticScales: AppSemanticScales? = null,
 ): AppColors = AppColors.derive(
     primary = primary,
     surface = Color.White,
-    onSurface = Color(0xFF09090B),
-    border = cardBorder(primary, isDark = false),
+    onSurface = Color(0xFF11181C),
+    // 边框收敛为中性 zinc-200：不再随品牌主色染色（HeroUI border/divider 均为中性）
+    border = HeroUiPalettes.zinc.shade200,
     warning = warning,
     primaryContainer = primaryLight(primary),
+    semanticScales = semanticScales,
 )
 
-/** 暗色主题统一派生：深色卡片 + 浅色文字，状态色提亮 */
-private fun nightThemeColors(primary: Color): AppColors = AppColors.derive(
+/** 暗色主题统一派生：深色卡片 + 浅色文字，中性暗边框；状态色不柔和化，与亮色同源（HeroUI 策略） */
+private fun nightThemeColors(
+    primary: Color,
+    semanticScales: AppSemanticScales? = null,
+): AppColors = AppColors.derive(
     primary = primary,
     surface = Color(0xFF18181B),
     onSurface = Color.White,
-    border = Color(0xFF2A2A3E),
-    success = Color(0xFF4DB6AC),
-    error = Color(0xFFE57373),
+    border = HeroUiPalettes.zinc.shade800,
     primaryContainer = primaryLight(primary),
+    semanticScales = semanticScales,
 )
 
 private fun Color.mix(other: Color, weight: Float): Color = Color(
@@ -89,15 +101,7 @@ private fun Color.mix(other: Color, weight: Float): Color = Color(
     alpha = 1f,
 )
 
-private fun Color.desaturate(factor: Float): Color {
-    val avg = (red + green + blue) / 3f
-    return Color(red * (1 - factor) + avg * factor, green * (1 - factor) + avg * factor, blue * (1 - factor) + avg * factor, alpha)
-}
-
 private fun primaryLight(primary: Color): Color = primary.mix(Color.White, 0.88f)
-
-private fun cardBorder(primary: Color, isDark: Boolean): Color =
-    if (isDark) Color(0xFF2A2A3E) else primary.mix(Color.White, 0.85f).desaturate(0.5f)
 
 // ═══════════════════════════════════════════════════════════
 //  CompositionLocal 声明 — LocalApp*：令牌体系（对标 Palette 的 11+ 个 Local）

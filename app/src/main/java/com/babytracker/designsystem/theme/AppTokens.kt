@@ -70,47 +70,59 @@ data class AppColors(
     val shadowError: Color,
     val info: Color,
     val danger: Color,
+    // —— 分档色板（对标 HeroUI semantic scale，取用约定见 AppColorScale.kt）——
+    val primaryScale: AppColorScale,
+    val secondaryScale: AppColorScale,
+    val successScale: AppColorScale,
+    val warningScale: AppColorScale,
+    val dangerScale: AppColorScale,
+    /** 中性阶梯（恒为 zinc），与主题品牌色无关 */
+    val neutralScale: AppColorScale,
+    /** 次级表面层级（对标 HeroUI content2）：卡片内的浅色块/代码块/徽章底 */
+    val surfaceMuted: Color,
 ) {
     companion object {
-        //  shadcn 风格：中性色灰调化，主色保持温暖蓝
+        //  HeroUI 风格：中性色 zinc 化，语义五色采用官方锚点值
         fun light() = derive(
-            primary = Color(0xFF3B82F6),       // shadcn blue-500
-            surface = Color(0xFFFFFFFF),       // shadcn background
-            onSurface = Color(0xFF1A1A2E),     // shadcn foreground（接近 zinc-900）
-            border = Color(0xFFE4E4E7),        // shadcn border（zinc-200）
-            onPrimary = Color(0xFFFFFFFF),
-            error = Color(0xFFEF4444),         // red-500
+            primary = Color(0xFF006FEE),       // HeroUI blue-500
+            surface = Color(0xFFFFFFFF),       // content1
+            onSurface = Color(0xFF11181C),     // HeroUI foreground
+            border = Color(0xFFE4E4E7),        // zinc-200
+            onPrimary = Color.White,
+            error = Color(0xFFF31260),         // HeroUI red-500（danger）
             onError = Color.White,
-            success = Color(0xFF22C55E),       // green-500（更清新的绿）
-            warning = Color(0xFFF59E0B),       // amber-500
-            secondary = Color(0xFF8B5CF6),     // violet-500
+            success = Color(0xFF17C964),       // HeroUI green-500
+            warning = Color(0xFFF5A524),       // HeroUI yellow-500
+            secondary = Color(0xFF7828C8),     // HeroUI purple-500
             onSecondary = Color.White,
-            tertiary = Color(0xFF06B6D4),      // cyan-500
-            primaryContainer = Color(0xFFDBEAFE),  // blue-100
-            background = Color(0xFFF8FAFC),    // slate-50 偏灰白（shadcn 风格）
-            onBackground = Color(0xFF1A1A2E),
+            tertiary = Color(0xFF06B7DB),      // HeroUI cyan-600
+            primaryContainer = Color(0xFFCCE3FD),  // blue-100
+            background = Color(0xFFF4F4F5),    // zinc-100 页面底，白卡浮于其上
+            onBackground = Color(0xFF11181C),
             outline = Color(0xFFE4E4E7),       // border-input
             scrim = Color(0x52000000),
+            semanticScales = HeroUiPalettes.officialSemantics,
         )
 
         fun dark() = derive(
-            primary = Color(0xFF60A5FA),       // blue-400（暗色下稍亮）
-            surface = Color(0xFF18181B),       // zinc-900
-            onSurface = Color(0xFFFAFAFA),     // zinc-50
+            primary = Color(0xFF006FEE),       // HeroUI 暗色下主值不变，仅档位倒序
+            surface = Color(0xFF18181B),       // zinc-900 = content1
+            onSurface = Color(0xFFFAFAFA),
             border = Color(0xFF27272A),        // zinc-800
-            onPrimary = Color(0xFF18181B),
-            error = Color(0xFFF87171),         // red-400
-            onError = Color(0xFF18181B),
-            success = Color(0xFF4ADE80),       // green-400
-            warning = Color(0xFFFBBF24),       // amber-400
-            secondary = Color(0xFFA78BFA),     // violet-400
-            onSecondary = Color(0xFF18181B),
-            tertiary = Color(0xFF22D3EE),      // cyan-400
-            primaryContainer = Color(0xFF1E3A5F),  // blue-900/10
+            onPrimary = Color.White,
+            error = Color(0xFFF31260),
+            onError = Color.White,
+            success = Color(0xFF17C964),
+            warning = Color(0xFFF5A524),
+            secondary = Color(0xFF9353D3),     // HeroUI 暗色 secondary 取 purple-400
+            onSecondary = Color.White,
+            tertiary = Color(0xFF06B7DB),
+            primaryContainer = Color(0xFF003B8A),  // 蓝暗底：介于 blue-700/800
             background = Color(0xFF09090B),    // zinc-950
             onBackground = Color(0xFFA1A1AA),  // zinc-400
             outline = Color(0xFF27272A),       // border-input
             scrim = Color(0x66000000),
+            semanticScales = HeroUiPalettes.officialSemantics,
         )
     }
 }
@@ -288,28 +300,40 @@ fun AppColors.Companion.derive(
     onSurface: Color = Color(0xFF333333),
     border: Color = Color(0xFFD9D9D9),
     onPrimary: Color = Color.White,
-    error: Color = Color(0xFFEF4444),
+    error: Color = Color(0xFFF31260),
     onError: Color = Color.White,
-    success: Color = Color(0xFF4CAF50),
+    success: Color = Color(0xFF17C964),
     onSuccess: Color = Color.White,
-    warning: Color = Color(0xFFFFA500),
+    warning: Color = Color(0xFFF5A524),
     onWarning: Color = Color.White,
     secondary: Color = Color(0xFFA78BFA),
     onSecondary: Color = Color.White,
-    tertiary: Color = Color(0xFF4DD0E1),
+    tertiary: Color = Color(0xFF06B7DB),
     onTertiary: Color = Color.White,
-    primaryContainer: Color = primary.copy(alpha = 0.12f),
+    primaryContainer: Color = Color.Unspecified,
     background: Color = surface,
     onBackground: Color = onSurface,
     outline: Color = border,
     scrim: Color = Color.Black.copy(alpha = 0.32f),
+    /** 显式注入语义分档（旗舰主题传 HeroUI 官方表）；缺省从种子色生成同源色阶 */
+    semanticScales: AppSemanticScales? = null,
 ): AppColors {
     val isDark = surface.luminance() < 0.5f
+
+    // 分档优先级：显式注入 > 从种子色生成（保证自定义主题也有完整档位）
+    val scales = semanticScales ?: AppSemanticScales(
+        primary = AppColorScale.fromSeed(primary),
+        secondary = AppColorScale.fromSeed(secondary),
+        success = AppColorScale.fromSeed(success),
+        warning = AppColorScale.fromSeed(warning),
+        danger = AppColorScale.fromSeed(error),
+    )
 
     return AppColors(
         primary = primary,
         onPrimary = onPrimary,
-        primaryContainer = primaryContainer,
+        // 未显式传入时取主色 shade100：不透明浅底，替代旧 alpha 叠加
+        primaryContainer = if (primaryContainer == Color.Unspecified) scales.primary.shade100 else primaryContainer,
         secondary = secondary,
         onSecondary = onSecondary,
         tertiary = tertiary,
@@ -333,7 +357,7 @@ fun AppColors.Companion.derive(
         textDisabled = onSurface.copy(alpha = 0.38f),
         inverseOnSurface = surface,
         // 表面层级
-        pageBackground = if (isDark) Color(0xFF121212) else Color(0xFFF5F7FA),
+        pageBackground = if (isDark) Color(0xFF09090B) else HeroUiPalettes.zinc.shade100,
         surfaceElevated = if (isDark) surface.copy(red = surface.red + 0.08f, green = surface.green + 0.08f, blue = surface.blue + 0.08f) else surface,
         surfaceOverlay = surface.copy(alpha = 0.95f),
         inverseSurface = onSurface,
@@ -354,6 +378,14 @@ fun AppColors.Companion.derive(
         shadowError = error.copy(alpha = 0.20f),
         info = primary,
         danger = error,
+        // 分档与次级表面
+        primaryScale = scales.primary,
+        secondaryScale = scales.secondary,
+        successScale = scales.success,
+        warningScale = scales.warning,
+        dangerScale = scales.danger,
+        neutralScale = HeroUiPalettes.zinc,
+        surfaceMuted = if (isDark) HeroUiPalettes.zinc.shade800 else HeroUiPalettes.zinc.shade100,
     )
 }
 
