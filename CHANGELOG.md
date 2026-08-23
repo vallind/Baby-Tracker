@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.9.2] — 2026-08-23
+
+**设计系统收敛批次三：新增统计格与底部操作条统一件：**
+- 新增 `StatCell` 组件与 `StatCellTokens`：数值/单位/标签纵向统计格，三处各自实现（首页概览 headlineMedium 主色、尿布汇总 titleMedium 加粗）收敛为统一规格（headlineSmall 强调色）
+- 新增 `AppActionBar` 组件与 `ActionBarTokens`：列表页底部固定全宽主按钮容器，替代喂养/尿布/睡眠三页复制粘贴的 Box+AppButton 样板
+- 组件令牌 34 → 37 种（badge/statCell/actionBar），聚合注册完成，themeTokenAudit 通过
+
 ### [1.9.1] — 2026-08-23
 
 **设计系统收敛批次二：组件形态统一（圆角/徽章/分段控件）：**

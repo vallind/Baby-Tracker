@@ -938,6 +938,57 @@ data class SegmentedControlTokens(
 //  参照 PaletteComponentThemes.default()：统一接收所有基础令牌，分发到各组件
 // ═══════════════════════════════════════════════════════════
 
+// —— 统计格（今日概览/尿布汇总等数值格子，全站统一规格） ——
+@Immutable
+data class StatCellTokens(
+    val valueColor: Color,
+    val unitColor: Color,
+    val labelColor: Color,
+    val valueFontSize: TextUnit,
+    val valueFontWeight: FontWeight,
+    val unitFontSize: TextUnit,
+    val labelFontSize: TextUnit,
+    val emojiFontSize: TextUnit,
+    val innerSpacing: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): StatCellTokens = StatCellTokens(
+            valueColor = colors.primary,                  // 数值用强调色（HeroUI 式数据突出）
+            unitColor = colors.textSecondary,
+            labelColor = colors.textTertiary,
+            valueFontSize = typography.headlineSmall.fontSize, // 三页统一 20sp（原 24/16 两档收敛）
+            valueFontWeight = FontWeight.SemiBold,
+            unitFontSize = typography.labelMedium.fontSize,
+            labelFontSize = typography.labelMedium.fontSize,
+            emojiFontSize = typography.titleLarge.fontSize,
+            innerSpacing = spacing.xs,
+        )
+    }
+}
+
+// —— 底部主操作条（列表页固定底栏全宽按钮，替代三页复制粘贴） ——
+@Immutable
+data class ActionBarTokens(
+    val containerColor: Color,
+    val horizontalPadding: Dp,
+    val verticalPadding: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            spacing: AppSpacing,
+        ): ActionBarTokens = ActionBarTokens(
+            containerColor = colors.surface,
+            horizontalPadding = spacing.md,
+            verticalPadding = 12.dp,   // 存量事实标准收编（8dp 网格外值，仅此一处）
+        )
+    }
+}
+
 // —— 图标徽章（列表行 40dp emoji 徽章，全站统一规格） ——
 @Immutable
 data class BadgeTokens(
@@ -1020,6 +1071,8 @@ data class AppComponentTokens(
     val summaryCard: SummaryCardTokens,
     val emptyState: EmptyStateTokens,
     val badge: BadgeTokens,
+    val statCell: StatCellTokens,
+    val actionBar: ActionBarTokens,
 ) {
     companion object {
         fun default(
@@ -1068,6 +1121,8 @@ data class AppComponentTokens(
             summaryCard = SummaryCardTokens.default(colors, shapes, spacing),
             emptyState = EmptyStateTokens.default(colors, spacing),
             badge = BadgeTokens.default(colors, shapes, typography),
+            statCell = StatCellTokens.default(colors, typography, spacing),
+            actionBar = ActionBarTokens.default(colors, spacing),
         )
     }
 }
