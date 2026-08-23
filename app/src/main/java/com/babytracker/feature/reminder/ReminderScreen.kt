@@ -1,6 +1,8 @@
 package com.babytracker.feature.reminder
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -89,54 +91,60 @@ fun ReminderScreen(navController: NavController) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
+            val spacing = LocalAppSpacing.current
             ReminderTabBar(tab = state.tab, onSwitch = viewModel::switchTab)
 
             val list = if (state.tab == ReminderTab.PENDING) state.pending else state.history
             if (list.isEmpty()) {
-                EmptyState(
-                    emoji = if (state.tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
-                    title = if (state.tab == ReminderTab.PENDING) AppStrings.reminderNoPending else AppStrings.reminderNoHistory,
-                    subtitle = if (state.tab == ReminderTab.PENDING)
-                        AppStrings.reminderNoPendingSubtitle
-                    else
-                        AppStrings.reminderNoHistorySubtitle,
-                )
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    EmptyState(
+                        emoji = if (state.tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
+                        title = if (state.tab == ReminderTab.PENDING) AppStrings.reminderNoPending else AppStrings.reminderNoHistory,
+                        subtitle = if (state.tab == ReminderTab.PENDING)
+                            AppStrings.reminderNoPendingSubtitle
+                        else
+                            AppStrings.reminderNoHistorySubtitle,
+                    )
+                }
             } else {
-                list.forEach { reminder ->
-                    if (state.tab == ReminderTab.PENDING) {
-                        PendingReminderCard(
-                            reminder = reminder,
-                            onMarkDone = { viewModel.markDone(reminder.id) },
-                            onToggleEnabled = { viewModel.setEnabled(reminder.id, it) },
-                            onDelete = {
-                                scope.launch {
-                                    reminderRepo.delete(reminder)
-                                    appSnackbar.showUndo(
-                                        message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
-                                    ) { reminderRepo.update(reminder) }
-                                }
-                            },
-                        )
-                    } else {
-                        HistoryReminderCard(
-                            reminder = reminder,
-                            onDelete = {
-                                scope.launch {
-                                    reminderRepo.delete(reminder)
-                                    appSnackbar.showUndo(
-                                        message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
-                                    ) { reminderRepo.update(reminder) }
-                                }
-                            },
-                        )
+                // 懒加载列表（2.1，P1）
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentPadding = PaddingValues(top = spacing.xs, bottom = 88.dp),
+                ) {
+                    items(list, key = { it.id }) { reminder ->
+                        if (state.tab == ReminderTab.PENDING) {
+                            PendingReminderCard(
+                                reminder = reminder,
+                                onMarkDone = { viewModel.markDone(reminder.id) },
+                                onToggleEnabled = { viewModel.setEnabled(reminder.id, it) },
+                                onDelete = {
+                                    scope.launch {
+                                        reminderRepo.delete(reminder)
+                                        appSnackbar.showUndo(
+                                            message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
+                                        ) { reminderRepo.update(reminder) }
+                                    }
+                                },
+                            )
+                        } else {
+                            HistoryReminderCard(
+                                reminder = reminder,
+                                onDelete = {
+                                    scope.launch {
+                                        reminderRepo.delete(reminder)
+                                        appSnackbar.showUndo(
+                                            message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
+                                        ) { reminderRepo.update(reminder) }
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }
-
-            Spacer(Modifier.height(80.dp))
         }
     }
 }
@@ -230,10 +238,12 @@ private fun PendingReminderCard(
                     )
                 }
                 Spacer(Modifier.width(spacing.xs))
+                // 完成按钮：40dp 圆形触控目标 + 柔底（2.1 放大，C7）
                 Box(
                     Modifier
-                        .size(32.dp)
+                        .size(40.dp)
                         .clip(RoundedCornerShape(shapes.full))
+                        .background(c.surfaceMuted)
                         .clickable(onClick = onMarkDone),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -241,7 +251,7 @@ private fun PendingReminderCard(
                         Icons.Default.Check,
                         contentDescription = AppStrings.reminderMarkDone,
                         tint = c.success,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }

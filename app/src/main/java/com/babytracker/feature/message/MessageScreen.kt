@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -31,6 +32,7 @@ import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
@@ -75,6 +77,8 @@ fun MessageScreen(navController: NavController) {
         if (filterType == null) state.messages
         else state.messages.filter { it.type == filterType }
     }
+
+    var deleteTarget by remember { mutableStateOf<AppMessage?>(null) }
 
     AppScaffold(
         topBar = {
@@ -142,7 +146,7 @@ fun MessageScreen(navController: NavController) {
                         MessageCard(
                             message = message,
                             onClick = { viewModel.markRead(message.id) },
-                            onDelete = { viewModel.delete(message) },
+                            onLongClick = { deleteTarget = message },
                         )
                     }
                     item { Spacer(Modifier.height(spacing.md)) }
@@ -150,6 +154,17 @@ fun MessageScreen(navController: NavController) {
             }
         }
     }
+
+    AppConfirmDialog(
+        show = deleteTarget != null,
+        title = AppStrings.confirmDelete,
+        message = AppStrings.confirmDeleteMessage,
+        onConfirm = {
+            deleteTarget?.let(viewModel::delete)
+            deleteTarget = null
+        },
+        onDismiss = { deleteTarget = null },
+    )
 }
 
 @Composable
@@ -229,7 +244,7 @@ private fun CategoryOverviewBar(
 private fun MessageCard(
     message: AppMessage,
     onClick: () -> Unit,
-    onDelete: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
@@ -237,7 +252,7 @@ private fun MessageCard(
         containerColor = c.surface,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
     ) {
         Row(
             Modifier
@@ -277,28 +292,15 @@ private fun MessageCard(
                 )
             }
             Spacer(Modifier.width(spacing.sm))
-            Column(
-                verticalArrangement = Arrangement.spacedBy(spacing.sm),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                if (!message.isRead) {
-                    Box(
-                        Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(c.danger),
-                    )
-                } else {
-                    Text(AppStrings.messageRead, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
-                }
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = AppStrings.delete,
-                    tint = c.textTertiary,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable(onClick = onDelete),
+            if (!message.isRead) {
+                Box(
+                    Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(c.danger),
                 )
+            } else {
+                Text(AppStrings.messageRead, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
             }
         }
     }

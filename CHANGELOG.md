@@ -2,6 +2,17 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.1.3] — 2026-08-23
+
+**重设计批次 P1-A：睡眠/尿布卡合并 + 提醒/消息交互（信息架构第一刀）：**
+
+- 睡眠页：夜间大卡与「睡眠详情」卡合并为单一渐变紫卡（时长/时段 + 入睡/起床两格
+  QuickStatPill），小睡记录保留；夜间大卡点击进入详情弹层
+- 尿布页：汇总大卡与「换尿布详情」卡合并（青渐变 + n 次 + 小便/大便/混合三格 QuickStatPill）
+- 提醒页：完成按钮 32→40dp（触控目标达标）+ surfaceMuted 底；列表改 LazyColumn 懒加载
+- 站内信：删除行内 16dp 小 X → 长按弹确认（AppConfirmDialog），点击标记已读不变
+- 版本号 2.1.2 → 2.1.3（versionCode 38 → 39）
+
 ### [2.1.2] — 2026-08-23
 
 **重设计批次 P0-C：i18n 第一批迁移（记录四页/时间线/首页/表单全部入 AppStrings）：**
