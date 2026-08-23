@@ -38,6 +38,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.core.util.BabyController
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.*
 import com.babytracker.feature.diaper.DiaperFormDialog
@@ -49,6 +50,7 @@ import com.babytracker.navigation.Growth as GrowthRoute
 import com.babytracker.navigation.Health
 import com.babytracker.navigation.Vaccination
 import kotlinx.coroutines.launch
+import java.util.Locale
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -110,7 +112,7 @@ fun TimelineScreen(navController: NavController) {
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
-            AppTopBar(title = "记录")
+            AppTopBar(title = AppStrings.records)
         },
         bottomBar = { BottomNavBar(navController) },
         fab = {
@@ -126,7 +128,7 @@ fun TimelineScreen(navController: NavController) {
             // —— 类型筛选 Tab ——
             val filterKeys = listOf("", "feeding", "sleep", "diaper", "growth", "health")
             SegmentedControl(
-                labels = listOf("全部", "🤱喂", "😴睡", "🧷尿", "📏长", "❤️健"),
+                labels = listOf(AppStrings.filterAll, AppStrings.filterFeeding, AppStrings.filterSleep, AppStrings.filterDiaper, AppStrings.filterGrowth, AppStrings.filterHealth),
                 selectedIndex = filterKeys.indexOf(typeFilter).coerceAtLeast(0),
                 onSelect = { typeFilter = filterKeys[it] },
                 modifier = Modifier
@@ -143,9 +145,9 @@ fun TimelineScreen(navController: NavController) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "📝",
-                        title = "还没有记录",
-                        subtitle = "点击右下角按钮，记录宝宝的每一次成长",
-                        actionText = "开始记录",
+                        title = AppStrings.noRecordsTitle,
+                        subtitle = AppStrings.noRecordsSubtitle,
+                        actionText = AppStrings.startRecording,
                         onAction = { showTypePicker = true },
                     )
                 }
@@ -160,14 +162,14 @@ fun TimelineScreen(navController: NavController) {
                         EmptyState(
                             emoji = typeEmoji(typeFilter),
                             title = "没有${when (typeFilter) {
-                                "feeding" -> "喂养"
-                                "sleep" -> "睡眠"
-                                "diaper" -> "尿布"
-                                "growth" -> "生长"
-                                "health" -> "健康"
+                                "feeding" -> AppStrings.feeding
+                                "sleep" -> AppStrings.sleep
+                                "diaper" -> AppStrings.diaper
+                                "growth" -> AppStrings.growth
+                                "health" -> AppStrings.health
                                 else -> ""
                             }}记录",
-                            subtitle = "点击右下角按钮开始记录",
+                            subtitle = AppStrings.emptyFilteredSubtitle,
                         )
                     }
                 } else {
@@ -206,7 +208,7 @@ fun TimelineScreen(navController: NavController) {
                                             .padding(horizontal = 6.dp, vertical = 1.dp),
                                     ) {
                                         Text(
-                                            "${records.size}次",
+                                            "${String.format(Locale.US, AppStrings.countTimesCompact, records.size)}",
                                             style = typography.labelMedium,
                                             color = c.textTertiary,
                                         )
@@ -223,7 +225,7 @@ fun TimelineScreen(navController: NavController) {
                                     onDelete = {
                                         scope.launch {
                                             viewModel.delete(record)
-                                            appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
+                                            appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { viewModel.undoLastDelete() }
                                         }
                                     },
                                     onClick = { detailRecord = record },
@@ -268,17 +270,17 @@ fun TimelineScreen(navController: NavController) {
         ) {
             Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.sm)) {
                 Text(
-                    "选择记录类型",
+                    AppStrings.pickRecordType,
                     style = typography.headlineMedium,
                     modifier = Modifier.padding(bottom = spacing.md),
                 )
                 val types = listOf(
-                    "🤱 喂养" to { showAddFeeding = true },
-                    "😴 睡眠" to { showAddSleep = true },
-                    "🧷 尿布" to { showAddDiaper = true },
-                    "📏 生长" to { navController.navigate(GrowthRoute) },
-                    "💉 疫苗" to { navController.navigate(Vaccination) },
-                    "❤️ 健康" to { navController.navigate(Health) },
+                    AppStrings.pickerOptionFeeding to { showAddFeeding = true },
+                    AppStrings.pickerOptionSleep to { showAddSleep = true },
+                    AppStrings.pickerOptionDiaper to { showAddDiaper = true },
+                    AppStrings.pickerOptionGrowth to { navController.navigate(GrowthRoute) },
+                    AppStrings.pickerOptionVaccine to { navController.navigate(Vaccination) },
+                    AppStrings.pickerOptionHealth to { navController.navigate(Health) },
                 )
                 types.forEach { (label, onSelect) ->
                     AppButton(
@@ -304,9 +306,9 @@ fun TimelineScreen(navController: NavController) {
             emoji = record.emoji,
             tint = typeColor(record.recordType),
             fields = listOf(
-                "日期" to record.date,
-                "时间" to record.time,
-                "内容" to record.subtitle,
+                AppStrings.detailDate to record.date,
+                AppStrings.detailTime to record.time,
+                AppStrings.detailContent to record.subtitle,
             ),
             onEdit = {
                 detailRecord = null
@@ -322,7 +324,7 @@ fun TimelineScreen(navController: NavController) {
                 detailRecord = null
                 scope.launch {
                     viewModel.delete(record)
-                    appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
+                    appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { viewModel.undoLastDelete() }
                 }
             },
             onDismiss = { detailRecord = null },

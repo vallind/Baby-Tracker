@@ -110,13 +110,13 @@ fun FeedingListScreen(navController: NavController) {
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = "喂养记录",
+                title = AppStrings.feedingRecords,
                 onBack = { navController.popBackStack() },
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
-                        contentDescription = "选择日期",
+                        contentDescription = AppStrings.selectDate,
                         tint = c.textPrimary,
                     )
                 },
@@ -144,9 +144,9 @@ fun FeedingListScreen(navController: NavController) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "\uD83C\uDF7C",
-                        title = "还没有喂养记录",
-                        subtitle = "点击底部按钮，记录宝宝的每一次进食",
-                        actionText = "记录喂养",
+                        title = AppStrings.emptyFeedingTitle,
+                        subtitle = AppStrings.emptyFeedingSubtitle,
+                        actionText = AppStrings.recordFeeding,
                         onAction = {
                             editingFeeding = null
                             showForm = true
@@ -162,7 +162,7 @@ fun FeedingListScreen(navController: NavController) {
                     onDelete = { f ->
                         scope.launch {
                             feedingRepo.delete(f)
-                            appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.update(f) }
+                            appSnackbar.showUndo(message = AppStrings.deletedFeeding) { feedingRepo.update(f) }
                         }
                     },
                     onEdit = { f ->
@@ -175,7 +175,7 @@ fun FeedingListScreen(navController: NavController) {
 
             // —— 底部主操作条（DS 统一件） ——
             AppActionBar(
-                label = "记录喂养",
+                label = AppStrings.recordFeeding,
                 icon = Icons.Default.Add,
                 onClick = {
                     editingFeeding = null
@@ -201,7 +201,7 @@ fun FeedingListScreen(navController: NavController) {
             onDelete = {
                 scope.launch {
                     feedingRepo.delete(d)
-                    appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.update(d) }
+                    appSnackbar.showUndo(message = AppStrings.deletedFeeding) { feedingRepo.update(d) }
                 }
             },
             onDismiss = { detailFeeding = null },
@@ -259,10 +259,10 @@ private fun feedingEmoji(type: FeedingType): String = when (type) {
 /** 喂养记录摘要文本 */
 private fun feedingSummary(f: Feeding): String = when (f.type) {
     FeedingType.BREAST -> {
-        val side = f.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: "双侧"
-        val mlPart = f.amountMl?.let { "${it}ml" } ?: ""
-        if (mlPart.isNotEmpty()) "$mlPart, $side \u00B7 ${f.durationMin}分钟"
-        else "$side \u00B7 ${f.durationMin}分钟"
+        val side = f.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: AppStrings.breastSideBoth
+        val mlPart = f.amountMl?.let { "${it}${AppStrings.feedingAmountMl}" } ?: ""
+        if (mlPart.isNotEmpty()) "$mlPart, $side \u00B7 ${String.format(Locale.US, AppStrings.minutesCompactFormat, f.durationMin)}"
+        else "$side \u00B7 ${String.format(Locale.US, AppStrings.minutesCompactFormat, f.durationMin)}"
     }
     FeedingType.FORMULA -> {
         "${f.amountMl}ml${if (!f.brand.isNullOrBlank()) " \u00B7 ${f.brand}" else ""}"
@@ -356,7 +356,7 @@ fun FeedingFormDialog(
     var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
     var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
     var durationMin by remember { mutableStateOf(editEntity?.durationMin?.toString() ?: "") }
-    var breastSide by remember { mutableStateOf(editEntity?.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: "双侧") }
+    var breastSide by remember { mutableStateOf(editEntity?.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: AppStrings.breastSideBoth) }
     var foodName by remember { mutableStateOf(editEntity?.foodName ?: "") }
     var amountG by remember { mutableStateOf(editEntity?.amountG?.toString() ?: "") }
     var brand by remember { mutableStateOf(editEntity?.brand ?: "") }
@@ -444,13 +444,13 @@ fun FeedingFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) "编辑喂养" else "记录喂养",
+        title = if (isEdit) AppStrings.editFeeding else AppStrings.recordFeeding,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) "更新" else "保存",
+        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
     ) {
         Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("breast" to "🤱 母乳", "formula" to "💧 配方", "food" to "🥣 辅食", "water" to "🥤 饮水").forEach { (t, label) ->
+            listOf("breast" to AppStrings.feedingOptionBreast, "formula" to AppStrings.feedingOptionFormula, "food" to AppStrings.feedingOptionFood, "water" to AppStrings.feedingOptionWater).forEach { (t, label) ->
                 AppFilterChip(
                     selected = type == t,
                     onClick = { type = t },
@@ -463,7 +463,7 @@ fun FeedingFormDialog(
         when (type) {
             "breast" -> {
                 Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    listOf("左侧", "右侧", "双侧").forEach { s ->
+                    listOf(AppStrings.breastSideLeft, AppStrings.breastSideRight, AppStrings.breastSideBoth).forEach { s ->
                         AppFilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = s, modifier = Modifier.weight(1f))
                     }
                 }
@@ -495,7 +495,7 @@ fun FeedingFormDialog(
                             .remove("feeding_timer_form_start_time")
                             .apply()
                     },
-                            label = "结束计时",
+                            label = AppStrings.timerStop,
                         )
                     } else {
                         AppButton(
@@ -509,17 +509,17 @@ fun FeedingFormDialog(
                             .putString("feeding_timer_form_start_time", feedingDateTime)
                             .apply()
                             },
-                            label = "开始计时",
+                            label = AppStrings.timerStart,
                         )
                     }
                 }
                 AppInput(
                     value = durationMin,
                     onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
-                    label = "时长 (分钟)",
+                    label = AppStrings.feedingDurationLabel,
                     leadingIcon = { Text("⏱", style = LocalAppTypography.current.titleLarge) },
                     isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
-                    errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) "请输入 0-600 之间的数字" else null,
+                    errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) AppStrings.durationRangeError else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -528,10 +528,10 @@ fun FeedingFormDialog(
                 AppInput(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = "奶量 (ml)",
+                    label = AppStrings.feedingAmountLabel,
                     leadingIcon = { Text("💧", style = LocalAppTypography.current.titleLarge) },
                     isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
-                    errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) "请输入 1-500 之间的数字" else null,
+                    errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) AppStrings.amountRangeError500 else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -544,7 +544,7 @@ fun FeedingFormDialog(
                 AppInput(
                     value = brand,
                     onValueChange = { brand = it },
-                    label = "品牌 (可选)",
+                    label = AppStrings.brandOptional,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -552,16 +552,16 @@ fun FeedingFormDialog(
                 AppInput(
                     value = foodName,
                     onValueChange = { foodName = it },
-                    label = "食物名称",
+                    label = AppStrings.foodNameLabel,
                     leadingIcon = { Text("🥣", style = LocalAppTypography.current.titleLarge) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AppInput(
                     value = amountG,
                     onValueChange = { amountG = it.filter { c -> c.isDigit() } },
-                    label = "分量 (g)",
+                    label = AppStrings.portionGramLabel,
                     isError = amountG.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    errorMessage = if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
+                    errorMessage = if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStrings.amountRangeError1000 else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -570,11 +570,11 @@ fun FeedingFormDialog(
                 AppInput(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = "饮水量 (ml)",
+                    label = AppStrings.waterAmountLabel,
                     // 饮水量预设由下方 chip 行提供
                     leadingIcon = { Text("🥤", style = LocalAppTypography.current.titleLarge) },
                     isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) "请输入 0-1000 之间的数字" else null,
+                    errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStrings.amountRangeError1000 else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -594,7 +594,7 @@ fun FeedingFormDialog(
         AppInput(
             value = feedingDateTime,
             onValueChange = {},
-            label = "时间 (yyyy-MM-dd HH:mm)",
+            label = AppStrings.feedingTimeLabel,
             enabled = false,
             modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
         )
@@ -616,24 +616,24 @@ private fun feedingDetailFields(f: Feeding): List<Pair<String, String>> {
         java.time.LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { f.timestamp }
-    list += "时间" to time
-    list += "类型" to DateUtils.feedingTypeLabel(FeedingType.raw(f.type))
+    list += AppStrings.detailTime to time
+    list += AppStrings.detailType to DateUtils.feedingTypeLabel(FeedingType.raw(f.type))
     when (f.type) {
         FeedingType.BREAST -> {
-            f.durationMin?.let { list += "时长" to "${it} 分钟" }
-            f.amountMl?.let { list += "奶量" to "${it} ml" }
-            com.babytracker.core.domain.model.BreastSide.raw(f.breastSide)?.let { list += "侧边" to it }
+            f.durationMin?.let { list += AppStrings.detailDuration to "${String.format(Locale.US, AppStrings.minutesFormat, it)}" }
+            f.amountMl?.let { list += AppStrings.detailAmount to "${it} ml" }
+            com.babytracker.core.domain.model.BreastSide.raw(f.breastSide)?.let { list += AppStrings.detailSide to it }
         }
         FeedingType.FORMULA -> {
-            f.amountMl?.let { list += "奶量" to "${it} ml" }
-            f.brand?.takeIf { it.isNotBlank() }?.let { list += "品牌" to it }
+            f.amountMl?.let { list += AppStrings.detailAmount to "${it} ml" }
+            f.brand?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailBrand to it }
         }
         FeedingType.FOOD -> {
-            f.foodName?.takeIf { it.isNotBlank() }?.let { list += "食物" to it }
-            f.amountG?.let { list += "分量" to "${it} g" }
+            f.foodName?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailFood to it }
+            f.amountG?.let { list += AppStrings.detailPortion to "${it} g" }
         }
-        FeedingType.WATER -> f.amountMl?.let { list += "饮水量" to "${it} ml" }
+        FeedingType.WATER -> f.amountMl?.let { list += AppStrings.detailWaterAmount to "${it} ml" }
     }
-    f.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    f.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
     return list
 }

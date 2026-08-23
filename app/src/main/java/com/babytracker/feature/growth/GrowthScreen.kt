@@ -95,20 +95,20 @@ fun GrowthScreen(navController: NavController) {
     var selectedDate by remember { mutableStateOf(today) }
     var showDatePicker by remember { mutableStateOf(false) }
     var tab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("身高", "体重", "头围")
+    val tabs = listOf(AppStrings.growthHeight, AppStrings.growthWeight, AppStrings.growthHead)
     val types = listOf(GrowthType.HEIGHT, GrowthType.WEIGHT, GrowthType.HEAD)
     val units = listOf("cm", "kg", "cm")
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = "生长记录",
+                title = AppStrings.growthRecords,
                 onBack = { navController.popBackStack() },
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
-                        contentDescription = "日历",
+                        contentDescription = AppStrings.growthCalendar,
                         tint = c.textPrimary,
                     )
                 },
@@ -171,9 +171,9 @@ fun GrowthScreen(navController: NavController) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = when (tab) { 0 -> "📏"; 1 -> "⚖️"; else -> "📐" },
-                        title = "还没有${tabs[tab]}记录",
-                        subtitle = "点击底部按钮，记录宝宝的${tabs[tab]}变化",
-                        actionText = "记录${tabs[tab]}",
+                        title = "${String.format(Locale.US, AppStrings.growthEmptyTitleTemplate, tabs[tab])}",
+                        subtitle = "${String.format(Locale.US, AppStrings.growthEmptySubtitleTemplate, tabs[tab])}",
+                        actionText = "${String.format(Locale.US, AppStrings.growthRecordTemplate, tabs[tab])}",
                         onAction = {
                             editingGrowth = null
                             showForm = true
@@ -224,7 +224,7 @@ fun GrowthScreen(navController: NavController) {
                             ) {
                                 Column(Modifier.fillMaxWidth().padding(spacing.lg), horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        "当前${tabs[tab]}",
+                                        "${String.format(Locale.US, AppStrings.growthCurrentTemplate, tabs[tab])}",
                                         style = LocalAppTypography.current.bodyMedium,
                                         color = c.textSecondary,
                                     )
@@ -249,7 +249,7 @@ fun GrowthScreen(navController: NavController) {
                                     }
                                     Spacer(Modifier.height(6.dp))
                                     Text(
-                                        "$measuredDate 测量",
+                                        "${String.format(Locale.US, AppStrings.growthMeasuredAtTemplate, measuredDate)}",
                                         style = LocalAppTypography.current.bodySmall,
                                         color = c.textTertiary,
                                     )
@@ -395,7 +395,7 @@ fun GrowthScreen(navController: NavController) {
                             onDelete = {
                                 scope.launch {
                                     growthRepo.delete(g)
-                                    appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.update(g) }
+                                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { growthRepo.update(g) }
                                 }
                             },
                                 onClick = { detailGrowth = g },
@@ -453,7 +453,7 @@ fun GrowthScreen(navController: NavController) {
                         editingGrowth = null
                         showForm = true
                     },
-                    label = "记录${tabs[tab]}",
+                    label = "${String.format(Locale.US, AppStrings.growthRecordTemplate, tabs[tab])}",
                     icon = Icons.Default.Add,
                     height = 48.dp,
                     modifier = Modifier.fillMaxWidth(),
@@ -478,7 +478,7 @@ fun GrowthScreen(navController: NavController) {
             onDelete = {
                 scope.launch {
                     growthRepo.delete(g)
-                    appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.update(g) }
+                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { growthRepo.update(g) }
                 }
             },
             onDismiss = { detailGrowth = null },
@@ -573,13 +573,13 @@ fun GrowthFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) "编辑生长" else "记录生长",
+        title = if (isEdit) AppStrings.editGrowthLabel else AppStrings.recordGrowthLabel,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) "更新" else "保存",
+        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
     ) {
         Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("height" to "📏 身高", "weight" to "⚖️ 体重", "head" to "📐 头围").forEach { (t, label) ->
+            listOf("height" to AppStrings.growthOptionHeight, "weight" to AppStrings.growthOptionWeight, "head" to AppStrings.growthOptionHead).forEach { (t, label) ->
                 AppFilterChip(
                     selected = type == t,
                     onClick = { type = t },
@@ -592,7 +592,7 @@ fun GrowthFormDialog(
         AppInput(
             value = value,
             onValueChange = { value = it },
-            label = "数值",
+            label = AppStrings.detailValue,
             keyboardType = KeyboardType.Decimal,
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
@@ -600,7 +600,7 @@ fun GrowthFormDialog(
         AppInput(
             value = measuredAt,
             onValueChange = {},
-            label = "测量时间",
+            label = AppStrings.detailMeasuredAt,
             enabled = false,
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showCascadePicker = true },
         )
@@ -608,7 +608,7 @@ fun GrowthFormDialog(
         AppInput(
             value = note,
             onValueChange = { note = it },
-            label = "备注 (可选)",
+            label = AppStrings.noteOptional,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -641,9 +641,9 @@ private fun growthDetailFields(g: Growth): List<Pair<String, String>> {
         java.time.LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { g.measuredAt }
-    list += "测量时间" to measured
+    list += AppStrings.detailMeasuredAt to measured
     val unit = when (g.type) { GrowthType.HEIGHT -> "cm"; GrowthType.WEIGHT -> "kg"; GrowthType.HEAD -> "cm" }
-    list += "数值" to String.format(java.util.Locale.US, "%.1f %s", g.value, unit)
-    g.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    list += AppStrings.detailValue to String.format(java.util.Locale.US, "%.1f %s", g.value, unit)
+    g.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
     return list
 }

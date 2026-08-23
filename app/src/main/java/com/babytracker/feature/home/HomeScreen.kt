@@ -86,6 +86,7 @@ import com.babytracker.navigation.navigateToRoot
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
+import java.util.Locale
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -178,7 +179,7 @@ fun HomeScreen(navController: NavController) {
                     feedingRepo.insert(f)
                     quickRecord = null
                     viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
-                    appSnackbar.showUndo(message = "已记录喂养") { feedingRepo.delete(f) }
+                    appSnackbar.showUndo(message = AppStrings.recordedFeeding) { feedingRepo.delete(f) }
                 }
             },
         )
@@ -190,7 +191,7 @@ fun HomeScreen(navController: NavController) {
                     sleepRepo.insert(sl)
                     quickRecord = null
                     viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
-                    appSnackbar.showUndo(message = "已记录睡眠") { sleepRepo.delete(sl) }
+                    appSnackbar.showUndo(message = AppStrings.recordedSleep) { sleepRepo.delete(sl) }
                 }
             },
         )
@@ -202,7 +203,7 @@ fun HomeScreen(navController: NavController) {
                     diaperRepo.insert(d)
                     quickRecord = null
                     viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
-                    appSnackbar.showUndo(message = "已记录换尿布") { diaperRepo.delete(d) }
+                    appSnackbar.showUndo(message = AppStrings.recordedDiaper) { diaperRepo.delete(d) }
                 }
             },
         )
@@ -431,20 +432,20 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
             Spacer(Modifier.height(spacing.md))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (showBreast) {
-                    StatItem(value = animatedBreast.toString(), label = "母乳", unit = "次", modifier = Modifier.weight(1f))
+                    StatItem(value = animatedBreast.toString(), label = AppStrings.breastFeeding, unit = AppStrings.countsUnit, modifier = Modifier.weight(1f))
                     StatDivider()
                 }
                 if (showFormula) {
-                    StatItem(value = if (formulaTotalMl > 0) formulaTotalMl.toString() else "0", label = "配方奶", unit = "ml", modifier = Modifier.weight(1f))
+                    StatItem(value = if (formulaTotalMl > 0) formulaTotalMl.toString() else "0", label = AppStrings.formulaFeeding, unit = "ml", modifier = Modifier.weight(1f))
                     StatDivider()
                 }
                 if (showGeneric) {
-                    StatItem(value = animatedFeed.toString(), label = "喂养次数", unit = "次", modifier = Modifier.weight(1f))
+                    StatItem(value = animatedFeed.toString(), label = AppStrings.feedingCount, unit = AppStrings.countsUnit, modifier = Modifier.weight(1f))
                     StatDivider()
                 }
-                StatItem(value = sleepHours, label = "睡眠时长", modifier = Modifier.weight(1f))
+                StatItem(value = sleepHours, label = AppStrings.sleepHours, modifier = Modifier.weight(1f))
                 StatDivider()
-                StatItem(value = animatedDiaper.toString(), label = "换尿布", unit = "次", modifier = Modifier.weight(1f))
+                StatItem(value = animatedDiaper.toString(), label = AppStrings.diaperChange, unit = AppStrings.countsUnit, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -608,10 +609,10 @@ private fun TimelineRecordRow(item: Any) {
         }
         is Sleep -> {
             val night = item.type == SleepType.NIGHT
-            Triple(if (night) "🌙" else "☀️", if (night) c.secondary else c.tertiary, if (night) "夜间睡眠" else "小睡")
+            Triple(if (night) "🌙" else "☀️", if (night) c.secondary else c.tertiary, if (night) AppStrings.nightSleep else AppStrings.nap)
         }
         is Diaper -> {
-            Triple("🧷", c.tertiary, "换尿布")
+            Triple("🧷", c.tertiary, AppStrings.diaperChange)
         }
         else -> return
     }
@@ -642,9 +643,9 @@ private fun TimelineRecordRow(item: Any) {
 
 private fun summaryText(item: Any): String = when (item) {
     is Feeding -> when (item.type) {
-        FeedingType.BREAST -> "${item.durationMin ?: 0}分钟"
+        FeedingType.BREAST -> "${String.format(Locale.US, AppStrings.minutesCompactFormat, item.durationMin ?: 0)}"
         FeedingType.FORMULA -> "${item.amountMl ?: 0}ml"
-        FeedingType.FOOD -> item.foodName ?: "辅食"
+        FeedingType.FOOD -> item.foodName ?: AppStrings.solidFood
         else -> "${item.amountMl ?: 0}ml"
     }
     is Sleep -> DateUtils.durationFullText(

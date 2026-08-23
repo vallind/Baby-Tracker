@@ -117,13 +117,13 @@ fun SleepListScreen(navController: NavController) {
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = "睡眠记录",
+                title = AppStrings.sleepRecords,
                 onBack = { navController.popBackStack() },
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
-                        contentDescription = "选择日期",
+                        contentDescription = AppStrings.selectDate,
                         tint = c.textPrimary,
                     )
                 },
@@ -151,9 +151,9 @@ fun SleepListScreen(navController: NavController) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "\uD83D\uDE34",
-                        title = "还没有睡眠记录",
-                        subtitle = "点击底部按钮，记录宝宝的睡眠时间",
-                        actionText = "记录睡眠",
+                        title = AppStrings.emptySleepTitle,
+                        subtitle = AppStrings.emptySleepSubtitle,
+                        actionText = AppStrings.recordSleep,
                         onAction = {
                             editingSleep = null
                             showForm = true
@@ -170,7 +170,7 @@ fun SleepListScreen(navController: NavController) {
 
                     AppSummaryCard(
                         emoji = "\uD83C\uDF19",
-                        title = "夜间睡眠",
+                        title = AppStrings.nightSleep,
                         value = DateUtils.durationFullText(durSec),
                         subtitle = timeRange,
                         gradient = Gradients.sleepHeader(c),
@@ -192,7 +192,7 @@ fun SleepListScreen(navController: NavController) {
                     ) {
                         Column(Modifier.padding(spacing.md)) {
                             Text(
-                                "睡眠详情",
+                                AppStrings.sleepDetail,
                                 style = LocalAppTypography.current.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = c.textPrimary,
@@ -202,13 +202,13 @@ fun SleepListScreen(navController: NavController) {
                                 val sleepStart = LocalDateTime.parse(nightSleep.startTime, DateTimeFormatter.ISO_DATE_TIME)
                                 val sleepEnd = LocalDateTime.parse(nightSleep.endTime, DateTimeFormatter.ISO_DATE_TIME)
                                 SleepStatCell(
-                                    label = "入睡时间",
+                                    label = AppStrings.fallAsleepTime,
                                     value = sleepStart.format(DateTimeFormatter.ofPattern("HH:mm")),
                                     modifier = Modifier.weight(1f),
                                     c = c,
                                 )
                                 SleepStatCell(
-                                    label = "起床时间",
+                                    label = AppStrings.wakeUpTime,
                                     value = sleepEnd.format(DateTimeFormatter.ofPattern("HH:mm")),
                                     modifier = Modifier.weight(1f),
                                     c = c,
@@ -223,7 +223,7 @@ fun SleepListScreen(navController: NavController) {
                 // —— 小睡记录 ——
                 if (naps.isNotEmpty()) {
                     Text(
-                        "小睡记录",
+                        AppStrings.napRecords,
                         style = LocalAppTypography.current.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = c.textPrimary,
@@ -253,7 +253,7 @@ fun SleepListScreen(navController: NavController) {
                                 onDelete = {
                                     scope.launch {
                                         sleepRepo.delete(nap)
-                                        appSnackbar.showUndo(message = "已删除小睡记录") { sleepRepo.update(nap) }
+                                        appSnackbar.showUndo(message = AppStrings.deletedNap) { sleepRepo.update(nap) }
                                     }
                                 },
                                 onClick = { detailSleep = nap },
@@ -290,7 +290,7 @@ fun SleepListScreen(navController: NavController) {
 
             // —— 底部主操作条（DS 统一件） ——
             AppActionBar(
-                label = "记录睡眠",
+                label = AppStrings.recordSleep,
                 icon = Icons.Default.Add,
                 onClick = {
                     editingSleep = null
@@ -304,7 +304,7 @@ fun SleepListScreen(navController: NavController) {
     detailSleep?.let { s ->
         RecordDetailSheet(
             show = true,
-            title = if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡",
+            title = if (s.type == SleepType.NIGHT) AppStrings.nightSleep else AppStrings.nap,
             emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
             tint = if (s.type == SleepType.NIGHT) c.secondary else c.tertiary,
             fields = sleepDetailFields(s),
@@ -316,7 +316,7 @@ fun SleepListScreen(navController: NavController) {
             onDelete = {
                 scope.launch {
                     sleepRepo.delete(s)
-                    appSnackbar.showUndo(message = "已删除睡眠记录") { sleepRepo.update(s) }
+                    appSnackbar.showUndo(message = AppStrings.deletedSleep) { sleepRepo.update(s) }
                 }
             },
             onDismiss = { detailSleep = null },
@@ -457,14 +457,14 @@ fun SleepFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) "编辑睡眠" else "记录睡眠",
+        title = if (isEdit) AppStrings.editSleep else AppStrings.recordSleep,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) "更新" else "保存",
+        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            AppFilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = "\uD83C\uDF19 夜间睡眠", modifier = Modifier.weight(1f))
-            AppFilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = "\u2600\uFE0F 小睡", modifier = Modifier.weight(1f))
+            AppFilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = AppStrings.sleepOptionNight, modifier = Modifier.weight(1f))
+            AppFilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = AppStrings.sleepOptionNap, modifier = Modifier.weight(1f))
         }
         Spacer(Modifier.height(spacing.md))
         // 计时器 UI
@@ -492,7 +492,7 @@ fun SleepFormDialog(
                             .remove("sleep_timer_form_start_time")
                             .apply()
                     },
-                    label = "结束计时",
+                    label = AppStrings.timerStop,
                 )
             } else {
                 AppButton(
@@ -507,17 +507,17 @@ fun SleepFormDialog(
                             .putString("sleep_timer_form_start_time", currentStartTime)
                             .apply()
                     },
-                    label = "开始计时",
+                    label = AppStrings.timerStart,
                 )
             }
         }
         QuickTimeChipRow(onPick = { startTime = it.format(timeFormatter) })
         Spacer(Modifier.height(spacing.xs))
-        AppInput(value = startTime, onValueChange = {}, label = "开始时间", enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showCascadePicker = true })
+        AppInput(value = startTime, onValueChange = {}, label = AppStrings.startTimeLabel, enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showCascadePicker = true })
         Spacer(Modifier.height(12.dp))
-        AppInput(value = endTime, onValueChange = {}, label = "结束时间", enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showCascadePicker = true })
+        AppInput(value = endTime, onValueChange = {}, label = AppStrings.endTimeLabel, enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showCascadePicker = true })
         Spacer(Modifier.height(12.dp))
-        AppInput(value = note, onValueChange = { note = it }, label = "备注", modifier = Modifier.fillMaxWidth())
+        AppInput(value = note, onValueChange = { note = it }, label = AppStrings.detailNote, modifier = Modifier.fillMaxWidth())
     }
 
     fun pickerField() = if (pickerTarget == 0) startTime else endTime
@@ -567,13 +567,13 @@ private fun sleepDetailFields(s: Sleep): List<Pair<String, String>> {
             .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { v }
     val list = mutableListOf<Pair<String, String>>()
-    list += "开始" to fmt(s.startTime)
-    list += "结束" to fmt(s.endTime)
+    list += AppStrings.detailStart to fmt(s.startTime)
+    list += AppStrings.detailEnd to fmt(s.endTime)
     val durSec = DateUtils.durationToTotalSeconds(
         java.time.LocalDateTime.parse(s.startTime, java.time.format.DateTimeFormatter.ISO_DATE_TIME),
         java.time.LocalDateTime.parse(s.endTime, java.time.format.DateTimeFormatter.ISO_DATE_TIME),
     )
-    list += "时长" to DateUtils.durationFullText(durSec)
-    s.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    list += AppStrings.detailDuration to DateUtils.durationFullText(durSec)
+    s.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
     return list
 }

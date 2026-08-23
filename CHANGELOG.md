@@ -2,6 +2,17 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.1.2] — 2026-08-23
+
+**重设计批次 P0-C：i18n 第一批迁移（记录四页/时间线/首页/表单全部入 AppStrings）：**
+
+- AppStrings 新增 100+ 条 2.1 收敛文案（字段标签/表单/空态/模板格式串），
+  首页/喂养/睡眠/尿布/生长/时间线 6 页用户可见硬编码中文清零
+- 动态文案模板化：已删除「%1$s」/「%1$d 次」/「%1$d时%2$d分」/「记录%1$s」等统一走
+  AppStrings 带参文案，HomeViewModel/TimelineViewModel 平台文案同步迁移
+- 剩余仅日期格式模式（M月d日）与技术注释；验收扫描 160 → 0 处用户可见硬编码
+- 版本号 2.1.1 → 2.1.2（versionCode 37 → 38）
+
 ### [2.1.1] — 2026-08-23
 
 **重设计批次 P0-B：全站卡片手势契约（单击=详情弹层）+ 健康页收敛：**

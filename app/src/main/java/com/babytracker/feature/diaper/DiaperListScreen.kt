@@ -59,6 +59,7 @@ import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -113,13 +114,13 @@ fun DiaperListScreen(navController: NavController) {
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = "尿布记录",
+                title = AppStrings.diaperRecords,
                 onBack = { navController.popBackStack() },
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
-                        contentDescription = "选择日期",
+                        contentDescription = AppStrings.selectDate,
                         tint = c.textPrimary,
                     )
                 },
@@ -147,9 +148,9 @@ fun DiaperListScreen(navController: NavController) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "🧷",
-                        title = "还没有尿布记录",
-                        subtitle = "点击底部按钮，记录宝宝每次换尿布",
-                        actionText = "记录尿布",
+                        title = AppStrings.emptyDiaperTitle,
+                        subtitle = AppStrings.emptyDiaperSubtitle,
+                        actionText = AppStrings.recordDiaper,
                         onAction = {
                             editingDiaper = null
                             showForm = true
@@ -161,8 +162,8 @@ fun DiaperListScreen(navController: NavController) {
 
                 AppSummaryCard(
                     emoji = "🧷",
-                    title = "今日尿布",
-                    value = "${filtered.size} 次",
+                    title = AppStrings.diaperToday,
+                    value = "${String.format(Locale.US, AppStrings.countTimes, filtered.size)}",
                     subtitle = "💧$wetCount  ·  💩$poopCount  ·  🔄$bothCount",
                     gradient = Gradients.diaperSummary(c),
                     contentColor = c.onTertiary,
@@ -182,7 +183,7 @@ fun DiaperListScreen(navController: NavController) {
                 ) {
                     Column(Modifier.padding(spacing.md)) {
                         Text(
-                            "换尿布详情",
+                            AppStrings.diaperDetail,
                             style = LocalAppTypography.current.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = c.textPrimary,
@@ -191,22 +192,22 @@ fun DiaperListScreen(navController: NavController) {
                         Row(Modifier.fillMaxWidth()) {
                             StatCell(
                                 value = wetCount.toString(),
-                                label = "小便",
-                                unit = "次",
+                                label = AppStrings.diaperWet,
+                                unit = AppStrings.countsUnit,
                                 emoji = "💧",
                                 modifier = Modifier.weight(1f),
                             )
                             StatCell(
                                 value = poopCount.toString(),
-                                label = "大便",
-                                unit = "次",
+                                label = AppStrings.diaperPoop,
+                                unit = AppStrings.countsUnit,
                                 emoji = "💩",
                                 modifier = Modifier.weight(1f),
                             )
                             StatCell(
                                 value = bothCount.toString(),
-                                label = "混合",
-                                unit = "次",
+                                label = AppStrings.diaperBoth,
+                                unit = AppStrings.countsUnit,
                                 emoji = "🔄",
                                 modifier = Modifier.weight(1f),
                             )
@@ -247,7 +248,7 @@ fun DiaperListScreen(navController: NavController) {
                         onDelete = {
                             scope.launch {
                                 diaperRepo.delete(d)
-                                appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.update(d) }
+                                appSnackbar.showUndo(message = AppStrings.deletedDiaper) { diaperRepo.update(d) }
                             }
                         },
                             onClick = { detailDiaper = d },
@@ -294,7 +295,7 @@ fun DiaperListScreen(navController: NavController) {
 
             // —— 底部主操作条（DS 统一件） ——
             AppActionBar(
-                label = "记录尿布",
+                label = AppStrings.recordDiaper,
                 icon = Icons.Default.Add,
                 onClick = {
                     editingDiaper = null
@@ -320,7 +321,7 @@ fun DiaperListScreen(navController: NavController) {
             onDelete = {
                 scope.launch {
                     diaperRepo.delete(d)
-                    appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.update(d) }
+                    appSnackbar.showUndo(message = AppStrings.deletedDiaper) { diaperRepo.update(d) }
                 }
             },
             onDismiss = { detailDiaper = null },
@@ -404,13 +405,13 @@ fun DiaperFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) "编辑尿布" else "记录尿布",
+        title = if (isEdit) AppStrings.editDiaper else AppStrings.recordDiaper,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) "更新" else "保存",
+        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
     ) {
         Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("wet" to "💧 小便", "poop" to "💩 大便", "both" to "🔄 混合").forEach { (t, label) ->
+            listOf("wet" to AppStrings.diaperOptionWet, "poop" to AppStrings.diaperOptionPoop, "both" to AppStrings.diaperOptionBoth).forEach { (t, label) ->
                 AppFilterChip(
                     selected = selectedType == t,
                     onClick = { selectedType = t },
@@ -426,7 +427,7 @@ fun DiaperFormDialog(
         AppInput(
             value = diaperDateTime,
             onValueChange = {},
-            label = "时间",
+            label = AppStrings.detailTime,
             enabled = false,
             modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
         )
@@ -434,7 +435,7 @@ fun DiaperFormDialog(
         AppInput(
             value = note,
             onValueChange = { note = it },
-            label = "备注 (可选)",
+            label = AppStrings.noteOptional,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -456,8 +457,8 @@ private fun diaperDetailFields(d: Diaper): List<Pair<String, String>> {
         java.time.LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { d.timestamp }
-    list += "时间" to time
-    list += "类型" to DateUtils.diaperTypeLabel(DiaperType.raw(d.type))
-    d.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    list += AppStrings.detailTime to time
+    list += AppStrings.detailType to DateUtils.diaperTypeLabel(DiaperType.raw(d.type))
+    d.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
     return list
 }
