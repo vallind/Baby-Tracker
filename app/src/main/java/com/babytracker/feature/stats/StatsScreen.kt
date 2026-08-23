@@ -36,7 +36,9 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -439,13 +441,15 @@ private fun StatCardFrame(
 
 @Composable
 private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifier) {
+    val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     Box(
         modifier
             .size(spacing.xl)
             .clip(CircleShape)
-            .background(tint.copy(alpha = 0.12f)),
+            // 小尺寸圆形变体：仅底色收编分档浅底（40dp 标准形态请用 AppEmojiBadge）
+            .background(AppColorScale.fromSeed(tint).tintContainer(c)),
         contentAlignment = Alignment.Center,
     ) {
         Text(emoji, style = typography.titleMedium)

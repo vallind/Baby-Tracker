@@ -14,7 +14,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.Gradients
+import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -140,7 +142,7 @@ private fun AiAssistantEntryCard(navController: NavController) {
                 Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(shapes.large))
-                    .background(colors.primary.copy(alpha = 0.14f)),
+                    .background(AppColorScale.fromSeed(colors.primary).tintContainer(colors)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("✨", style = typography.headlineMedium)
@@ -318,7 +320,8 @@ private fun FeatureGridItem(
             Modifier
                 .size(56.dp)
                 .clip(RoundedCornerShape(shapes.large))
-                .background(tint.copy(alpha = 0.14f)),
+                .background(AppColorScale.fromSeed(tint).tintContainer(c)),
+
             contentAlignment = Alignment.Center,
         ) {
             Text(item.emoji, style = typography.headlineMedium)

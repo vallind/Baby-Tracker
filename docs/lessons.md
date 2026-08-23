@@ -280,4 +280,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 **原因：** Kotlin 按声明顺序执行属性初始化与 init 块，`override val issue = Issue(...)` 若声明在 init 块之后，init 执行时 `issue` 还是 null；而 `valueOrDefault` → `getRuleConfig` → `getRuleId()` → `issue.id`，必然 NPE。
 
 **规则：** detekt `Rule` 子类里**禁止**在 `issue` 初始化之前（init 块、或 `issue` 声明之前的属性初始化器）调用任何 `ConfigAware` 的 `valueOrDefault`/`subConfig`；`issue` 声明必须放在任何自定义 init 块之前。错误写法：`init { valueOrDefault("active", false) }`；正确写法：不做 init 块，或把 `issue` 声明提到最前。
+---
+
+## 20. KDoc 里写路径通配会触发 Kotlin 嵌套注释
+
+**现象：** 新建 `AppColorScale.kt` 后编译报 `Syntax error: Unclosed comment`（指向文件末尾），但文件里每个 `/**...*/` 看起来都闭合。
+
+**原因：** Kotlin 的块注释**支持嵌套**——注释正文里出现 `/*`（如抄 HeroUI 源码路径 `colors/*.ts`）会开启一层嵌套注释，其后的第一个 `*/` 只闭合嵌套层，外层注释直到文件尾都未闭合。
+
+**规则：** 注释正文禁止出现 `/*` 字样。要写文件通配路径时改成不含 `/*` 的表述（如「colors 目录各色表文件」），或用 `⭐` 等占位符替代星号。
 

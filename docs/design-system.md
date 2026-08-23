@@ -12,7 +12,7 @@
 
 三层令牌：
   designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 42字段 + 分档色板/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
-  designsystem/theme/AppComponentTokens.kt  — 组件令牌（34 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/SummaryCard/EmptyState；AppDensityTokens 为非组件令牌，不在计数内）
+  designsystem/theme/AppComponentTokens.kt  — 组件令牌（37 种：Button/Card/Input/Select/SelectionControl/Switch/Table/Dialog/Menu/Tag/Divider/Surface/SnackbarHost/Progress/Skeleton/Steps/Pagination/Slider/Rate/AppBar/Chip/Fab/BottomBar/ListItem/IconButton/Scaffold/BorderContainer/TimePicker/DatePicker/DateTimeCascade/Sheet/SegmentedControl/SummaryCard/EmptyState/Badge/StatCell/ActionBar；AppDensityTokens 为非组件令牌，不在计数内）
   designsystem/util/AppDefaults.kt          — 快照（非 Composable 环境下的默认值访问，已同步令牌结构）
 
 Typography 自建 12 级：displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall（禁止直接使用 M3 Typography，仅 theme 层桥接）
@@ -85,6 +85,9 @@ AppSummaryCard(emoji, title, value, subtitle, gradient, contentColor) // 渐变�
 AppMarkdownText(markdown = content)                // 安全渲染文本 Markdown，不加载远程图片或执行 HTML
 DateTimeCascadeDialog(...)                          // 级联日期时间选择（含 dateOnly 模式）
 RecordCard(record, ...)                             // 记录卡片（左滑删除 + Snackbar 撤销）
+AppEmojiBadge(emoji, tint)                          // 列表行 emoji 徽章，40dp 统一规格，分档浅底
+StatCell(value, label, unit?, emoji?)               // 统计格（数值强调色 headlineSmall）
+AppActionBar(label, onClick, icon?)                 // 列表页底部固定全宽主按钮条
 snackbar.showUndo(onUndo = { repo.update(r) })     // 替代 showSnackbar + ActionPerformed 样板（撤销=恢复软删除行）
 ```
 

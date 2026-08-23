@@ -29,6 +29,8 @@ import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
@@ -102,7 +104,7 @@ fun FamilyPage(navController: NavController) {
 
             // 错误提示
             uiState.errorMessage?.let { msg ->
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(spacing.md))
                 Text(msg, color = c.error, style = typography.bodyLarge, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             }
         }
@@ -136,7 +138,7 @@ fun FamilyPage(navController: NavController) {
         content = {
             Column {
                 Text("输入家庭邀请码（6 位）", color = c.textSecondary, style = typography.bodyLarge)
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(spacing.md))
                 AppInput(
                     value = uiState.inviteCode,
                     onValueChange = { vm.onInviteCodeChange(it.take(6)) },
@@ -215,7 +217,7 @@ private fun LocalDataView(
                         variant = ButtonVariant.Secondary,
                         onClick = { onMigrate(family) },
                         label = "归入 ${family.name}",
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs),
                     )
                 }
             }
@@ -241,7 +243,7 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(spacing.lg))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
                 AppButton(variant = ButtonVariant.Secondary, onClick = onJoinClick, label = "加入家庭", icon = Icons.Default.GroupAdd)
                 AppButton(onClick = onCreateClick, label = "创建家庭", icon = Icons.Default.Add)
             }
@@ -292,8 +294,8 @@ private fun FamilyDetailView(
                 Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(shapes.large))
-                    .background(c.primaryContainer.copy(alpha = 0.3f))
-                    .padding(12.dp),
+                    .background(AppColorScale.fromSeed(c.primary).tintContainer(c))
+                    .padding(spacing.md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
@@ -315,7 +317,7 @@ private fun FamilyDetailView(
         }
     }
 
-    Spacer(Modifier.height(12.dp))
+    Spacer(Modifier.height(spacing.md))
 
     // 成员列表
     if (members.isNotEmpty()) {
@@ -323,12 +325,12 @@ private fun FamilyDetailView(
         AppCard(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Column(Modifier.padding(horizontal = 12.dp)) {
+            Column(Modifier.padding(horizontal = spacing.md)) {
                 members.forEachIndexed { index, member ->
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 12.dp),
+                            .padding(vertical = spacing.md),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(

@@ -24,6 +24,7 @@ import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
@@ -173,15 +174,7 @@ private fun PendingReminderCard(
         onDelete = onDelete,
         modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
     ) {
-        Box(
-            Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(shapes.large))
-                .background(typeColor.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(emoji, style = LocalAppTypography.current.titleLarge)
-        }
+        AppEmojiBadge(emoji = emoji, tint = typeColor)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
@@ -263,7 +256,6 @@ private fun HistoryReminderCard(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     val (emoji, typeColor) = reminder.type.toVisual(c)
     val doneText = reminder.doneDate?.let { String.format(Locale.US, AppStrings.reminderDoneAt, DateUtils.formatDate(it)) }
         ?: AppStrings.reminderDone
@@ -273,15 +265,7 @@ private fun HistoryReminderCard(
         containerColor = c.surface.copy(alpha = 0.7f),
         modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
     ) {
-        Box(
-            Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(shapes.large))
-                .background(typeColor.copy(alpha = 0.10f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(emoji, style = LocalAppTypography.current.titleLarge)
-        }
+        AppEmojiBadge(emoji = emoji, tint = typeColor)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(

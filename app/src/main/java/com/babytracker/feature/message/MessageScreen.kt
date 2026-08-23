@@ -25,6 +25,10 @@ import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.theme.tintContainer
+import com.babytracker.designsystem.theme.accentContent
+import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.core.domain.model.AppMessage
@@ -316,7 +320,7 @@ private fun MessageLeadingIcon(message: AppMessage) {
                 Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(pickColor.copy(alpha = 0.15f)),
+                    .background(AppColorScale.fromSeed(pickColor).tintContainer(c)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -332,13 +336,13 @@ private fun MessageLeadingIcon(message: AppMessage) {
                 Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(shapes.large))
-                    .background(c.primary.copy(alpha = 0.12f)),
+                    .background(AppColorScale.fromSeed(c.primary).tintContainer(c)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.Notifications,
                     contentDescription = null,
-                    tint = c.primary,
+                    tint = AppColorScale.fromSeed(c.primary).accentContent(c),
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -348,13 +352,13 @@ private fun MessageLeadingIcon(message: AppMessage) {
                 Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(shapes.large))
-                    .background(c.secondary.copy(alpha = 0.12f)),
+                    .background(AppColorScale.fromSeed(c.secondary).tintContainer(c)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = c.secondary,
+                    tint = AppColorScale.fromSeed(c.secondary).accentContent(c),
                     modifier = Modifier.size(20.dp),
                 )
             }

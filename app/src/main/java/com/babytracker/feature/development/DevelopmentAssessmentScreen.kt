@@ -24,10 +24,14 @@ import androidx.navigation.NavController
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
+import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.accentContent
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -318,15 +322,7 @@ private fun AssessmentItemCard(
     ) {
         Column(Modifier.padding(horizontal = spacing.md, vertical = 14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(bgColor.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(emoji, style = LocalAppTypography.current.titleLarge)
-                }
+                AppEmojiBadge(emoji = emoji, tint = bgColor)
                 Spacer(Modifier.width(12.dp))
                 Row(
                     Modifier.weight(1f),
@@ -337,10 +333,11 @@ private fun AssessmentItemCard(
                     Box(
                         Modifier
                             .clip(RoundedCornerShape(shapes.full))
-                            .background(statusColor.copy(alpha = 0.12f))
+                            .background(AppColorScale.fromSeed(statusColor).tintContainer(c))
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                     ) {
-                        Text(scoreLabel(score), style = LocalAppTypography.current.labelMedium, fontWeight = FontWeight.SemiBold, color = statusColor)
+                        Text(scoreLabel(score), style = LocalAppTypography.current.labelMedium, fontWeight = FontWeight.SemiBold, // 胶囊文字取强调档，保证浅底上的对比度
+                        color = AppColorScale.fromSeed(statusColor).accentContent(c))
                     }
                 }
                 Spacer(Modifier.width(spacing.xs))
@@ -497,10 +494,11 @@ private fun ScoreSelector(
                 Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(shapes.large))
-                    .background(tint.copy(alpha = 0.14f)),
+                    .background(AppColorScale.fromSeed(tint).tintContainer(c)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = title, tint = tint, modifier = Modifier.size(20.dp))
+                // 图标取强调前景档，与浅底形成层次
+                Icon(icon, contentDescription = title, tint = AppColorScale.fromSeed(tint).accentContent(c), modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.width(10.dp))
             Column {
@@ -517,7 +515,8 @@ private fun ScoreSelector(
                     Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(shapes.medium))
-                        .background(if (isSelected) chipColor else chipColor.copy(alpha = 0.2f))
+                        // 选中=整档实底；未选中=浅底档（替代 alpha 叠加）
+                        .background(if (isSelected) chipColor else AppColorScale.fromSeed(chipColor).tintContainer(c))
                         .clickable { onSelect(value) }
                         .padding(vertical = spacing.sm),
                     contentAlignment = Alignment.Center,

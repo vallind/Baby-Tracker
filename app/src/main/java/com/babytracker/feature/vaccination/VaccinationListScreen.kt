@@ -25,6 +25,8 @@ import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.recordcard.RecordCard
@@ -330,7 +332,7 @@ private fun VaccinationCard(
                 Box(
                     Modifier
                         .clip(RoundedCornerShape(shapes.full))
-                        .background(tagColor.copy(alpha = 0.12f))
+                        .background(AppColorScale.fromSeed(tagColor).tintContainer(c))
                         .padding(horizontal = 10.dp, vertical = 4.dp),
                 ) {
                     Text(

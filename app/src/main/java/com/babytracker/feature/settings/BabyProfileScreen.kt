@@ -25,7 +25,9 @@ import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -98,7 +100,7 @@ fun BabyProfileScreen(navController: NavController) {
                             Modifier
                                 .size(88.dp)
                                 .clip(CircleShape)
-                                .background(c.primary.copy(alpha = 0.12f)),
+                                .background(AppColorScale.fromSeed(c.primary).tintContainer(c)),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(

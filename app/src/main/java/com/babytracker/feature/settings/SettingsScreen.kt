@@ -35,6 +35,8 @@ import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppButton
@@ -110,7 +112,7 @@ fun SettingsScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.md),
         ) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.md))
 
             UserInfoCard(
                 babyName = baby?.name ?: "未设置",
@@ -129,7 +131,7 @@ fun SettingsScreen(navController: NavController) {
                 } else null,
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.md))
 
             SettingsSectionTitle("宝宝与家庭")
             SettingsCard {
@@ -159,7 +161,7 @@ fun SettingsScreen(navController: NavController) {
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.md))
 
             SettingsSectionTitle("更多设置")
             SettingsCard {
@@ -355,7 +357,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
     ) {
         Column(Modifier.padding(spacing.md)) {
             Text("选择主题", style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
                 AppTheme.all.forEach { theme ->
                     val selected = themeCtrl.currentTheme.name == theme.name
                     AppCard(
@@ -370,7 +372,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                         elevation = elev.level1,
                         containerColor = theme.colors.surface,
                     ) {
-                        Box(Modifier.fillMaxSize().padding(12.dp)) {
+                        Box(Modifier.fillMaxSize().padding(spacing.md)) {
                             Column {
                                 Box(Modifier.size(36.dp).clip(RoundedCornerShape(shapes.large)).background(theme.colors.primary))
                                 Spacer(Modifier.height(6.dp))
@@ -401,7 +403,7 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
     ) {
         Column(Modifier.padding(spacing.md)) {
             Text(AppStrings.densityLabel, style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
                 AppDensity.entries.forEach { density ->
                     val selected = ctrl.currentDensity == density
                     AppCard(
@@ -415,7 +417,7 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
                             .clickable { ctrl.switchDensity(density) },
                         elevation = elev.level1,
                     ) {
-                        Box(Modifier.fillMaxSize().padding(12.dp)) {
+                        Box(Modifier.fillMaxSize().padding(spacing.md)) {
                             Column {
                                 Box(
                                     Modifier.size(36.dp)
@@ -488,11 +490,12 @@ fun SettingsRow(emoji: String, label: String, subtitle: String? = null, trailing
 @Composable
 fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
     val themesColors = mapOf(
         "pure" to 0xFF2563EB, "aurora" to 0xFF7C3AED, "warm" to 0xFFFF8A80,
         "sunny" to 0xFFF59E0B, "night" to 0xFF1E293B, "morandi" to 0xFF94A3B8,
     )
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs), verticalAlignment = Alignment.CenterVertically) {
         themesColors.forEach { (name, colorInt) ->
             Box(
                 Modifier.size(20.dp).clip(CircleShape).background(Color(colorInt))
@@ -559,13 +562,13 @@ fun BabyManagementScreen(navController: NavController) {
                             Box(Modifier.size(44.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {
                                 Text(b.name.take(1), color = c.primary, fontWeight = FontWeight.SemiBold, style = LocalAppTypography.current.titleMedium)
                             }
-                            Spacer(Modifier.width(12.dp))
+                            Spacer(Modifier.width(spacing.md))
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(b.name, style = LocalAppTypography.current.titleSmall)
                                     if (isCurrent) {
                                         Spacer(Modifier.width(spacing.sm))
-                                        AppSurface(color = c.primaryContainer, shape = RoundedCornerShape(shapes.medium)) {
+                                        AppSurface(color = AppColorScale.fromSeed(c.primary).tintContainer(c), shape = RoundedCornerShape(shapes.medium)) {
                                             Text("当前", style = LocalAppTypography.current.labelSmall, color = c.primary, modifier = Modifier.padding(horizontal = spacing.sm, vertical = spacing.xxs))
                                         }
                                     }
@@ -678,7 +681,7 @@ fun BabyFormDialog(baby: Baby?, onDismiss: () -> Unit, onSave: (Baby) -> Unit) {
         cancelText = "取消",
         confirmEnabled = name.isNotBlank(),
         content = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.md)) {
                 AppInput(
                     value = name,
                     onValueChange = { name = it },
@@ -837,7 +840,7 @@ fun BackupScreen(navController: NavController) {
                             Text("选择备份保存位置", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(spacing.md))
                     AppButton(
                         variant = ButtonVariant.Secondary,
                         onClick = { dirPicker.launch(null) },
@@ -853,7 +856,7 @@ fun BackupScreen(navController: NavController) {
                             Text(selectedDirName, style = LocalAppTypography.current.bodySmall, modifier = Modifier.weight(1f), maxLines = 1)
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(spacing.md))
                     AppButton(
                         onClick = {
                             scope.launch {
@@ -874,7 +877,7 @@ fun BackupScreen(navController: NavController) {
             if (backupPath.isNotEmpty()) {
                 Text("上次备份: $backupPath", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(top = spacing.sm))
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.md))
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -882,7 +885,7 @@ fun BackupScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.tertiary.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(AppColorScale.fromSeed(c.tertiary).tintContainer(c)), contentAlignment = Alignment.Center) {
                             Text("☁️", style = LocalAppTypography.current.titleMedium)
                         }
                         Spacer(Modifier.width(14.dp))
@@ -891,7 +894,7 @@ fun BackupScreen(navController: NavController) {
                             Text(webdavStatus, style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(spacing.md))
                     if (!showWebDAV) {
                         AppButton(variant = ButtonVariant.Secondary, onClick = { showWebDAV = true }, label = "配置 WebDAV", modifier = Modifier.fillMaxWidth())
                     } else {
@@ -900,7 +903,7 @@ fun BackupScreen(navController: NavController) {
                         AppInput(value = webdavUser, onValueChange = { webdavUser = it }, label = "用户名", modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(spacing.sm))
                         AppInput(value = webdavPass, onValueChange = { webdavPass = it }, label = "密码", modifier = Modifier.fillMaxWidth(), isPassword = true)
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(spacing.md))
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
                             AppButton(variant = ButtonVariant.Secondary, onClick = {
                                 scope.launch {
@@ -924,7 +927,7 @@ fun BackupScreen(navController: NavController) {
                     }
                 }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(spacing.md))
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -932,7 +935,7 @@ fun BackupScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(c.error.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(shapes.large)).background(AppColorScale.fromSeed(c.error).tintContainer(c)), contentAlignment = Alignment.Center) {
                             Icon(Icons.Default.Restore, contentDescription = null, tint = c.error)
                         }
                         Spacer(Modifier.width(14.dp))
@@ -941,7 +944,7 @@ fun BackupScreen(navController: NavController) {
                             Text("从 zip 文件导入数据", style = LocalAppTypography.current.bodySmall, color = c.textSecondary)
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(spacing.md))
                     AppButton(
                         onClick = { restorePicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) },
                         label = if (restoring) "恢复中..." else "选择备份文件",

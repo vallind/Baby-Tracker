@@ -42,7 +42,9 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
+import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -254,7 +256,7 @@ fun GrowthScreen(navController: NavController) {
                             targetValue = if (chartData.size > 1) 1f else 0f,
                             animationSpec = tween(durationMillis = 800),
                         )
-                        val chartCardShape = RoundedCornerShape(12.dp)
+                        val chartCardShape = RoundedCornerShape(shapes.medium)   // shapes.medium（原硬编码 12dp 收编）
                         val gridColor = c.divider
                         val lineColor = c.primary
                         val bgColor = c.surface
@@ -368,7 +370,7 @@ fun GrowthScreen(navController: NavController) {
                                     Modifier
                                         .size(36.dp)
                                         .clip(RoundedCornerShape(shapes.medium))
-                                        .background(c.primary.copy(alpha = 0.12f)),
+                                        .background(AppColorScale.fromSeed(c.primary).tintContainer(c)),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text("📊", style = typography.titleMedium)
@@ -432,7 +434,7 @@ fun GrowthScreen(navController: NavController) {
                                     Modifier
                                         .size(40.dp)
                                         .clip(RoundedCornerShape(shapes.large))
-                                        .background(c.primary.copy(alpha = 0.12f)),
+                                        .background(AppColorScale.fromSeed(c.primary).tintContainer(c)),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Text(

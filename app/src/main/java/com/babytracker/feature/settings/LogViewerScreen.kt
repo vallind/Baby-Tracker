@@ -48,6 +48,8 @@ import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.theme.tintContainer
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -192,7 +194,7 @@ fun LogViewerScreen(navController: NavController) {
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.sm),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(spacing.xs),
             ) {
                 LEVELS.forEach { opt ->
                     val selected = opt.level in selectedLevels
@@ -217,7 +219,7 @@ fun LogViewerScreen(navController: NavController) {
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(spacing.xs))
 
             // 日志列表
             LazyColumn(
@@ -249,7 +251,7 @@ fun LogViewerScreen(navController: NavController) {
                     AppDivider(
                         color = c.divider.copy(alpha = 0.4f),
                         thickness = 0.5.dp,
-                        modifier = Modifier.padding(start = if (isSelected) 0.dp else 4.dp, end = 4.dp),
+                        modifier = Modifier.padding(start = if (isSelected) 0.dp else spacing.xs, end = spacing.xs),
                     )
                 }
             }
@@ -300,6 +302,8 @@ private fun LogEntryRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val shapes = LocalAppShapes.current
+    val spacing = LocalAppSpacing.current
     val levelColor = when (entry.level) {
         'V' -> c.textTertiary
         'D' -> c.info
@@ -314,7 +318,7 @@ private fun LogEntryRow(
     }
 
     val bgColor = when {
-        isSelected -> levelColor.copy(alpha = 0.12f)
+        isSelected -> AppColorScale.fromSeed(levelColor).tintContainer(c)
         selectMode -> c.surface
         else -> c.surface
     }
@@ -322,7 +326,7 @@ private fun LogEntryRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(shapes.extraSmall))
             .background(bgColor)
             .then(
                 if (selectMode) Modifier.clickable { onClick() }
@@ -331,7 +335,7 @@ private fun LogEntryRow(
                     onLongClick = onLongClick,
                 )
             )
-            .padding(vertical = 2.dp, horizontal = 4.dp),
+            .padding(vertical = spacing.xxs, horizontal = spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

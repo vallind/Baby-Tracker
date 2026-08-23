@@ -58,7 +58,9 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -582,7 +584,7 @@ private fun AiAnalysisUnavailableBanner(
         color = colors.warning,
         modifier = Modifier
             .fillMaxWidth()
-            .background(colors.warning.copy(alpha = 0.1f))
+            .background(AppColorScale.fromSeed(colors.warning).tintContainer(colors))
             .padding(horizontal = spacing.md, vertical = spacing.sm),
     )
 }
@@ -969,7 +971,7 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
     Row(
         Modifier
             .fillMaxWidth()
-            .background(colors.error.copy(alpha = 0.1f))
+            .background(AppColorScale.fromSeed(colors.error).tintContainer(colors))
             .padding(horizontal = spacing.md, vertical = spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {

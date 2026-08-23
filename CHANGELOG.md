@@ -2,6 +2,16 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.9.5] — 2026-08-23
+
+**设计系统收敛批次六：全站页面清剿（疫苗/健康/提醒/消息/家庭/设置/生长/发育/统计/AI）：**
+- 全部剩余徽章类浅底 `copy(alpha=0.12~0.2f)` 收编分档取色（`tintContainer`），矢量图标前景改用强调档（`accentContent`）；图表网格线、scrim 遮罩、渐变笔刷等非容器用途的 alpha 按语义保留
+- 疫苗/健康/提醒/消息页 emoji 徽章统一换用 `AppEmojiBadge`
+- 发育评估页选项 chip 改"选中实底 / 未选中浅底档"；状态胶囊文字改强调档
+- 直构圆角与硬编码间距按令牌映射收编（4→xs / 8→sm / 16→md 等，仅精确匹配）
+- 文档同步：design-system.md 组件速查补 AppEmojiBadge/StatCell/AppActionBar；project-structure.md 目录与令牌计数更新至 37 组；lessons.md 追加「KDoc 嵌套注释」教训
+- 至此 feature 层 alpha 叠加仅剩图表/遮罩/渐变等合理用途 7 处
+
 ### [1.9.4] — 2026-08-23
 
 **设计系统收敛批次五：时间线与首页对齐：**

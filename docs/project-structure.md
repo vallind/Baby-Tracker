@@ -1,6 +1,6 @@
 # 项目结构与模块索引
 
-> 最后更新：2026-08-11 · 对应版本：1.8.0
+> 最后更新：2026-08-23 · 对应版本：1.9.4
 >
 > 从 AGENTS.md 拆分，供需要定位代码时查阅。
 
@@ -10,7 +10,7 @@
 app/src/main/java/com/babytracker/
 ├── designsystem/                # 设计系统（主题令牌 + 可复用组件 + Hooks + i18n）
 │   ├── theme/                   # AppTokens（核心令牌）/ AppComponentTokens（组件令牌）/ AppDensity 密度体系（含 DensityController.kt）/ Theme.kt
-│   ├── components/              # 可复用组件（26 个目录 + 根级组件，含 Defaults）
+│   ├── components/              # 可复用组件（29 个目录 + 根级组件，含 Defaults）
 │   ├── hooks/                   # useDebounce/useState/useLatestState + Logic 类
 │   ├── i18n/                    # AppStrings
 │   ├── foundation/              # BorderContainer/CenterVerticallyRow
@@ -65,9 +65,9 @@ designsystem/
 | 生长图表 | `feature/growth/GrowthScreen.kt`（Canvas + WHO 参考线） |
 | 疫苗计划 | `core/util/VaccineSchedule.kt`（21 条预设） |
 | 核心令牌 | `designsystem/theme/AppTokens.kt` — AppColors(42字段)/Spacing/Shapes/Elevation/Opacity/Motion/Typography |
-| 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 34 种组件令牌（derive{} 部分覆盖为 TODO，未实现）；AppDensityTokens 为非组件令牌（见 design-system.md） |
+| 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 37 种组件令牌（derive{} 部分覆盖为 TODO，未实现）；AppDensityTokens 为非组件令牌（见 design-system.md） |
 | 密度/无障碍 | `designsystem/theme/DensityController.kt` + `DensityPickerSheet`（`feature/settings/SettingsScreen.kt`）；`docs/a11y-baseline.md` |
-| 组件库 | `designsystem/components/`（27 个组件目录 + 根级组件，含 Defaults） |
+| 组件库 | `designsystem/components/`（29 个组件目录 + 根级组件，含 Defaults；badge/statcell/actionbar 为收敛批次新增） |
 | 国际化 | `designsystem/i18n/AppStrings.kt` |
 | Hooks/Logic | `designsystem/hooks/Hooks.kt` + `ButtonLogic.kt`/`FormLogic.kt`/`TableLogic.kt` |
 | 备份逻辑 | `core/backup/BackupManager.kt` |
