@@ -171,3 +171,19 @@ public object HeroUiPalettes {
         danger = red,
     )
 }
+
+// ═══════════════════════════════════════════════════════════
+//  意图取档 — 组件按"用途"取色，不按固定档位硬编码，
+//  暗色主题自动倒序（对标 HeroUI swapColorValues 策略）
+// ═══════════════════════════════════════════════════════════
+
+/** 当前主题是否暗色（判定口径与 AppColors.derive 一致：surface 亮度） */
+val AppColors.isDarkTheme: Boolean get() = surface.luminance() < 0.5f
+
+/** 浅底容器档（图标徽章底/选中底）：亮色 shade100，暗色 shade800 */
+fun AppColorScale.tintContainer(colors: AppColors): Color =
+    if (colors.isDarkTheme) shade800 else shade100
+
+/** 强调前景档（选中文字/强调数值）：亮色 shade600，暗色 shade400 提亮 */
+fun AppColorScale.accentContent(colors: AppColors): Color =
+    if (colors.isDarkTheme) shade400 else shade600

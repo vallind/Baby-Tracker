@@ -2,6 +2,15 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.9.1] — 2026-08-23
+
+**设计系统收敛批次二：组件形态统一（圆角/徽章/分段控件）：**
+- 新增 `AppEmojiBadge` 组件与 `BadgeTokens` 令牌组：列表行 emoji 徽章全站统一为 40dp + medium 圆角，底色走分档浅底（暗色自动倒序），替代各页 `copy(alpha=0.12)` 现场调色
+- 新增分档意图取档 API：`tintContainer()`（浅底档）/ `accentContent()`（强调前景档），按主题明暗自动倒序取档（对标 HeroUI swapColorValues）
+- AppFilterChip 接入令牌圆角与分档选中色，去除硬编码 8dp 与 alpha=0.16 叠加
+- 卡片令牌改 HeroUI 风格：发丝描边 1dp 定形 + 阴影降级 level1
+- SegmentedControl 轨道色收敛为中性 surfaceMuted + 白色滑块，去 alpha 叠加
+
 ### [1.9.0] — 2026-08-23
 
 **设计系统收敛批次一：分档色板（对标 HeroUI）：**

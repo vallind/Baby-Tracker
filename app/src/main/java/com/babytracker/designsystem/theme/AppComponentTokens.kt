@@ -82,10 +82,10 @@ data class CardTokens(
             containerColor = colors.surface,
             contentColor = colors.onSurface,
             borderColor = colors.outline,
-            borderWidth = 0.dp,                          // 无边框风格
+            borderWidth = 1.dp,                          // HeroUI 风格发丝描边，卡片在灰底上靠描边定形
             cornerRadius = shapes.scaled(shapes.largeIncreased), // 大圆角卡片
             innerPadding = spacing.md,
-            elevation = elevation.level2,
+            elevation = elevation.level1,                // 阴影降为轻量级，层次主要靠描边表达
         )
     }
 }
@@ -919,8 +919,8 @@ data class SegmentedControlTokens(
             shapes: AppShapes,
             typography: AppTypography,
         ): SegmentedControlTokens = SegmentedControlTokens(
-            containerColor = colors.primaryContainer.copy(alpha = 0.25f),
-            selectedContainerColor = colors.surface,
+            containerColor = colors.surfaceMuted,       // 中性轨道槽（对标 iOS/HeroUI 分段控件）
+            selectedContainerColor = colors.surface,    // 白色滑块
             selectedContentColor = colors.primary,
             unselectedContentColor = colors.textSecondary,
             cornerRadius = shapes.scaled(shapes.large),
@@ -937,6 +937,26 @@ data class SegmentedControlTokens(
 //  TT-030 顶层聚合容器
 //  参照 PaletteComponentThemes.default()：统一接收所有基础令牌，分发到各组件
 // ═══════════════════════════════════════════════════════════
+
+// —— 图标徽章（列表行 40dp emoji 徽章，全站统一规格） ——
+@Immutable
+data class BadgeTokens(
+    val size: Dp,
+    val cornerRadius: Dp,
+    val fontSize: TextUnit,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+        ): BadgeTokens = BadgeTokens(
+            size = 40.dp,                                // 全站列表行徽章统一尺寸（存量事实标准收编）
+            cornerRadius = shapes.scaled(shapes.medium), // shapes.medium
+            fontSize = typography.titleLarge.fontSize,   // 字号/容器 ≈ 0.45，与宫格比例一致
+        )
+    }
+}
 
 // —— 渐变摘要卡（夜间睡眠 / 今日尿布等大数字摘要） ——
 @Immutable
@@ -999,6 +1019,7 @@ data class AppComponentTokens(
     val segmentedControl: SegmentedControlTokens,
     val summaryCard: SummaryCardTokens,
     val emptyState: EmptyStateTokens,
+    val badge: BadgeTokens,
 ) {
     companion object {
         fun default(
@@ -1046,6 +1067,7 @@ data class AppComponentTokens(
             segmentedControl = SegmentedControlTokens.default(colors, shapes, typography),
             summaryCard = SummaryCardTokens.default(colors, shapes, spacing),
             emptyState = EmptyStateTokens.default(colors, spacing),
+            badge = BadgeTokens.default(colors, shapes, typography),
         )
     }
 }

@@ -16,7 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.accentContent
+import com.babytracker.designsystem.theme.tintContainer
 
 /**
  * 标签组件 — 对标 Palette Tag/Chip 组件，消费 AppComponentTokens.chip
@@ -67,15 +70,16 @@ fun AppFilterChip(
     onClick: () -> Unit,
     label: String,
     selectedColor: Color? = null,
-    shape: Shape = RoundedCornerShape(8.dp),
+    shape: Shape = RoundedCornerShape(ChipDefaults.cornerRadius()),
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
-    val activeColor = selectedColor ?: c.primary
+    // 任意语义色统一走分档：选中底=浅底档，选中文字=强调档，禁止 alpha 现场调
+    val activeScale = AppColorScale.fromSeed(selectedColor ?: c.primary)
 
     val colors = FilterChipDefaults.filterChipColors(
-        selectedContainerColor = activeColor.copy(alpha = 0.16f),
-        selectedLabelColor = activeColor,
+        selectedContainerColor = activeScale.tintContainer(c),
+        selectedLabelColor = activeScale.accentContent(c),
         labelColor = c.textSecondary,
         containerColor = Color.Transparent,
     )

@@ -389,8 +389,8 @@ fun AppColors.Companion.derive(
     )
 }
 
-/** 估算颜色的感知亮度（0~1），用于判断亮/暗主题 */
-private fun Color.luminance(): Float {
+/** 估算颜色的感知亮度（0~1），用于判断亮/暗主题；internal 供分档取色辅助函数复用 */
+internal fun Color.luminance(): Float {
     val r = red; val g = green; val b = blue
     return 0.299f * r + 0.587f * g + 0.114f * b
 }
