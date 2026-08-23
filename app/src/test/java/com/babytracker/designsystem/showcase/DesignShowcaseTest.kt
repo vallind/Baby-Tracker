@@ -78,7 +78,7 @@ private val showcaseFontFamily = FontFamily(
 )
 
 @Composable
-private fun AppTypographyInFont(): AppTypography {
+private fun appTypographyWithFont(): AppTypography {
     val base = LocalAppTypography.current
     fun withFont(s: TextStyle) = s.copy(fontFamily = showcaseFontFamily)
     return AppTypography(
@@ -98,7 +98,7 @@ private fun AppTypographyInFont(): AppTypography {
 }
 
 @Composable
-private fun M3TypographyInFont(): Typography {
+private fun m3TypographyWithFont(): Typography {
     val base = MaterialTheme.typography
     fun withFont(s: TextStyle) = s.copy(fontFamily = showcaseFontFamily)
     return Typography(
@@ -122,8 +122,8 @@ private fun M3TypographyInFont(): Typography {
 @Composable
 private fun ShowcaseHost(dark: Boolean = false, content: @Composable () -> Unit) {
     BabyTrackerTheme(theme = if (dark) AppTheme.night else AppTheme.pure) {
-        CompositionLocalProvider(LocalAppTypography provides AppTypographyInFont()) {
-            val m3 = M3TypographyInFont()
+        CompositionLocalProvider(LocalAppTypography provides appTypographyWithFont()) {
+            val m3 = m3TypographyWithFont()
             MaterialTheme(typography = m3) { content() }
         }
     }

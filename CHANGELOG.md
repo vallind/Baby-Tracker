@@ -2,6 +2,16 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.0.1] — 2026-08-23
+
+**现代化重构第二批：AI 会话与次要页面打磨：**
+- AI 会话：错误/不可用横幅圆角卡片化、欢迎推荐问题胶囊粉彩底、输入中气泡（surfaceMuted + 加载圈）
+- 提醒中心：历史记录卡底色去 alpha 伪造，改 surfaceMuted 分层
+- 发育评估：文本箭头 › 换矢量图标（ChevronRight）
+- 设置页用户头像渐变换 Gradients.primary（去除 alpha 渐变），清理 Brush 导入
+- 修复 lint 新增项：Showcase 返回值的 Composable 辅助函数改小写命名
+- 版本号 2.0.0 → 2.0.1（versionCode 34 → 35）
+
 ### [2.0.0] — 2026-08-23
 
 **UI/UX 全面现代化重构：「柔和奶油 + 多彩分区」视觉语言**

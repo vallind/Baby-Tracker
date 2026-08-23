@@ -262,7 +262,7 @@ private fun HistoryReminderCard(
 
     RecordCard(
         onDelete = onDelete,
-        containerColor = c.surface.copy(alpha = 0.7f),
+        containerColor = c.surfaceMuted,
         modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
     ) {
         AppEmojiBadge(emoji = emoji, tint = typeColor)

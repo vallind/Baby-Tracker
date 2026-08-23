@@ -341,7 +341,7 @@ private fun AssessmentItemCard(
                     }
                 }
                 Spacer(Modifier.width(spacing.xs))
-                Text("\u203A", style = LocalAppTypography.current.titleLarge, color = c.textTertiary)
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = c.textTertiary, modifier = Modifier.size(20.dp))
             }
             Spacer(Modifier.height(spacing.sm))
             Text(description, style = LocalAppTypography.current.bodyMedium.copy(lineHeight = 20.sp), color = c.textSecondary)

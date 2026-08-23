@@ -52,6 +52,7 @@ import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.markdown.AppMarkdownText
+import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
@@ -584,6 +585,8 @@ private fun AiAnalysisUnavailableBanner(
         color = colors.warning,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(horizontal = spacing.md)
+            .clip(RoundedCornerShape(16.dp))
             .background(AppColorScale.fromSeed(colors.warning).tintContainer(colors))
             .padding(horizontal = spacing.md, vertical = spacing.sm),
     )
@@ -711,6 +714,8 @@ private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
             ).forEach { question ->
                 AppChip(
                     label = question,
+                    backgroundColor = AppColorScale.fromSeed(colors.primary).tintContainer(colors),
+                    textColor = colors.textPrimary,
                     modifier = Modifier
                         .padding(bottom = spacing.sm)
                         .clickable { onQuestion(question) },
@@ -944,12 +949,27 @@ private fun AiTypingIndicator() {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
-    Text(
-        text = AppStrings.aiAnswering,
-        style = typography.bodyMedium,
-        color = colors.textSecondary,
-        modifier = Modifier.padding(vertical = spacing.sm),
-    )
+    Row(
+        Modifier.padding(vertical = spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(colors.surfaceMuted)
+                .padding(horizontal = spacing.md, vertical = 10.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AppCircularProgress(indicatorColor = colors.primary)
+                Spacer(Modifier.width(spacing.sm))
+                Text(
+                    text = AppStrings.aiAnswering,
+                    style = typography.bodyMedium,
+                    color = colors.textSecondary,
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -971,6 +991,8 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
     Row(
         Modifier
             .fillMaxWidth()
+            .padding(horizontal = spacing.md)
+            .clip(RoundedCornerShape(16.dp))
             .background(AppColorScale.fromSeed(colors.error).tintContainer(colors))
             .padding(horizontal = spacing.md, vertical = spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
