@@ -26,6 +26,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.divider.AppDivider
+import com.babytracker.designsystem.components.statcell.StatCell
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.navigation.AiAssistant
@@ -236,44 +237,22 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
             Spacer(Modifier.height(spacing.md))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (showBreast) {
-                    TextStatCell(animatedBreast.toString(), "次", "母乳")
+                    StatCell(value = animatedBreast.toString(), label = "母乳", unit = "次", modifier = Modifier.weight(1f))
                     StatDivider()
                 }
                 if (showFormula) {
-                    TextStatCell(if (formulaTotalMl > 0) "${formulaTotalMl}" else "0", "ml", "配方奶")
+                    StatCell(value = if (formulaTotalMl > 0) formulaTotalMl.toString() else "0", label = "配方奶", unit = "ml", modifier = Modifier.weight(1f))
                     StatDivider()
                 }
                 if (showGeneric) {
-                    TextStatCell(animatedFeed.toString(), "次", "喂养次数")
+                    StatCell(value = animatedFeed.toString(), label = "喂养次数", unit = "次", modifier = Modifier.weight(1f))
                     StatDivider()
                 }
-                TextStatCell(sleepHours, "", "睡眠时长")
+                StatCell(value = sleepHours, label = "睡眠时长", modifier = Modifier.weight(1f))
                 StatDivider()
-                TextStatCell(animatedDiaper.toString(), "次", "换尿布")
+                StatCell(value = animatedDiaper.toString(), label = "换尿布", unit = "次", modifier = Modifier.weight(1f))
             }
         }
-    }
-}
-
-@Composable
-fun RowScope.TextStatCell(value: String, unit: String, label: String) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    Column(
-        Modifier.weight(1f),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(value, style = typography.headlineMedium, color = c.primary)
-            if (unit.isNotEmpty()) {
-                Spacer(Modifier.width(spacing.xxs))
-                Text(unit, style = typography.labelMedium, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.xxs))
-            }
-        }
-        Spacer(Modifier.height(spacing.xs))
-        Text(label, style = typography.labelMedium, color = c.textTertiary)
     }
 }
 
@@ -426,7 +405,7 @@ private fun TimelineRecordRow(item: Any) {
                 Text(when (item.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" }, style = typography.titleLarge)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), style = typography.bodyLarge, color = c.textPrimary)
+                    Text(DateUtils.feedingTypeLabel(com.babytracker.core.domain.model.FeedingType.raw(item.type)), style = typography.titleSmall, color = c.textPrimary)
                     Text(if (item.type == FeedingType.BREAST) "${item.durationMin ?: 0}分钟" else "${item.amountMl ?: 0}ml", style = typography.labelMedium, color = c.textSecondary)
                 }
                 Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)
@@ -435,7 +414,7 @@ private fun TimelineRecordRow(item: Any) {
                 Text(if (item.type == SleepType.NIGHT) "🌙" else "☀️", style = typography.titleLarge)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(if (item.type == SleepType.NIGHT) "夜间睡眠" else "小睡", style = typography.bodyLarge, color = c.textPrimary)
+                    Text(if (item.type == SleepType.NIGHT) "夜间睡眠" else "小睡", style = typography.titleSmall, color = c.textPrimary)
                     Text(
                         DateUtils.durationFullText(
                             DateUtils.durationToTotalSeconds(
@@ -453,7 +432,7 @@ private fun TimelineRecordRow(item: Any) {
                 Text("🧷", style = typography.titleLarge)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("换尿布", style = typography.bodyLarge, color = c.textPrimary)
+                    Text("换尿布", style = typography.titleSmall, color = c.textPrimary)
                     Text(DateUtils.diaperTypeLabel(com.babytracker.core.domain.model.DiaperType.raw(item.type)), style = typography.labelMedium, color = c.textSecondary)
                 }
                 Text(item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: "", style = typography.labelMedium, color = c.textTertiary)

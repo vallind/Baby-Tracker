@@ -2,6 +2,13 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.9.4] — 2026-08-23
+
+**设计系统收敛批次五：时间线与首页对齐：**
+- 时间线记录行徽章换用 `AppEmojiBadge`，行字级与记录三页对齐（titleMedium/labelMedium → titleSmall/bodySmall）
+- 首页今日概览统计格接入共享 `StatCell`（删除本地 TextStatCell），数值规格全站一致
+- 首页最近记录行标题字级对齐 titleSmall，消除与记录页的字级跳变
+
 ### [1.9.3] — 2026-08-23
 
 **设计系统收敛批次四：喂养/尿布/睡眠页接入统一件：**

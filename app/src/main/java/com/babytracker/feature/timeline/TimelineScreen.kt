@@ -31,6 +31,7 @@ import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
@@ -234,28 +235,18 @@ fun TimelineScreen(navController: NavController) {
                                         }
                                     },
                                 ) {
-                                    Box(
-                                        Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(shapes.large))
-                                            .background(accent.copy(alpha = 0.12f)),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Text(
-                                            record.emoji,
-                                            style = typography.titleLarge,
-                                        )
-                                    }
+                                    AppEmojiBadge(emoji = record.emoji, tint = accent)
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(
                                             record.title,
-                                            style = typography.titleMedium,
+                                            // 与记录三页对齐：行标题 titleSmall / 副标题 bodySmall
+                                            style = typography.titleSmall,
                                             color = c.textPrimary,
                                         )
                                         Text(
                                             record.subtitle,
-                                            style = typography.labelMedium,
+                                            style = typography.bodySmall,
                                             color = c.textSecondary,
                                         )
                                     }
