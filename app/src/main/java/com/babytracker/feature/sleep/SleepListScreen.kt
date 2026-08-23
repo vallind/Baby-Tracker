@@ -5,7 +5,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,7 +27,6 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppButton
@@ -39,6 +37,8 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.SleepRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.actionbar.AppActionBar
+import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
@@ -60,7 +60,6 @@ import java.util.Locale
 fun SleepListScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     val sleepRepo: SleepRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -270,13 +269,7 @@ fun SleepListScreen(navController: NavController) {
                                 modifier = Modifier.padding(bottom = spacing.sm),
                                 accentColor = c.warning,
                             ) {
-                                Box(
-                                    Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(shapes.large))
-                                        .background(c.warning.copy(alpha = 0.12f)),
-                                    contentAlignment = Alignment.Center,
-                                ) { Text("\u2600\uFE0F", style = LocalAppTypography.current.titleLarge) }
+                                AppEmojiBadge(emoji = "\u2600\uFE0F", tint = c.warning)
                                 Spacer(Modifier.width(12.dp))
                                 Text(
                                     range,
@@ -300,23 +293,15 @@ fun SleepListScreen(navController: NavController) {
                 }
             }
 
-            // —— 底部固定按钮 ——
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(c.surface)
-                    .padding(horizontal = spacing.md, vertical = 12.dp),
-            ) {
-                AppButton(
-                    onClick = {
-                        editingSleep = null
-                        showForm = true
-                    },
-                    label = "记录睡眠",
-                    icon = Icons.Default.Add,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            // —— 底部主操作条（DS 统一件） ——
+            AppActionBar(
+                label = "记录睡眠",
+                icon = Icons.Default.Add,
+                onClick = {
+                    editingSleep = null
+                    showForm = true
+                },
+            )
         }
     }
 

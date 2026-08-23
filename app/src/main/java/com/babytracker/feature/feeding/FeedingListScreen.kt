@@ -41,6 +41,8 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.actionbar.AppActionBar
+import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
@@ -60,7 +62,6 @@ import java.util.Locale
 fun FeedingListScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     val feedingRepo: FeedingRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -172,23 +173,15 @@ fun FeedingListScreen(navController: NavController) {
                 )
             }
 
-            // —— 底部固定按钮 ——
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(c.surface)
-                    .padding(horizontal = spacing.md, vertical = 12.dp),
-            ) {
-                AppButton(
-                    onClick = {
-                        editingFeeding = null
-                        showForm = true
-                    },
-                    label = "记录喂养",
-                    icon = Icons.Default.Add,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            // —— 底部主操作条（DS 统一件） ——
+            AppActionBar(
+                label = "记录喂养",
+                icon = Icons.Default.Add,
+                onClick = {
+                    editingFeeding = null
+                    showForm = true
+                },
+            )
         }
     }
 
@@ -277,7 +270,6 @@ private fun FeedingTimeline(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -340,13 +332,7 @@ private fun FeedingTimeline(
                         .padding(bottom = 10.dp),
                     accentColor = color,
                 ) {
-                    Box(
-                        Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(shapes.large))
-                            .background(color.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center,
-                    ) { Text(emoji, style = LocalAppTypography.current.titleLarge) }
+                    AppEmojiBadge(emoji = emoji, tint = color)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(

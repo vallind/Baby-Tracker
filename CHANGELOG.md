@@ -2,6 +2,14 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [1.9.3] — 2026-08-23
+
+**设计系统收敛批次四：喂养/尿布/睡眠页接入统一件：**
+- 三页列表行 emoji 徽章统一换用 `AppEmojiBadge`（分档浅底，替代 alpha 调色）
+- 三页底部固定按钮条统一换用 `AppActionBar`
+- 尿布汇总统计格接入共享 `StatCell`（删除页内私有实现），数值规格与首页对齐
+- 清理各页失引用的 shapes 局部变量与 RoundedCornerShape 导入
+
 ### [1.9.2] — 2026-08-23
 
 **设计系统收敛批次三：新增统计格与底部操作条统一件：**

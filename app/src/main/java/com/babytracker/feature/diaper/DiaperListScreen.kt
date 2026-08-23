@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,7 +25,6 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppButton
@@ -40,6 +38,9 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.actionbar.AppActionBar
+import com.babytracker.designsystem.components.badge.AppEmojiBadge
+import com.babytracker.designsystem.components.statcell.StatCell
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
@@ -55,7 +56,6 @@ import java.time.format.DateTimeFormatter
 fun DiaperListScreen(navController: NavController) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     val diaperRepo: DiaperRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
@@ -191,26 +191,26 @@ fun DiaperListScreen(navController: NavController) {
                         )
                         Spacer(Modifier.height(spacing.md))
                         Row(Modifier.fillMaxWidth()) {
-                            DiaperStatCell(
-                                emoji = "💧",
+                            StatCell(
+                                value = wetCount.toString(),
                                 label = "小便",
-                                value = "${wetCount}次",
+                                unit = "次",
+                                emoji = "💧",
                                 modifier = Modifier.weight(1f),
-                                c = c,
                             )
-                            DiaperStatCell(
-                                emoji = "💩",
+                            StatCell(
+                                value = poopCount.toString(),
                                 label = "大便",
-                                value = "${poopCount}次",
+                                unit = "次",
+                                emoji = "💩",
                                 modifier = Modifier.weight(1f),
-                                c = c,
                             )
-                            DiaperStatCell(
-                                emoji = "🔄",
+                            StatCell(
+                                value = bothCount.toString(),
                                 label = "混合",
-                                value = "${bothCount}次",
+                                unit = "次",
+                                emoji = "🔄",
                                 modifier = Modifier.weight(1f),
-                                c = c,
                             )
                         }
                     }
@@ -258,13 +258,7 @@ fun DiaperListScreen(navController: NavController) {
                             },
                             modifier = Modifier.padding(bottom = spacing.sm),
                         ) {
-                            Box(
-                                Modifier
-                                    .size(40.dp)
-                                    .clip(RoundedCornerShape(shapes.large))
-                                    .background(accentColor.copy(alpha = 0.12f)),
-                                contentAlignment = Alignment.Center,
-                            ) { Text(typeEmoji, style = LocalAppTypography.current.titleLarge) }
+                            AppEmojiBadge(emoji = typeEmoji, tint = accentColor)
                             Spacer(Modifier.width(12.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(
@@ -295,23 +289,15 @@ fun DiaperListScreen(navController: NavController) {
                 }
             }
 
-            // —— 底部固定按钮 ——
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(c.surface)
-                    .padding(horizontal = spacing.md, vertical = 12.dp),
-            ) {
-                AppButton(
-                    onClick = {
-                        editingDiaper = null
-                        showForm = true
-                    },
-                    label = "记录尿布",
-                    icon = Icons.Default.Add,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            // —— 底部主操作条（DS 统一件） ——
+            AppActionBar(
+                label = "记录尿布",
+                icon = Icons.Default.Add,
+                onClick = {
+                    editingDiaper = null
+                    showForm = true
+                },
+            )
         }
     }
 
@@ -433,33 +419,3 @@ fun DiaperFormDialog(
     )
 }
 
-@Composable
-private fun DiaperStatCell(
-    emoji: String,
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    c: AppColors,
-) {
-    val spacing = LocalAppSpacing.current
-    Column(
-        modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(emoji, style = LocalAppTypography.current.titleLarge)
-        Spacer(Modifier.height(spacing.xs))
-        Text(
-            value,
-            style = LocalAppTypography.current.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = c.textPrimary,
-        )
-        Spacer(Modifier.height(spacing.xxs))
-        Text(
-            label,
-            style = LocalAppTypography.current.bodySmall,
-            color = c.textSecondary,
-        )
-    }
-}
