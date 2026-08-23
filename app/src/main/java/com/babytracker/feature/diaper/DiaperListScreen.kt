@@ -39,6 +39,7 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.datetimecascade.QuickTimeChipRow
 import com.babytracker.designsystem.components.dialog.AppFormSheet
@@ -72,6 +73,7 @@ fun DiaperListScreen(navController: NavController) {
     val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
+    var detailDiaper by remember { mutableStateOf<Diaper?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
@@ -248,7 +250,7 @@ fun DiaperListScreen(navController: NavController) {
                                 appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.update(d) }
                             }
                         },
-                            onClick = {},
+                            onClick = { detailDiaper = d },
                             onLongClick = {
                                 editingDiaper = d
                                 showForm = true
@@ -300,6 +302,29 @@ fun DiaperListScreen(navController: NavController) {
                 },
             )
         }
+    }
+
+    // 单击卡片 = 详情弹层
+    detailDiaper?.let { d ->
+        RecordDetailSheet(
+            show = true,
+            title = DateUtils.diaperTypeLabel(DiaperType.raw(d.type)),
+            emoji = when (d.type) { DiaperType.WET -> "💧"; DiaperType.POOP -> "💩"; DiaperType.BOTH -> "🔄" },
+            tint = when (d.type) { DiaperType.WET -> c.tertiary; DiaperType.POOP -> c.warning; DiaperType.BOTH -> c.tertiary },
+            fields = diaperDetailFields(d),
+            onEdit = {
+                detailDiaper = null
+                editingDiaper = d
+                showForm = true
+            },
+            onDelete = {
+                scope.launch {
+                    diaperRepo.delete(d)
+                    appSnackbar.showUndo(message = "已删除尿布记录") { diaperRepo.update(d) }
+                }
+            },
+            onDismiss = { detailDiaper = null },
+        )
     }
 
     if (showForm) {
@@ -422,3 +447,17 @@ fun DiaperFormDialog(
     )
 }
 
+
+
+/** 尿布记录详情字段 */
+private fun diaperDetailFields(d: Diaper): List<Pair<String, String>> {
+    val list = mutableListOf<Pair<String, String>>()
+    val time = try {
+        java.time.LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME)
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+    } catch (_: Exception) { d.timestamp }
+    list += "时间" to time
+    list += "类型" to DateUtils.diaperTypeLabel(DiaperType.raw(d.type))
+    d.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    return list
+}

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -86,6 +87,7 @@ fun GrowthScreen(navController: NavController) {
     val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
+    var detailGrowth by remember { mutableStateOf<Growth?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
@@ -396,7 +398,7 @@ fun GrowthScreen(navController: NavController) {
                                     appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.update(g) }
                                 }
                             },
-                                onClick = {},
+                                onClick = { detailGrowth = g },
                                 onLongClick = {
                                     editingGrowth = g
                                     showForm = true
@@ -458,6 +460,29 @@ fun GrowthScreen(navController: NavController) {
                 )
             }
         }
+    }
+
+    // 单击卡片 = 详情弹层
+    detailGrowth?.let { g ->
+        RecordDetailSheet(
+            show = true,
+            title = DateUtils.growthTypeLabel(GrowthType.raw(g.type)),
+            emoji = when (g.type) { GrowthType.HEIGHT -> "📏"; GrowthType.WEIGHT -> "⚖️"; GrowthType.HEAD -> "📐" },
+            tint = c.success,
+            fields = growthDetailFields(g),
+            onEdit = {
+                detailGrowth = null
+                editingGrowth = g
+                showForm = true
+            },
+            onDelete = {
+                scope.launch {
+                    growthRepo.delete(g)
+                    appSnackbar.showUndo(message = "已删除生长记录") { growthRepo.update(g) }
+                }
+            },
+            onDismiss = { detailGrowth = null },
+        )
     }
 
     if (showForm) {
@@ -606,4 +631,19 @@ private fun whoReferenceLines(type: String, minVal: Double, maxVal: Double, rang
     val offsets = listOf(0.10, 0.0, -0.10)
     return offsets.map { median * (1 + it) }
         .filter { it in (minVal - range * 0.2)..(maxVal + range * 0.2) }
+}
+
+
+/** 生长记录详情字段 */
+private fun growthDetailFields(g: Growth): List<Pair<String, String>> {
+    val list = mutableListOf<Pair<String, String>>()
+    val measured = try {
+        java.time.LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME)
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+    } catch (_: Exception) { g.measuredAt }
+    list += "测量时间" to measured
+    val unit = when (g.type) { GrowthType.HEIGHT -> "cm"; GrowthType.WEIGHT -> "kg"; GrowthType.HEAD -> "cm" }
+    list += "数值" to String.format(java.util.Locale.US, "%.1f %s", g.value, unit)
+    g.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    return list
 }

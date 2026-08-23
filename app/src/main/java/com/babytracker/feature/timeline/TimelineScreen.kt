@@ -29,6 +29,7 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.divider.AppDivider
+import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
@@ -75,6 +76,7 @@ fun TimelineScreen(navController: NavController) {
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
     var editingHealth by remember { mutableStateOf<HealthRecord?>(null) }
     var typeFilter by remember { mutableStateOf("") }
+    var detailRecord by remember { mutableStateOf<TimelineItem?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
@@ -224,16 +226,8 @@ fun TimelineScreen(navController: NavController) {
                                             appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
                                         }
                                     },
-                                    onClick = {},
-                                    onLongClick = {
-                                        when (record.recordType) {
-                                            "feeding" -> editingFeeding = viewModel.findFeeding(record.id)
-                                            "sleep" -> editingSleep = viewModel.findSleep(record.id)
-                                            "diaper" -> editingDiaper = viewModel.findDiaper(record.id)
-                                            "growth" -> editingGrowth = viewModel.findGrowth(record.id)
-                                            "health" -> editingHealth = viewModel.findHealth(record.id)
-                                        }
-                                    },
+                                    onClick = { detailRecord = record },
+                                    onLongClick = { detailRecord = record },
                                 ) {
                                     AppEmojiBadge(emoji = record.emoji, tint = accent)
                                     Spacer(Modifier.width(12.dp))
@@ -300,6 +294,39 @@ fun TimelineScreen(navController: NavController) {
                 Spacer(Modifier.height(spacing.lg))
             }
         }
+    }
+
+    // 单击卡片 = 详情弹层（编辑按类型分发到各表单）
+    detailRecord?.let { record ->
+        RecordDetailSheet(
+            show = true,
+            title = record.title,
+            emoji = record.emoji,
+            tint = typeColor(record.recordType),
+            fields = listOf(
+                "日期" to record.date,
+                "时间" to record.time,
+                "内容" to record.subtitle,
+            ),
+            onEdit = {
+                detailRecord = null
+                when (record.recordType) {
+                    "feeding" -> editingFeeding = viewModel.findFeeding(record.id)
+                    "sleep" -> editingSleep = viewModel.findSleep(record.id)
+                    "diaper" -> editingDiaper = viewModel.findDiaper(record.id)
+                    "growth" -> editingGrowth = viewModel.findGrowth(record.id)
+                    "health" -> editingHealth = viewModel.findHealth(record.id)
+                }
+            },
+            onDelete = {
+                detailRecord = null
+                scope.launch {
+                    viewModel.delete(record)
+                    appSnackbar.showUndo(message = "已删除「${record.title}」") { viewModel.undoLastDelete() }
+                }
+            },
+            onDismiss = { detailRecord = null },
+        )
     }
 
     // ── 编辑表单弹窗 ──

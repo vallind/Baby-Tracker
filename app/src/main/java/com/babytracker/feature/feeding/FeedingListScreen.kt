@@ -43,6 +43,8 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.FeedingRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
+import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
+import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.actionbar.AppActionBar
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
@@ -78,6 +80,7 @@ fun FeedingListScreen(navController: NavController) {
     val feedings by feedingRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
+    var detailFeeding by remember { mutableStateOf<Feeding?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
@@ -155,6 +158,7 @@ fun FeedingListScreen(navController: NavController) {
                 FeedingTimeline(
                     feedings = filteredFeedings,
                     snackbarHostState = snackbarHostState,
+                    onDetail = { f -> detailFeeding = f },
                     onDelete = { f ->
                         scope.launch {
                             feedingRepo.delete(f)
@@ -179,6 +183,29 @@ fun FeedingListScreen(navController: NavController) {
                 },
             )
         }
+    }
+
+    // 单击卡片 = 详情弹层（编辑/确认删除在弹层内，删除走 Snackbar 撤销）
+    detailFeeding?.let { d ->
+        RecordDetailSheet(
+            show = true,
+            title = DateUtils.feedingTypeLabel(FeedingType.raw(d.type)),
+            emoji = feedingEmoji(d.type),
+            tint = feedingColor(d.type, c),
+            fields = feedingDetailFields(d),
+            onEdit = {
+                detailFeeding = null
+                editingFeeding = d
+                showForm = true
+            },
+            onDelete = {
+                scope.launch {
+                    feedingRepo.delete(d)
+                    appSnackbar.showUndo(message = "已删除喂养记录") { feedingRepo.update(d) }
+                }
+            },
+            onDismiss = { detailFeeding = null },
+        )
     }
 
     if (showForm) {
@@ -253,6 +280,7 @@ private fun feedingSummary(f: Feeding): String = when (f.type) {
 private fun FeedingTimeline(
     feedings: List<Feeding>,
     snackbarHostState: SnackbarHostState,
+    onDetail: (Feeding) -> Unit,
     onDelete: (Feeding) -> Unit,
     onEdit: (Feeding) -> Unit,
     modifier: Modifier = Modifier,
@@ -281,7 +309,7 @@ private fun FeedingTimeline(
             // 记录卡片行：粉彩徽章 + 标题/摘要 + 时间（时间轴竖线改为卡片呼吸间距）
             RecordCard(
                 onDelete = { onDelete(f) },
-                onClick = {},
+                onClick = { onDetail(f) },
                 onLongClick = { onEdit(f) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -578,4 +606,34 @@ fun FeedingFormDialog(
         onConfirm = { feedingDateTime = it },
         onDismiss = { showCascadePicker = false },
     )
+}
+
+
+/** 喂养记录详情字段（按类型展示实际数据，无数据字段不上） */
+private fun feedingDetailFields(f: Feeding): List<Pair<String, String>> {
+    val list = mutableListOf<Pair<String, String>>()
+    val time = try {
+        java.time.LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME)
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+    } catch (_: Exception) { f.timestamp }
+    list += "时间" to time
+    list += "类型" to DateUtils.feedingTypeLabel(FeedingType.raw(f.type))
+    when (f.type) {
+        FeedingType.BREAST -> {
+            f.durationMin?.let { list += "时长" to "${it} 分钟" }
+            f.amountMl?.let { list += "奶量" to "${it} ml" }
+            com.babytracker.core.domain.model.BreastSide.raw(f.breastSide)?.let { list += "侧边" to it }
+        }
+        FeedingType.FORMULA -> {
+            f.amountMl?.let { list += "奶量" to "${it} ml" }
+            f.brand?.takeIf { it.isNotBlank() }?.let { list += "品牌" to it }
+        }
+        FeedingType.FOOD -> {
+            f.foodName?.takeIf { it.isNotBlank() }?.let { list += "食物" to it }
+            f.amountG?.let { list += "分量" to "${it} g" }
+        }
+        FeedingType.WATER -> f.amountMl?.let { list += "饮水量" to "${it} ml" }
+    }
+    f.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    return list
 }

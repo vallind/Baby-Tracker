@@ -40,6 +40,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.SleepRepository
 import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.actionbar.AppActionBar
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
@@ -76,6 +77,7 @@ fun SleepListScreen(navController: NavController) {
     val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingSleep by remember { mutableStateOf<Sleep?>(null) }
+    var detailSleep by remember { mutableStateOf<Sleep?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
@@ -176,7 +178,8 @@ fun SleepListScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = spacing.md)
-                            .padding(bottom = spacing.md),
+                            .padding(bottom = spacing.md)
+                            .clickable { detailSleep = nightSleep },
                     )
 
                     // —— 睡眠详情 ——
@@ -253,7 +256,7 @@ fun SleepListScreen(navController: NavController) {
                                         appSnackbar.showUndo(message = "已删除小睡记录") { sleepRepo.update(nap) }
                                     }
                                 },
-                                onClick = {},
+                                onClick = { detailSleep = nap },
                                 onLongClick = {
                                     editingSleep = nap
                                     showForm = true
@@ -295,6 +298,29 @@ fun SleepListScreen(navController: NavController) {
                 },
             )
         }
+    }
+
+    // 单击卡片 = 详情弹层（夜间大卡与小睡卡共用）
+    detailSleep?.let { s ->
+        RecordDetailSheet(
+            show = true,
+            title = if (s.type == SleepType.NIGHT) "夜间睡眠" else "小睡",
+            emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
+            tint = if (s.type == SleepType.NIGHT) c.secondary else c.tertiary,
+            fields = sleepDetailFields(s),
+            onEdit = {
+                detailSleep = null
+                editingSleep = s
+                showForm = true
+            },
+            onDelete = {
+                scope.launch {
+                    sleepRepo.delete(s)
+                    appSnackbar.showUndo(message = "已删除睡眠记录") { sleepRepo.update(s) }
+                }
+            },
+            onDismiss = { detailSleep = null },
+        )
     }
 
     if (showForm) {
@@ -531,4 +557,23 @@ private fun SleepStatCell(
             color = c.textSecondary,
         )
     }
+}
+
+
+/** 睡眠记录详情字段 */
+private fun sleepDetailFields(s: Sleep): List<Pair<String, String>> {
+    fun fmt(v: String): String = try {
+        java.time.LocalDateTime.parse(v, java.time.format.DateTimeFormatter.ISO_DATE_TIME)
+            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+    } catch (_: Exception) { v }
+    val list = mutableListOf<Pair<String, String>>()
+    list += "开始" to fmt(s.startTime)
+    list += "结束" to fmt(s.endTime)
+    val durSec = DateUtils.durationToTotalSeconds(
+        java.time.LocalDateTime.parse(s.startTime, java.time.format.DateTimeFormatter.ISO_DATE_TIME),
+        java.time.LocalDateTime.parse(s.endTime, java.time.format.DateTimeFormatter.ISO_DATE_TIME),
+    )
+    list += "时长" to DateUtils.durationFullText(durSec)
+    s.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    return list
 }

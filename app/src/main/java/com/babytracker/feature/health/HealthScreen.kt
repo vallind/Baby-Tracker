@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -19,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.ui.draw.rotate
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -43,6 +46,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -58,11 +62,12 @@ internal fun completedVaccinationCount(vaccinations: List<Vaccination>): Int =
     vaccinations.count { it.status == VaccinationStatus.DONE }
 
 private fun healthCategories(c: AppColors) = listOf(
-    HealthCategoryMeta("birth_info", "出生信息", "🍼", c.secondary),
-    HealthCategoryMeta("allergy", "过敏史", "🤧", c.tertiary),
-    HealthCategoryMeta("medicalHistory", "既往病史", "📋", c.success),
-    HealthCategoryMeta("visit", "就诊记录", "🏥", c.error),
-    HealthCategoryMeta("medication", "用药记录", "💊", c.primary),
+    // 分区色纪律（T3）：除疫苗（琥珀）外全部统一珊瑚分区浅底，类别靠 emoji/文案区分，去彩虹色
+    HealthCategoryMeta("birth_info", "出生信息", "🍼", c.danger),
+    HealthCategoryMeta("allergy", "过敏史", "🤧", c.danger),
+    HealthCategoryMeta("medicalHistory", "既往病史", "📋", c.danger),
+    HealthCategoryMeta("visit", "就诊记录", "🏥", c.danger),
+    HealthCategoryMeta("medication", "用药记录", "💊", c.danger),
     HealthCategoryMeta("vaccination", "疫苗接种记录", "💉", c.warning),
     HealthCategoryMeta("doctor_note", "医生备注", "📋", c.danger),
 )
@@ -93,6 +98,7 @@ fun HealthScreen(navController: NavController) {
     val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<HealthRecord?>(null) }
+    var detailRecord by remember { mutableStateOf<HealthRecord?>(null) }
     var expandedCategory by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -156,6 +162,7 @@ fun HealthScreen(navController: NavController) {
                             AnimatedVisibility(visible = isExpanded && items.isNotEmpty()) {
                                 ExpandedCategoryItems(
                                     items = items,
+                                    onDetail = { detailRecord = it },
                                     onEdit = { record ->
                                         editingRecord = record
                                         showForm = true
@@ -174,6 +181,30 @@ fun HealthScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    // 单击卡片 = 详情弹层（编辑入口在弹层内）
+    detailRecord?.let { r ->
+        RecordDetailSheet(
+            show = true,
+            title = healthCategoryLabel(r.category),
+            emoji = r.categoryEmoji(),
+            tint = c.danger,
+            fields = healthDetailFields(r),
+            onEdit = {
+                detailRecord = null
+                editingRecord = r
+                showForm = true
+            },
+            onDelete = {
+                detailRecord = null
+                scope.launch {
+                    healthRepo.delete(r)
+                    appSnackbar.showUndo(message = "已删除「${r.description.take(20)}」") { healthRepo.update(r) }
+                }
+            },
+            onDismiss = { detailRecord = null },
+        )
     }
 
     if (showForm) {
@@ -236,7 +267,14 @@ private fun HealthCategorySummaryCard(
                 )
             }
             Spacer(Modifier.width(spacing.sm))
-            Text("›", style = typography.titleLarge, color = c.textTertiary)
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = c.textTertiary,
+                modifier = Modifier
+                    .size(20.dp)
+                    .rotate(if (isExpanded) 90f else 0f),
+            )
         }
     }
 }
@@ -276,7 +314,14 @@ private fun VaccinationSummaryCard(
                 )
             }
             Spacer(Modifier.width(spacing.sm))
-            Text("›", style = typography.titleLarge, color = c.textTertiary)
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = c.textTertiary,
+                modifier = Modifier
+                    .size(20.dp)
+                    .rotate(90f), // 疫苗卡固定指向（点击即跳疫苗页）
+            )
         }
     }
 }
@@ -286,6 +331,7 @@ private fun ExpandedCategoryItems(
     items: List<HealthRecord>,
     onEdit: (HealthRecord) -> Unit,
     onDelete: (HealthRecord) -> Unit,
+    onDetail: (HealthRecord) -> Unit,
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
@@ -296,7 +342,7 @@ private fun ExpandedCategoryItems(
             RecordCard(
                 modifier = Modifier.padding(bottom = 12.dp),
                 onDelete = { onDelete(r) },
-                onClick = { onEdit(r) },
+                onClick = { onDetail(r) },
                 onLongClick = { onEdit(r) },
                 verticalAlignment = Alignment.Top,
             ) {
@@ -436,4 +482,38 @@ fun HealthFormDialog(
         },
         onDismiss = { showDatePicker = false },
     )
+}
+
+
+/** 健康分类中文名（与 healthCategories 文案一致，供详情弹层标题复用） */
+private fun healthCategoryLabel(category: String): String = when (category) {
+    "birth_info" -> "出生信息"
+    "allergy" -> "过敏史"
+    "medicalHistory" -> "既往病史"
+    "visit" -> "就诊记录"
+    "medication" -> "用药记录"
+    "vaccination" -> "疫苗接种记录"
+    "doctor_note" -> "医生备注"
+    else -> "健康记录"
+}
+
+private fun HealthRecord.categoryEmoji(): String = when (category) {
+    "birth_info" -> "🍼"
+    "allergy" -> "🤧"
+    "medicalHistory" -> "📋"
+    "visit" -> "🏥"
+    "medication" -> "💊"
+    "vaccination" -> "💉"
+    "doctor_note" -> "📋"
+    else -> "❤️"
+}
+
+/** 健康记录详情字段 */
+private fun healthDetailFields(r: HealthRecord): List<Pair<String, String>> {
+    val list = mutableListOf<Pair<String, String>>()
+    list += "日期" to r.recordDate.take(10)
+    list += "描述" to r.description
+    r.doctorName?.takeIf { it.isNotBlank() }?.let { list += "医生" to it }
+    r.note?.takeIf { it.isNotBlank() }?.let { list += "备注" to it }
+    return list
 }
