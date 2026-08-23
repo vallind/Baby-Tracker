@@ -12,9 +12,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.card.CardDefaults as AppCardDefaults
+import com.babytracker.designsystem.theme.LocalAppColors
 
 /**
- * 统一卡片组件 — 对标 Palette Card 组件，消费 AppComponentTokens.card
+ * 统一卡片组件 — 消费 AppComponentTokens.card
  *
  * 优先级模型：
  *   显式参数 > CardDefaults（令牌） > M3 默认值
@@ -34,9 +35,16 @@ fun AppCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
+    // 暖棕调阴影（colors.shadow），与奶油底呼应，替代默认冷蓝阴影
+    val shadowColor = LocalAppColors.current.shadow
 
     Card(
-        modifier = modifier.shadow(elevation = elevation, shape = shape),
+        modifier = modifier.shadow(
+            elevation = elevation,
+            shape = shape,
+            ambientColor = shadowColor,
+            spotColor = shadowColor,
+        ),
         shape = shape,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),

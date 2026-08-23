@@ -202,34 +202,46 @@ private fun DateRangeNav(
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.md),
+            .padding(horizontal = spacing.md, vertical = spacing.xs),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // 现代胶囊日期导航：中间柔底胶囊 + 两侧箭头
         Icon(
             Icons.Filled.ChevronLeft,
             contentDescription = "上一周期",
             tint = if (canGoBack) c.textSecondary else c.textDisabled,
             modifier = Modifier
-                .size(28.dp)
+                .size(30.dp)
                 .clip(CircleShape)
-                .clickable(enabled = canGoBack) { onBack() },
+                .background(if (canGoBack) c.surfaceMuted else c.surface.copy(alpha = 0.0f))
+                .clickable(enabled = canGoBack) { onBack() }
+                .padding(5.dp),
         )
-        Text(
-            dateRangeText,
-            style = typography.bodyLarge,
-            color = c.textSecondary,
-            modifier = Modifier.padding(horizontal = spacing.md),
-            textAlign = TextAlign.Center,
-        )
+        Box(
+            Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(c.surfaceMuted)
+                .padding(horizontal = 18.dp, vertical = 9.dp),
+        ) {
+            Text(
+                dateRangeText,
+                style = typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = c.textPrimary,
+                textAlign = TextAlign.Center,
+            )
+        }
         Icon(
             Icons.Filled.ChevronRight,
             contentDescription = "下一周期",
             tint = if (canGoForward) c.textSecondary else c.textDisabled,
             modifier = Modifier
-                .size(28.dp)
+                .size(30.dp)
                 .clip(CircleShape)
-                .clickable(enabled = canGoForward) { onForward() },
+                .background(if (canGoForward) c.surfaceMuted else c.surface.copy(alpha = 0.0f))
+                .clickable(enabled = canGoForward) { onForward() }
+                .padding(5.dp),
         )
     }
 }
@@ -256,7 +268,7 @@ private fun FeedingCard(
             verticalAlignment = Alignment.Top,
         ) {
             Column {
-                StatCardIcon("🍼", c.warning)
+                StatCardIcon("🍼", c.danger)
                 Spacer(Modifier.height(spacing.sm))
                 Text("喂养", style = typography.labelMedium, color = c.textTertiary)
             }
@@ -281,7 +293,7 @@ private fun FeedingCard(
             hasData = points.any { it > 0f },
             emptyText = "本周期暂无喂养记录",
         ) {
-            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.warning)
+            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.danger)
         }
     }
 }

@@ -15,8 +15,8 @@ android {
         applicationId = "com.babytracker"
         minSdk = 24
         targetSdk = 36
-        versionCode = 33
-        versionName = "1.10.1"
+        versionCode = 34
+        versionName = "2.0.0"
     }
 
     buildTypes {
@@ -36,6 +36,34 @@ android {
     kotlin { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
 
     buildFeatures { compose = true }
+}
+
+// 容器/Ubuntu 环境 JVM 自附加不可用（VirtualMachineImpl FileNotFoundException），
+// 且 agent 会干扰普通单测的 android mock 类加载。截图跑法：
+//   ./gradlew testDebugUnitTest -PpaparazziScreenshots
+// 此时 ByteBuddy agent 以 -javaagent 预加载，Paparazzi 规则写出 PNG 到 src/test/snapshots。
+val byteBuddyAgentPath = provider {
+    configurations.findByName("debugUnitTestRuntimeClasspath")
+        ?.files?.firstOrNull { it.name.startsWith("byte-buddy-agent") }?.absolutePath
+}
+
+tasks.configureEach {
+    if (this is Test && name == "testDebugUnitTest") {
+        if (project.hasProperty("paparazziScreenshots")) {
+            // 截图模式：挂 ByteBuddy agent + 只跑 Showcase（x86_64 与 aarch64 通用）
+            include("**/DesignShowcaseTest*")
+            jvmArgs("-Djdk.attach.allowAttachSelf=true")
+            jvmArgumentProviders.add(
+                org.gradle.process.CommandLineArgumentProvider {
+                    byteBuddyAgentPath.get()?.let { listOf("-javaagent:$it") } ?: emptyList()
+                }
+            )
+        } else if (System.getProperty("os.arch") == "aarch64") {
+            // ARM64 Linux：layoutlib-runtime 16.2.1 仅发布 x86_64 原生库，Paparazzi 无法运行，
+            // 常规单测排除 Showcase 保持全绿；x86_64 机器走插件 recordPaparazzi 标准流程
+            exclude("**/DesignShowcaseTest.class")
+        }
+    }
 }
 
 dependencies {

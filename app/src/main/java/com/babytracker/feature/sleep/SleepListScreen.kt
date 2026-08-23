@@ -5,6 +5,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -49,6 +50,9 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.summarycard.AppSummaryCard
+import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.designsystem.theme.accentContent
+import com.babytracker.designsystem.theme.tintContainer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -129,7 +133,7 @@ fun SleepListScreen(navController: NavController) {
                 .padding(padding)
                 .background(c.pageBackground),
         ) {
-            // —— 日期选择器 ——
+            // —— 日期选择器（现代胶囊行） ——
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = spacing.md),
                 verticalAlignment = Alignment.CenterVertically,
@@ -141,27 +145,49 @@ fun SleepListScreen(navController: NavController) {
                     contentDescription = "前一天",
                     tint = c.textPrimary,
                 )
+                // 中间胶囊：点击开日期选择
                 Row(
-                    Modifier.weight(1f).clickable { showDatePicker = true },
+                    Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                        style = LocalAppTypography.current.titleSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = c.textPrimary,
-                    )
-                    Spacer(Modifier.width(spacing.xs))
-                    Icon(
-                        Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = c.textTertiary,
-                        modifier = Modifier.size(18.dp),
-                    )
+                    Box(
+                        Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(c.surfaceMuted)
+                            .clickable { showDatePicker = true }
+                            .padding(horizontal = 18.dp, vertical = 10.dp),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
+                                style = LocalAppTypography.current.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = c.textPrimary,
+                            )
+                            Spacer(Modifier.width(spacing.xs))
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = c.textTertiary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
                 }
                 // 非今天时提供一键回跳
                 if (selectedDate != today) {
-                    AppFilterChip(selected = false, onClick = { selectedDate = today }, label = "今天")
+                    Text(
+                        AppStrings.today,
+                        style = LocalAppTypography.current.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = c.primaryScale.accentContent(c),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(c.primaryScale.tintContainer(c))
+                            .clickable { selectedDate = today }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
                     Spacer(Modifier.width(spacing.xs))
                 }
                 // 后一天

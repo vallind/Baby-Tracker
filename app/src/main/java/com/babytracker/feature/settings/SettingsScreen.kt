@@ -492,8 +492,8 @@ fun ThemeDots(currentTheme: String, onClick: () -> Unit) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val themesColors = mapOf(
-        "pure" to 0xFF2563EB, "aurora" to 0xFF7C3AED, "warm" to 0xFFFF8A80,
-        "sunny" to 0xFFF59E0B, "night" to 0xFF1E293B, "morandi" to 0xFF94A3B8,
+        "pure" to 0xFF3B6FE0, "aurora" to 0xFF8B7BF0, "warm" to 0xFFEF7967,
+        "sunny" to 0xFFF0A43B, "night" to 0xFF8FA7F9, "morandi" to 0xFF9AAE8F,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(spacing.xs), verticalAlignment = Alignment.CenterVertically) {
         themesColors.forEach { (name, colorInt) ->

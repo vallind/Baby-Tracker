@@ -282,7 +282,25 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 **规则：** detekt `Rule` 子类里**禁止**在 `issue` 初始化之前（init 块、或 `issue` 声明之前的属性初始化器）调用任何 `ConfigAware` 的 `valueOrDefault`/`subConfig`；`issue` 声明必须放在任何自定义 init 块之前。错误写法：`init { valueOrDefault("active", false) }`；正确写法：不做 init 块，或把 `issue` 声明提到最前。
 ---
 
-## 20. KDoc 里写路径通配会触发 Kotlin 嵌套注释
+## 21. M3 NavigationBar 无 shape 参数：胶囊形态需要外层 Box 裁切
+
+**现象：** 做悬浮胶囊底导航时，把 `Modifier.shadow(16.dp, pillShape, ...)` 直接挂在 NavigationBar 上，结果阴影完全不可见。
+
+**原因：** M3 `NavigationBar`（material3 1.4.0）没有 `shape` 参数，内部 Surface 恒为矩形（Rectangle），且将传入 modifier 之后追加自己的高度/inset 修饰；`Modifier.shadow(shape=pill)` 的阴影只按 pill 轮廓绘制，而矩形不透明 Surface 恰好完整覆盖了 pill 的包围盒，阴影被全部遮住。
+
+**规则：** 需要非矩形底导航/底栏时，用**外层 Box 承担视觉**：`Box(Modifier.shadow(elev, pillShape, ambientColor, spotColor).clip(pillShape)) { NavigationBar(...) }`，把 M3 矩形条裁进胶囊里；阴影/圆角一律不挂到 NavigationBar 自身。
+
+---
+
+## 22. 局部 Composable 函数不继承外层 RowScope/ColumnScope 接收者
+
+**现象：** 首页重构时把统计格提取成 `TodayOverviewCard` 内部的 `@Composable fun StatItem(...)`，函数体内 `Modifier.weight(1f)` 编译报 `Unresolved reference 'weight'`；而同一模式写在 Row 的 content lambda（含 forEach 嵌套）里却一直能编译。
+
+**原因：** `Row { ... }` 的 content 是 `@Composable RowScope.() -> Unit`，其隐式接收者在嵌套 lambda 中仍然可见，所以 `forEach { Modifier.weight(1f) }` 能编译；但**局部的 `@Composable fun` 是独立函数，不携带外层作用域的 receiver**，函数体里访问不到 RowScope/ColumnScope 成员。
+
+**规则：** 从 Row/Column 内容里提取局部 Composable 时，需要作用域能力的修饰符（weight/align/weight 类）必须作为参数传入：`fun StatItem(..., modifier: Modifier)` + 调用侧 `StatItem(modifier = Modifier.weight(1f))`。错误写法：在局部 Composable 函数体内直接 `Modifier.weight(1f)`。
+
+---
 
 **现象：** 新建 `AppColorScale.kt` 后编译报 `Syntax error: Unclosed comment`（指向文件末尾），但文件里每个 `/**...*/` 看起来都闭合。
 

@@ -1,8 +1,22 @@
 # 设计系统详细文档
 
-> 最后更新：2026-08-23 · 对应版本：1.9.5
+> 最后更新：2026-08-23 · 对应版本：2.0.0
 >
 > 从 AGENTS.md 拆分，供需要深入了解设计系统时查阅。
+
+## 视觉语言（2.0「柔和奶油 + 多彩分区」）
+
+全站视觉基调在 2.0 批次整体翻新，功能行为不变：
+
+- **奶油暖底**：页面底为暖奶油色 `#F8F6F3`（暗色为暖黑 `#141110`），中性阶梯由冷灰 zinc 换为暖灰 **stone**，文字换暖近黑色 `#2E2925`；
+- **多彩分区**：五个语义色降饱和提柔和（蓝 indigo `#3B6FE0` / 紫 violet `#8B7BF0` / 绿 green `#34A96F` / 琥珀 amber `#E8930C` / 珊瑚 coral `#E85D5D`），并按业务分区赋予归属：**喂养=珊瑚、睡眠=紫、尿布=青(tertiary teal)、生长=绿、提醒/疫苗=琥珀、健康=珊瑚、发育=蓝、AI=紫**；分区色统一走 `AppColorScale` 分档（浅底 shade100 / 强调档 shade600 / 暗色自动倒序）；
+- **大圆角**：AppShapes 整体放大一档——卡片 24dp（largeIncreased）、弹层 32dp（extraLarge）、控件 16dp（medium），按钮/标签/FAB 全胶囊化（shapes.full）；
+- **柔和暖阴影**：`colors.shadow` 由冷黑改为暖棕半透明，`AppCard`/`RecordCard`/悬浮底栏统一使用（阴影分层替代旧发丝灰描边，卡片令牌 borderWidth 归零）；
+- **顶栏透明化**：`AppBarTokens.containerColor` 改为 `pageBackground`（去掉旧式彩色大色块顶栏），标题升为 titleLarge(18sp)；
+- **底部导航悬浮胶囊**：5 Tab 收进左右留白 + 28dp 大圆角 + 暖阴影的白色胶囊（M3 NavigationBar 无 shape 参数，由外层 Box 裁切+阴影）；
+- **输入框填充式**：`InputTokens.containerColor = surfaceMuted`（奶油浅底无描边），聚焦才亮 2dp 主色边框；
+- **排版放大**：自建 12 级 Typography 整体放大（bodyLarge 16 / bodyMedium 14 / headlineLarge 30），层级更分明；
+- **系统栏融入**：状态栏/导航栏颜色 = 页面底，App 内容与系统栏同色相连。
 
 ## 令牌驱动架构
 
@@ -17,11 +31,11 @@
 
 Typography 自建 12 级：displayLarge/headlineLarge/headlineMedium/headlineSmall/titleLarge/titleMedium/titleSmall/bodyLarge/bodyMedium/bodySmall/labelMedium/labelSmall（禁止直接使用 M3 Typography，仅 theme 层桥接）
 
-## 分档色板（对标 HeroUI semantic scale）
+## 分档色板（「柔和奶油」语义 scale）
 
 `AppColorScale`（designsystem/theme/AppColorScale.kt）：每个语义色一条 default + shade50~900 色阶，
-HeroUI 官方 hex 抄录于 `HeroUiPalettes`（blue/purple/green/yellow/red/zinc）。
-旗舰主题 pure/night 注入官方表；其余自定义主题由 `AppColorScale.fromSeed(种子)` 自动生成同源色阶。
+锚点色阶收于 `SoftPalettes`（2.0 前为 HeroUiPalettes）：blue/violet/green/amber/coral/teal/stone。
+旗舰主题 pure/night 注入官方软调表；其余自定义主题由 `AppColorScale.fromSeed(种子)` 自动生成同源色阶。
 
 **统一取用约定（替代 alpha 叠加，全站强制）：**
 
@@ -32,9 +46,8 @@ HeroUI 官方 hex 抄录于 `HeroUiPalettes`（blue/purple/green/yellow/red/zinc
 | 前景强调文字（浅色模式） | `scale.shade600` |
 | 主按钮容器 | `scale.default` |
 
-禁止再用 `.copy(alpha = 0.12f)` 现场伪造浅色底。中性场景一律用 `colors.neutralScale`（恒 zinc）与
-`colors.surfaceMuted`（次级表面层级，对标 HeroUI content2）；边框/分割线收敛为中性色，
-不再随品牌主色染色。
+禁止再用 `.copy(alpha = 0.12f)` 现场伪造浅色底。中性场景一律用 `colors.neutralScale`（恒 stone 暖灰）与
+`colors.surfaceMuted`（次级表面层级）；边框/分割线收敛为中性色，不再随品牌主色染色。
 
 
 ## 令牌设计约定（参照 shadcn/ui）
@@ -112,6 +125,22 @@ snackbar.showUndo(onUndo = { repo.update(r) })     // 替代 showSnackbar + Acti
 - **存储与切换**：`AppSettings.appearance.density`（DataStore 持久化）；`DensityController`（`designsystem/theme/DensityController.kt`，仿 ThemeController：订阅设置流 + `mutableStateOf` + `switchDensity`）以 `single` 注册进 `core/di/Modules.kt`。
 - **设置页入口**：`feature/settings/SettingsMenuScreen.kt`（使用偏好）「界面密度」（📐）→ `DensityPickerSheet`（`SettingsScreen.kt` 内，AppBottomSheet 三选一卡片，label 走 AppStrings.densityLabel）。
 - 密度相关回归：`DensityTokensTest`（缩放/三档数值/fromKey/densityAdjusted 4 项）。
+
+## Paparazzi 截图 Showcase（DesignShowcaseTest）
+
+`app/src/test/java/com/babytracker/designsystem/showcase/DesignShowcaseTest.kt` 用 Paparazzi 渲染
+真实主题（pure 亮色 / night 暗色）与核心组件（按钮/输入框/统计格/标签徽章/分段控件/记录卡/渐变摘要卡/
+迷你图表/空状态 + 首页今日概览卡与最近记录），截图即设计走查证据（PNG 写入 `app/src/test/snapshots/images/`）。
+
+- **运行（x86_64 机器）**：`./gradlew recordPaparazzi`（插件标准流程）；或
+  `./gradlew testDebugUnitTest -PpaparazziScreenshots`（独立模式，ByteBuddy agent 以 `-javaagent` 预加载，
+  适配容器/自附加受限环境）。
+- **平台限制**：layoutlib-runtime 16.2.1 只发布 x86_64 原生库，**Linux ARM64 无法运行 Paparazzi**；
+  `app/build.gradle.kts` 在 aarch64 上自动把 Showcase 排除出常规单测（保持 `testDebugUnitTest` 全绿），
+  插件 `recordPaparazzi/verifyPaparazzi` 任务仅能在 x86_64 使用。
+- **中文字体**：Noto Sans SC 三字重（Regular/Medium/Bold）经 `pyftsubset` 按全库字符集子集化后放入
+  `app/src/main/res/font/`（合计约 700KB），Showcase 通过嵌套 MaterialTheme/LocalAppTypography 覆盖字体；
+  emoji 需系统 emoji 字体，Paparazzi 下可能显示为方框，不影响布局走查。
 
 ## Logic 模式（纯 Kotlin，可 JVM 单测）
 

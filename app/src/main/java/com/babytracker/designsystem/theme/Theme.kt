@@ -33,64 +33,94 @@ data class AppTheme(
 ) {
     companion object {
         // 每个主题只需传入与默认值不同的种子，其余由 AppColors.derive() 自动派生
-        // pure/night 为旗舰主题：primary 锚定 HeroUI blue-500 并直接注入官方分档表
+        // pure/night 为旗舰主题：奶油底 + 品牌蓝，直接注入官方软调分档表
         val pure = AppTheme("pure", lightThemeColors(
-            primary = Color(0xFF006FEE),
-            semanticScales = HeroUiPalettes.officialSemantics,
+            primary = SoftPalettes.blue.default,
+            semanticScales = SoftPalettes.softSemantics,
         ))
 
+        // 晨曦紫：柔和紫为主色，琥珀点缀
         val aurora = AppTheme("aurora", lightThemeColors(
-            primary = Color(0xFF7C6CF0),
-            warning = Color(0xFFFCD34D),
+            primary = SoftPalettes.violet.default,
+            warning = SoftPalettes.amber.default,
+            semanticScales = SoftPalettes.softSemantics,
         ))
 
-        val warm = AppTheme("warm", lightThemeColors(primary = Color(0xFFFF8A80)))
+        // 暖阳粉：珊瑚色为主色
+        val warm = AppTheme("warm", lightThemeColors(
+            primary = Color(0xFFEF7967),
+            warning = SoftPalettes.amber.default,
+            semanticScales = SoftPalettes.softSemantics,
+        ))
 
+        // 晴日橙：琥珀为主色
         val sunny = AppTheme("sunny", lightThemeColors(
-            primary = Color(0xFFF5A623),
-            warning = Color(0xFFE67A2E),
+            primary = Color(0xFFF0A43B),
+            warning = Color(0xFFE8782E),
+            semanticScales = SoftPalettes.softSemantics,
         ))
 
+        // 深夜蓝：暖黑底 + 提亮品牌蓝
         val night = AppTheme("night", nightThemeColors(
-            primary = Color(0xFF006FEE),
-            semanticScales = HeroUiPalettes.officialSemantics,
+            primary = Color(0xFF8FA7F9),
+            semanticScales = SoftPalettes.softSemantics,
         ))
 
+        // 莫兰迪：低饱和鼠尾草绿，安静高级
         val morandi = AppTheme("morandi", lightThemeColors(
-            primary = Color(0xFFB0BEC5),
-            warning = Color(0xFFD0A878),
+            primary = Color(0xFF9AAE8F),
+            warning = Color(0xFFC9A96E),
+            semanticScales = SoftPalettes.softSemantics,
         ))
 
         val all = listOf(pure, aurora, warm, sunny, night, morandi)
     }
 }
 
-/** 亮色主题统一派生：白卡片 + 中性边框，主色浅档作为容器色 */
+/** 亮色主题统一派生：奶油底 + 白卡片 + 暖灰描边，主色浅档作为容器色 */
 private fun lightThemeColors(
     primary: Color,
-    warning: Color = Color(0xFFF5A524),
+    warning: Color = SoftPalettes.amber.default,
+    onSurface: Color = Color(0xFF2E2925),
+    background: Color = Color(0xFFF8F6F3),
+    border: Color = SoftPalettes.stone.shade200,
+    primaryContainer: Color = Color.Unspecified,
+    secondary: Color = SoftPalettes.violet.default,
+    tertiary: Color = SoftPalettes.teal.default,
+    success: Color = SoftPalettes.green.default,
+    error: Color = SoftPalettes.coral.default,
     semanticScales: AppSemanticScales? = null,
 ): AppColors = AppColors.derive(
     primary = primary,
     surface = Color.White,
-    onSurface = Color(0xFF11181C),
-    // 边框收敛为中性 zinc-200：不再随品牌主色染色（HeroUI border/divider 均为中性）
-    border = HeroUiPalettes.zinc.shade200,
+    onSurface = onSurface,
+    // 边框收敛为暖灰 stone-200，不随品牌主色染色
+    border = border,
     warning = warning,
-    primaryContainer = primaryLight(primary),
+    background = background,
+    pageBackground = background,
+    primaryContainer = if (primaryContainer == Color.Unspecified) primary.mix(Color.White, 0.85f) else primaryContainer,
+    secondary = secondary,
+    tertiary = tertiary,
+    success = success,
+    error = error,
     semanticScales = semanticScales,
 )
 
-/** 暗色主题统一派生：深色卡片 + 浅色文字，中性暗边框；状态色不柔和化，与亮色同源（HeroUI 策略） */
+/** 暗色主题统一派生：暖黑卡片 + 浅色文字，暖灰暗边框；状态色提亮一档（HeroUI 暗色策略） */
 private fun nightThemeColors(
     primary: Color,
+    warning: Color = SoftPalettes.amber.shade400,
     semanticScales: AppSemanticScales? = null,
 ): AppColors = AppColors.derive(
     primary = primary,
-    surface = Color(0xFF18181B),
-    onSurface = Color.White,
-    border = HeroUiPalettes.zinc.shade800,
-    primaryContainer = primaryLight(primary),
+    surface = Color(0xFF211E1B),
+    onSurface = Color(0xFFF2EFEA),
+    border = SoftPalettes.stone.shade800,
+    pageBackground = Color(0xFF141110),
+    background = Color(0xFF141110),
+    primaryContainer = primary.mix(Color(0xFF211E1B), 0.55f),
+    warning = warning,
     semanticScales = semanticScales,
 )
 
@@ -101,10 +131,8 @@ private fun Color.mix(other: Color, weight: Float): Color = Color(
     alpha = 1f,
 )
 
-private fun primaryLight(primary: Color): Color = primary.mix(Color.White, 0.88f)
-
 // ═══════════════════════════════════════════════════════════
-//  CompositionLocal 声明 — LocalApp*：令牌体系（对标 Palette 的 11+ 个 Local）
+//  CompositionLocal 声明 — LocalApp*：令牌体系
 // ═══════════════════════════════════════════════════════════
 
 val LocalAppTypography = compositionLocalOf { AppTypography() }
@@ -112,81 +140,88 @@ val LocalAppTypography = compositionLocalOf { AppTypography() }
 // 内部 M3 Typography：数值与自建 AppTypography 保持一致，
 // 仅提供给 MaterialTheme 内部使用，不对外暴露 M3 Typography 类型
 private val internalMaterialTypography = Typography(
-    displayLarge = TextStyle(fontSize = 40.sp, lineHeight = 48.sp, fontWeight = FontWeight.Bold),
-    headlineLarge = TextStyle(fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.SemiBold),
+    displayLarge = TextStyle(fontSize = 40.sp, lineHeight = 46.sp, fontWeight = FontWeight.Bold),
+    headlineLarge = TextStyle(fontSize = 30.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold),
     headlineMedium = TextStyle(fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
-    headlineSmall = TextStyle(fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
+    headlineSmall = TextStyle(fontSize = 21.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
     titleLarge = TextStyle(fontSize = 18.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold),
-    titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium),
-    titleSmall = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),
-    bodyLarge = TextStyle(fontSize = 15.sp, lineHeight = 22.sp),
-    bodyMedium = TextStyle(fontSize = 13.sp, lineHeight = 18.sp),
-    bodySmall = TextStyle(fontSize = 12.sp, lineHeight = 16.sp),
+    titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium),
+    titleSmall = TextStyle(fontSize = 15.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium),
+    bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
+    bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 21.sp),
+    bodySmall = TextStyle(fontSize = 13.sp, lineHeight = 18.sp),
     labelMedium = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
-    labelSmall = TextStyle(fontSize = 11.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
+    labelSmall = TextStyle(fontSize = 11.sp, lineHeight = 15.sp, fontWeight = FontWeight.Medium),
 )
 
 val BabyTrackerShapes = Shapes(
-    extraSmall = RoundedCornerShape(12.dp),    // 原 8 → 12（更圆润，输入框/小元素）
-    small = RoundedCornerShape(16.dp),         // 原 16（不变，标准卡片）
-    medium = RoundedCornerShape(20.dp),        // 原 20（不变，中等卡片）
-    large = RoundedCornerShape(28.dp),         // 原 28（不变，大卡片/对话框）
-    extraLarge = RoundedCornerShape(36.dp),    // 原 32 → 36（底部弹层/超大圆角）
+    extraSmall = RoundedCornerShape(12.dp),    // 输入框/小元素
+    small = RoundedCornerShape(16.dp),         // 标准卡片
+    medium = RoundedCornerShape(20.dp),        // 中等卡片
+    large = RoundedCornerShape(24.dp),         // 大卡片/对话框
+    extraLarge = RoundedCornerShape(32.dp),    // 底部弹层/超大圆角
 )
 
 fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.ColorScheme {
     val c = colors
+    // 容器色统一走分档浅底/暗底（亮色 shade100 / 暗色 shade800），杜绝 alpha 伪造
+    val secondaryTint = c.secondaryScale.tintContainer(c)
+    val secondaryContent = c.secondaryScale.accentContent(c)
+    val tertiaryScale = AppColorScale.fromSeed(c.tertiary)
+    val tertiaryTint = tertiaryScale.tintContainer(c)
+    val tertiaryContent = tertiaryScale.accentContent(c)
+    val dangerTint = c.dangerScale.tintContainer(c)
     return if (isDark) darkColorScheme(
         primary = c.primary,
         onPrimary = c.onPrimary,
         primaryContainer = c.primaryContainer,
-        onPrimaryContainer = c.primary,
+        onPrimaryContainer = c.primaryScale.accentContent(c),
         secondary = c.secondary,
         onSecondary = c.onSecondary,
-        secondaryContainer = c.secondary.copy(alpha = 0.12f),
-        onSecondaryContainer = c.secondary,
+        secondaryContainer = secondaryTint,
+        onSecondaryContainer = secondaryContent,
         tertiary = c.tertiary,
         onTertiary = c.onTertiary,
-        tertiaryContainer = c.tertiary.copy(alpha = 0.12f),
-        onTertiaryContainer = c.tertiary,
+        tertiaryContainer = tertiaryTint,
+        onTertiaryContainer = tertiaryContent,
         background = c.pageBackground,
-        onBackground = c.onBackground,
+        onBackground = c.textPrimary,
         surface = c.surface,
         onSurface = c.textPrimary,
-        surfaceVariant = c.surfaceElevated,
+        surfaceVariant = c.surfaceMuted,
         onSurfaceVariant = c.textSecondary,
         outline = c.outline,
         outlineVariant = c.divider,
         error = c.error,
         onError = c.onError,
-        errorContainer = c.error.copy(alpha = 0.12f),
-        onErrorContainer = c.error,
+        errorContainer = dangerTint,
+        onErrorContainer = c.dangerScale.accentContent(c),
         scrim = c.scrim,
     ) else lightColorScheme(
         primary = c.primary,
         onPrimary = c.onPrimary,
         primaryContainer = c.primaryContainer,
-        onPrimaryContainer = c.primary,
+        onPrimaryContainer = c.primaryScale.accentContent(c),
         secondary = c.secondary,
         onSecondary = c.onSecondary,
-        secondaryContainer = c.secondary.copy(alpha = 0.12f),
-        onSecondaryContainer = c.secondary,
+        secondaryContainer = secondaryTint,
+        onSecondaryContainer = secondaryContent,
         tertiary = c.tertiary,
         onTertiary = c.onTertiary,
-        tertiaryContainer = c.tertiary.copy(alpha = 0.12f),
-        onTertiaryContainer = c.tertiary,
+        tertiaryContainer = tertiaryTint,
+        onTertiaryContainer = tertiaryContent,
         background = c.pageBackground,
-        onBackground = c.onBackground,
+        onBackground = c.textPrimary,
         surface = c.surface,
         onSurface = c.textPrimary,
-        surfaceVariant = c.surfaceElevated,
+        surfaceVariant = c.surfaceMuted,
         onSurfaceVariant = c.textSecondary,
         outline = c.outline,
         outlineVariant = c.divider,
         error = c.error,
         onError = c.onError,
-        errorContainer = c.error.copy(alpha = 0.12f),
-        onErrorContainer = c.error,
+        errorContainer = dangerTint,
+        onErrorContainer = c.dangerScale.accentContent(c),
         scrim = c.scrim,
     )
 }
@@ -207,10 +242,16 @@ fun BabyTrackerTheme(
         val activity = context as? Activity
         if (activity != null && Build.VERSION.SDK_INT >= 21) {
             val window = activity.window
-            // 状态栏融入页面背景（浅蓝），让顶部更柔和
+            // 状态栏/导航栏融入奶油页面底（暗色为暖黑），淡化系统栏存在感
             @Suppress("DEPRECATION")
-            run { window.statusBarColor = if (darkTheme) colorScheme.surface.toArgb() else colorScheme.background.toArgb() }
-            WindowCompat.getInsetsController(window, activity.window.decorView).isAppearanceLightStatusBars = !darkTheme
+            run {
+                window.statusBarColor = colorScheme.background.toArgb()
+                window.navigationBarColor = colorScheme.background.toArgb()
+            }
+            WindowCompat.getInsetsController(window, activity.window.decorView).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
         }
     }
 

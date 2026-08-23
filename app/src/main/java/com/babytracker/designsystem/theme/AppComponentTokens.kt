@@ -46,7 +46,7 @@ data class ButtonTokens(
             opacity: AppOpacity,
         ): ButtonTokens = ButtonTokens(
             height = control.medium.height,
-            cornerRadius = shapes.scaled(shapes.medium),   // shadcn 风格：按钮 = --radius
+            cornerRadius = shapes.scaled(shapes.full),   // 现代胶囊按钮
             fontSize = typography.bodyLarge.fontSize,
             fontWeight = FontWeight.SemiBold,
             iconSize = control.medium.iconSize,
@@ -82,10 +82,10 @@ data class CardTokens(
             containerColor = colors.surface,
             contentColor = colors.onSurface,
             borderColor = colors.outline,
-            borderWidth = 1.dp,                          // HeroUI 风格发丝描边，卡片在灰底上靠描边定形
-            cornerRadius = shapes.scaled(shapes.largeIncreased), // 大圆角卡片
+            borderWidth = 0.dp,                          // 无描边：奶油底上靠柔和暖阴影分层，更现代
+            cornerRadius = shapes.scaled(shapes.largeIncreased), // 24dp 大圆角卡片
             innerPadding = spacing.md,
-            elevation = elevation.level1,                // 阴影降为轻量级，层次主要靠描边表达
+            elevation = elevation.level2,                // 轻量暖阴影，替代旧发丝描边
         )
     }
 }
@@ -116,11 +116,11 @@ data class InputTokens(
             height = 56.dp,
             cornerRadius = shapes.scaled(shapes.medium),
             fontSize = typography.bodyLarge.fontSize,
-            borderWidth = 1.dp,
+            borderWidth = 0.dp,
             borderWidthFocus = 2.dp,
             iconSize = control.medium.iconSize,
-            containerColor = colors.surface,
-            unfocusedBorderColor = colors.outline,
+            containerColor = colors.surfaceMuted,        // 填充式输入框：奶油浅底无描边
+            unfocusedBorderColor = Color.Transparent,
             focusedBorderColor = colors.borderFocus,
             errorBorderColor = colors.error,
             placeholderColor = colors.textTertiary,
@@ -331,26 +331,26 @@ data class TagTokens(
             opacity: AppOpacity,
         ): TagTokens = TagTokens(
             primary = TagVariantColors(
-                backgroundColor = colors.primary.copy(alpha = opacity.subtle),
-                textColor = colors.primary,
+                backgroundColor = colors.primaryScale.tintContainer(colors),
+                textColor = colors.primaryScale.accentContent(colors),
             ),
             success = TagVariantColors(
-                backgroundColor = colors.success.copy(alpha = opacity.subtle),
-                textColor = colors.success,
+                backgroundColor = colors.successScale.tintContainer(colors),
+                textColor = colors.successScale.accentContent(colors),
             ),
             warning = TagVariantColors(
-                backgroundColor = colors.warning.copy(alpha = opacity.subtle),
-                textColor = colors.warning,
+                backgroundColor = colors.warningScale.tintContainer(colors),
+                textColor = colors.warningScale.accentContent(colors),
             ),
             danger = TagVariantColors(
-                backgroundColor = colors.danger.copy(alpha = opacity.subtle),
-                textColor = colors.danger,
+                backgroundColor = colors.dangerScale.tintContainer(colors),
+                textColor = colors.dangerScale.accentContent(colors),
             ),
             default = TagVariantColors(
-                backgroundColor = colors.bgHover,
+                backgroundColor = colors.surfaceMuted,
                 textColor = colors.textSecondary,
             ),
-            cornerRadius = shapes.scaled(shapes.full),     // shadcn 风格：标签 = rounded-full
+            cornerRadius = shapes.scaled(shapes.full),     // 胶囊标签
             fontSize = typography.labelMedium.fontSize,
             fontWeight = FontWeight.Medium,
             horizontalPadding = 12.dp,
@@ -400,7 +400,7 @@ data class SnackbarHostTokens(
             SnackbarHostTokens(
                 containerColor = colors.inverseSurface,
                 contentColor = colors.inverseOnSurface,
-                cornerRadius = shapes.scaled(shapes.small),
+                cornerRadius = shapes.scaled(shapes.medium),
                 elevation = elevation.level3,   // 中档阴影；M3 1.4.0 Snackbar 无 tonalElevation 参数，令牌预留
             )
     }
@@ -416,7 +416,7 @@ data class EmptyStateTokens(
 ) {
     companion object {
         fun default(colors: AppColors, spacing: AppSpacing): EmptyStateTokens = EmptyStateTokens(
-            emojiSize = 56.sp,
+            emojiSize = 64.sp,
             titleColor = colors.onSurface,
             subtitleColor = colors.textSecondary,
             actionSpacing = spacing.lg,
@@ -437,10 +437,10 @@ data class ProgressTokens(
         fun default(
             colors: AppColors,
         ): ProgressTokens = ProgressTokens(
-            height = 6.dp,
+            height = 8.dp,
             circularSize = 32.dp,
             strokeWidth = 4.dp,
-            trackColor = colors.bgHover,
+            trackColor = colors.surfaceMuted,
             indicatorColor = colors.primary,
         )
     }
@@ -459,8 +459,8 @@ data class SkeletonTokens(
             shapes: AppShapes,
             darkTheme: Boolean = false,
         ): SkeletonTokens = SkeletonTokens(
-            shimmerColor1 = if (darkTheme) Color(0xFF3A3A3A) else Color(0xFFE0E0E0),
-            shimmerColor2 = if (darkTheme) Color(0xFF4A4A4A) else Color(0xFFF5F5F5),
+            shimmerColor1 = if (darkTheme) Color(0xFF383430) else Color(0xFFEAE6E0),
+            shimmerColor2 = if (darkTheme) Color(0xFF4A453F) else Color(0xFFF5F2EC),
             cornerRadius = shapes.scaled(shapes.extraSmall),
             avatarSize = 40.dp,
             shimmerDurationMs = 1000,
@@ -526,8 +526,8 @@ data class SliderTokens(
         fun default(
             colors: AppColors,
         ): SliderTokens = SliderTokens(
-            trackHeight = 4.dp,
-            thumbSize = 20.dp,
+            trackHeight = 6.dp,
+            thumbSize = 22.dp,
             activeColor = colors.primary,
             inactiveColor = colors.borderDisabled,
         )
@@ -575,9 +575,9 @@ data class AppBarTokens(
             titleSize = typography.titleLarge.fontSize,
             titleWeight = FontWeight.SemiBold,
             backIconSize = 22.dp,
-            containerColor = if (darkTheme) colors.pageBackground else colors.primaryContainer,
+            containerColor = colors.pageBackground,      // 顶栏融入页面底，去掉旧式彩色大色块
             titleColor = colors.textPrimary,
-            iconColor = colors.primary,
+            iconColor = colors.textPrimary,
         )
     }
 }
@@ -628,7 +628,7 @@ data class FabTokens(
         ): FabTokens = FabTokens(
             size = 56.dp,
             iconSize = control.large.iconSize,
-            cornerRadius = 28.dp,
+            cornerRadius = 28.dp,                        // 胶囊 FAB
             elevation = elevation.level3,
             containerColor = colors.primary,
             contentColor = colors.onPrimary,
@@ -654,7 +654,7 @@ data class BottomBarTokens(
             colors: AppColors,
             typography: AppTypography,
         ): BottomBarTokens = BottomBarTokens(
-            height = 80.dp,
+            height = 72.dp,
             iconSize = 24.dp,
             labelSize = 11.sp,
             fontWeight = FontWeight.Medium,
@@ -688,7 +688,7 @@ data class ListItemTokens(
             typography: AppTypography,
             opacity: AppOpacity,
         ): ListItemTokens = ListItemTokens(
-            minHeight = 56.dp,
+            minHeight = 64.dp,
             horizontalPadding = spacing.md,
             iconSize = 24.dp,
             titleSize = typography.bodyLarge.fontSize,
@@ -789,8 +789,8 @@ data class TimePickerTokens(
             arrowColor = colors.primary,
             backgroundColor = colors.surface,
             cornerRadius = shapes.scaled(shapes.large),
-            selectedBackgroundColor = colors.primary.copy(alpha = 0.12f),
-            selectedTextColor = colors.primary,
+            selectedBackgroundColor = colors.primaryScale.tintContainer(colors), // 粉彩选中底
+            selectedTextColor = colors.primaryScale.accentContent(colors),
             unselectedTextColor = colors.textTertiary,
             dividerColor = colors.divider,
             itemHeight = 44.dp,
@@ -890,7 +890,7 @@ data class SheetTokens(
             containerColor = colors.surface,
             contentColor = colors.onSurface,
             scrimColor = colors.scrim,
-            cornerRadius = shapes.scaled(shapes.large),
+            cornerRadius = shapes.scaled(shapes.extraLarge), // 32dp 大顶部圆角
             dragHandleColor = colors.divider,
             dragHandleWidth = 32.dp,
             dragHandleHeight = 4.dp,
@@ -957,11 +957,11 @@ data class StatCellTokens(
             typography: AppTypography,
             spacing: AppSpacing,
         ): StatCellTokens = StatCellTokens(
-            valueColor = colors.primary,                  // 数值用强调色（HeroUI 式数据突出）
+            valueColor = colors.primary,                  // 数值用强调色（数据突出）
             unitColor = colors.textSecondary,
             labelColor = colors.textTertiary,
-            valueFontSize = typography.headlineSmall.fontSize, // 三页统一 20sp（原 24/16 两档收敛）
-            valueFontWeight = FontWeight.SemiBold,
+            valueFontSize = typography.headlineSmall.fontSize, // 统一 21sp
+            valueFontWeight = FontWeight.Bold,
             unitFontSize = typography.labelMedium.fontSize,
             labelFontSize = typography.labelMedium.fontSize,
             emojiFontSize = typography.titleLarge.fontSize,
@@ -1025,7 +1025,7 @@ data class SummaryCardTokens(
             shapes: AppShapes,
             spacing: AppSpacing,
         ): SummaryCardTokens = SummaryCardTokens(
-            cornerRadius = shapes.scaled(shapes.large),
+            cornerRadius = shapes.scaled(shapes.largeIncreased),
             innerPadding = spacing.lg,
             contentColor = colors.onPrimary,
             iconContainerAlpha = 0.25f,

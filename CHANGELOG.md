@@ -2,6 +2,31 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.0.0] — 2026-08-23
+
+**UI/UX 全面现代化重构：「柔和奶油 + 多彩分区」视觉语言**
+
+主题与令牌（设计系统）：
+- 视觉语言整体翻新：奶油暖底（亮色 #F8F6F3 / 暗色暖黑 #141110）、暖灰 neutral stone 替代冷灰 zinc、暖近黑文字；五个语义色降饱和提柔和（蓝 #3B6FE0 / 紫 #8B7BF0 / 绿 #34A96F / 琥珀 #E8930C / 珊瑚 #E85D5D），`HeroUiPalettes` → `SoftPalettes`
+- 多彩分区归属：喂养=珊瑚、睡眠=紫、尿布=青(teal)、生长=绿、提醒/疫苗=琥珀、发育=蓝、AI=紫；全站徽章/图表/渐变按分区取色
+- 排版放大：12 级 Typography 整体升一档（bodyLarge 16sp / headlineLarge 30sp），行高放宽；圆角整体放大（卡片 24dp / 弹层 32dp / 控件 16dp）
+- 阴影换柔暖棕调（`colors.shadow`），卡片令牌 borderWidth 归零（阴影分层替代发丝描边）；Elevation 档位上调
+- 顶栏透明化（`AppBarTokens.containerColor = pageBackground` + titleLarge 标题）；输入框改填充式（surfaceMuted 无描边、聚焦 2dp 主色边框）；按钮/标签/FAB 全胶囊化；TimePicker 选中底改分档粉彩
+- 新增分区渐变 `Gradients.feeding/sleep/diaper/growth/reminder/ai`；页面渐变（pageHeader/overviewCard 等）全部重校准
+
+组件与页面：
+- 底部导航改现代悬浮胶囊（左右留白 + 28dp 大圆角 + 暖阴影 + 粉彩选中指示器），M3 NavigationBar 由外层 Box 裁切承形
+- 首页全新 hero（问候语 + 大标题 + 渐变光环头像 + 月龄/资料胶囊）、宫格粉彩渐变图标块、AI 入口紫渐变卡、今日概览改品牌蓝渐变白字统计卡、最近记录改粉彩徽章行
+- 喂养/睡眠/尿布/生长/统计五页日期导航统一现代胶囊行（柔底胶囊 + 粉彩「今天」回跳）
+- 喂养时间轴去左侧竖线轨道，改记录卡行内时间（徽章 + 标题/摘要 + 右侧时间）；尿布记录行信息层级重排
+- 登录页品牌化：渐变光环 hero + 卡片式表单；统计页喂养卡颜色对齐珊瑚分区色；时间线/消息/疫苗/健康/提醒/设置等其余页面随令牌自动升级
+- 系统栏融入页面底（状态栏/导航栏同色），暗色模式全量同步翻新
+
+工程与验证：
+- 新增 Paparazzi 截图 Showcase 测试（`DesignShowcaseTest`：亮/暗两套组件与首页卡片实拍），中文字体 Noto Sans SC 三字重子集（约 700KB）入 `res/font`（不进测试产物但进 APK，默认字体不受影响）
+- 截图运行方式：x86_64 下 `./gradlew recordPaparazzi` 或 `./gradlew testDebugUnitTest -PpaparazziScreenshots`；容器/JVM 自附加不可用时 ByteBuddy agent 以 `-javaagent` 预加载；Linux ARM64 因 layoutlib 无 aarch64 原生库自动降级（常规单测排除 Showcase，保持全绿）
+- 版本号 1.10.1 → 2.0.0（versionCode 33 → 34）
+
 ### [1.10.1] — 2026-08-23
 
 **交互优化批次二：列表页日期切换增强：**

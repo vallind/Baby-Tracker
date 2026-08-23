@@ -102,10 +102,11 @@ fun RecordCard(
                 }
             },
             content = {
+                val shadowColor = LocalAppColors.current.shadow
                 Card(
                     Modifier
                         .fillMaxWidth()
-                        .shadow(elevation, shape)
+                        .shadow(elevation, shape, ambientColor = shadowColor, spotColor = shadowColor)
                         .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                         .semantics {
                             // 无障碍：TalkBack 用户无法滑动删除，暴露自定义删除动作

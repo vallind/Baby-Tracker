@@ -52,6 +52,9 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
+import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.designsystem.theme.accentContent
+import com.babytracker.designsystem.theme.tintContainer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -121,7 +124,7 @@ fun FeedingListScreen(navController: NavController) {
                 .padding(padding)
                 .background(c.pageBackground),
         ) {
-            // —— 日期选择器 ——
+            // —— 日期选择器（现代胶囊行） ——
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = spacing.md),
                 verticalAlignment = Alignment.CenterVertically,
@@ -133,27 +136,49 @@ fun FeedingListScreen(navController: NavController) {
                     contentDescription = "前一天",
                     tint = c.textPrimary,
                 )
+                // 中间胶囊：点击开日期选择
                 Row(
-                    Modifier.weight(1f).clickable { showDatePicker = true },
+                    Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                        style = LocalAppTypography.current.titleSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = c.textPrimary,
-                    )
-                    Spacer(Modifier.width(spacing.xs))
-                    Icon(
-                        Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = c.textTertiary,
-                        modifier = Modifier.size(18.dp),
-                    )
+                    Box(
+                        Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(c.surfaceMuted)
+                            .clickable { showDatePicker = true }
+                            .padding(horizontal = 18.dp, vertical = 10.dp),
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
+                                style = LocalAppTypography.current.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = c.textPrimary,
+                            )
+                            Spacer(Modifier.width(spacing.xs))
+                            Icon(
+                                Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = c.textTertiary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
                 }
                 // 非今天时提供一键回跳
                 if (selectedDate != today) {
-                    AppFilterChip(selected = false, onClick = { selectedDate = today }, label = "今天")
+                    Text(
+                        AppStrings.today,
+                        style = LocalAppTypography.current.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = c.primaryScale.accentContent(c),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(c.primaryScale.tintContainer(c))
+                            .clickable { selectedDate = today }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
                     Spacer(Modifier.width(spacing.xs))
                 }
                 // 后一天
@@ -313,65 +338,37 @@ private fun FeedingTimeline(
             } catch (_: Exception) { "" }
             val typeLabel = DateUtils.feedingTypeLabel(FeedingType.raw(f.type))
 
-            Row(
+            // 记录卡片行：粉彩徽章 + 标题/摘要 + 时间（时间轴竖线改为卡片呼吸间距）
+            RecordCard(
+                onDelete = { onDelete(f) },
+                onClick = {},
+                onLongClick = { onEdit(f) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
+                    .padding(bottom = 10.dp),
+                accentColor = color,
             ) {
-                // —— 左侧时间轴（时间 + 圆点 + 竖线）——
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(spacing.xxl),
-                ) {
-                    Text(
-                        time,
-                        style = LocalAppTypography.current.labelSmall,
-                        color = c.textTertiary,
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Box(
-                        Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(color),
-                    )
-                    // 竖线填满剩余空间
-                    Box(
-                        Modifier
-                            .width(spacing.xxs)
-                            .weight(1f)
-                            .background(c.divider),
-                    )
-                }
-
+                AppEmojiBadge(emoji = emoji, tint = color)
                 Spacer(Modifier.width(12.dp))
-
-                // —— 右侧卡片 ——
-                RecordCard(
-                    onDelete = { onDelete(f) },
-                    onClick = {},
-                    onLongClick = { onEdit(f) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(bottom = 10.dp),
-                    accentColor = color,
-                ) {
-                    AppEmojiBadge(emoji = emoji, tint = color)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(
-                            typeLabel,
-                            style = LocalAppTypography.current.titleSmall,
-                            color = c.textPrimary,
-                            fontWeight = FontWeight.Medium,
-                        )
-                        Text(
-                            feedingSummary(f),
-                            style = LocalAppTypography.current.bodySmall,
-                            color = c.textSecondary,
-                        )
-                    }
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        typeLabel,
+                        style = LocalAppTypography.current.titleSmall,
+                        color = c.textPrimary,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        feedingSummary(f),
+                        style = LocalAppTypography.current.bodySmall,
+                        color = c.textSecondary,
+                        maxLines = 1,
+                    )
                 }
+                Text(
+                    time,
+                    style = LocalAppTypography.current.labelMedium,
+                    color = c.textTertiary,
+                )
             }
         }
     }

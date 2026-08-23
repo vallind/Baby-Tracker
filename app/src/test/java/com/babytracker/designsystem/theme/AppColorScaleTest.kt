@@ -7,37 +7,37 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * 分档色板审计 — 守护 HeroUI 对标色板不被无意篡改、
+ * 分档色板审计 — 守护「柔和奶油」色板锚点不被无意篡改、
  * 自定义主题种子生成的色阶单调可用、derive() 注入路径完整。
  */
 class AppColorScaleTest {
 
     @Test
-    fun `HeroUI 官方语义锚点值不得被篡改`() {
-        val p = HeroUiPalettes
-        // 抄录自 @heroui/theme 2.4.26 semantic 默认值
-        assertEquals(Color(0xFF006FEE), p.blue.default)
-        assertEquals(Color(0xFF7828C8), p.purple.default)
-        assertEquals(Color(0xFF17C964), p.green.default)
-        assertEquals(Color(0xFFF5A524), p.yellow.default)
-        assertEquals(Color(0xFFF31260), p.red.default)
-        assertEquals(Color(0xFF71717A), p.zinc.default)
+    fun `柔和色板语义锚点值不得被篡改`() {
+        val p = SoftPalettes
+        // 「柔和奶油 + 多彩分区」设计语言的锚点主值
+        assertEquals(Color(0xFF3B6FE0), p.blue.default)
+        assertEquals(Color(0xFF8B7BF0), p.violet.default)
+        assertEquals(Color(0xFF34A96F), p.green.default)
+        assertEquals(Color(0xFFE8930C), p.amber.default)
+        assertEquals(Color(0xFFE85D5D), p.coral.default)
+        assertEquals(Color(0xFF78716C), p.stone.default)
     }
 
     @Test
     fun `官方色阶档位抽样校验`() {
-        val blue = HeroUiPalettes.blue
-        assertEquals(Color(0xFFCCE3FD), blue.shade100)   // 徽章浅底档
-        assertEquals(Color(0xFF005BC4), blue.shade600)   // 前景强调档
-        assertEquals(Color(0xFFE6F1FE), blue.shade50)
-        assertEquals(Color(0xFF001731), blue.shade900)
+        val blue = SoftPalettes.blue
+        assertEquals(Color(0xFFDCE6FD), blue.shade100)   // 徽章浅底档
+        assertEquals(Color(0xFF2C57BE), blue.shade600)   // 前景强调档
+        assertEquals(Color(0xFFEDF2FE), blue.shade50)
+        assertEquals(Color(0xFF0E1D46), blue.shade900)
     }
 
     @Test
     fun `pure 主题派生后主色档位与官方表完全一致`() {
         val c = AppTheme.pure.colors
-        assertEquals(HeroUiPalettes.blue, c.primaryScale)
-        assertEquals(HeroUiPalettes.red, c.dangerScale)
+        assertEquals(SoftPalettes.blue, c.primaryScale)
+        assertEquals(SoftPalettes.coral, c.dangerScale)
         // danger 单点色与档位 default 必须同源，禁止出现两套红
         assertEquals(c.dangerScale.default, c.error)
     }
@@ -65,8 +65,8 @@ class AppColorScaleTest {
 
         assertEquals(primary, c.primaryScale.default)
         assertEquals(warning, c.warningScale.default)
-        // 中性阶梯恒为 zinc，不随主题漂移
-        assertEquals(HeroUiPalettes.zinc, c.neutralScale)
+        // 中性阶梯恒为 stone 暖灰，不随主题漂移
+        assertEquals(SoftPalettes.stone, c.neutralScale)
         // 缺省容器色取主色 shade100（不透明），不再是 alpha 叠加
         assertEquals(c.primaryScale.shade100, c.primaryContainer)
     }
@@ -77,7 +77,7 @@ class AppColorScaleTest {
         val dark = AppColors.dark()
         assertNotEquals(light.surfaceMuted, dark.surfaceMuted)
         assertTrue(light.surfaceMuted.alpha == 1f && dark.surfaceMuted.alpha == 1f)
-        assertEquals(HeroUiPalettes.zinc.shade100, light.surfaceMuted)
-        assertEquals(HeroUiPalettes.zinc.shade800, dark.surfaceMuted)
+        assertEquals(SoftPalettes.stone.shade100, light.surfaceMuted)
+        assertEquals(SoftPalettes.stone.shade800, dark.surfaceMuted)
     }
 }

@@ -73,6 +73,15 @@ object AppStrings {
     const val noBabySubtitle = "点击下方按钮，记录宝宝成长的每一个瞬间"
     const val babyProfile = "宝宝资料"
 
+    // —— 首页 ——
+    const val homeGreetingMorning = "早上好"
+    const val homeGreetingAfternoon = "下午好"
+    const val homeGreetingEvening = "晚上好"
+    const val todayOverview = "今日概览"
+    const val quickFeeding = "记喂养"
+    const val quickSleep = "记睡眠"
+    const val quickDiaper = "记尿布"
+
     // —— 喂养 ——
     const val feeding = "喂养"
     const val feedingRecords = "喂养记录"

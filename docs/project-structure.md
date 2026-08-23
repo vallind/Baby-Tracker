@@ -1,6 +1,6 @@
 # 项目结构与模块索引
 
-> 最后更新：2026-08-23 · 对应版本：1.9.4
+> 最后更新：2026-08-23 · 对应版本：2.0.0
 >
 > 从 AGENTS.md 拆分，供需要定位代码时查阅。
 
@@ -48,8 +48,9 @@ config/detekt/detekt.yml         # detekt 显式枚举配置（Termux 下 buildU
 
 ```
 designsystem/
-├── theme/                       # DensityTokensTest / ComponentTokensStateAuditTest / ThemeTokenizationStaticAuditTest / TypographyTokensTest
+├── theme/                       # DensityTokensTest / ComponentTokensStateAuditTest / ThemeTokenizationStaticAuditTest / TypographyTokensTest / AppColorScaleTest
 ├── components/                  # A11ySemanticsAuditTest（自定义可交互组件语义静态审计）
+├── showcase/                    # DesignShowcaseTest（Paparazzi 截图 Showcase，仅 x86_64 可跑，见 docs/design-system.md）
 └── core/util/                   # TokenAuditCheckerTest（共享检查器拦截/白名单/防呆样本）
 ```
 

@@ -81,10 +81,10 @@ fun TimelineScreen(navController: NavController) {
 
     LaunchedEffect(babyId) { viewModel.load(babyId) }
 
-    // 类型 → 颜色映射
+    // 类型 → 颜色映射（与首页宫格分区色一致：喂养珊瑚/睡眠紫/尿布青/生长绿/健康蓝）
     val typeColor: (String) -> Color = {
         when (it) {
-            "feeding" -> c.warning
+            "feeding" -> c.danger
             "sleep" -> c.secondary
             "diaper" -> c.tertiary
             "growth" -> c.success
