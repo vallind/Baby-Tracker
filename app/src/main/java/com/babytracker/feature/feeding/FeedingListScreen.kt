@@ -24,6 +24,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.navigation.NavController
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.FeedingType
@@ -121,24 +123,45 @@ fun FeedingListScreen(navController: NavController) {
         ) {
             // —— 日期选择器 ——
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { showDatePicker = true }
-                    .padding(horizontal = spacing.md, vertical = 12.dp),
+                Modifier.fillMaxWidth().padding(horizontal = spacing.md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
-                    style = LocalAppTypography.current.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = c.textPrimary,
+                // 前一天
+                AppIconButton(
+                    icon = Icons.Default.ChevronLeft,
+                    onClick = { selectedDate = selectedDate.minusDays(1) },
+                    contentDescription = "前一天",
+                    tint = c.textPrimary,
                 )
-                Spacer(Modifier.width(spacing.xs))
-                Icon(
-                    Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = c.textTertiary,
-                    modifier = Modifier.size(18.dp),
+                Row(
+                    Modifier.weight(1f).clickable { showDatePicker = true },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "$dateLabel ${selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
+                        style = LocalAppTypography.current.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = c.textPrimary,
+                    )
+                    Spacer(Modifier.width(spacing.xs))
+                    Icon(
+                        Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint = c.textTertiary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                // 非今天时提供一键回跳
+                if (selectedDate != today) {
+                    AppFilterChip(selected = false, onClick = { selectedDate = today }, label = "今天")
+                    Spacer(Modifier.width(spacing.xs))
+                }
+                // 后一天
+                AppIconButton(
+                    icon = Icons.Default.ChevronRight,
+                    onClick = { selectedDate = selectedDate.plusDays(1) },
+                    contentDescription = "后一天",
+                    tint = c.textPrimary,
                 )
             }
 
