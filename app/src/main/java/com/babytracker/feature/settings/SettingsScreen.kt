@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -391,7 +392,18 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                     ) {
                         Box(Modifier.fillMaxSize().padding(spacing.md)) {
                             Column {
-                                Box(Modifier.size(36.dp).clip(RoundedCornerShape(shapes.large)).background(theme.colors.primary))
+                                // 2.1：主题色条预览（主→次→第三色渐变条），替代单色方块
+                                Box(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(16.dp)
+                                        .clip(RoundedCornerShape(shapes.large))
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(theme.colors.primary, theme.colors.secondary, theme.colors.tertiary),
+                                            ),
+                                        ),
+                                )
                                 Spacer(Modifier.height(6.dp))
                                 Text(names[theme.name] ?: theme.name, style = LocalAppTypography.current.bodySmall, color = theme.colors.textPrimary)
                             }

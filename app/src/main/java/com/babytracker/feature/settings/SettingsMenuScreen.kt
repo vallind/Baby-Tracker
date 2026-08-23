@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
+import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.DensityController
@@ -111,9 +112,7 @@ fun DataSettingsScreen(navController: NavController) {
                 emoji = "🔐",
                 label = "隐私设置",
                 subtitle = "管理数据与隐私选项",
-                onClick = {
-                    Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show()
-                },
+                trailing = { AppChip(label = AppStrings.comingSoon) },
             )
         }
     }
@@ -142,9 +141,7 @@ fun SupportSettingsScreen(navController: NavController) {
                 emoji = "❓",
                 label = "帮助与反馈",
                 subtitle = "使用问题与意见反馈",
-                onClick = {
-                    Toast.makeText(context, "即将上线", Toast.LENGTH_SHORT).show()
-                },
+                trailing = { AppChip(label = AppStrings.comingSoon) },
             )
             SettingsDivider()
             SettingsRow(

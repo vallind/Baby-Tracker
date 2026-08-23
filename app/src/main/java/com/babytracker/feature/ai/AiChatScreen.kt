@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,12 +24,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,11 +41,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.babytracker.designsystem.components.button.AppButton
@@ -87,6 +93,7 @@ fun AiChatScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember(snackbarHostState) { AppSnackbar(snackbarHostState) }
     var showHistory by remember { mutableStateOf(false) }
+    var headerExpanded by rememberSaveable { mutableStateOf(true) }
     var deletingConversationId by remember { mutableStateOf<Long?>(null) }
     val copyAnswer: (String) -> Unit = { answer ->
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -134,12 +141,17 @@ fun AiChatScreen(navController: NavController) {
                 .padding(padding)
                 .background(LocalAppColors.current.pageBackground),
         ) {
-            AiBabySummary(state)
-            AiModelSelector(
-                state = state,
-                onSelect = viewModel::selectModel,
-                onRefresh = viewModel::refreshConfig,
-            )
+            // 2.1 H4：顶栏可折叠——展开显示完整摘要+模型选择，收起为一枚胶囊
+            if (headerExpanded) {
+                AiBabySummary(state = state, onCollapse = { headerExpanded = false })
+                AiModelSelector(
+                    state = state,
+                    onSelect = viewModel::selectModel,
+                    onRefresh = viewModel::refreshConfig,
+                )
+            } else {
+                CollapsedAiHeader(state = state, onExpand = { headerExpanded = true })
+            }
 
             LazyColumn(
                 state = listState,
@@ -603,7 +615,7 @@ private fun analysisRange(period: AiAnalysisPeriod): String =
     "最近 ${period.days} 天 · 对比前 ${period.days} 天"
 
 @Composable
-private fun AiBabySummary(state: AiChatUiState) {
+private fun AiBabySummary(state: AiChatUiState, onCollapse: () -> Unit = {}) {
     val spacing = LocalAppSpacing.current
     val colors = LocalAppColors.current
     val typography = LocalAppTypography.current
@@ -614,16 +626,25 @@ private fun AiBabySummary(state: AiChatUiState) {
             .fillMaxWidth(),
         containerColor = colors.primaryContainer,
     ) {
-        Column(Modifier.padding(spacing.md)) {
-            Text(
-                text = baby?.let {
-                    val age = DateUtils.safeParseDate(it.birthDate)?.let(DateUtils::monthAge)
-                        ?: AppStrings.aiMonthAgeUnknown
-                    "${it.name} · $age"
-                } ?: AppStrings.aiNoBaby,
-                style = typography.titleMedium,
-                color = colors.textPrimary,
-            )
+        Column(Modifier.padding(start = spacing.md, end = spacing.xs, top = spacing.sm, bottom = spacing.sm)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = baby?.let {
+                        val age = DateUtils.safeParseDate(it.birthDate)?.let(DateUtils::monthAge)
+                            ?: AppStrings.aiMonthAgeUnknown
+                        "${it.name} · $age"
+                    } ?: AppStrings.aiNoBaby,
+                    style = typography.titleMedium,
+                    color = colors.textPrimary,
+                    modifier = Modifier.weight(1f),
+                )
+                AppIconButton(
+                    icon = Icons.Default.KeyboardArrowUp,
+                    onClick = onCollapse,
+                    contentDescription = AppStrings.aiSettings,
+                    tint = colors.textSecondary,
+                )
+            }
             Spacer(Modifier.height(spacing.xs))
             Text(
                 text = if (state.preferences.useRecentRecords) {
@@ -634,6 +655,41 @@ private fun AiBabySummary(state: AiChatUiState) {
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
             )
+        }
+    }
+}
+
+/** 折叠态顶栏：一枚胶囊展示宝宝名 + 当前模型，点击展开（H4） */
+@Composable
+private fun CollapsedAiHeader(state: AiChatUiState, onExpand: () -> Unit) {
+    val spacing = LocalAppSpacing.current
+    val colors = LocalAppColors.current
+    val typography = LocalAppTypography.current
+    val modelName = state.modelOptions.firstOrNull { it.id == state.selectedOptionId }?.name ?: ""
+    AppCard(
+        modifier = Modifier
+            .padding(horizontal = spacing.md, vertical = spacing.sm)
+            .fillMaxWidth()
+            .clickable(onClick = onExpand),
+        containerColor = colors.primaryContainer,
+    ) {
+        Row(
+            Modifier.padding(horizontal = spacing.md, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("👶", style = typography.titleMedium)
+            Spacer(Modifier.width(spacing.sm))
+            Text(
+                text = state.baby?.name ?: AppStrings.aiNoBaby,
+                style = typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textPrimary,
+                maxLines = 1,
+                modifier = Modifier.weight(1f),
+            )
+            Text(modelName, style = typography.labelMedium, color = colors.textSecondary)
+            Spacer(Modifier.width(spacing.xs))
+            Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(16.dp))
         }
     }
 }

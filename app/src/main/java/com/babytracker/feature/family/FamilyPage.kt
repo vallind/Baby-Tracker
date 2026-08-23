@@ -25,6 +25,7 @@ import com.babytracker.core.data.FamilyMember
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.Gradients
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppShapes
@@ -237,15 +238,15 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
             Text("👨‍👩‍👧", style = typography.displayLarge)
             Spacer(Modifier.height(spacing.md))
             Text(
-                "创建或加入家庭\n与家人共享宝宝的成长记录",
+                AppStrings.familyEmptyTitle,
                 style = typography.bodyLarge,
                 color = c.textSecondary,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(spacing.lg))
             Row(horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
-                AppButton(variant = ButtonVariant.Secondary, onClick = onJoinClick, label = "加入家庭", icon = Icons.Default.GroupAdd)
-                AppButton(onClick = onCreateClick, label = "创建家庭", icon = Icons.Default.Add)
+                AppButton(variant = ButtonVariant.Secondary, onClick = onJoinClick, label = AppStrings.familyJoin, icon = Icons.Default.GroupAdd)
+                AppButton(onClick = onCreateClick, label = AppStrings.familyCreate, icon = Icons.Default.Add)
             }
         }
     }

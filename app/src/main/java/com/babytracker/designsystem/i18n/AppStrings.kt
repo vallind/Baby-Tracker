@@ -133,6 +133,10 @@ object AppStrings {
     const val logViewer = "运行日志"
     const val backupManageSubtitle = "本地备份、WebDAV 与数据恢复"
     const val logViewerSubtitle = "查看与导出运行日志"
+    const val comingSoon = "敬请期待"
+    const val familyEmptyTitle = "创建或加入家庭\n与家人共享宝宝的成长记录"
+    const val familyJoin = "加入家庭"
+    const val familyCreate = "创建家庭"
 
     // —— 时间 ——
     const val today = "今天"
