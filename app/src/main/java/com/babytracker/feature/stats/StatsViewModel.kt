@@ -27,6 +27,11 @@ data class StatsUiState(
     val formulaCount: Int = 0,
     val formulaTotalMl: Int = 0,
     val sleepMinutes: Long = 0,
+    // —— 尿布（2.1 新增，H5） ——
+    val diaperCount: Int = 0,
+    val diaperWetCount: Int = 0,
+    val diaperPoopCount: Int = 0,
+    val diaperBothCount: Int = 0,
     val height: String = "--",
     val heightRaw: Float = 0f,
     val weight: String = "--",
@@ -77,8 +82,9 @@ class StatsViewModel(
                     feedingRepo.watchByBaby(babyId),
                     sleepRepo.watchByBaby(babyId),
                     growthRepo.watchByBaby(babyId),
-                ) { feedings, sleeps, growths ->
-                    aggregateStats(period, offset, feedings, sleeps, growths)
+                    diaperRepo.watchByBaby(babyId),
+                ) { feedings, sleeps, growths, diapers ->
+                    aggregateStats(period, offset, feedings, sleeps, growths, diapers)
                 }
                     .onStart {
                         emit(
@@ -145,6 +151,7 @@ internal fun aggregateStats(
     feedings: List<Feeding>,
     sleeps: List<Sleep>,
     growths: List<Growth>,
+    diapers: List<Diaper> = emptyList(),
 ): StatsUiState {
     val start = statsPeriodStart(period, offset)
     val end = statsPeriodEnd(period, offset)
@@ -179,6 +186,13 @@ internal fun aggregateStats(
     else (sleepMinutes - sleepPrevMinutes + 30) / 60
     val sleepCompare = statsBuildCompare(sleepDiffHours, "时")
 
+    // ── 尿布（2.1 新增） ──
+    val diaperInRange = diapers.filter { statsInRange(it.timestamp, start, end) }
+    val diaperCount = diaperInRange.size
+    val diaperWetCount = diaperInRange.count { it.type == DiaperType.WET }
+    val diaperPoopCount = diaperInRange.count { it.type == DiaperType.POOP }
+    val diaperBothCount = diaperInRange.count { it.type == DiaperType.BOTH }
+
     // ── 身高/体重 ──
     val (heightRaw, heightPoints) = statsLatestGrowth(growths, GrowthType.HEIGHT, start, end)
     val (heightPrevRaw, _) = statsLatestGrowth(growths, GrowthType.HEIGHT, prevStart, prevEnd)
@@ -198,6 +212,10 @@ internal fun aggregateStats(
         period = period,
         periodOffset = offset,
         dateRangeText = dateRangeText,
+        diaperCount = diaperCount,
+        diaperWetCount = diaperWetCount,
+        diaperPoopCount = diaperPoopCount,
+        diaperBothCount = diaperBothCount,
         feedingCount = feedingCount,
         breastFeedCount = breastFeedCount,
         formulaCount = formulaCount,

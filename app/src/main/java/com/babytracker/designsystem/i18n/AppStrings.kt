@@ -114,6 +114,9 @@ object AppStrings {
     const val vaccinationRecords = "疫苗接种"
     const val generateVaccinePlan = "生成接种计划"
     const val vaccineDone = "已完成"
+    const val vaccinePlan = "接种计划"
+    const val vaccineRecordsTab = "接种记录"
+    const val vaccineDoneTab = "已接种"
     const val vaccineUpcoming = "待接种"
 
     // —— 健康 ——

@@ -68,7 +68,8 @@ class StatsLogicTest {
     @Test
     fun `unparseable sleep timestamps produce zero minutes`() {
         val sleep = Sleep(babyId = 1, type = SleepType.NAP, startTime = "", endTime = "")
-        val state = aggregateStats(StatsPeriod.WEEK, 0, emptyList(), listOf(sleep), emptyList())
+        val state = aggregateStats(StatsPeriod.WEEK, 0, emptyList(), listOf(sleep), emptyList(), emptyList())
+
         assertEquals(0L, state.sleepMinutes)
         assertEquals(7, state.sleepPoints.size)
     }
@@ -80,7 +81,8 @@ class StatsLogicTest {
         // 回归：1.7.10 之前解析失败的记录计入数字但柱状图不显示
         val good = Feeding(babyId = 1, type = FeedingType.FORMULA, amountMl = 100, timestamp = at(today, 8))
         val bad = Feeding(babyId = 1, type = FeedingType.FORMULA, amountMl = 100, timestamp = "")
-        val state = aggregateStats(StatsPeriod.DAY, 0, listOf(good, bad), emptyList(), emptyList())
+        val state = aggregateStats(StatsPeriod.DAY, 0, listOf(good, bad), emptyList(), emptyList(), emptyList())
+
         assertEquals(1, state.feedingCount)
         assertEquals(24, state.feedingPoints.size)
         assertEquals(1f, state.feedingPoints[8], 0f)
@@ -91,7 +93,8 @@ class StatsLogicTest {
         val start = statsPeriodStart(StatsPeriod.WEEK, 0)
         val day3 = start.toLocalDate().plusDays(3)
         val f = Feeding(babyId = 1, type = FeedingType.BREAST, durationMin = 10, timestamp = at(day3, 9))
-        val state = aggregateStats(StatsPeriod.WEEK, 0, listOf(f), emptyList(), emptyList())
+        val state = aggregateStats(StatsPeriod.WEEK, 0, listOf(f), emptyList(), emptyList(), emptyList())
+
         assertEquals(7, state.feedingPoints.size)
         assertEquals(1f, state.feedingPoints[3], 0f)
         assertEquals(1, state.feedingCount)
@@ -100,7 +103,8 @@ class StatsLogicTest {
     @Test
     fun `feeding compare counts previous period`() {
         val prev = Feeding(babyId = 1, type = FeedingType.FORMULA, amountMl = 90, timestamp = at(today.minusDays(1), 8))
-        val state = aggregateStats(StatsPeriod.DAY, 0, listOf(prev), emptyList(), emptyList())
+        val state = aggregateStats(StatsPeriod.DAY, 0, listOf(prev), emptyList(), emptyList(), emptyList())
+
         assertEquals(0, state.feedingCount)
         assertEquals("-1次", state.feedingCompare)
     }
@@ -119,7 +123,8 @@ class StatsLogicTest {
         val older = Growth(babyId = 1, type = GrowthType.HEIGHT, value = 50.0, measuredAt = at(today, 9))
         val newer = Growth(babyId = 1, type = GrowthType.HEIGHT, value = 52.0, measuredAt = at(today, 18))
         val weight = Growth(babyId = 1, type = GrowthType.WEIGHT, value = 4.0, measuredAt = at(today, 12))
-        val state = aggregateStats(StatsPeriod.DAY, 0, emptyList(), emptyList(), listOf(older, newer, weight))
+        val state = aggregateStats(StatsPeriod.DAY, 0, emptyList(), emptyList(), listOf(older, newer, weight), emptyList())
+
         assertEquals("52.0cm", state.height)
         assertEquals("4.0kg", state.weight)
         assertEquals(2, state.heightPoints.size)
@@ -127,7 +132,8 @@ class StatsLogicTest {
 
     @Test
     fun `no growth in range shows placeholder`() {
-        val state = aggregateStats(StatsPeriod.DAY, 0, emptyList(), emptyList(), emptyList())
+        val state = aggregateStats(StatsPeriod.DAY, 0, emptyList(), emptyList(), emptyList(), emptyList())
+
         assertEquals("--", state.height)
         assertEquals("--", state.weight)
         assertTrue(state.heightPoints.isEmpty())
@@ -137,7 +143,8 @@ class StatsLogicTest {
 
     @Test
     fun `empty data produces empty state`() {
-        val state = aggregateStats(StatsPeriod.WEEK, 0, emptyList(), emptyList(), emptyList())
+        val state = aggregateStats(StatsPeriod.WEEK, 0, emptyList(), emptyList(), emptyList(), emptyList())
+
         assertEquals(0, state.feedingCount)
         assertEquals(0L, state.sleepMinutes)
         assertEquals("", state.feedingCompare)

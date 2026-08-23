@@ -2,6 +2,17 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.1.4] — 2026-08-23
+
+**重设计批次 P1-B：首页信息架构 + 疫苗筛选 + 统计尿布卡：**
+
+- 首页（H1）：今日概览上移至 hero 之下、宫格与 AI 卡之前（高频数据优先）；hero 头像 92→64dp 压缩
+- 疫苗页（H3）：状态筛选仅计划 Tab 显示且精简为「待接种/已过期」两枚（删除「全部/已接种」死筛选，
+  点已选中胶囊可取消回全部）；SegmentedControl 与胶囊文案迁移 AppStrings
+- 统计页（H5）：新增尿布统计卡（次数 + 小便/大便/混合三格）；StatsViewModel aggregateStats 增加
+  diapers 维度（含 StatsLogicTest 7 处调用更新）
+- 版本号 2.1.3 → 2.1.4（versionCode 39 → 40）
+
 ### [2.1.3] — 2026-08-23
 
 **重设计批次 P1-A：睡眠/尿布卡合并 + 提醒/消息交互（信息架构第一刀）：**

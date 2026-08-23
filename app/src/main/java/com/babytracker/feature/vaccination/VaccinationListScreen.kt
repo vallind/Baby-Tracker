@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.*
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
@@ -55,10 +56,10 @@ import kotlinx.coroutines.launch
 private data class FilterPill(val key: String, val label: String)
 
 private val FILTER_PILLS = listOf(
-    FilterPill("all", "全部"),
-    FilterPill("pending", "待接种"),
-    FilterPill("done", "已接种"),
-    FilterPill("expired", "已过期"),
+    FilterPill("all", AppStrings.filterAll),
+    FilterPill("pending", AppStrings.vaccineUpcoming),
+    FilterPill("done", AppStrings.vaccineDoneTab),
+    FilterPill("expired", AppStrings.expired),
 )
 
 private fun suggestedAgeText(scheduledDate: String?, birthDate: String): String {
@@ -144,7 +145,7 @@ fun VaccinationListScreen(navController: NavController) {
                     .padding(horizontal = spacing.md, vertical = spacing.sm),
             ) {
                 SegmentedControl(
-                    labels = listOf("接种计划", "接种记录"),
+                    labels = listOf(AppStrings.vaccinePlan, AppStrings.vaccineRecordsTab),
                     selectedIndex = if (tab == "plan") 0 else 1,
                     onSelect = { idx ->
                         tab = if (idx == 0) "plan" else "done"
@@ -154,27 +155,28 @@ fun VaccinationListScreen(navController: NavController) {
                 )
             }
 
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.md)
-                    .padding(bottom = spacing.sm),
-                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-            ) {
-                FILTER_PILLS.forEach { pill ->
-                    val active = statusFilter == pill.key
-                    val pillColor = when (pill.key) {
-                        "done" -> c.success
-                        "expired" -> c.error
-                        else -> c.primary
+            // 状态筛选仅计划 Tab 展示且只保留「待接种/已过期」两枚（H3：已接种 Tab 下旧筛选永远为空）
+            if (tab == "plan") {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = spacing.md)
+                        .padding(bottom = spacing.sm),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+                ) {
+                    listOf(FILTER_PILLS[1], FILTER_PILLS[3]).forEach { pill ->
+                        val active = statusFilter == pill.key
+                        AppFilterChip(
+                            selected = active,
+                            onClick = {
+                                // 点击已选中的胶囊即取消筛选（回到全部）
+                                statusFilter = if (active) "all" else pill.key
+                            },
+                            label = pill.label,
+                            selectedColor = if (pill.key == "expired") c.error else c.primary,
+                            modifier = Modifier.weight(1f),
+                        )
                     }
-                    AppFilterChip(
-                        selected = active,
-                        onClick = { statusFilter = pill.key },
-                        label = pill.label,
-                        selectedColor = pillColor,
-                        modifier = Modifier.weight(1f),
-                    )
                 }
             }
 

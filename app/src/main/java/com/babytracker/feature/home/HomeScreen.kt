@@ -145,14 +145,15 @@ fun HomeScreen(navController: NavController) {
             // —— 顶部 hero 区：奶油渐变 + 大标题 + 渐变光环头像 ——
             HeroHeader(baby, onClickProfile = { navController.navigate(BabyProfile) })
 
+            // 今日概览紧随 hero（2.1 信息架构：高频数据优先，H1）
+            Spacer(Modifier.height(spacing.md))
+            TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
+
             Spacer(Modifier.height(spacing.md))
             FeatureGrid(navController, onQuickRecord = { quickRecord = it })
 
             Spacer(Modifier.height(spacing.md))
             AiAssistantEntryCard(navController)
-
-            Spacer(Modifier.height(spacing.md))
-            TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
 
             if (state.recentItems.isNotEmpty()) {
                 Spacer(Modifier.height(spacing.md))
@@ -232,7 +233,7 @@ private fun HeroHeader(baby: Baby, onClickProfile: () -> Unit) {
             .padding(horizontal = spacing.md),
     ) {
         Row(
-            Modifier.padding(vertical = 26.dp),
+            Modifier.padding(vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
@@ -294,14 +295,14 @@ private fun HeroHeader(baby: Baby, onClickProfile: () -> Unit) {
             // 渐变光环头像（品牌蓝→紫）
             Box(
                 Modifier
-                    .size(92.dp)
+                    .size(64.dp)
                     .clip(RoundedCornerShape(999.dp))
                     .background(Brush.linearGradient(listOf(c.primary, c.secondary))),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
                     Modifier
-                        .size(82.dp)
+                        .size(58.dp)
                         .clip(RoundedCornerShape(999.dp))
                         .background(c.surface),
                     contentAlignment = Alignment.Center,
