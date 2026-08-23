@@ -26,11 +26,11 @@ import com.babytracker.designsystem.components.quickstat.QuickStatPillDefaults
  */
 @Composable
 fun QuickStatPill(
+    modifier: Modifier = Modifier,
     value: String,
     label: String,
     unit: String? = null,
     contentColor: Color,
-    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier,

@@ -43,6 +43,7 @@ import com.babytracker.designsystem.theme.LocalAppTypography
  */
 @Composable
 fun DateNavCapsule(
+    modifier: Modifier = Modifier,
     dateLabel: String,
     onPrev: () -> Unit,
     onNext: () -> Unit,
@@ -50,7 +51,6 @@ fun DateNavCapsule(
     onToday: (() -> Unit)? = null,
     contentDescriptionPrev: String = AppStrings.prevDay,
     contentDescriptionNext: String = AppStrings.nextDay,
-    modifier: Modifier = Modifier,
 ) {
     val typography = LocalAppTypography.current
     Row(

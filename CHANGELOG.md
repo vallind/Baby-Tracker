@@ -2,6 +2,23 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.2.0] — 2026-08-23
+
+**2.1 全站 UI/UX 重设计批次完成（里程碑）：**
+
+本里程碑由 2.1.0~2.1.7 七个批次组成，覆盖 2.1 重设计方案 P0/P1/P2：
+- P0 全局收敛：DateNavCapsule/QuickStatPill/RecordDetailSheet/AppEmojiBadge.twoTone 组件与 40 组令牌；
+  日期导航全站统一；记录卡「单击=详情」手势契约 6 处接入（空 onClick 归零）；色彩纪律
+  （尿布/喂养/健康分区色，error 红退出业务类型）；假数据下线（夜醒次数、生长写死参考范围换
+  GrowthReference 按月龄动态）；i18n 第一批（记录四页/时间线/首页/表单硬编码清零）
+- P1 信息架构：首页今日概览上移 + hero 压缩；睡眠/尿布汇总详情卡合并；统计新增尿布卡
+  （aggregateStats 增 diapers 维度）；疫苗筛选精简；提醒 40dp 完成按钮 + LazyColumn；
+  站内信长按删除确认；时间线胶囊筛选；发育评估头部统一
+- P2 长尾：登录错误通道/加载态；设置快捷工具组；宝宝资料去假入口；占位项灰态化；
+  AI 折叠顶栏与配置状态卡；主题选择器渐变预览
+- 文档同步：design-system.md（组件/令牌 40 组）、project-structure.md、lessons.md；
+  版本号 2.1.0 → 2.2.0（versionCode 36 → 44）
+
 ### [2.1.7] — 2026-08-23
 
 **重设计批次 P2-C：占位灰态 / 家庭页 i18n / AI 折叠顶栏 / 主题预览：**

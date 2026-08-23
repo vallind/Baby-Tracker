@@ -1,6 +1,19 @@
 package com.babytracker.feature.ai
 
 import androidx.compose.foundation.clickable
+import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.components.progress.AppCircularProgress
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.button.ButtonVariant
+import com.babytracker.designsystem.components.button.AppButton
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
 import com.babytracker.core.ai.AiModelOption
@@ -72,6 +86,11 @@ fun AiSettingsScreen(navController: NavController) {
                 .padding(horizontal = spacing.md),
         ) {
             Spacer(Modifier.height(spacing.md))
+
+            // 2.1 配置状态卡（5.19：状态可见性前置，点击刷新）
+            AiConfigStatusCard(state = state, onRefresh = viewModel::refreshConfig)
+
+            Spacer(Modifier.height(spacing.sm))
 
             AiSettingsSectionTitle(AppStrings.aiSettingsGeneral)
             SettingsCard {
@@ -319,14 +338,7 @@ fun AiSettingsScreen(navController: NavController) {
                     subtitle = AppStrings.aiSettingsDataNoticeSubtitle,
                     trailing = { },
                 )
-                SettingsDivider()
-                SettingsRow(
-                    emoji = "☁️",
-                    label = AppStrings.aiSettingsConfigStatus,
-                    subtitle = configStatus(state),
-                    onClick = viewModel::refreshConfig,
-                )
-                SettingsDivider()
+
                 SettingsRow(
                     emoji = "🗑️",
                     label = AppStrings.aiSettingsClearChat,
@@ -497,4 +509,57 @@ private fun configStatus(state: AiSettingsUiState): String {
             .format(Instant.ofEpochMilli(it))
     } ?: AppStrings.unknown
     return "v${state.configVersion} · ${AppStrings.aiSettingsExpiresAt}$expires"
+}
+
+
+/** 配置状态卡：状态点 + 配置摘要 + 刷新按钮（2.1，替代列表内行内状态） */
+@Composable
+private fun AiConfigStatusCard(state: AiSettingsUiState, onRefresh: () -> Unit) {
+    val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypography.current
+    val shapes = LocalAppShapes.current
+    val ready = state.configVersion != null && !state.isRefreshing
+
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = c.surface,
+    ) {
+        Row(
+            Modifier.padding(spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // 状态点：绿=可用 / 红=异常 / 转圈=刷新中
+            if (state.isRefreshing) {
+                AppCircularProgress(indicatorColor = c.primary)
+            } else {
+                Box(
+                    Modifier
+                        .size(10.dp)
+                        .clip(RoundedCornerShape(shapes.full))
+                        .background(if (ready) c.success else c.error),
+                )
+            }
+            Spacer(Modifier.width(spacing.md))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    AppStrings.aiSettingsConfigStatus,
+                    style = typography.titleSmall,
+                    color = c.textPrimary,
+                )
+                Spacer(Modifier.height(spacing.xxs))
+                Text(
+                    configStatus(state),
+                    style = typography.bodySmall,
+                    color = if (ready) c.textSecondary else c.error,
+                )
+            }
+            AppButton(
+                variant = ButtonVariant.Text,
+                onClick = onRefresh,
+                label = AppStrings.aiRetry,
+                enabled = !state.isRefreshing,
+            )
+        }
+    }
 }
