@@ -305,6 +305,8 @@ RealtimeManager.subscribeAll()
 
 入站记录先校验 `family_id` 与当前家庭一致，不一致丢弃（双保险）。
 
+**云端孤儿行（外键违反）**：v9 起 Room 外键强制（`AppDatabase_Impl` 执行 `PRAGMA foreign_keys = ON`），入站行若 `babyId`（uuid）在本机 `babies` 不存在（`resolveLocalBabyId` 返回 0 → `baby_id=0`），插入/更新会被 `SQLiteConstraintException` 拒绝。`applyRemoteChange` 对该异常**特判跳过**：记 WARN 日志（Tag=Sync，含 table/uuid）、返回 true 推进游标——避免整页拉取永久失败；数据保留在云端不清除，宝宝 uuid 将来出现时全量拉取可恢复。pull 与 Realtime 共用此路径，行为一致。
+
 ### 6.3 说明
 
 当前系统使用**软删除**（upsert with deletedAt），Supabase 上不会真正 DELETE 行，因此 `PostgresAction.Delete` 仅在云端执行物理删除时才触发（目前不常用）。

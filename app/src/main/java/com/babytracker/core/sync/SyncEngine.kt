@@ -1,5 +1,6 @@
 package com.babytracker.core.sync
 
+import android.database.sqlite.SQLiteConstraintException
 import com.babytracker.core.database.AppDatabase
 import com.babytracker.core.database.entity.*
 import com.babytracker.core.database.dao.SyncMetadataDao
@@ -493,6 +494,14 @@ class SyncEngine(
                     )
                 )
             }
+            return true
+        } catch (e: SQLiteConstraintException) {
+            // 云端孤儿行：babyId（uuid）在本机 babies 找不到 → resolveLocalBabyId 返回 0，
+            // 插入/更新 baby_id=0 被 v9 外键强制拒绝（AppDatabase_Impl 执行 PRAGMA foreign_keys=ON）。
+            // 这类记录在 v8 时代同样不可见（baby_id=0 无宝宝归属），本机无法呈现 → 跳过并
+            // 推进游标，避免整页拉取永久失败；数据保留在云端，不清除，宝宝 uuid 将来出现时
+            // 全量拉取可恢复。Realtime 竞态事件走同一路径，靠全量拉取自愈,行为一致。
+            Timber.tag("Sync").w("跳过云端孤儿行 table=%s uuid=%s（baby 不在本地，外键拒绝）", tableName, remoteUuid)
             return true
         } catch (e: Exception) {
             Timber.tag("Sync").e(e, "apply remote failed table=%s uuid=%s", tableName, remoteUuid)

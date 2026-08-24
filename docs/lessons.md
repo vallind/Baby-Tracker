@@ -335,3 +335,28 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 - 构造领域模型前先查字段类型（grep `data class Diaper` 等），枚举字段传枚举值（`DiaperType.WET`）。
 - 测试断言需要与生产代码一致的证据时，优先从 git 历史里找该技术栈的旧用法（`git log --diff-filter=D` + `git show`），不要凭记忆猜新版本 API。
 
+---
+
+## 26. Room 迁移对历史数据抛异常 = 发布后启动即崩，且无恢复入口
+
+**现象：** Batch 6 的 `MIGRATION_8_9` 对孤儿记录（baby 行已物理删除但 feedings 等仍有引用）执行预检并抛 `IllegalStateException`；真机用户从 v8 升级后**每次启动必闪退**，卸载重装才能恢复（本地数据全丢），App 内无任何补救路径。
+
+**原因：**
+
+- Room 迁移在任何 UI 之前于数据库打开时同步执行，迁移内抛异常直接崩 App；`fallbackToDestructiveMigration` 会清全库亦不可用——「迁移失败 = 用户被锁死」。
+- 孤儿数据的真实来源是 `BackupManager` 还原路径（先 `DELETE FROM` 全部表再物理恢复），备份不完整即产生孤儿；该路径是已知测试盲区，说明「干净库迁移测试全绿」不覆盖真实历史数据。
+- 作者自述「v9 schema JSON 与迁移 SQL 逐列交叉核对一致」只是静态比对，未在真实 SQLite 上执行迁移 + 校验，静态一致性 ≠ 运行时正确。
+
+**规则：**
+
+- 迁移代码对**真实历史数据**的每种形态（含脏数据/孤儿/畸形值）都必须有明确策略；任何「抛异常终止迁移」的写法都等于对存量用户发布炸弹。无法保留的数据只能二选一：物理清理（记日志）或挂靠兜底，且必须 🔴 请示用户确认，绝不能静默丢数据。
+- 迁移/JSON 解析等真实执行逻辑，验证必须落到「真实 SQLite 执行 + 迁移后 schema 校验」，静态比对、纯单测绿都不算数；本机无 Android 时可用 Python sqlite3（系统自带模块）按 Kotlin 原文逐条执行复现。
+- 静态审计测试可以守门迁移策略（如：断言迁移区禁止出现 `throw IllegalStateException`），防回归重蹈覆辙。
+
+## 27. 平台限制类「文档声明」≠「构建脚本实现」：aarch64 上 Paparazzi 恒红但排除逻辑只写在文档里
+
+**现象：** aarch64 宿主（Termux/容器）跑 `./gradlew testDebugUnitTest` 恒红——`HomeScreenPaparazziTest` 抛 `ByteBuddyAgent.java:685 IllegalStateException`（JVM 无法自附加）；`docs/design-system.md`「Paparazzi 平台限制」声称 build.gradle.kts 在 aarch64 自动排除，实际构建脚本里根本没有该逻辑（grep 零命中），文档替代码「免责」。
+
+**原因：** Paparazzi 的 layoutlib-runtime 只发布 x86_64 原生库，ByteBuddy 自附加在受限容器里同样失败，二者都与业务代码无关；新增 per-screen Paparazzi 测试时没有同步落实文档声称的排除机制，文档与实现漂移。
+
+**规则：** 平台限制类排除必须真实存在于构建脚本并覆盖全部相关测试类，禁止「只写文档不写代码」。错误写法：文档声明「aarch64 自动排除」但 build.gradle.kts 无对应逻辑；正确写法：`tasks.withType<Test>().configureEach { if (isArm64Host) exclude("**/*PaparazziTest*") }`。提交此类变更前 grep 构建脚本确认实现存在，并让 CHANGELOG 与实现一致。

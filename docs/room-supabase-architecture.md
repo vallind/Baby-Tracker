@@ -56,7 +56,7 @@ UI（Compose + ViewModel）→ Repository（Entity↔Domain 映射 + SyncMeta �
 | `MIGRATION_5_6` | 5→6 | **Supabase 同步改造**：10 张表加 `uuid`/`updatedAt`/`deletedAt`；创建旧版 `sync_metadata`（6 字段） |
 | `MIGRATION_6_7` | 6→7 | `babies` 加 `familyId`；重建 `sync_metadata`（新列 `familyId`/`retryCount`/`nextRetryAt`/`lastError`，按 `(tableName, localId)` 去重迁移 + 唯一索引）；**删除 messages 存量同步记录**；创建 `sync_cursors` |
 | `MIGRATION_7_8` | 7→8 | 创建 `ai_conversations` / `ai_messages` 两表（含索引），仅本机 |
-| `MIGRATION_8_9` | 8→9 | 六表补 `FOREIGN KEY(baby_id) REFERENCES babies(id)`（NO ACTION，无 CASCADE）+ `Index(baby_id)`；babies 补 `Index(familyId)`；**孤儿预检**（任一非 0 抛异常失败，绝不自动 DELETE）；sync_metadata / sync_cursors 零改动 |
+| `MIGRATION_8_9` | 8→9 | 六表补 `FOREIGN KEY(baby_id) REFERENCES babies(id)`（NO ACTION，无 CASCADE）+ `Index(baby_id)`；babies 补 `Index(familyId)`；**孤儿清理**（无归属宝宝记录物理删除 + WARN 日志；曾为抛异常导致真机启动闪退，已改自动清理）；sync_metadata / sync_cursors 零改动 |
 
 ### 14 个 DAO 接口（`core/database/dao/Daos.kt`）
 

@@ -8,6 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.babytracker.core.database.dao.*
 import com.babytracker.core.database.entity.*
+import timber.log.Timber
 
 @Database(
     entities = [BabyEntity::class, FeedingEntity::class, SleepEntity::class,
@@ -253,6 +254,10 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // ── 0) 孤儿预检（任何 DDL 之前）──
+                // 策略：真机升级曾因孤儿记录直接抛异常，导致启动即崩且无恢复入口。
+                // 孤儿 = baby 行已被物理删除但记录仍在：v9 外键约束下无法保留，UI 本就
+                // 不可见（宝宝列表里没有归属者），因此改为物理清理 + WARN 日志，
+                // 绝不触碰正常数据。
                 val orphanTables = listOf(
                     "feedings", "sleeps", "growths", "vaccinations", "health_records", "diapers",
                 )
@@ -263,9 +268,11 @@ abstract class AppDatabase : RoomDatabase() {
                     if (count > 0) "$table=$count" else null
                 }
                 if (orphanCounts.isNotEmpty()) {
-                    throw IllegalStateException(
-                        "迁移 8→9 孤儿预检失败（存在 baby_id 不在 babies 的记录）：${orphanCounts.joinToString(", ")}。" +
-                            "请人工决定：恢复对应宝宝或确认清理后重试，迁移不会自动删除任何数据。",
+                    orphanTables.forEach { table ->
+                        db.execSQL("DELETE FROM $table WHERE baby_id NOT IN (SELECT id FROM babies)")
+                    }
+                    Timber.tag("Database").w(
+                        "迁移 8→9 清理孤儿记录（无归属宝宝，UI 不可见）：${orphanCounts.joinToString(", ")}",
                     )
                 }
 

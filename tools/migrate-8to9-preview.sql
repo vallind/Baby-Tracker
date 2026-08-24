@@ -11,14 +11,16 @@
 --   PRAGMA foreign_key_check;               -- 应无输出（无孤儿、FK 生效）
 -- ============================================================
 
--- ── 0) 孤儿预检（任何 DDL 之前；预演脚本同样不做任何不可逆数据删除）──
-SELECT 'orphan_feedings', COUNT(*) FROM feedings WHERE baby_id NOT IN (SELECT id FROM babies);
-SELECT 'orphan_sleeps', COUNT(*) FROM sleeps WHERE baby_id NOT IN (SELECT id FROM babies);
-SELECT 'orphan_growths', COUNT(*) FROM growths WHERE baby_id NOT IN (SELECT id FROM babies);
-SELECT 'orphan_vaccinations', COUNT(*) FROM vaccinations WHERE baby_id NOT IN (SELECT id FROM babies);
-SELECT 'orphan_health_records', COUNT(*) FROM health_records WHERE baby_id NOT IN (SELECT id FROM babies);
-SELECT 'orphan_diapers', COUNT(*) FROM diapers WHERE baby_id NOT IN (SELECT id FROM babies);
--- 以上任一计数 > 0 时：终止脚本，人工决定（恢复宝宝或确认清理）后再跑。
+-- ── 0) 孤儿预检 + 清理（任何 DDL 之前；与 Kotlin MIGRATION_8_9 策略一致）──
+-- 孤儿 = baby 行已被物理删除但记录仍在。它们在 v9 外键约束下无法保留，
+-- UI 本就不可见（宝宝列表无归属者），因此直接清理并计数留痕，绝不自动删除正常数据。
+SELECT 'orphan_before_feedings', COUNT(*) FROM feedings WHERE baby_id NOT IN (SELECT id FROM babies);
+DELETE FROM feedings WHERE baby_id NOT IN (SELECT id FROM babies);
+DELETE FROM sleeps WHERE baby_id NOT IN (SELECT id FROM babies);
+DELETE FROM growths WHERE baby_id NOT IN (SELECT id FROM babies);
+DELETE FROM vaccinations WHERE baby_id NOT IN (SELECT id FROM babies);
+DELETE FROM health_records WHERE baby_id NOT IN (SELECT id FROM babies);
+DELETE FROM diapers WHERE baby_id NOT IN (SELECT id FROM babies);
 
 -- ── 1) babies.familyId 索引 ──
 CREATE INDEX IF NOT EXISTS index_babies_familyId ON babies(familyId);

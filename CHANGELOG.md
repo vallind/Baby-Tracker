@@ -2,6 +2,18 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.3.1] — 2026-08-24
+
+**修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**
+
+- **现象一**：旧版本（v8 数据库）升级到本轮构建后启动即闪退，无恢复入口；根因是 v8 库存在「孤儿记录」（baby 行已被物理删除但 feedings/sleeps 等仍有引用），迁移孤儿预检直接抛 `IllegalStateException`，每次启动必崩
+- **修复一**：孤儿策略由「抛异常失败」改为「物理清理 + WARN 日志」（`Tag=Database`）——孤儿无 UI 归属、v9 外键下无法保留，清理是对业务影响最小的处理；正常数据一律不动
+- **现象二**：v9 起 Room 外键强制（`AppDatabase_Impl` 执行 `PRAGMA foreign_keys = ON`），云端孤儿记录（babyId uuid 在本机 babies 不存在 → `resolveLocalBabyId` 返回 0 → `baby_id=0` 违反外键）导致 pull 该表**整页失败、游标永不推进**，feedings 同步永久卡死
+- **修复二**：`applyRemoteChange` 对 `SQLiteConstraintException` 特判为「跳过孤儿行 + WARN 日志 + 推进游标」——同步恢复正常；孤儿行在所有设备一致不可见（与 v8 行为相同），数据保留在云端不清除
+- **补充**：新增 `Room89MigrationAuditTest`（迁移孤儿必须清理、禁止回退抛异常）与 `SyncEngineOrphanAuditTest`（外键特判守门）；`tools/migrate-8to9-preview.sql` 同步为清理语义
+- **构建/测试基建**：`testDebugUnitTest` 在 aarch64 宿主（本机）因 Paparazzi 截图测试（HomeScreenPaparazziTest）ByteBuddy 自附加失败恒红；按 `docs/design-system.md`「Paparazzi 平台限制」既定意图，在 `app/build.gradle.kts` 补上「aarch64 宿主自动排除 `**/*PaparazziTest*`」逻辑（layoutlib-runtime 仅发布 x86_64 原生库），本机测试恢复全绿；x86_64 机器截图任务不受影响
+- 版本号 2.3.0 → 2.3.1（versionCode 48 不变，发布构建时递增）
+
 ### [2.3.0] — 2026-08-24
 
 **架构收敛波次（refactor）批次 1：DesignSystem 边界**

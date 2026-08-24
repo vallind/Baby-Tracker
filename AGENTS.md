@@ -104,6 +104,7 @@ Design System 只负责 UI 的视觉、交互组件与 Design Token；Feature �
 
 - 所有注释**必须中文**。Commit message **必须中文**。
 - 复杂逻辑写注释解释**为什么**（why），不重复代码表面意思（what）。
+- 每次构建成功新提交。
 - **版本号在每次提交前变更**（与 `app/build.gradle.kts` 的 versionName/versionCode 同步）：**versionCode 仅在产生可发布构建时递增**，内部重构提交不递增。
 - 每次提交前把本批次条目写入 CHANGELOG 对应版本小节（版本号与 build.gradle 一致），不允许 `[Unreleased]` 或“未分配版本号”的条目提交。
 
@@ -111,12 +112,9 @@ Design System 只负责 UI 的视觉、交互组件与 Design Token；Feature �
 
 ## 八、设计系统与 i18n
 
-- **优先使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button`/`OutlinedButton`/`TextButton` → `AppButton`（variant 枚举 Primary/Secondary/Text），`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`HorizontalDivider` → `AppDivider`，`Surface` → `AppSurface`，`SnackbarHost` → `AppSnackbarHost`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
+- **必须<使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button`/`OutlinedButton`/`TextButton` → `AppButton`（variant 枚举 Primary/Secondary/Text），`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`HorizontalDivider` → `AppDivider`，`Surface` → `AppSurface`，`SnackbarHost` → `AppSnackbarHost`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
 - **DS 组件缺失时的决策路径**：
   1. 满足新增标准（见下）→ 新增组件，走完整流程并更新 `docs/design-system.md`
-- **新增组件判断标准**（两者同时满足才新增）：
-  1. 同一视觉形态在项目中已出现 ≥ 2 处（跨功能重复算，按视觉形态计数，不是调用次数）
-  2. 需要封装设计令牌（颜色/圆角/间距），而非纯布局组合
 - **新增组件流程**：判断标准 → 定义令牌 → 写 Defaults → 组件本体 → 注册到 `AppComponentTokens` → 更新 `docs/design-system.md`。
 - **i18n**：新增用户可见文本必须写入 `AppStrings`，禁止硬编码中文。存量硬编码文本按批次迁移。
 

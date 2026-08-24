@@ -16,7 +16,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 48
-        versionName = "2.3.0"
+        versionName = "2.3.1"
     }
 
     buildTypes {
@@ -136,6 +136,19 @@ detekt {
     // 不用 buildUponDefaultConfig：全量默认规则在 Termux 上分析过慢（>20 分钟），
     // 改用显式枚举规则（见 config/detekt/detekt.yml 注释，实测 ~9 秒）
     ignoreFailures = true
+}
+
+// —— Paparazzi 截图测试在 aarch64 宿主自动排除（layoutlib-runtime 仅发布 x86_64 原生库）——
+// 执行 docs/design-system.md「Paparazzi 平台限制」的既定意图：本机保持 testDebugUnitTest 全绿；
+// ByteBuddy 自附加失败是受限容器环境问题，与业务代码无关。x86_64 机器不受影响（截图任务照常可跑）
+val isArm64Host = System.getProperty("os.arch")?.lowercase()?.let {
+    it.contains("aarch64") || it.contains("arm64")
+} == true
+
+tasks.withType<Test>().configureEach {
+    if (isArm64Host) {
+        exclude("**/*PaparazziTest*")
+    }
 }
 
 // —— 令牌审计门禁：themeTokenAudit（共享 TokenAuditChecker，双路复用）——

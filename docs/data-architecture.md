@@ -87,7 +87,7 @@
 | 14 | `ai_conversations` | Long auto | ✅ | ✅ → babies.id | ❌ 仅本机 | AI 会话（v8 新增，绑定家庭+宝宝） |
 | 15 | `ai_messages` | Long auto | 间接（经会话） | ✅ → ai_conversations.id | ❌ 仅本机 | AI 消息（v8 新增，含思考/安全字段） |
 
-> v9 说明（Batch 6）：六张业务表从「仅逻辑关联」补齐 `FOREIGN KEY(baby_id) REFERENCES babies(id)`（**NO ACTION，不带 CASCADE**——删除语义由业务层 soft delete / sync tombstone 控制）+ `Index(baby_id)`；babies 补 `Index(familyId)`。迁移原则：**孤儿预检**（任一表存在 baby_id 不在 babies 的记录即抛异常失败，绝不自动 DELETE），见 `MIGRATION_8_9` 与 `tools/migrate-8to9-preview.sql`；时间字段仍为 TEXT（时间模型统一属 P2-A 单独立项）。
+> v9 说明（Batch 6）：六张业务表从「仅逻辑关联」补齐 `FOREIGN KEY(baby_id) REFERENCES babies(id)`（**NO ACTION，不带 CASCADE**——删除语义由业务层 soft delete / sync tombstone 控制）+ `Index(baby_id)`；babies 补 `Index(familyId)`。迁移原则：**孤儿清理**——存在 baby_id 不在 babies 的记录时物理删除并记 WARN 日志（孤儿无 UI 归属、v9 外键下无法保留；早期版本对孤儿抛异常导致真机升级启动即崩，已改为自动清理），见 `MIGRATION_8_9` 与 `tools/migrate-8to9-preview.sql`；时间字段仍为 TEXT（时间模型统一属 P2-A 单独立项）。
 
 ### 关键表字段
 
@@ -251,7 +251,7 @@
 | MIGRATION_5_6 | 10 表加 uuid/updatedAt/deletedAt + 建 sync_metadata（旧版 6 字段） | ✅ |
 | MIGRATION_6_7 | babies +familyId；重建 sync_metadata（10 业务字段 + 唯一索引）；建 sync_cursors；清除 messages 同步元数据 | ✅ |
 | MIGRATION_7_8 | 建 ai_conversations / ai_messages（含复合索引与 FK 级联） | ✅ |
-| MIGRATION_8_9 | 孤儿预检（非 0 即失败，不自动删）→ babies +familyId 索引 → 六表重建补 FK(NO ACTION) + baby_id 索引；同步元数据表零改动 | ✅ |
+| MIGRATION_8_9 | 孤儿清理（无归属宝宝记录物理删除 + 日志）→ babies +familyId 索引 → 六表重建补 FK(NO ACTION) + baby_id 索引；同步元数据表零改动 | ✅ |
 
 > `exportSchema = true`，schema JSON 导出在 `app/schemas/com.babytracker.core.database.AppDatabase/8.json`。
 
