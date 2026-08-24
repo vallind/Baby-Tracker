@@ -61,6 +61,18 @@ class SyncEngine(
     /** 当前家庭 ID（登录+加入家庭后设置），push 时自动注入到每条记录 */
     var currentFamilyId: String? = null
 
+    /**
+     * 参与同步的表清单 —— 列表「顺序」是硬约束，禁止改动：
+     * 「babies」必须保持在首位。
+     *
+     * 为什么（Batch 6 起 Room 启用外键强制，见 AppDatabase_Impl 中 PRAGMA foreign_keys = ON）：
+     * - pullInternal() 与 markExistingPending() 均按此列表顺序逐表处理；
+     * - 子表记录（feedings 等六张业务表）的 baby_id 外键要求父行（babies）先存在；
+     * - 若把 babies 移出首位，拉取时子表页可能先于 babies 落地，
+     *   INSERT 将抛 SQLiteConstraintException（NO ACTION 外键），整页无法提交；
+     * - Realtime 的 applyRemoteChange 有 try/catch 可跳过竞态事件并靠下次全量拉取自愈，
+     *   但全量 pull 的顺序错误是确定性失败 —— 保持首位则此路径天然不会触发。
+     */
     private val syncedTables = listOf(
         "babies", "feedings", "sleeps", "growths", "vaccinations",
         "health_records", "diapers", "development_assessments", "reminders",
@@ -255,7 +267,7 @@ class SyncEngine(
         try {
             _syncState.value = SyncState.PULLING
             Timber.tag("Sync").d("pull start: family=%s", fid)
-            for (tableName in syncedTables) {
+            for (tableName in syncedTables) {  // 表序 = syncedTables 声明顺序，「babies」必须最先（外键依赖，见该常量注释）
                 try {
                     withContext(NonCancellable) {
                         var pageCursor = syncCursor.get(fid, tableName) ?: 0L
