@@ -19,8 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
@@ -32,24 +30,31 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.i18n.AppStrings
-import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavController) {
-    val vm: LoginViewModel = koinInject()
-    val uiState by vm.uiState.collectAsStateWithLifecycle()
+fun LoginScreen(
+    state: LoginViewModel.UiState,
+    onAccountChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onToggleMode: () -> Unit,
+    onLoginSuccess: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val typography = LocalAppTypography.current
     val spacing = LocalAppSpacing.current
 
-    LaunchedEffect(uiState.isLoggedIn) {
-        if (uiState.isLoggedIn) navController.popBackStack()
+    LaunchedEffect(state.isLoggedIn) {
+        if (state.isLoggedIn) onLoginSuccess()
     }
 
     AppScaffold(
+        modifier = modifier,
         topBar = {
-            AppTopBar(title = AppStrings.accountPage, onBack = { navController.popBackStack() })
+            AppTopBar(title = AppStrings.accountPage, onBack = onBack)
         },
     ) { padding ->
         Column(
@@ -83,14 +88,14 @@ fun LoginScreen(navController: NavController) {
             Spacer(Modifier.height(spacing.lg))
 
             Text(
-                text = if (uiState.isRegisterMode) AppStrings.registerTitle else AppStrings.loginTitle,
+                text = if (state.isRegisterMode) AppStrings.registerTitle else AppStrings.loginTitle,
                 style = typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = c.textPrimary,
             )
             Spacer(Modifier.height(spacing.sm))
             Text(
-                text = if (uiState.isRegisterMode) AppStrings.registerSubtitle else AppStrings.loginSubtitle,
+                text = if (state.isRegisterMode) AppStrings.registerSubtitle else AppStrings.loginSubtitle,
                 style = typography.bodyLarge,
                 color = c.textSecondary,
                 textAlign = TextAlign.Center,
@@ -101,42 +106,42 @@ fun LoginScreen(navController: NavController) {
             AppCard(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(spacing.lg)) {
                     AppInput(
-                        value = uiState.account, onValueChange = vm::onAccountChange,
+                        value = state.account, onValueChange = onAccountChange,
                         label = AppStrings.accountLabel,
                         placeholder = AppStrings.accountPlaceholder,
                         keyboardType = KeyboardType.Text,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading,
+                        enabled = !state.isLoading,
                     )
                     Spacer(Modifier.height(spacing.md))
 
                     AppInput(
-                        value = uiState.password, onValueChange = vm::onPasswordChange,
+                        value = state.password, onValueChange = onPasswordChange,
                         label = AppStrings.passwordLabel,
                         placeholder = AppStrings.passwordPlaceholder,
                         isPassword = true,
                         keyboardType = KeyboardType.Password,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading,
+                        enabled = !state.isLoading,
                         // 2.1：错误提示走输入框 errorMessage 通道（替代独立 Text）
-                        isError = uiState.errorMessage != null,
-                        errorMessage = uiState.errorMessage,
+                        isError = state.errorMessage != null,
+                        errorMessage = state.errorMessage,
                     )
                     Spacer(Modifier.height(spacing.lg))
 
                     AppButton(
-                        onClick = vm::submit,
+                        onClick = onSubmit,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !uiState.isLoading,
-                        label = if (uiState.isLoading) AppStrings.loading
-                        else if (uiState.isRegisterMode) AppStrings.register else AppStrings.login,
+                        enabled = !state.isLoading,
+                        label = if (state.isLoading) AppStrings.loading
+                        else if (state.isRegisterMode) AppStrings.register else AppStrings.login,
                     )
                     Spacer(Modifier.height(spacing.xs))
 
                     AppButton(
                         variant = ButtonVariant.Text,
-                        onClick = vm::toggleMode,
-                        label = if (uiState.isRegisterMode) AppStrings.toLogin else AppStrings.toRegister,
+                        onClick = onToggleMode,
+                        label = if (state.isRegisterMode) AppStrings.toLogin else AppStrings.toRegister,
                     )
                 }
             }

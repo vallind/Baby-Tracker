@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -34,50 +33,56 @@ import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
-import com.babytracker.core.util.BabyController
+import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.Reminder
 import com.babytracker.core.domain.model.ReminderType
-import com.babytracker.core.data.repository.ReminderRepository
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
-import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
+/** 提醒中心 Tab —— 待办 / 历史（纯 UI 局部状态，留在 Screen；原在 ViewModel，Batch 2 迁出） */
+enum class ReminderTab { PENDING, HISTORY }
+
 /**
  * 提醒中心 —— 待办提醒 + 历史提醒。
+ *
+ * 纯 UI 渲染层：只收 state + baby + 命名回调，不接触导航 / Koin / Repository / Controller。
+ * 弹层显隐、Snackbar、选中 Tab 等 UI 临时状态留在本地 remember。
  */
 @Composable
-fun ReminderScreen(navController: NavController) {
+fun ReminderScreen(
+    state: ReminderUiState,
+    baby: Baby?,
+    onBack: () -> Unit,
+    onMarkDone: (Int) -> Unit,
+    onToggleEnabled: (Int, Boolean) -> Unit,
+    onDelete: (Reminder) -> Unit,
+    onRestore: (Reminder) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
-    val viewModel: ReminderViewModel = org.koin.androidx.compose.koinViewModel()
-    val babyCtrl: BabyController = koinInject()
-    val reminderRepo: ReminderRepository = koinInject()
-    val state by viewModel.state.collectAsState()
-    val babyId = babyCtrl.currentBabyId
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
-
-    LaunchedEffect(babyId) {
-        if (babyId != 0) viewModel.load(babyId)
-    }
+    var tab by remember { mutableStateOf(ReminderTab.PENDING) }
 
     AppScaffold(
+        modifier = modifier,
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = AppStrings.reminderCenter,
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
             )
         },
     ) { padding ->
-        if (babyId == 0) {
+        if (baby == null) {
             EmptyState(
                 emoji = "\uD83C\uDF7C",
                 title = AppStrings.noBabyTitle,
@@ -94,15 +99,15 @@ fun ReminderScreen(navController: NavController) {
                 .background(c.pageBackground),
         ) {
             val spacing = LocalAppSpacing.current
-            ReminderTabBar(tab = state.tab, onSwitch = viewModel::switchTab)
+            ReminderTabBar(tab = tab, onSwitch = { tab = it })
 
-            val list = if (state.tab == ReminderTab.PENDING) state.pending else state.history
+            val list = if (tab == ReminderTab.PENDING) state.pending else state.history
             if (list.isEmpty()) {
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
-                        emoji = if (state.tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
-                        title = if (state.tab == ReminderTab.PENDING) AppStrings.reminderNoPending else AppStrings.reminderNoHistory,
-                        subtitle = if (state.tab == ReminderTab.PENDING)
+                        emoji = if (tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
+                        title = if (tab == ReminderTab.PENDING) AppStrings.reminderNoPending else AppStrings.reminderNoHistory,
+                        subtitle = if (tab == ReminderTab.PENDING)
                             AppStrings.reminderNoPendingSubtitle
                         else
                             AppStrings.reminderNoHistorySubtitle,
@@ -115,17 +120,17 @@ fun ReminderScreen(navController: NavController) {
                     contentPadding = PaddingValues(top = spacing.xs, bottom = 88.dp),
                 ) {
                     items(list, key = { it.id }) { reminder ->
-                        if (state.tab == ReminderTab.PENDING) {
+                        if (tab == ReminderTab.PENDING) {
                             PendingReminderCard(
                                 reminder = reminder,
-                                onMarkDone = { viewModel.markDone(reminder.id) },
-                                onToggleEnabled = { viewModel.setEnabled(reminder.id, it) },
+                                onMarkDone = { onMarkDone(reminder.id) },
+                                onToggleEnabled = { onToggleEnabled(reminder.id, it) },
                                 onDelete = {
+                                    onDelete(reminder)
                                     scope.launch {
-                                        reminderRepo.delete(reminder)
                                         appSnackbar.showUndo(
                                             message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
-                                        ) { reminderRepo.update(reminder) }
+                                        ) { onRestore(reminder) }
                                     }
                                 },
                             )
@@ -133,11 +138,11 @@ fun ReminderScreen(navController: NavController) {
                             HistoryReminderCard(
                                 reminder = reminder,
                                 onDelete = {
+                                    onDelete(reminder)
                                     scope.launch {
-                                        reminderRepo.delete(reminder)
                                         appSnackbar.showUndo(
                                             message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
-                                        ) { reminderRepo.update(reminder) }
+                                        ) { onRestore(reminder) }
                                     }
                                 },
                             )

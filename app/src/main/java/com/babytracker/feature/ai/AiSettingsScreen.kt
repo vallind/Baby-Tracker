@@ -27,7 +27,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,7 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.navigation.NavController
 import com.babytracker.core.ai.AiModelOption
 import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
@@ -59,22 +57,45 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun AiSettingsScreen(navController: NavController) {
-    val viewModel: AiSettingsViewModel = koinViewModel()
-    val state by viewModel.state.collectAsState()
+fun AiSettingsScreen(
+    state: AiSettingsUiState,
+    onBack: () -> Unit,
+    onRefreshConfig: () -> Unit,
+    onSetAssistantEnabled: (Boolean) -> Unit,
+    onSetDefaultModel: (String) -> Unit,
+    onSetContextRounds: (Int) -> Unit,
+    onSetMaxOutputTokens: (Int) -> Unit,
+    onSetStreaming: (Boolean) -> Unit,
+    onSetThinkingMode: (AiThinkingMode) -> Unit,
+    onSetReasoningEffort: (AiReasoningEffort) -> Unit,
+    onSetCustomTemperature: (Boolean) -> Unit,
+    onSetTemperatureTenths: (Int) -> Unit,
+    onSetAnswerDetail: (AiAnswerDetail) -> Unit,
+    onSetAnswerTone: (AiAnswerTone) -> Unit,
+    onSetActionChecklist: (Boolean) -> Unit,
+    onSetUseRecentRecords: (Boolean) -> Unit,
+    onSetUseFeeding: (Boolean) -> Unit,
+    onSetUseSleep: (Boolean) -> Unit,
+    onSetUseDiaper: (Boolean) -> Unit,
+    onSetUseGrowth: (Boolean) -> Unit,
+    onSetUseHealth: (Boolean) -> Unit,
+    onSetRecommendedQuestions: (Boolean) -> Unit,
+    onClearConversation: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val preferences = state.preferences
     val capabilities = state.selectedModel?.capabilities
     val spacing = LocalAppSpacing.current
     var showClearConfirm by remember { mutableStateOf(false) }
 
     AppScaffold(
+        modifier = modifier,
         topBar = {
             AppTopBar(
                 title = AppStrings.aiSettings,
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
             )
         },
     ) { padding ->
@@ -88,7 +109,7 @@ fun AiSettingsScreen(navController: NavController) {
             Spacer(Modifier.height(spacing.md))
 
             // 2.1 配置状态卡（5.19：状态可见性前置，点击刷新）
-            AiConfigStatusCard(state = state, onRefresh = viewModel::refreshConfig)
+            AiConfigStatusCard(state = state, onRefresh = onRefreshConfig)
 
             Spacer(Modifier.height(spacing.sm))
 
@@ -99,7 +120,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsEnabled,
                     subtitle = AppStrings.aiSettingsEnabledSubtitle,
                     checked = preferences.assistantEnabled,
-                    onCheckedChange = viewModel::setAssistantEnabled,
+                    onCheckedChange = onSetAssistantEnabled,
                 )
             }
 
@@ -110,7 +131,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsDefaultModel,
                     options = state.modelOptions.map { it.id to it.name },
                     selectedId = state.selectedModelId,
-                    onSelect = viewModel::setDefaultModel,
+                    onSelect = onSetDefaultModel,
                 )
                 SettingsDivider()
                 AiCapabilitySetting(state.selectedModel)
@@ -127,7 +148,7 @@ fun AiSettingsScreen(navController: NavController) {
                         }
                     },
                     selectedId = preferences.contextRounds.toString(),
-                    onSelect = { viewModel.setContextRounds(it.toInt()) },
+                    onSelect = { onSetContextRounds(it.toInt()) },
                 )
                 SettingsDivider()
                 AiChoiceSetting(
@@ -142,13 +163,13 @@ fun AiSettingsScreen(navController: NavController) {
                         }
                     },
                     selectedId = preferences.maxOutputTokens.toString(),
-                    onSelect = { viewModel.setMaxOutputTokens(it.toInt()) },
+                    onSelect = { onSetMaxOutputTokens(it.toInt()) },
                 )
                 AppInput(
                     value = preferences.maxOutputTokens.takeIf { it > 0 }?.toString().orEmpty(),
                     onValueChange = { value ->
                         val digits = value.filter(Char::isDigit)
-                        viewModel.setMaxOutputTokens(digits.toIntOrNull() ?: 0)
+                        onSetMaxOutputTokens(digits.toIntOrNull() ?: 0)
                     },
                     label = AppStrings.aiSettingsCustomTokens,
                     placeholder = AppStrings.aiSettingsAutomatic,
@@ -168,7 +189,7 @@ fun AiSettingsScreen(navController: NavController) {
                     },
                     checked = preferences.streamingEnabled && capabilities?.streaming == true,
                     enabled = capabilities?.streaming == true,
-                    onCheckedChange = viewModel::setStreaming,
+                    onCheckedChange = onSetStreaming,
                 )
                 SettingsDivider()
                 if (capabilities?.thinking == true) {
@@ -177,7 +198,7 @@ fun AiSettingsScreen(navController: NavController) {
                         label = AppStrings.aiSettingsThinking,
                         options = AiThinkingMode.entries.map { it.name to thinkingLabel(it) },
                         selectedId = preferences.thinkingMode.name,
-                        onSelect = { viewModel.setThinkingMode(AiThinkingMode.valueOf(it)) },
+                        onSelect = { onSetThinkingMode(AiThinkingMode.valueOf(it)) },
                     )
                     val supportedEfforts = capabilities.reasoningEfforts
                     if (supportedEfforts.isNotEmpty()) {
@@ -193,7 +214,7 @@ fun AiSettingsScreen(navController: NavController) {
                                 .map { it.name to effortLabel(it) },
                             selectedId = preferences.reasoningEffort.name,
                             onSelect = {
-                                viewModel.setReasoningEffort(AiReasoningEffort.valueOf(it))
+                                onSetReasoningEffort(AiReasoningEffort.valueOf(it))
                             },
                         )
                     }
@@ -212,12 +233,12 @@ fun AiSettingsScreen(navController: NavController) {
                         label = AppStrings.aiSettingsTemperature,
                         subtitle = AppStrings.aiSettingsTemperatureSubtitle,
                         checked = preferences.customTemperature,
-                        onCheckedChange = viewModel::setCustomTemperature,
+                        onCheckedChange = onSetCustomTemperature,
                     )
                     if (preferences.customTemperature) {
                         AppSlider(
                             value = preferences.temperatureTenths.toFloat(),
-                            onValueChange = { viewModel.setTemperatureTenths(it.toInt()) },
+                            onValueChange = { onSetTemperatureTenths(it.toInt()) },
                             valueRange = 0f..20f,
                             steps = 19,
                             modifier = Modifier.padding(horizontal = spacing.md),
@@ -243,7 +264,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsDetail,
                     options = AiAnswerDetail.entries.map { it.name to detailLabel(it) },
                     selectedId = preferences.answerDetail.name,
-                    onSelect = { viewModel.setAnswerDetail(AiAnswerDetail.valueOf(it)) },
+                    onSelect = { onSetAnswerDetail(AiAnswerDetail.valueOf(it)) },
                 )
                 SettingsDivider()
                 AiChoiceSetting(
@@ -251,14 +272,14 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsTone,
                     options = AiAnswerTone.entries.map { it.name to toneLabel(it) },
                     selectedId = preferences.answerTone.name,
-                    onSelect = { viewModel.setAnswerTone(AiAnswerTone.valueOf(it)) },
+                    onSelect = { onSetAnswerTone(AiAnswerTone.valueOf(it)) },
                 )
                 SettingsDivider()
                 AiSwitchRow(
                     emoji = "✅",
                     label = AppStrings.aiSettingsChecklist,
                     checked = preferences.includeActionChecklist,
-                    onCheckedChange = viewModel::setActionChecklist,
+                    onCheckedChange = onSetActionChecklist,
                 )
             }
 
@@ -269,7 +290,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsUseRecords,
                     subtitle = AppStrings.aiSettingsUseRecordsSubtitle,
                     checked = preferences.useRecentRecords,
-                    onCheckedChange = viewModel::setUseRecentRecords,
+                    onCheckedChange = onSetUseRecentRecords,
                 )
                 SettingsDivider()
                 AiSwitchRow(
@@ -277,7 +298,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsFeeding,
                     checked = preferences.useFeedingRecords,
                     enabled = preferences.useRecentRecords,
-                    onCheckedChange = viewModel::setUseFeeding,
+                    onCheckedChange = onSetUseFeeding,
                 )
                 SettingsDivider()
                 AiSwitchRow(
@@ -285,7 +306,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsSleep,
                     checked = preferences.useSleepRecords,
                     enabled = preferences.useRecentRecords,
-                    onCheckedChange = viewModel::setUseSleep,
+                    onCheckedChange = onSetUseSleep,
                 )
                 SettingsDivider()
                 AiSwitchRow(
@@ -293,7 +314,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsDiaper,
                     checked = preferences.useDiaperRecords,
                     enabled = preferences.useRecentRecords,
-                    onCheckedChange = viewModel::setUseDiaper,
+                    onCheckedChange = onSetUseDiaper,
                 )
                 SettingsDivider()
                 AiSwitchRow(
@@ -301,7 +322,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsGrowth,
                     checked = preferences.useGrowthRecords,
                     enabled = preferences.useRecentRecords,
-                    onCheckedChange = viewModel::setUseGrowth,
+                    onCheckedChange = onSetUseGrowth,
                 )
                 SettingsDivider()
                 AiSwitchRow(
@@ -309,7 +330,7 @@ fun AiSettingsScreen(navController: NavController) {
                     label = AppStrings.aiSettingsHealth,
                     checked = preferences.useHealthRecords,
                     enabled = preferences.useRecentRecords,
-                    onCheckedChange = viewModel::setUseHealth,
+                    onCheckedChange = onSetUseHealth,
                 )
             }
 
@@ -319,7 +340,7 @@ fun AiSettingsScreen(navController: NavController) {
                     emoji = "💡",
                     label = AppStrings.aiSettingsRecommended,
                     checked = preferences.showRecommendedQuestions,
-                    onCheckedChange = viewModel::setRecommendedQuestions,
+                    onCheckedChange = onSetRecommendedQuestions,
                 )
             }
 
@@ -356,7 +377,7 @@ fun AiSettingsScreen(navController: NavController) {
         message = AppStrings.aiSettingsClearConfirm,
         confirmText = AppStrings.clear,
         onConfirm = {
-            viewModel.clearConversation()
+            onClearConversation()
             showClearConfirm = false
         },
         onDismiss = { showClearConfirm = false },

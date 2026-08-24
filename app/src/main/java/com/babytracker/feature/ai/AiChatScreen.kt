@@ -36,7 +36,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,7 +48,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
@@ -71,22 +69,37 @@ import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
-import com.babytracker.navigation.AiSettings
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * AI 聊天屏 — 纯 UI 渲染层：只收 UiState 与命名回调，不感知 Koin / NavController / BabyController。
+ * 回调全部由 [AiChatRoute] 装配（VM 方法引用 + 导航映射）。
+ */
 @Composable
-fun AiChatScreen(navController: NavController) {
-    val viewModel: AiChatViewModel = koinViewModel()
-    val babyController: BabyController = koinInject()
-    val state by viewModel.state.collectAsState()
-    val currentBabyId = babyController.currentBabyId
+fun AiChatScreen(
+    state: AiChatUiState,
+    onBack: () -> Unit,
+    onOpenAiSettings: () -> Unit,
+    onSelectModel: (String) -> Unit,
+    onRefreshConfig: () -> Unit,
+    onPrepareAnalysis: (AiAnalysisSource) -> Unit,
+    onSelectAnalysisPeriod: (AiAnalysisPeriod) -> Unit,
+    onUpdateInput: (String) -> Unit,
+    onSend: () -> Unit,
+    onStop: () -> Unit,
+    onRetry: () -> Unit,
+    onRemoveAnalysisContext: () -> Unit,
+    onRegenerateLastAnswer: () -> Unit,
+    onEditLastQuestion: () -> Unit,
+    onUpdateHistoryQuery: (String) -> Unit,
+    onNewConversation: () -> Unit,
+    onLoadConversation: (Long) -> Unit,
+    onDeleteConversation: (Long) -> Unit,
+) {
     val listState = rememberLazyListState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -103,9 +116,6 @@ fun AiChatScreen(navController: NavController) {
         }
     }
 
-    LaunchedEffect(currentBabyId) {
-        viewModel.selectBaby(currentBabyId)
-    }
     val lastMessageLength = state.messages.lastOrNull()?.let {
         it.content.length + it.reasoningContent.length
     } ?: 0
@@ -126,10 +136,10 @@ fun AiChatScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = AppStrings.aiAssistant,
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
                 actions = {
                     AppIconButton(icon = Icons.Default.History, onClick = { showHistory = true }, contentDescription = AppStrings.aiHistory)
-                    AppIconButton(icon = Icons.Default.Settings, onClick = { navController.navigate(AiSettings) }, contentDescription = AppStrings.aiSettings)
+                    AppIconButton(icon = Icons.Default.Settings, onClick = onOpenAiSettings, contentDescription = AppStrings.aiSettings)
                 },
             )
         },
@@ -146,8 +156,8 @@ fun AiChatScreen(navController: NavController) {
                 AiBabySummary(state = state, onCollapse = { headerExpanded = false })
                 AiModelSelector(
                     state = state,
-                    onSelect = viewModel::selectModel,
-                    onRefresh = viewModel::refreshConfig,
+                    onSelect = onSelectModel,
+                    onRefresh = onRefreshConfig,
                 )
             } else {
                 CollapsedAiHeader(state = state, onExpand = { headerExpanded = true })
@@ -168,12 +178,12 @@ fun AiChatScreen(navController: NavController) {
                     item {
                         AiQuickAnalysisSection(
                             state = state,
-                            onSelect = viewModel::prepareAnalysis,
-                            onSelectPeriod = viewModel::selectAnalysisPeriod,
+                            onSelect = onPrepareAnalysis,
+                            onSelectPeriod = onSelectAnalysisPeriod,
                         )
                     }
                     if (state.preferences.showRecommendedQuestions) {
-                        item { AiWelcomeCard(onQuestion = viewModel::updateInput) }
+                        item { AiWelcomeCard(onQuestion = onUpdateInput) }
                     }
                 }
                 items(state.messages, key = { it.id }) { message ->
@@ -184,8 +194,8 @@ fun AiChatScreen(navController: NavController) {
                         canRevise = state.canReviseLastAnswer &&
                             state.messages.lastOrNull()?.id == message.id,
                         onCopy = copyAnswer,
-                        onRegenerate = viewModel::regenerateLastAnswer,
-                        onEditQuestion = viewModel::editLastQuestion,
+                        onRegenerate = onRegenerateLastAnswer,
+                        onEditQuestion = onEditLastQuestion,
                     )
                 }
                 if (state.isSending && !state.hasStreamingAnswer) {
@@ -201,7 +211,7 @@ fun AiChatScreen(navController: NavController) {
                     source = source,
                     period = state.analysisPeriod,
                     canRemove = !state.isSending,
-                    onRemove = viewModel::removeAnalysisContext,
+                    onRemove = onRemoveAnalysisContext,
                 )
             }
             val unavailableReason = state.analysisUnavailableReason
@@ -216,15 +226,15 @@ fun AiChatScreen(navController: NavController) {
                 AiErrorBanner(
                     error = error,
                     canRetry = state.messages.lastOrNull()?.role == AiChatRole.USER && !state.isSending,
-                    onRetry = viewModel::retry,
+                    onRetry = onRetry,
                 )
             }
             AiHistorySaveStatusBanner(state.historySaveStatus)
             AiComposer(
                 state = state,
-                onInputChange = viewModel::updateInput,
-                onSend = viewModel::send,
-                onStop = viewModel::stop,
+                onInputChange = onUpdateInput,
+                onSend = onSend,
+                onStop = onStop,
             )
         }
     }
@@ -233,13 +243,13 @@ fun AiChatScreen(navController: NavController) {
         show = showHistory,
         state = state,
         onDismiss = { showHistory = false },
-        onQueryChange = viewModel::updateHistoryQuery,
+        onQueryChange = onUpdateHistoryQuery,
         onNewConversation = {
-            viewModel.newConversation()
+            onNewConversation()
             showHistory = false
         },
         onLoadConversation = { conversationId ->
-            viewModel.loadConversation(conversationId)
+            onLoadConversation(conversationId)
             showHistory = false
         },
         onDeleteConversation = { conversationId ->
@@ -252,7 +262,7 @@ fun AiChatScreen(navController: NavController) {
         title = AppStrings.aiHistoryDeleteTitle,
         message = AppStrings.aiHistoryDeleteMessage,
         onConfirm = {
-            deletingConversationId?.let(viewModel::deleteConversation)
+            deletingConversationId?.let(onDeleteConversation)
             deletingConversationId = null
         },
         onDismiss = { deletingConversationId = null },

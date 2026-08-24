@@ -59,17 +59,17 @@ val appModule = module {
     single<ReminderRepository> { ReminderRepositoryImpl(get(), get(), get()) }
     single<AiHistoryRepository> { AiHistoryRepositoryImpl(get()) }
     single { AiSettingsStore(get()) }
-    viewModel { StatsViewModel(get(), get(), get(), get()) }
-    viewModel { HomeViewModel(get(), get(), get()) }
+    viewModel { StatsViewModel(get(), get(), get(), get(), get()) }
+    viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
     viewModel { MessageViewModel(get()) }
-    viewModel { DevelopmentAssessmentViewModel(get(), get()) }
-    viewModel { ReminderViewModel(get()) }
-    viewModel { TimelineViewModel(get(), get(), get(), get(), get()) }
+    viewModel { DevelopmentAssessmentViewModel(get(), get(), get()) }
+    viewModel { ReminderViewModel(get(), get(), get()) }
+    viewModel { TimelineViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { SyncViewModel(get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
-    viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { AiSettingsViewModel(get(), get(), get()) }
     single { AiContextBuilder(get(), get(), get(), get(), get()) }
 }

@@ -26,7 +26,7 @@ app/src/main/java/com/babytracker/
 │   ├── settings/                # AppSettings（DataStore 设置聚合）/ ThemeController / DensityController（App 层状态，迁自 designsystem）
 │   ├── sync/                    # SyncEngine / SyncTrigger / RealtimeManager / SyncWorker
 │   └── util/                    # BabyController/DateUtils/VaccineSchedule/NetworkMonitor/TokenAuditChecker（令牌审计检查器，Gradle 任务与 JVM 单测双路复用）
-├── feature/                     # 业务功能（16 个模块）
+├── feature/                     # 业务功能（16 个模块；每个 Feature 默认 Route/Screen/ViewModel 三文件模板，见 AGENTS.md）
 │   ├── home/feeding/sleep/diaper/growth/
 │   ├── vaccination/health/stats/timeline/
 │   ├── message/development/reminder/settings/

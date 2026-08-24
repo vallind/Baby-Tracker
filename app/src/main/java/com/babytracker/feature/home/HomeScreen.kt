@@ -22,12 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,18 +30,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.domain.model.Diaper
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.FeedingType
 import com.babytracker.core.domain.model.Sleep
 import com.babytracker.core.domain.model.SleepType
-import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
@@ -63,20 +54,6 @@ import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.isDarkTheme
 import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.feature.common.feedingTone
-import com.babytracker.navigation.AiAssistant
-import com.babytracker.navigation.BabyManagement
-import com.babytracker.navigation.BabyProfile
-import com.babytracker.navigation.DevelopmentAssessment
-import com.babytracker.navigation.Diaper as DiaperRoute
-import com.babytracker.navigation.Feeding as FeedingRoute
-import com.babytracker.navigation.Growth
-import com.babytracker.navigation.Health
-import com.babytracker.navigation.Reminder
-import com.babytracker.navigation.Sleep as SleepRoute
-import com.babytracker.navigation.Timeline
-import com.babytracker.navigation.Vaccination
-import com.babytracker.navigation.navigateToRoot
-import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.util.Locale
 import java.time.LocalTime
@@ -84,25 +61,22 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    state: HomeUiState,
+    baby: Baby?,
+    bottomBar: @Composable () -> Unit = {},
+    onOpenBabyManagement: () -> Unit = {},
+    onOpenProfile: () -> Unit = {},
+    onOpenFeature: (HomeFeature) -> Unit = {},
+    onOpenAiAssistant: () -> Unit = {},
+    onSeeAll: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val babyRepo: BabyRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
-    val viewModel: HomeViewModel = org.koin.androidx.compose.koinViewModel()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val currentBabyId = babyCtrl.currentBabyId
-    val baby = babies.find { it.id == currentBabyId } ?: babies.firstOrNull()
-    val state by viewModel.state.collectAsState()
-    LaunchedEffect(baby) {
-        if (baby != null) {
-            if (babyCtrl.currentBabyId != baby.id) babyCtrl.selectBaby(baby.id)
-            viewModel.loadData(baby.id)
-        }
-    }
 
     AppScaffold(
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
     ) { padding ->
         if (baby == null) {
             EmptyState(
@@ -110,7 +84,7 @@ fun HomeScreen(navController: NavController) {
                 title = AppStrings.noBabyTitle,
                 subtitle = AppStrings.noBabySubtitle,
                 actionText = AppStrings.addBaby,
-                onAction = { navController.navigate(BabyManagement) },
+                onAction = onOpenBabyManagement,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -124,13 +98,13 @@ fun HomeScreen(navController: NavController) {
                 .background(c.pageBackground),
         ) {
             // —— 顶部 hero 区：奶油渐变 + 大标题 + 渐变光环头像 ——
-            HeroHeader(baby, onClickProfile = { navController.navigate(BabyProfile) })
+            HeroHeader(baby, onClickProfile = onOpenProfile)
 
             Spacer(Modifier.height(spacing.md))
-            FeatureGrid(navController)
+            FeatureGrid(onOpenFeature)
 
             Spacer(Modifier.height(spacing.md))
-            AiAssistantEntryCard(navController)
+            AiAssistantEntryCard(onClick = onOpenAiAssistant)
 
             Spacer(Modifier.height(spacing.md))
             TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
@@ -139,7 +113,7 @@ fun HomeScreen(navController: NavController) {
                 Spacer(Modifier.height(spacing.md))
                 RecentRecordsSection(
                     items = state.recentItems,
-                    onSeeAll = { navController.navigate(Timeline) },
+                    onSeeAll = onSeeAll,
                 )
             }
 
@@ -253,7 +227,7 @@ private fun HeroHeader(baby: Baby, onClickProfile: () -> Unit) {
 }
 
 @Composable
-private fun AiAssistantEntryCard(navController: NavController) {
+private fun AiAssistantEntryCard(onClick: () -> Unit) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -265,7 +239,7 @@ private fun AiAssistantEntryCard(navController: NavController) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(shapes.largeIncreased))
             .background(Gradients.ai(c))
-            .clickable { navController.navigate(AiAssistant) },
+            .clickable(onClick = onClick),
     ) {
         Row(
             Modifier.padding(spacing.lg),
@@ -391,62 +365,61 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
 }
 
 @Composable
-fun FeatureGrid(navController: NavController) {
+fun FeatureGrid(onOpenFeature: (HomeFeature) -> Unit) {
     val spacing = LocalAppSpacing.current
     val items = listOf(
         // 记录类三格点击进入对应记录页（宫格直达表单已于 2.2.1 回滚）
-        FeatureGridItemData({ navController.navigateToRoot(FeedingRoute) }, "🍼", AppStrings.feedingRecords, FeatureTone.Feeding),
-        FeatureGridItemData({ navController.navigateToRoot(SleepRoute) }, "🌙", AppStrings.sleepRecords, FeatureTone.Sleep),
-        FeatureGridItemData({ navController.navigateToRoot(DiaperRoute) }, "🧷", AppStrings.diaperRecords, FeatureTone.Diaper),
-        FeatureGridItemData({ navController.navigateToRoot(Growth) }, "📏", AppStrings.growthRecords, FeatureTone.Growth),
-        FeatureGridItemData({ navController.navigateToRoot(DevelopmentAssessment) }, "🧠", AppStrings.developmentAssessment, FeatureTone.Development),
-        FeatureGridItemData({ navController.navigateToRoot(Vaccination) }, "💉", AppStrings.vaccinationRecords, FeatureTone.Vaccination),
-        FeatureGridItemData({ navController.navigateToRoot(Health) }, "❤️", AppStrings.healthRecords, FeatureTone.Health),
+        FeatureGridItemData(HomeFeature.Feeding, "🍼", AppStrings.feedingRecords),
+        FeatureGridItemData(HomeFeature.Sleep, "🌙", AppStrings.sleepRecords),
+        FeatureGridItemData(HomeFeature.Diaper, "🧷", AppStrings.diaperRecords),
+        FeatureGridItemData(HomeFeature.Growth, "📏", AppStrings.growthRecords),
+        FeatureGridItemData(HomeFeature.Development, "🧠", AppStrings.developmentAssessment),
+        FeatureGridItemData(HomeFeature.Vaccination, "💉", AppStrings.vaccinationRecords),
+        FeatureGridItemData(HomeFeature.Health, "❤️", AppStrings.healthRecords),
         // 提醒中心原只有设置页一个深入口，宫格补位后可达性提升
-        FeatureGridItemData({ navController.navigateToRoot(Reminder) }, "⏰", AppStrings.reminderCenter, FeatureTone.Reminder),
+        FeatureGridItemData(HomeFeature.Reminder, "⏰", AppStrings.reminderCenter),
     )
     Column(Modifier.padding(horizontal = spacing.md)) {
         Spacer(Modifier.height(6.dp))
         // 第一行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             items.subList(0, 4).forEach { item ->
-                FeatureGridItem(item, Modifier.weight(1f))
+                FeatureGridItem(item, onOpenFeature, Modifier.weight(1f))
             }
         }
         Spacer(Modifier.height(spacing.sm))
         // 第二行 4 个
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
             items.subList(4, 8).forEach { item ->
-                FeatureGridItem(item, Modifier.weight(1f))
+                FeatureGridItem(item, onOpenFeature, Modifier.weight(1f))
             }
         }
     }
 }
 
-/** 宫格功能分区（设计语言映射到五个语义色系） */
-private enum class FeatureTone { Feeding, Sleep, Diaper, Growth, Development, Vaccination, Health, Reminder }
-
-private fun FeatureTone.color(c: AppColors) = when (this) {
-    FeatureTone.Feeding -> c.danger          // 喂养珊瑚红
-    FeatureTone.Sleep -> c.secondary         // 睡眠紫
-    FeatureTone.Diaper -> c.tertiary         // 尿布青
-    FeatureTone.Growth -> c.success          // 生长绿
-    FeatureTone.Development -> c.primary     // 发育蓝
-    FeatureTone.Vaccination -> c.warning     // 疫苗琥珀
-    FeatureTone.Health -> c.danger           // 健康珊瑚（医疗红）
-    FeatureTone.Reminder -> c.warning        // 提醒琥珀
+/** 宫格功能分区（设计语言映射到五个语义色系）；语义枚举定义在 HomeRoute（路由映射留在 Route） */
+private fun HomeFeature.color(c: AppColors) = when (this) {
+    HomeFeature.Feeding -> c.danger          // 喂养珊瑚红
+    HomeFeature.Sleep -> c.secondary         // 睡眠紫
+    HomeFeature.Diaper -> c.tertiary         // 尿布青
+    HomeFeature.Growth -> c.success          // 生长绿
+    HomeFeature.Development -> c.primary     // 发育蓝
+    HomeFeature.Vaccination -> c.warning     // 疫苗琥珀
+    HomeFeature.Health -> c.danger           // 健康珊瑚（医疗红）
+    HomeFeature.Reminder -> c.warning        // 提醒琥珀
 }
 
 @Composable
 private fun FeatureGridItem(
     item: FeatureGridItemData,
+    onOpenFeature: (HomeFeature) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
-    val scale = AppColorScale.fromSeed(item.tone.color(c))
+    val scale = AppColorScale.fromSeed(item.feature.color(c))
     // 亮色：粉彩渐变（shade100→shade200）；暗色：深彩渐变（shade800→shade700）
     val tileBrush = Brush.verticalGradient(
         if (c.isDarkTheme) listOf(scale.shade800, scale.shade700)
@@ -455,7 +428,7 @@ private fun FeatureGridItem(
     Column(
         modifier
             .clip(RoundedCornerShape(shapes.large))
-            .clickable { item.navigate() }
+            .clickable { onOpenFeature(item.feature) }
             .padding(vertical = spacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -475,10 +448,9 @@ private fun FeatureGridItem(
 }
 
 private data class FeatureGridItemData(
-    val navigate: () -> Unit,
+    val feature: HomeFeature,
     val emoji: String,
     val label: String,
-    val tone: FeatureTone,
 )
 
 @Composable

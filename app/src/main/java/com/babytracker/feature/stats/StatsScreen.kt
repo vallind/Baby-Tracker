@@ -28,11 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.progress.AppCircularProgress
@@ -44,29 +41,26 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import org.koin.compose.koinInject
 
 @Composable
-fun StatsScreen(navController: NavController) {
+fun StatsScreen(
+    state: StatsUiState,
+    bottomBar: @Composable () -> Unit = {},
+    onSelectPeriod: (StatsPeriod) -> Unit,
+    onGoBack: () -> Unit,
+    onGoForward: () -> Unit,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
-    val viewModel: StatsViewModel = org.koin.androidx.compose.koinViewModel()
-    val state by viewModel.state.collectAsState()
-
-    val babyCtrl: BabyController = koinInject()
-    val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
-
-    LaunchedEffect(babyId) {
-        viewModel.loadData(babyId)
-    }
 
     AppScaffold(
         topBar = {
             AppTopBar(title = "统计分析")
         },
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
     ) { padding ->
         Column(
             Modifier
@@ -99,7 +93,7 @@ fun StatsScreen(navController: NavController) {
                             3 -> StatsPeriod.YEAR
                             else -> StatsPeriod.WEEK
                         }
-                        viewModel.selectPeriod(babyId, p)
+                        onSelectPeriod(p)
                     },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -109,8 +103,8 @@ fun StatsScreen(navController: NavController) {
                 dateRangeText = state.dateRangeText,
                 canGoBack = true,
                 canGoForward = state.periodOffset < 0,
-                onBack = { viewModel.goBack(babyId) },
-                onForward = { viewModel.goForward(babyId) },
+                onBack = onGoBack,
+                onForward = onGoForward,
             )
 
             Spacer(Modifier.height(spacing.md))
@@ -123,7 +117,7 @@ fun StatsScreen(navController: NavController) {
                         title = "统计数据加载失败",
                         subtitle = state.errorMessage.orEmpty(),
                         actionText = "重新加载",
-                        onAction = viewModel::retry,
+                        onAction = onRetry,
                     )
                 }
                 !state.hasAnyData -> {

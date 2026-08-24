@@ -19,7 +19,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.babytracker.core.data.Family
 import com.babytracker.core.data.FamilyMember
 import com.babytracker.designsystem.components.card.AppCard
@@ -40,22 +39,38 @@ import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.dialog.AppDialog
 import com.babytracker.designsystem.components.divider.AppDivider
-import org.koin.androidx.compose.koinViewModel
 
+/**
+ * 家庭共享屏 — 纯 UI 渲染层：只收 UiState 与命名回调，不感知 Koin / NavController。
+ * 回调全部由 [FamilyRoute] 装配（VM 方法引用 + 导航映射）。
+ */
 @Composable
-fun FamilyPage(navController: NavController) {
+fun FamilyScreen(
+    state: FamilyViewModel.UiState,
+    onBack: () -> Unit,
+    onSelectFamily: (Family) -> Unit,
+    onSelectLocal: () -> Unit,
+    onMigrate: (Family) -> Unit,
+    onCreateClick: () -> Unit,
+    onJoinClick: () -> Unit,
+    onFamilyNameChange: (String) -> Unit,
+    onCreate: () -> Unit,
+    onDismissCreate: () -> Unit,
+    onInviteCodeChange: (String) -> Unit,
+    onJoin: () -> Unit,
+    onDismissJoin: () -> Unit,
+    onConfirmMigration: () -> Unit,
+    onDismissMigration: () -> Unit,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
-    val vm: FamilyViewModel = koinViewModel()
-    val uiState by vm.uiState.collectAsState()
-    val context = LocalContext.current
 
     AppScaffold(
         topBar = {
             AppTopBar(
                 title = "家庭共享",
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
             )
         },
     ) { padding ->
@@ -66,45 +81,45 @@ fun FamilyPage(navController: NavController) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = spacing.md, vertical = spacing.md),
         ) {
-            if (uiState.families.isNotEmpty() || uiState.unscopedBabyCount > 0) {
+            if (state.families.isNotEmpty() || state.unscopedBabyCount > 0) {
                 FamilyModeSelector(
-                    families = uiState.families,
-                    currentFamily = uiState.currentFamily,
-                    localSelected = uiState.isLocalMode,
-                    localCount = uiState.unscopedBabyCount,
-                    onSelectFamily = vm::selectFamily,
-                    onSelectLocal = vm::selectLocalMode,
+                    families = state.families,
+                    currentFamily = state.currentFamily,
+                    localSelected = state.isLocalMode,
+                    localCount = state.unscopedBabyCount,
+                    onSelectFamily = onSelectFamily,
+                    onSelectLocal = onSelectLocal,
                 )
                 Spacer(Modifier.height(spacing.md))
             }
-            if (uiState.isLoading && uiState.families.isEmpty()) {
+            if (state.isLoading && state.families.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
                     AppCircularProgress(indicatorColor = c.primary)
                 }
-            } else if (uiState.isLocalMode) {
+            } else if (state.isLocalMode) {
                 LocalDataView(
-                    count = uiState.unscopedBabyCount,
-                    families = uiState.families,
-                    onMigrate = vm::requestMigration,
+                    count = state.unscopedBabyCount,
+                    families = state.families,
+                    onMigrate = onMigrate,
                 )
-            } else if (uiState.currentFamily == null) {
+            } else if (state.currentFamily == null) {
                 // ── 无家庭：提示创建或加入 ──
                 EmptyFamilyView(
-                    onCreateClick = { vm.showCreateDialog() },
-                    onJoinClick = { vm.showJoinDialog() },
+                    onCreateClick = onCreateClick,
+                    onJoinClick = onJoinClick,
                 )
             } else {
                 // ── 有家庭：显示详情 ──
                 FamilyDetailView(
-                    family = uiState.currentFamily!!,
-                    members = uiState.members,
-                    onCreateClick = { vm.showCreateDialog() },
-                    onJoinClick = { vm.showJoinDialog() },
+                    family = state.currentFamily!!,
+                    members = state.members,
+                    onCreateClick = onCreateClick,
+                    onJoinClick = onJoinClick,
                 )
             }
 
             // 错误提示
-            uiState.errorMessage?.let { msg ->
+            state.errorMessage?.let { msg ->
                 Spacer(Modifier.height(spacing.md))
                 Text(msg, color = c.error, style = typography.bodyLarge, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
             }
@@ -113,52 +128,52 @@ fun FamilyPage(navController: NavController) {
 
     // ── 创建家庭对话框 ──
     AppDialog(
-        show = uiState.showCreateDialog,
+        show = state.showCreateDialog,
         title = "创建家庭",
         confirmText = "创建",
         cancelText = "取消",
         content = {
             AppInput(
-                value = uiState.newFamilyName,
-                onValueChange = { vm.onFamilyNameChange(it) },
+                value = state.newFamilyName,
+                onValueChange = onFamilyNameChange,
                 label = "家庭名称",
                 modifier = Modifier.fillMaxWidth(),
             )
         },
-        onConfirm = { vm.createFamily() },
-        onDismiss = { vm.hideCreateDialog() },
+        onConfirm = onCreate,
+        onDismiss = onDismissCreate,
     )
 
     // ── 加入家庭对话框 ──
     AppDialog(
-        show = uiState.showJoinDialog,
+        show = state.showJoinDialog,
         title = "加入家庭",
         confirmText = "加入",
         cancelText = "取消",
-        confirmEnabled = uiState.inviteCode.length == 6,
+        confirmEnabled = state.inviteCode.length == 6,
         content = {
             Column {
                 Text("输入家庭邀请码（6 位）", color = c.textSecondary, style = typography.bodyLarge)
                 Spacer(Modifier.height(spacing.md))
                 AppInput(
-                    value = uiState.inviteCode,
-                    onValueChange = { vm.onInviteCodeChange(it.take(6)) },
+                    value = state.inviteCode,
+                    onValueChange = { onInviteCodeChange(it.take(6)) },
                     label = "邀请码",
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
         },
-        onConfirm = { vm.joinFamily() },
-        onDismiss = { vm.hideJoinDialog() },
+        onConfirm = onJoin,
+        onDismiss = onDismissJoin,
     )
 
     AppConfirmDialog(
-        show = uiState.migrationTarget != null,
+        show = state.migrationTarget != null,
         title = "归属本机数据",
-        message = "将 ${uiState.unscopedBabyCount} 个宝宝及其全部记录归入“${uiState.migrationTarget?.name.orEmpty()}”？归属后这些数据会参与该家庭的云同步。",
+        message = "将 ${state.unscopedBabyCount} 个宝宝及其全部记录归入“${state.migrationTarget?.name.orEmpty()}”？归属后这些数据会参与该家庭的云同步。",
         confirmText = "确认归属",
-        onConfirm = vm::confirmMigration,
-        onDismiss = vm::cancelMigration,
+        onConfirm = onConfirmMigration,
+        onDismiss = onDismissMigration,
     )
 }
 

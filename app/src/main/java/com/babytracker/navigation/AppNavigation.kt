@@ -10,31 +10,31 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
-import com.babytracker.feature.home.HomeScreen
+import com.babytracker.feature.home.HomeRoute
 import com.babytracker.feature.feeding.FeedingListScreen
-import com.babytracker.feature.timeline.TimelineScreen
+import com.babytracker.feature.timeline.TimelineRoute
 import com.babytracker.feature.sleep.SleepListScreen
 import com.babytracker.feature.growth.GrowthScreen
 import com.babytracker.feature.vaccination.VaccinationListScreen
 import com.babytracker.feature.health.HealthScreen
 import com.babytracker.feature.diaper.DiaperListScreen
-import com.babytracker.feature.stats.StatsScreen
+import com.babytracker.feature.stats.StatsRoute
 import com.babytracker.feature.settings.SettingsScreen
 import com.babytracker.feature.settings.BabyProfileScreen
 import com.babytracker.feature.settings.BabyManagementScreen
 import com.babytracker.feature.settings.BackupScreen
 import com.babytracker.feature.settings.LogViewerScreen
-import com.babytracker.feature.settings.SyncSettingsScreen
+import com.babytracker.feature.settings.SyncSettingsRoute
 import com.babytracker.feature.settings.PreferenceSettingsScreen
 import com.babytracker.feature.settings.DataSettingsScreen
 import com.babytracker.feature.settings.SupportSettingsScreen
-import com.babytracker.feature.message.MessageScreen
-import com.babytracker.feature.development.DevelopmentAssessmentScreen
-import com.babytracker.feature.reminder.ReminderScreen
-import com.babytracker.feature.auth.LoginScreen
-import com.babytracker.feature.family.FamilyPage
-import com.babytracker.feature.ai.AiChatScreen
-import com.babytracker.feature.ai.AiSettingsScreen
+import com.babytracker.feature.message.MessageRoute
+import com.babytracker.feature.development.DevelopmentAssessmentRoute
+import com.babytracker.feature.reminder.ReminderRoute
+import com.babytracker.feature.auth.LoginRoute
+import com.babytracker.feature.family.FamilyRoute
+import com.babytracker.feature.ai.AiChatRoute
+import com.babytracker.feature.ai.AiSettingsRoute
 
 /**
  * 类型安全路由：每个页面一个 @Serializable data object，
@@ -70,15 +70,15 @@ import com.babytracker.feature.ai.AiSettingsScreen
 fun AppNavigation() {
     val navController = rememberNavController()
     NavHost(navController, startDestination = Home) {
-        instantComposable<Home> { HomeScreen(navController) }
-        instantComposable<Timeline> { TimelineScreen(navController) }
+        instantComposable<Home> { HomeRoute(navController) }
+        instantComposable<Timeline> { TimelineRoute(navController) }
         instantComposable<Feeding> { FeedingListScreen(navController) }
         instantComposable<Sleep> { SleepListScreen(navController) }
         instantComposable<Growth> { GrowthScreen(navController) }
         instantComposable<Vaccination> { VaccinationListScreen(navController) }
         instantComposable<Health> { HealthScreen(navController) }
         instantComposable<Diaper> { DiaperListScreen(navController) }
-        instantComposable<Stats> { StatsScreen(navController) }
+        instantComposable<Stats> { StatsRoute(navController) }
         instantComposable<Settings> { SettingsScreen(navController) }
         instantComposable<PreferenceSettings> { PreferenceSettingsScreen(navController) }
         instantComposable<DataSettings> { DataSettingsScreen(navController) }
@@ -87,14 +87,14 @@ fun AppNavigation() {
         instantComposable<BabyProfile> { BabyProfileScreen(navController) }
         instantComposable<Backup> { BackupScreen(navController) }
         instantComposable<LogViewer> { LogViewerScreen(navController) }
-        instantComposable<SyncSettings> { SyncSettingsScreen(navController) }
-        instantComposable<Family> { FamilyPage(navController) }
-        instantComposable<Message> { MessageScreen(navController) }
-        instantComposable<DevelopmentAssessment> { DevelopmentAssessmentScreen(navController) }
-        instantComposable<Reminder> { ReminderScreen(navController) }
-        instantComposable<Login> { LoginScreen(navController) }
-        instantComposable<AiAssistant> { AiChatScreen(navController) }
-        instantComposable<AiSettings> { AiSettingsScreen(navController) }
+        instantComposable<SyncSettings> { SyncSettingsRoute(navController) }
+        instantComposable<Family> { FamilyRoute(navController) }
+        instantComposable<Message> { MessageRoute(navController) }
+        instantComposable<DevelopmentAssessment> { DevelopmentAssessmentRoute(navController) }
+        instantComposable<Reminder> { ReminderRoute(navController) }
+        instantComposable<Login> { LoginRoute(navController) }
+        instantComposable<AiAssistant> { AiChatRoute(navController) }
+        instantComposable<AiSettings> { AiSettingsRoute(navController) }
     }
 }
 

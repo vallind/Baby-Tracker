@@ -24,3 +24,6 @@ MyApp.zip
 # Kotlin 构建缓存（Termux/KGP 2.x 生成）
 .kotlin
 /detekt-rules/build
+
+# Paparazzi 截图产物（基准图不入库，按需校验）
+app/src/test/snapshots/

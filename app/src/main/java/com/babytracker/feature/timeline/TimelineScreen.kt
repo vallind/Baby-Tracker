@@ -24,7 +24,6 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
@@ -38,7 +37,6 @@ import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
-import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.*
@@ -47,44 +45,49 @@ import com.babytracker.feature.feeding.FeedingFormDialog
 import com.babytracker.feature.growth.GrowthFormDialog
 import com.babytracker.feature.health.HealthFormDialog
 import com.babytracker.feature.sleep.SleepFormDialog
-import com.babytracker.navigation.Growth as GrowthRoute
-import com.babytracker.navigation.Health
-import com.babytracker.navigation.Vaccination
 import kotlinx.coroutines.launch
 import java.util.Locale
-import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimelineScreen(navController: NavController) {
+fun TimelineScreen(
+    state: TimelineUiState,
+    babyId: Int,
+    editing: Any?,
+    bottomBar: @Composable () -> Unit = {},
+    onDelete: (TimelineItem) -> Unit,
+    onUndoDelete: () -> Unit,
+    onRequestEdit: (TimelineItem) -> Unit,
+    onDismissEdit: () -> Unit,
+    onAddFeeding: (Feeding) -> Unit,
+    onAddSleep: (Sleep) -> Unit,
+    onAddDiaper: (Diaper) -> Unit,
+    onUpdateFeeding: (Feeding) -> Unit,
+    onUpdateSleep: (Sleep) -> Unit,
+    onUpdateDiaper: (Diaper) -> Unit,
+    onUpdateGrowth: (Growth) -> Unit,
+    onUpdateHealth: (HealthRecord) -> Unit,
+    onOpenGrowth: () -> Unit,
+    onOpenVaccination: () -> Unit,
+    onOpenHealth: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
-    val viewModel: TimelineViewModel = koinViewModel()
-    val babyCtrl: BabyController = koinInject()
+
     val scope = rememberCoroutineScope()
-    val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
-    val state by viewModel.state.collectAsState()
 
     var showTypePicker by remember { mutableStateOf(false) }
     var showAddFeeding by remember { mutableStateOf(false) }
     var showAddSleep by remember { mutableStateOf(false) }
     var showAddDiaper by remember { mutableStateOf(false) }
-    var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
-    var editingSleep by remember { mutableStateOf<Sleep?>(null) }
-    var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
-    var editingGrowth by remember { mutableStateOf<Growth?>(null) }
-    var editingHealth by remember { mutableStateOf<HealthRecord?>(null) }
     var typeFilter by remember { mutableStateOf("") }
     var detailRecord by remember { mutableStateOf<TimelineItem?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
-
-    LaunchedEffect(babyId) { viewModel.load(babyId) }
 
     // 类型 → 颜色映射（与首页宫格分区色一致：喂养珊瑚/睡眠紫/尿布青/生长绿/健康蓝）
     val typeColor: (String) -> Color = {
@@ -110,12 +113,15 @@ fun TimelineScreen(navController: NavController) {
         }
     }
 
+    // 无宝宝时不渲染（与原 LaunchedEffect 前守卫一致；宝宝由 VM 的 babyId 状态提供）
+    if (babyId == 0) return
+
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(title = AppStrings.records)
         },
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
         fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { showTypePicker = true })
         },
@@ -248,8 +254,8 @@ fun TimelineScreen(navController: NavController) {
                                     accentColor = accent,
                                     onDelete = {
                                         scope.launch {
-                                            viewModel.delete(record)
-                                            appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { viewModel.undoLastDelete() }
+                                            onDelete(record)
+                                            appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { onUndoDelete() }
                                         }
                                     },
                                     onClick = { detailRecord = record },
@@ -302,9 +308,9 @@ fun TimelineScreen(navController: NavController) {
                     AppStrings.pickerOptionFeeding to { showAddFeeding = true },
                     AppStrings.pickerOptionSleep to { showAddSleep = true },
                     AppStrings.pickerOptionDiaper to { showAddDiaper = true },
-                    AppStrings.pickerOptionGrowth to { navController.navigate(GrowthRoute) },
-                    AppStrings.pickerOptionVaccine to { navController.navigate(Vaccination) },
-                    AppStrings.pickerOptionHealth to { navController.navigate(Health) },
+                    AppStrings.pickerOptionGrowth to onOpenGrowth,
+                    AppStrings.pickerOptionVaccine to onOpenVaccination,
+                    AppStrings.pickerOptionHealth to onOpenHealth,
                 )
                 types.forEach { (label, onSelect) ->
                     AppButton(
@@ -336,94 +342,82 @@ fun TimelineScreen(navController: NavController) {
             ),
             onEdit = {
                 detailRecord = null
-                when (record.recordType) {
-                    "feeding" -> editingFeeding = viewModel.findFeeding(record.id)
-                    "sleep" -> editingSleep = viewModel.findSleep(record.id)
-                    "diaper" -> editingDiaper = viewModel.findDiaper(record.id)
-                    "growth" -> editingGrowth = viewModel.findGrowth(record.id)
-                    "health" -> editingHealth = viewModel.findHealth(record.id)
-                }
+                onRequestEdit(record)
             },
             onDelete = {
                 detailRecord = null
                 scope.launch {
-                    viewModel.delete(record)
-                    appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { viewModel.undoLastDelete() }
+                    onDelete(record)
+                    appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { onUndoDelete() }
                 }
             },
             onDismiss = { detailRecord = null },
         )
     }
 
-    // ── 编辑表单弹窗 ──
-    editingFeeding?.let { f ->
-        FeedingFormDialog(
+    // ── 编辑表单弹窗（编辑目标在 ViewModel：requestEdit/dismissEdit 维护）──
+    when (val entity = editing) {
+        is Feeding -> FeedingFormDialog(
             babyId = babyId,
-            editEntity = f,
-            onDismiss = { editingFeeding = null },
+            editEntity = entity,
+            onDismiss = onDismissEdit,
             onSave = { updated ->
                 scope.launch {
-                    viewModel.updateFeeding(updated)
-                    editingFeeding = null
+                    onUpdateFeeding(updated)
+                    onDismissEdit()
                 }
             },
         )
-    }
 
-    editingSleep?.let { s ->
-        SleepFormDialog(
+        is Sleep -> SleepFormDialog(
             babyId = babyId,
-            editEntity = s,
-            onDismiss = { editingSleep = null },
+            editEntity = entity,
+            onDismiss = onDismissEdit,
             onSave = { updated ->
                 scope.launch {
-                    viewModel.updateSleep(updated)
-                    editingSleep = null
+                    onUpdateSleep(updated)
+                    onDismissEdit()
                 }
             },
         )
-    }
 
-    editingDiaper?.let { d ->
-        DiaperFormDialog(
+        is Diaper -> DiaperFormDialog(
             babyId = babyId,
-            editEntity = d,
-            onDismiss = { editingDiaper = null },
+            editEntity = entity,
+            onDismiss = onDismissEdit,
             onSave = { updated ->
                 scope.launch {
-                    viewModel.updateDiaper(updated)
-                    editingDiaper = null
+                    onUpdateDiaper(updated)
+                    onDismissEdit()
                 }
             },
         )
-    }
 
-    editingGrowth?.let { g ->
-        GrowthFormDialog(
+        is Growth -> GrowthFormDialog(
             babyId = babyId,
-            editEntity = g,
-            onDismiss = { editingGrowth = null },
+            editEntity = entity,
+            onDismiss = onDismissEdit,
             onSave = { updated ->
                 scope.launch {
-                    viewModel.updateGrowth(updated)
-                    editingGrowth = null
+                    onUpdateGrowth(updated)
+                    onDismissEdit()
                 }
             },
         )
-    }
 
-    editingHealth?.let { h ->
-        HealthFormDialog(
+        is HealthRecord -> HealthFormDialog(
             babyId = babyId,
-            editEntity = h,
-            onDismiss = { editingHealth = null },
+            editEntity = entity,
+            onDismiss = onDismissEdit,
             onSave = { updated ->
                 scope.launch {
-                    viewModel.updateHealth(updated)
-                    editingHealth = null
+                    onUpdateHealth(updated)
+                    onDismissEdit()
                 }
             },
         )
+
+        else -> Unit
     }
 
     // ── 快速新增表单 ──
@@ -434,7 +428,7 @@ fun TimelineScreen(navController: NavController) {
             onDismiss = { showAddFeeding = false },
             onSave = { feeding ->
                 scope.launch {
-                    viewModel.addFeeding(feeding)
+                    onAddFeeding(feeding)
                     showAddFeeding = false
                 }
             },
@@ -448,7 +442,7 @@ fun TimelineScreen(navController: NavController) {
             onDismiss = { showAddSleep = false },
             onSave = { sleep ->
                 scope.launch {
-                    viewModel.addSleep(sleep)
+                    onAddSleep(sleep)
                     showAddSleep = false
                 }
             },
@@ -462,7 +456,7 @@ fun TimelineScreen(navController: NavController) {
             onDismiss = { showAddDiaper = false },
             onSave = { diaper ->
                 scope.launch {
-                    viewModel.addDiaper(diaper)
+                    onAddDiaper(diaper)
                     showAddDiaper = false
                 }
             },

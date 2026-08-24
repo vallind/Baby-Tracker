@@ -1,5 +1,6 @@
 package com.babytracker.feature.ai
 
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.ai.AiGenerationOptions
@@ -20,6 +21,7 @@ import com.babytracker.core.data.repository.AiHistoryRepository
 import com.babytracker.core.data.repository.AiStoredMessage
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.Baby
+import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CancellationException
@@ -47,6 +49,7 @@ class AiChatViewModel(
     authService: AuthService,
     familyService: FamilyService,
     private val historyRepository: AiHistoryRepository,
+    private val babyController: BabyController,
 ) : ViewModel() {
     private val selectedBabyId = MutableStateFlow(0)
     private val messageIds = AtomicLong(0)
@@ -61,6 +64,13 @@ class AiChatViewModel(
     private val historySaveMutex = Mutex()
 
     init {
+        // v4：VM 持有当前宝宝上下文，监听 BabyController.currentBabyId 自动切换/加载，
+        // Route 不再负责 selectBaby（Screen 也不再持有 BabyController）。
+        viewModelScope.launch {
+            snapshotFlow { babyController.currentBabyId }.collect { babyId ->
+                selectBaby(babyId)
+            }
+        }
         val babyFlow = selectedBabyId.flatMapLatest { babyId ->
             babyRepository.watchAll().map { babies ->
                 babies.firstOrNull { it.id == babyId }

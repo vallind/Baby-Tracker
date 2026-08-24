@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -35,11 +34,9 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
-import org.koin.androidx.compose.koinViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -65,11 +62,16 @@ private fun categoryOverviews(): List<CategoryOverview> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MessageScreen(navController: NavController) {
+fun MessageScreen(
+    state: MessageUiState,
+    onMarkAllRead: () -> Unit,
+    onMarkRead: (Long) -> Unit,
+    onDelete: (AppMessage) -> Unit,
+    modifier: Modifier = Modifier,
+    bottomBar: @Composable () -> Unit = {},
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val viewModel: MessageViewModel = koinViewModel()
-    val state by viewModel.state.collectAsState()
 
     var filterType by remember { mutableStateOf<MessageType?>(null) }
 
@@ -81,6 +83,7 @@ fun MessageScreen(navController: NavController) {
     var deleteTarget by remember { mutableStateOf<AppMessage?>(null) }
 
     AppScaffold(
+        modifier = modifier,
         topBar = {
             AppTopBar(
                 title = AppStrings.messageCenter,
@@ -92,13 +95,13 @@ fun MessageScreen(navController: NavController) {
                         fontWeight = FontWeight.Medium,
                         color = if (canMarkAll) c.primary else c.textTertiary,
                         modifier = Modifier
-                            .clickable(enabled = canMarkAll, onClick = { viewModel.markAllRead() })
+                            .clickable(enabled = canMarkAll, onClick = onMarkAllRead)
                             .padding(horizontal = spacing.xs),
                     )
                 },
             )
         },
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
     ) { padding ->
         Column(
             Modifier
@@ -145,7 +148,7 @@ fun MessageScreen(navController: NavController) {
                     items(filteredMessages, key = { it.id }) { message ->
                         MessageCard(
                             message = message,
-                            onClick = { viewModel.markRead(message.id) },
+                            onClick = { onMarkRead(message.id) },
                             onLongClick = { deleteTarget = message },
                         )
                     }
@@ -160,7 +163,7 @@ fun MessageScreen(navController: NavController) {
         title = AppStrings.confirmDelete,
         message = AppStrings.confirmDeleteMessage,
         onConfirm = {
-            deleteTarget?.let(viewModel::delete)
+            deleteTarget?.let(onDelete)
             deleteTarget = null
         },
         onDismiss = { deleteTarget = null },

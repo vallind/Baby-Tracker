@@ -15,6 +15,14 @@
 - 主题/密度选择弹层自 `SettingsScreen.kt` 拆至 `feature/settings/SettingsSheets.kt`（*Screen.kt 文件不再直接依赖 Controller，配合 Screen 边界审计）
 - 新增 `DesignSystemBoundaryAuditTest`：designsystem 源码禁止 import core/feature/navigation/koin，边界由测试守门（架构十原则 #1/#2 落地）
 
+**二、批次 2：Route/Screen 结构拆分（11 屏，Route 组合根契约）：**
+- 新建 11 个 `XxxRoute.kt`（组合根：只做 DI / ViewModel 装配 + 导航回调映射；当前宝宝解析、数据加载、编辑目标全部移入 ViewModel），`AppNavigation` 25 条路由中 11 条改调 Route
+- Screen 全部纯 UI 化：只收 `state` + 命名回调，清除 NavController / koinInject / koinViewModel / Repository / Controller 依赖（Home / Stats / Timeline / Message / Development / Reminder / AiChat / AiSettings / Family / Login / SyncSettings）
+- 宝宝上下文迁入 VM：Home（watchAll 派生 `baby` + 自动加载）、Stats / Timeline / AiChat（snapshotFlow 监听 currentBabyId）、Development / Reminder（watchAll 派生）；Timeline 编辑目标（原 Screen 内 editingXxx）进 VM（requestEdit / dismissEdit），表单对话框按类型分发
+- `FamilyPage` 按 Feature 默认模板重命名 `FamilyScreen`（配 FamilyRoute）；遗留的 11 个旧约定 Route 半成品按 v4 重写后暂存目录 `tools/parked-batch2-routes/` 待删
+- 新增 `HomeScreenPaparazziTest` 截图样板：fake state 直渲染（无需 NavHost / Koin / Room / Supabase），Paparazzi 2.0 管线恢复可用（输出 `build/reports/paparazzi`，样本不含中文基准图入 gitignore）
+- `ScreenBoundaryAuditTest` 违规清单从 25 屏缩至 Batch 3/4 范围（记录六屏 + Settings 家族），Batch 2 全部 11 屏通过审计
+
 版本号 2.2.4 → 2.3.0（本波次统一起点；versionCode 48 不变，发布构建时递增）。
 
 ### [2.2.4] — 2026-08-23

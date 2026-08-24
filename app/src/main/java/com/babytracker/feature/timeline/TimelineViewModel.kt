@@ -1,10 +1,12 @@
 package com.babytracker.feature.timeline
 
 import androidx.lifecycle.ViewModel
+import androidx.compose.runtime.snapshotFlow
 import com.babytracker.designsystem.i18n.AppStrings
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.domain.model.*
 import com.babytracker.core.util.DateUtils
+import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -49,9 +51,18 @@ class TimelineViewModel(
     private val diaperRepo: DiaperRepository,
     private val growthRepo: GrowthRepository,
     private val healthRepo: HealthRepository,
+    private val babyCtrl: BabyController,
 ) : ViewModel() {
     private val _state = MutableStateFlow(TimelineUiState())
     val state: StateFlow<TimelineUiState> = _state.asStateFlow()
+
+    /** 当前宝宝（供表单对话框传 babyId；0 = 无宝宝，Screen 不渲染） */
+    private val _babyId = MutableStateFlow(0)
+    val babyId: StateFlow<Int> = _babyId.asStateFlow()
+
+    /** 编辑目标：详情弹层请求编辑后由 requestEdit 从缓存解析，Screen 按类型分发到各表单 */
+    private val _editing = MutableStateFlow<Any?>(null)
+    val editing: StateFlow<Any?> = _editing.asStateFlow()
 
     private val _trigger = MutableStateFlow<Int?>(null)
 
@@ -95,10 +106,33 @@ class TimelineViewModel(
             }
             .onEach { _state.value = it }
             .launchIn(viewModelScope)
+
+        // 当前宝宝变化自动加载（原 Screen 内 LaunchedEffect(babyId) { load(babyId) } 迁入）
+        viewModelScope.launch {
+            snapshotFlow { babyCtrl.currentBabyId }
+                .distinctUntilChanged()
+                .filter { it != 0 }
+                .collectLatest { id ->
+                    _babyId.value = id
+                    _trigger.value = id
+                }
+        }
     }
 
-    fun load(babyId: Int) {
-        _trigger.value = babyId
+    /** 详情弹层请求编辑：按记录类型从缓存解析实体，供表单回填 */
+    fun requestEdit(item: TimelineItem) {
+        _editing.value = when (item.recordType) {
+            "feeding" -> cachedFeedings.find { it.id == item.id }
+            "sleep" -> cachedSleeps.find { it.id == item.id }
+            "diaper" -> cachedDiapers.find { it.id == item.id }
+            "growth" -> cachedGrowths.find { it.id == item.id }
+            "health" -> cachedHealths.find { it.id == item.id }
+            else -> null
+        }
+    }
+
+    fun dismissEdit() {
+        _editing.value = null
     }
 
     /** 删除记录，并在内部暂存实体副本用于可能的撤销操作 */
@@ -123,12 +157,6 @@ class TimelineViewModel(
             }
         }
     }
-
-    fun findFeeding(id: Int): Feeding? = cachedFeedings.find { it.id == id }
-    fun findSleep(id: Int): Sleep? = cachedSleeps.find { it.id == id }
-    fun findDiaper(id: Int): Diaper? = cachedDiapers.find { it.id == id }
-    fun findGrowth(id: Int): Growth? = cachedGrowths.find { it.id == id }
-    fun findHealth(id: Int): HealthRecord? = cachedHealths.find { it.id == id }
 
     fun addFeeding(e: Feeding) { viewModelScope.launch { feedingRepo.insert(e) } }
     fun addSleep(e: Sleep) { viewModelScope.launch { sleepRepo.insert(e) } }

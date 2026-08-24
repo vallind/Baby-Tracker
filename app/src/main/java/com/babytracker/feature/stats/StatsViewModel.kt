@@ -2,10 +2,13 @@ package com.babytracker.feature.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.snapshotFlow
 import com.babytracker.core.domain.model.*
 import com.babytracker.core.data.repository.*
+import com.babytracker.core.util.BabyController
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -55,6 +58,7 @@ class StatsViewModel(
     private val sleepRepo: SleepRepository,
     private val growthRepo: GrowthRepository,
     private val diaperRepo: DiaperRepository,
+    private val babyCtrl: BabyController,
 ) : ViewModel() {
     private val _state = MutableStateFlow(StatsUiState())
     val state: StateFlow<StatsUiState> = _state.asStateFlow()
@@ -109,24 +113,31 @@ class StatsViewModel(
             .distinctUntilChanged()
             .onEach { _state.value = it }
             .launchIn(viewModelScope)
+
+        // 当前宝宝变化自动加载（原 Screen 内 LaunchedEffect(babyId) { loadData(babyId) } 迁入）
+        // babyCtrl.currentBabyId 是 Compose 状态，用 snapshotFlow 观察；无宝宝时不加载
+        viewModelScope.launch {
+            snapshotFlow { babyCtrl.currentBabyId }
+                .distinctUntilChanged()
+                .filter { it != 0 }
+                .collectLatest { babyId -> _trigger.value = Trigger(babyId, StatsPeriod.WEEK, 0) }
+        }
     }
 
-    fun selectPeriod(babyId: Int, period: StatsPeriod) {
+    fun selectPeriod(period: StatsPeriod) {
+        val babyId = _trigger.value?.babyId ?: babyCtrl.currentBabyId
+        if (babyId == 0) return
         _trigger.value = Trigger(babyId, period, 0)
     }
 
-    fun goBack(babyId: Int) {
+    fun goBack() {
         val t = _trigger.value ?: return
         _trigger.value = t.copy(offset = t.offset - 1)
     }
 
-    fun goForward(babyId: Int) {
+    fun goForward() {
         val t = _trigger.value ?: return
         if (t.offset < 0) _trigger.value = t.copy(offset = t.offset + 1)
-    }
-
-    fun loadData(babyId: Int, period: StatsPeriod = StatsPeriod.WEEK) {
-        _trigger.value = Trigger(babyId, period, 0)
     }
 
     fun retry() {

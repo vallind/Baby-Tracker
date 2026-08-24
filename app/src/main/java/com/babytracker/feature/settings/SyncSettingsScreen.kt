@@ -8,9 +8,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.babytracker.core.sync.BgInterval
+import com.babytracker.core.sync.RealtimeState
+import com.babytracker.core.sync.SyncConfig
 import com.babytracker.core.sync.SyncDelay
+import com.babytracker.core.sync.SyncState
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -20,20 +22,24 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
-import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SyncSettingsScreen(navController: NavController) {
-    val settingsViewModel: SettingsViewModel = koinViewModel()
-    val syncViewModel: SyncViewModel = koinViewModel()
-    val settings by settingsViewModel.settings.collectAsState()
-    val config = settings.sync
-    val connectionState by syncViewModel.connectionState.collectAsState()
-    val isOnline by syncViewModel.isOnline.collectAsState()
-    val syncState by syncViewModel.syncState.collectAsState()
-    val syncResult by syncViewModel.syncResult.collectAsState()
-    val syncRunId by syncViewModel.syncRunId.collectAsState()
-
+fun SyncSettingsScreen(
+    config: SyncConfig,
+    syncState: SyncState,
+    connectionState: RealtimeState,
+    isOnline: Boolean,
+    syncResult: String?,
+    syncRunId: Int,
+    onBack: () -> Unit,
+    onSetAutoSync: (Boolean) -> Unit,
+    onSetSyncOnExit: (Boolean) -> Unit,
+    onSetWifiOnly: (Boolean) -> Unit,
+    onSetSyncDelay: (SyncDelay) -> Unit,
+    onSetBgInterval: (BgInterval) -> Unit,
+    onManualSync: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -52,7 +58,7 @@ fun SyncSettingsScreen(navController: NavController) {
 
     AppScaffold(
         topBar = {
-            AppTopBar(title = "同步设置", onBack = { navController.popBackStack() })
+            AppTopBar(title = "同步设置", onBack = onBack)
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md)) {
@@ -64,9 +70,7 @@ fun SyncSettingsScreen(navController: NavController) {
                     trailing = {
                         AppSwitch(
                             checked = config.autoSync,
-                            onCheckedChange = { enabled ->
-                                settingsViewModel.updateSync { it.copy(autoSync = enabled) }
-                            },
+                            onCheckedChange = onSetAutoSync,
                         )
                     },
                 )
@@ -94,9 +98,7 @@ fun SyncSettingsScreen(navController: NavController) {
                     trailing = {
                         AppSwitch(
                             checked = config.syncOnExit,
-                            onCheckedChange = { enabled ->
-                                settingsViewModel.updateSync { it.copy(syncOnExit = enabled) }
-                            },
+                            onCheckedChange = onSetSyncOnExit,
                         )
                     },
                 )
@@ -108,9 +110,7 @@ fun SyncSettingsScreen(navController: NavController) {
                     trailing = {
                         AppSwitch(
                             checked = config.wifiOnly,
-                            onCheckedChange = { enabled ->
-                                settingsViewModel.updateSync { it.copy(wifiOnly = enabled) }
-                            },
+                            onCheckedChange = onSetWifiOnly,
                         )
                     },
                 )
@@ -124,7 +124,7 @@ fun SyncSettingsScreen(navController: NavController) {
                 label = if (syncing) "同步中..." else "立即同步",
                 onClick = {
                     syncing = true
-                    syncViewModel.manualSync()
+                    onManualSync()
                 },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = spacing.sm),
             )
@@ -159,7 +159,7 @@ fun SyncSettingsScreen(navController: NavController) {
                 SyncDelay.entries.forEach { delay ->
                     Row(
                         Modifier.fillMaxWidth().height(48.dp).clickable {
-                            settingsViewModel.updateSync { it.copy(syncDelay = delay) }
+                            onSetSyncDelay(delay)
                             showDelaySheet = false
                         },
                         verticalAlignment = Alignment.CenterVertically,
@@ -167,7 +167,7 @@ fun SyncSettingsScreen(navController: NavController) {
                         AppRadioButton(
                             selected = config.syncDelay == delay,
                             onClick = {
-                                settingsViewModel.updateSync { it.copy(syncDelay = delay) }
+                                onSetSyncDelay(delay)
                                 showDelaySheet = false
                             },
                         )
@@ -186,7 +186,7 @@ fun SyncSettingsScreen(navController: NavController) {
                 BgInterval.entries.forEach { interval ->
                     Row(
                         Modifier.fillMaxWidth().height(48.dp).clickable {
-                            settingsViewModel.updateSync { it.copy(bgInterval = interval) }
+                            onSetBgInterval(interval)
                             showBgSheet = false
                         },
                         verticalAlignment = Alignment.CenterVertically,
@@ -194,7 +194,7 @@ fun SyncSettingsScreen(navController: NavController) {
                         AppRadioButton(
                             selected = config.bgInterval == interval,
                             onClick = {
-                                settingsViewModel.updateSync { it.copy(bgInterval = interval) }
+                                onSetBgInterval(interval)
                                 showBgSheet = false
                             },
                         )
@@ -204,13 +204,5 @@ fun SyncSettingsScreen(navController: NavController) {
                 }
             }
         }
-    }
-}
-
-private fun SettingsViewModel.updateSync(
-    transform: (com.babytracker.core.sync.SyncConfig) -> com.babytracker.core.sync.SyncConfig,
-) {
-    updateSettings { current ->
-        current.copy(sync = transform(current.sync))
     }
 }

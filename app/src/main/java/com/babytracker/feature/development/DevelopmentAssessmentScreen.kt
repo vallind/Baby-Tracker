@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.AppColors
@@ -36,14 +35,10 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.input.AppInput
-import com.babytracker.core.util.BabyController
-import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.domain.model.AssessmentItem
 import com.babytracker.core.domain.model.DevelopmentAssessment
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
-import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Period
@@ -168,25 +163,22 @@ private fun babyAgeMonths(birthDate: String): Int {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DevelopmentAssessmentScreen(navController: NavController) {
+fun DevelopmentAssessmentScreen(
+    state: DevelopmentAssessmentUiState,
+    baby: Baby?,
+    onBack: () -> Unit,
+    onSubmitAssessment: (DevelopmentAssessment) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
-    val babyRepo: BabyRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
-    val viewModel: DevelopmentAssessmentViewModel = koinViewModel()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
-    val state by viewModel.state.collectAsState()
     var showForm by remember { mutableStateOf(false) }
 
-    LaunchedEffect(baby?.id) {
-        if (baby != null) viewModel.load(baby.id)
-    }
-
     AppScaffold(
+        modifier = modifier,
         topBar = {
-            AppTopBar(title = "发育评估", onBack = { navController.popBackStack() })
+            AppTopBar(title = "发育评估", onBack = onBack)
         },
     ) { padding ->
         if (baby == null) {
@@ -243,7 +235,7 @@ fun DevelopmentAssessmentScreen(navController: NavController) {
             babyAgeMonths = babyAgeMonths(baby.birthDate),
             onDismiss = { showForm = false },
             onSubmit = { assessment ->
-                viewModel.insert(assessment)
+                onSubmitAssessment(assessment)
                 showForm = false
             },
         )

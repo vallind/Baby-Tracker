@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.domain.model.*
 import com.babytracker.core.data.repository.*
+import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -30,11 +31,22 @@ class HomeViewModel(
     private val feedingRepo: FeedingRepository,
     private val sleepRepo: SleepRepository,
     private val diaperRepo: DiaperRepository,
+    private val babyRepo: BabyRepository,
+    private val babyCtrl: BabyController,
 ) : ViewModel() {
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
     private val _trigger = MutableStateFlow<Int?>(null)
+
+    /**
+     * 当前宝宝（Batch 2 自 Screen 迁入）。
+     * babyCtrl.currentBabyId 是 Compose 状态（VM 侧不可观察），因此以 watchAll 列表派生：
+     * 列表变化会重新求值，与原本 Screen 内 `find ?: firstOrNull` 语义一致。
+     */
+    val baby: StateFlow<Baby?> = babyRepo.watchAll()
+        .map { babies -> babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         _trigger
@@ -79,6 +91,14 @@ class HomeViewModel(
             }
             .onEach { _state.value = it }
             .launchIn(viewModelScope)
+
+        // 当前宝宝变化时：同步选中 + 加载今日数据（原 HomeScreen 内 LaunchedEffect 迁入）
+        viewModelScope.launch {
+            baby.filterNotNull().collectLatest { b ->
+                if (babyCtrl.currentBabyId != b.id) babyCtrl.selectBaby(b.id)
+                _trigger.value = b.id
+            }
+        }
     }
 
     fun loadData(babyId: Int) {
