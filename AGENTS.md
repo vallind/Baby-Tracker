@@ -14,6 +14,29 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 
 分层：`designsystem`（设计系统）/ `core`（数据库、DI、备份、同步引擎、AI、工具）/ `feature`（业务模块）/ `navigation`（路由）。模块索引与路由见 `docs/project-structure.md`。
 
+### 核心架构（三层原则，不增层）
+
+Design System 只负责 UI 的视觉、交互组件与 Design Token；Feature 负责页面状态、用户行为和业务流程；Repository 负责数据访问。Navigation 只是"页面之间怎么走"的胶水，不是第四层业务架构；DI/Koin 是基础设施，同样不算一层。
+
+**架构十原则（违反即架构错误）：**
+
+```text
+1. Design System 只负责 UI 的视觉、交互组件和 Design Token。
+2. Design System 不知道 Feature、Repository、Navigation、Koin。
+3. Feature 负责页面状态、用户行为和业务流程。
+4. Screen 是 UI 渲染层，不直接访问 Repository、Koin、NavController。
+5. ViewModel 负责业务状态和 Repository 调用，不持有 UI lambda，不持有 NavController。
+6. Route 是组合根，只负责 DI、ViewModel 装配和 Navigation 映射，不承载业务逻辑（当前实体/参数解析、数据加载进 ViewModel）。
+7. Repository 负责数据访问；Feature 只依赖 Repository 契约（interface），不直接依赖具体实现/数据源。
+8. Navigation 是 App 胶水，不建立额外的全局导航抽象。
+9. UI 临时状态留在 Screen（刷新后不需要存在的状态）；业务状态进入 ViewModel（刷新后仍应存在的状态）。
+10. 除非真实复杂度证明必要，否则不增加架构层。
+```
+
+> 不要为了让代码"看起来架构完整"而创建抽象。
+
+**Feature 默认模板**：`feature/<x>/` 默认 Route（组合根）/ Screen（纯 UI）/ ViewModel（业务）三文件，`UiState` 与 ViewModel 同文件；**三文件是默认形态，不是死规则**——仅当真实复杂度出现时才增加文件。Repository 契约保持薄接口（`observeByBaby`/`insert`/`update`/`delete`），不包 UseCase/Service 壳。ViewModel 按职责拆分（是否存在多个互不相关的状态生命周期），行数只是警戒线不是规则。
+
 ## 二、开发命令
 
 ```bash
@@ -81,8 +104,8 @@ Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Mater
 
 - 所有注释**必须中文**。Commit message **必须中文**。
 - 复杂逻辑写注释解释**为什么**（why），不重复代码表面意思（what）。
-- **版本号在每次提交前变更**（与 `app/build.gradle.kts` 的 versionName/versionCode 同步）：versionCode 每次 +1；versionName 常规提交升 patch，功能级批次可升 minor。禁止提交前不升版本号。
-- 每次提交前把本批次条目写入 CHANGELOG 对应版本小节（版本号与 build.gradle 一致），不允许 `[Unreleased]` 或“未分配版本号”的条目提交。
+- **版本号在同一功能批次内只升一次**（与 `app/build.gradle.kts` 的 versionName/versionCode 同步）：versionName 仅在"用户可感知的功能/API/行为变化"批次的首个提交时升级（功能级批次升 minor，常规功能升 patch）；批次内后续重构/整理提交不再升版本号。**versionCode 仅在产生可发布构建时递增**，内部重构提交不递增。
+- 每次提交前把本批次条目写入 CHANGELOG 对应版本小节（版本号与 build.gradle 一致），不允许 `[Unreleased]` 或“未分配版本号”的条目提交；同一发布版本内的多批次（如多个纯重构批次）条目汇聚在同一小节，发布时一次性升 versionCode。
 
 ---
 

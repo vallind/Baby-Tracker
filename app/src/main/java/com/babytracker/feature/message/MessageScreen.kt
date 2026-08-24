@@ -35,7 +35,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
@@ -98,7 +98,7 @@ fun MessageScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { AppBottomBar(navController) },
     ) { padding ->
         Column(
             Modifier

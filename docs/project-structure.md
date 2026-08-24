@@ -9,7 +9,7 @@
 ```
 app/src/main/java/com/babytracker/
 ├── designsystem/                # 设计系统（主题令牌 + 可复用组件 + Hooks + i18n）
-│   ├── theme/                   # AppTokens（核心令牌）/ AppComponentTokens（组件令牌）/ AppDensity 密度体系（含 DensityController.kt）/ Theme.kt
+│   ├── theme/                   # AppTokens（核心令牌）/ AppComponentTokens（组件令牌）/ AppDensity 密度体系 / Theme.kt
 │   ├── components/              # 可复用组件（29 个目录 + 根级组件，含 Defaults）
 │   ├── hooks/                   # useDebounce/useState/useLatestState + Logic 类
 │   ├── i18n/                    # AppStrings
@@ -23,16 +23,16 @@ app/src/main/java/com/babytracker/
 │   ├── di/                      # Koin Modules
 │   ├── data/                    # Repository + FamilyService + Mapper
 │   ├── domain/                  # Domain Models
-│   ├── settings/                # AppSettings（DataStore 设置聚合）
+│   ├── settings/                # AppSettings（DataStore 设置聚合）/ ThemeController / DensityController（App 层状态，迁自 designsystem）
 │   ├── sync/                    # SyncEngine / SyncTrigger / RealtimeManager / SyncWorker
 │   └── util/                    # BabyController/DateUtils/VaccineSchedule/NetworkMonitor/TokenAuditChecker（令牌审计检查器，Gradle 任务与 JVM 单测双路复用）
 ├── feature/                     # 业务功能（16 个模块）
 │   ├── home/feeding/sleep/diaper/growth/
 │   ├── vaccination/health/stats/timeline/
 │   ├── message/development/reminder/settings/
-│   │   └── settings/            # SettingsMenuScreen（使用偏好：界面密度入口）/ SettingsScreen（DensityPickerSheet/ThemePickerSheet）/ SettingsViewModel
+│   │   └── settings/            # SettingsMenuScreen（使用偏好：界面密度入口）/ SettingsScreen / SettingsSheets（主题/密度弹层）/ SettingsViewModel
 │   └── ai/auth/family/
-└── navigation/                  # 导航（AppNavigation.kt，类型安全 @Serializable 路由，25+ 页面）
+└── navigation/                  # 导航（AppNavigation.kt，类型安全 @Serializable 路由，25+ 页面）+ AppBottomBar（底部导航 App 层壳；纯 UI 组件在 designsystem/components/navigation/）
 ```
 
 仓库根级模块与构建配置：
@@ -50,6 +50,7 @@ config/detekt/detekt.yml         # detekt 显式枚举配置（Termux 下 buildU
 designsystem/
 ├── theme/                       # DensityTokensTest / ComponentTokensStateAuditTest / ThemeTokenizationStaticAuditTest / TypographyTokensTest / AppColorScaleTest
 ├── components/                  # A11ySemanticsAuditTest（自定义可交互组件语义静态审计）
+├── DesignSystemBoundaryAuditTest.kt  # DS 边界守门：designsystem 禁止依赖 core/feature/navigation/koin（Batch 1）
 ├── showcase/                    # DesignShowcaseTest（Paparazzi 截图 Showcase，仅 x86_64 可跑，见 docs/design-system.md）
 └── core/util/                   # TokenAuditCheckerTest（共享检查器拦截/白名单/防呆样本）
 ```

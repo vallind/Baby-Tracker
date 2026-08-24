@@ -125,8 +125,8 @@ snackbar.showUndo(onUndo = { repo.update(r) })     // 替代 showSnackbar + Acti
   1. `AppSpacing().scaled(spacingScale)` — 全量间距令牌按系数缩放（`none` 不缩放），注入 `LocalAppSpacing`；
   2. `AppControlTokens.densityAdjusted(density)` — 仅调整 medium 档控件高度（±8dp），注入 `LocalAppControl`；
   3. 全部组件自动生效，无需逐组件改动；组件若需按密度区分，用枚举参数（如 `density: AppDensity`），不新增函数。
-- **存储与切换**：`AppSettings.appearance.density`（DataStore 持久化）；`DensityController`（`designsystem/theme/DensityController.kt`，仿 ThemeController：订阅设置流 + `mutableStateOf` + `switchDensity`）以 `single` 注册进 `core/di/Modules.kt`。
-- **设置页入口**：`feature/settings/SettingsMenuScreen.kt`（使用偏好）「界面密度」（📐）→ `DensityPickerSheet`（`SettingsScreen.kt` 内，AppBottomSheet 三选一卡片，label 走 AppStrings.densityLabel）。
+- **存储与切换**：`AppSettings.appearance.density`（DataStore 持久化）；`DensityController`（`core/settings/DensityController.kt`，App 层状态，仿 ThemeController：订阅设置流 + `mutableStateOf` + `switchDensity`；Batch 1 起迁出 designsystem）以 `single` 注册进 `core/di/Modules.kt`。
+- **设置页入口**：`feature/settings/SettingsMenuScreen.kt`（使用偏好）「界面密度」（📐）→ `DensityPickerSheet`（`SettingsSheets.kt` 内，AppBottomSheet 三选一卡片，label 走 AppStrings.densityLabel）。
 - 密度相关回归：`DensityTokensTest`（缩放/三档数值/fromKey/densityAdjusted 4 项）。
 
 ## Paparazzi 截图 Showcase（DesignShowcaseTest）

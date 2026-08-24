@@ -7,7 +7,7 @@
 1. **M3 内置锚点**：M3 包装组件（AppButton / AppSwitch / AppCheckbox / AppRadioButton / AppSlider / AppFilterChip / AppLinearProgress / AppCircularProgress / AppDialog / AppInput 等）依赖 M3 内置语义作为基线锚点，不重复叠加，不改写 role。
 2. **自定义必须显式**：自定义可交互组件（SegmentedControl / RecordCard / AppRate / TimePickerLogic 滚轮 / DateTimeCascade 日历）必须显式提供 `role` / `selected` / `stateDescription` / `customActions`。
 3. **装饰隔离**：纯装饰内容（BabyIllustration / BadgeIcon / EmptyState emoji / 分割线 / 骨架屏 / 背景删除图标）必须 `clearAndSetSemantics` 隔离，避免常驻无障碍树。
-4. **防重复朗读**：文本标签与 icon 不得重复声明语义——label 变体（AppFAB / BottomNavBar / AppButton 带 icon）的 icon `contentDescription = null`，文本已由组件朗读。
+4. **防重复朗读**：文本标签与 icon 不得重复声明语义——label 变体（AppFAB / AppNavigationBar / AppButton 带 icon）的 icon `contentDescription = null`，文本已由组件朗读。
 
 ## 组件承诺表
 
@@ -36,7 +36,7 @@
 | TimePickerLogic 滚轮 | 选中项 `selected` 语义（TimePickerLogic.kt:162，与视觉高亮同源） |
 | DateTimeCascade 日历 | 日期格 `Role.Button` + `selected`（DateTimeCascade.kt:369-370） |
 | AppConfirmDialog / AppDialog / AppActionSheet / AppFormSheet / AppBottomSheet | M3 AlertDialog/BottomSheet 内置 focus trap + 标题朗读；按钮语义随内部 AppButton |
-| BottomNavBar | M3 内置（NavigationBarItem，label 文本朗读 + selected 状态）；icon `contentDescription = null`（BottomNav.kt:71/74） |
+| AppNavigationBar | M3 内置（NavigationBarItem，label 文本朗读 + selected 状态）；icon `contentDescription = null`（AppNavigationBar.kt） |
 | AppFAB | label 变体：ExtendedFAB 文本朗读，icon CD = null（Fab.kt:39）；紧凑变体依赖调用方 `contentDescription`（Fab.kt:56） |
 | AppSnackbar / AppSnackbarHost | M3 内置（Snackbar 文本 + actionLabel 朗读）；actionLabel 走 AppStrings.undo |
 | SectionHeader / AppListItem | 文本自动朗读；可选 onClick 走 `clickable` 触达语义（Section.kt:46/82） |
@@ -59,6 +59,6 @@
 
 ## 审计
 
-- `A11ySemanticsAuditTest`（静态断言）守护自定义可交互组件语义：SegmentedControl（Role.Tab/selected）、RecordCard（customActions）、AppRate/AppLabeledSlider（contentDescription）、TimePickerLogic/DateTimeCascade（selected）、Fab/BottomNav（contentDescription = null）。
+- `A11ySemanticsAuditTest`（静态断言）守护自定义可交互组件语义：SegmentedControl（Role.Tab/selected）、RecordCard（customActions）、AppRate/AppLabeledSlider（contentDescription）、TimePickerLogic/DateTimeCascade（selected）、Fab/AppNavigationBar（contentDescription = null）。
 - `ThemeTokenizationStaticAuditTest` 守护令牌合规（无硬编码颜色值）。
 - 原则 4（防重复朗读）由代码审查 + 静态测试共同守护；新增 label+icon 组合组件时必须 icon CD = null。

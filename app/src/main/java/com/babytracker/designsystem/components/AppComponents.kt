@@ -45,7 +45,8 @@ package com.babytracker.designsystem.components
 // —— 专用组件 ——
 // BabyIllustration   宝宝头像
 // BadgeIcon          角标
-// BottomNavBar       底部导航              (bottomnav/)
+// AppNavigationBar   底部导航（纯 UI）      (navigation/)
+// AppNavigationItem  底部导航 Tab 数据
 // CountdownChip      倒计时标签
 // EmptyState         空状态
 // EmptyStateDefaults 空状态令牌读取（TT-036）

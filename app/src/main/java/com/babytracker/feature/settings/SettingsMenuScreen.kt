@@ -22,9 +22,9 @@ import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.designsystem.theme.DensityController
+import com.babytracker.core.settings.DensityController
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.ThemeController
+import com.babytracker.core.settings.ThemeController
 import com.babytracker.navigation.AiSettings
 import com.babytracker.navigation.Backup
 import com.babytracker.navigation.LogViewer

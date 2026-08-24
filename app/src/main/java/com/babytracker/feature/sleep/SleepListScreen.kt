@@ -40,7 +40,7 @@ import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.SleepRepository
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.quickstat.QuickStatPill
 import com.babytracker.designsystem.components.recordcard.RecordCard
@@ -131,7 +131,7 @@ fun SleepListScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { AppBottomBar(navController) },
     ) { padding ->
         Column(
             Modifier

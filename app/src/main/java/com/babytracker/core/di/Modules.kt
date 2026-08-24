@@ -12,8 +12,8 @@ import com.babytracker.core.ai.provider.OpenAiResponsesAdapter
 import com.babytracker.core.ai.settings.AiSettingsStore
 import com.babytracker.core.backup.BackupManager
 import com.babytracker.core.database.AppDatabase
-import com.babytracker.designsystem.theme.ThemeController
-import com.babytracker.designsystem.theme.DensityController
+import com.babytracker.core.settings.ThemeController
+import com.babytracker.core.settings.DensityController
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.*
 import com.babytracker.feature.stats.StatsViewModel

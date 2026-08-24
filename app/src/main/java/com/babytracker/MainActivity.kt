@@ -20,8 +20,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.babytracker.designsystem.theme.BabyTrackerTheme
-import com.babytracker.designsystem.theme.DensityController
-import com.babytracker.designsystem.theme.ThemeController
+import com.babytracker.core.settings.DensityController
+import com.babytracker.core.settings.ThemeController
 import com.babytracker.designsystem.theme.toColorScheme
 import com.babytracker.navigation.AppNavigation
 import org.koin.android.ext.android.inject

@@ -24,7 +24,7 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
@@ -115,7 +115,7 @@ fun TimelineScreen(navController: NavController) {
         topBar = {
             AppTopBar(title = AppStrings.records)
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { AppBottomBar(navController) },
         fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { showTypePicker = true })
         },

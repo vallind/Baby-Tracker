@@ -44,6 +44,6 @@ class A11ySemanticsAuditTest {
         assert(read("DateTimeCascade.kt").contains("selected =")) { "DateTimeCascade 日历日期格缺少 selected 选中语义" }
         // FAB label 变体与底部导航：图标不重复朗读，置空 contentDescription
         assert(read("Fab.kt").contains("contentDescription = null")) { "Fab label 变体图标未置空 contentDescription（会与文字重复朗读）" }
-        assert(read("BottomNav.kt").contains("contentDescription = null")) { "BottomNav 图标未置空 contentDescription（M3 内置 label 已朗读）" }
+        assert(read("AppNavigationBar.kt").contains("contentDescription = null")) { "AppNavigationBar 图标未置空 contentDescription（M3 内置 label 已朗读）" }
     }
 }

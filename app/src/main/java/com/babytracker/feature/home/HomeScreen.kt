@@ -46,7 +46,7 @@ import com.babytracker.core.domain.model.SleepType
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
@@ -102,7 +102,7 @@ fun HomeScreen(navController: NavController) {
     }
 
     AppScaffold(
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { AppBottomBar(navController) },
     ) { padding ->
         if (baby == null) {
             EmptyState(

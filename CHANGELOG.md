@@ -2,6 +2,21 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.3.0] — 2026-08-24
+
+**架构收敛波次（refactor）批次 1：DesignSystem 边界**
+
+> 本波次（Batch 1~6，见 docs/refactor-p0-p1-plan.md）共用一个版本号起点 2.3.0，后续重构批次不再升版本；versionCode 在发布构建时递增。
+
+**一、DesignSystem 与 App 层分离：**
+- 底部导航拆两层：`designsystem/components/navigation/AppNavigationBar`（纯 UI：items/selectedIndex/onItemClick + 徽章展示，零业务依赖）+ `navigation/AppBottomBar`（App 层壳：消息未读数、5 个 Tab 路由映射）；删除旧 `designsystem/components/bottomnav/BottomNav.kt`；9 个页面调用点同步替换
+- Tab 文案改用 AppStrings 键（home/records/stats/messages/profile，去除硬编码中文）
+- `ThemeController` / `DensityController` 迁出 designsystem 至 `core/settings`（App 层状态）；MainActivity / Modules / SettingsMenuScreen 调用方同步更新
+- 主题/密度选择弹层自 `SettingsScreen.kt` 拆至 `feature/settings/SettingsSheets.kt`（*Screen.kt 文件不再直接依赖 Controller，配合 Screen 边界审计）
+- 新增 `DesignSystemBoundaryAuditTest`：designsystem 源码禁止 import core/feature/navigation/koin，边界由测试守门（架构十原则 #1/#2 落地）
+
+版本号 2.2.4 → 2.3.0（本波次统一起点；versionCode 48 不变，发布构建时递增）。
+
 ### [2.2.4] — 2026-08-23
 
 **回滚与工程清理合并批次（原 2.2.1~2.2.3 计划小节合并为一）：**

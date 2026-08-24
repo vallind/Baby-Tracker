@@ -39,7 +39,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.quickstat.QuickStatPill
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
@@ -128,7 +128,7 @@ fun DiaperListScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { AppBottomBar(navController) },
     ) { padding ->
         Column(
             Modifier

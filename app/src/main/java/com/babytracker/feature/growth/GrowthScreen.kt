@@ -37,7 +37,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.core.data.repository.GrowthRepository
 import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.util.GrowthReference
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
@@ -114,7 +114,7 @@ fun GrowthScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { AppBottomBar(navController) },
     ) { padding ->
         Column(
             Modifier

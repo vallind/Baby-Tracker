@@ -32,7 +32,7 @@ import androidx.navigation.NavController
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.bottomnav.BottomNavBar
+import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.progress.AppCircularProgress
@@ -66,7 +66,7 @@ fun StatsScreen(navController: NavController) {
         topBar = {
             AppTopBar(title = "统计分析")
         },
-        bottomBar = { BottomNavBar(navController) },
+        bottomBar = { AppBottomBar(navController) },
     ) { padding ->
         Column(
             Modifier
