@@ -279,7 +279,7 @@ SELECT COUNT(*) FROM sleeps        WHERE baby_id NOT IN (SELECT id FROM babies);
 | Batch 3（已完成 ✅） | 六记录屏建 VM + 状态迁移（逐屏提交） | 2 | 中 | 每屏提交全绿 |
 | Batch 4（已完成 ✅） | Settings 拆文件 + BackupVM / BabyManagementVM / 薄 SettingsVM | 3 | 中 | 全绿 + 按职责无 God VM；ScreenBoundaryAuditTest 首次全绿 |
 | Batch 5（已完成 ✅） | Token 桥接 + AppButton 收紧 | 无（可与 4 并行） | 低～中 | 全绿 + 审计守门（AppButtonApiAuditTest） |
-| Batch 6 | Room FK + Index（Migration 8→9） | 5 | 中 | 孤儿预检 + 迁移预演 + 真机冒烟 + 全绿 |
+| Batch 6（已完成 ✅） | Room FK + Index（Migration 8→9） | 5 | 中 | 孤儿预检 + v9 schema 交叉核对 + 预演脚本 + 全绿（真机冒烟待用户） |
 
 **版本规则**（AGENTS.md §七 已同步更新）：整个重构波次作为一个发布批次，**versionName 只升一次**（2.2.0 → 2.3.0，Batch 1 首个提交时）；批次内后续提交不升版本号；versionCode 仅在产生可发布构建时递增。每批：`assembleDebug` + `testDebugUnitTest` 全绿 → `refactor:` 中文 commit → CHANGELOG 汇聚到 2.3.0 小节 → 文档同步（§9）。
 

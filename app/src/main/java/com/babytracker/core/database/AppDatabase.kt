@@ -16,7 +16,7 @@ import com.babytracker.core.database.entity.*
         DevelopmentAssessmentEntity::class, ReminderEntity::class,
         SyncMetadataEntity::class, SyncCursorEntity::class,
         AiConversationEntity::class, AiMessageEntity::class],
-    version = 8, exportSchema = true,
+    version = 9, exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun babyDao(): BabyDao
@@ -246,6 +246,163 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Batch 6：六张业务表补 baby_id 外键（不带 CASCADE）+ baby_id 索引；babies 补 familyId 索引。
+        // 迁移原则（评审确认）：迁移默认不做不可逆数据删除 —— 第一步六表孤儿预检，
+        // 任一表存在孤儿（baby_id 不在 babies）即抛异常失败，绝不在迁移内自动 DELETE；
+        // 孤儿可能来自旧版 bug/同步顺序/备份恢复/家庭数据迁移，是否清理由人工决定。
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // ── 0) 孤儿预检（任何 DDL 之前）──
+                val orphanTables = listOf(
+                    "feedings", "sleeps", "growths", "vaccinations", "health_records", "diapers",
+                )
+                val orphanCounts = orphanTables.mapNotNull { table ->
+                    val count = db.query("SELECT COUNT(*) AS c FROM $table WHERE baby_id NOT IN (SELECT id FROM babies)").use { cursor ->
+                        if (cursor.moveToFirst()) cursor.getLong(0) else 0L
+                    }
+                    if (count > 0) "$table=$count" else null
+                }
+                if (orphanCounts.isNotEmpty()) {
+                    throw IllegalStateException(
+                        "迁移 8→9 孤儿预检失败（存在 baby_id 不在 babies 的记录）：${orphanCounts.joinToString(", ")}。" +
+                            "请人工决定：恢复对应宝宝或确认清理后重试，迁移不会自动删除任何数据。",
+                    )
+                }
+
+                // ── 1) babies.familyId 索引（纯增索引，无重建）──
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_babies_familyId ON babies(familyId)")
+
+                // ── 2) 六张表 12 步重建：建新表（含 FK）→ INSERT SELECT → DROP → RENAME → CREATE INDEX ──
+                // 列顺序/类型与 Entity 声明严格一致（Room v9 schema 校验）：
+                // id INTEGER PK AUTOINC / baby_id INTEGER NOT NULL + FK / 业务列 / 同步列 TEXT/INTEGER
+                rebuildWithBabyFk(
+                    db, table = "feedings",
+                    columns = "id, baby_id, type, amountMl, durationMin, breastSide, foodName, amountG, brand, note, timestamp, uuid, updatedAt, deletedAt",
+                    createSql = """
+                        CREATE TABLE feedings_new (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            baby_id INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            amountMl INTEGER,
+                            durationMin INTEGER,
+                            breastSide TEXT,
+                            foodName TEXT,
+                            amountG INTEGER,
+                            brand TEXT,
+                            note TEXT,
+                            timestamp TEXT NOT NULL,
+                            uuid TEXT,
+                            updatedAt INTEGER NOT NULL,
+                            deletedAt INTEGER,
+                            FOREIGN KEY(baby_id) REFERENCES babies(id)
+                        )
+                    """.trimIndent(),
+                )
+                rebuildWithBabyFk(
+                    db, table = "sleeps",
+                    columns = "id, baby_id, type, start_time, end_time, note, uuid, updatedAt, deletedAt",
+                    createSql = """
+                        CREATE TABLE sleeps_new (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            baby_id INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            start_time TEXT NOT NULL,
+                            end_time TEXT NOT NULL,
+                            note TEXT,
+                            uuid TEXT,
+                            updatedAt INTEGER NOT NULL,
+                            deletedAt INTEGER,
+                            FOREIGN KEY(baby_id) REFERENCES babies(id)
+                        )
+                    """.trimIndent(),
+                )
+                rebuildWithBabyFk(
+                    db, table = "growths",
+                    columns = "id, baby_id, type, value, measured_at, note, uuid, updatedAt, deletedAt",
+                    createSql = """
+                        CREATE TABLE growths_new (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            baby_id INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            value REAL NOT NULL,
+                            measured_at TEXT NOT NULL,
+                            note TEXT,
+                            uuid TEXT,
+                            updatedAt INTEGER NOT NULL,
+                            deletedAt INTEGER,
+                            FOREIGN KEY(baby_id) REFERENCES babies(id)
+                        )
+                    """.trimIndent(),
+                )
+                rebuildWithBabyFk(
+                    db, table = "vaccinations",
+                    columns = "id, baby_id, name, dose, scheduled_date, administered_date, status, note, uuid, updatedAt, deletedAt",
+                    createSql = """
+                        CREATE TABLE vaccinations_new (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            baby_id INTEGER NOT NULL,
+                            name TEXT NOT NULL,
+                            dose TEXT,
+                            scheduled_date TEXT,
+                            administered_date TEXT,
+                            status TEXT NOT NULL,
+                            note TEXT,
+                            uuid TEXT,
+                            updatedAt INTEGER NOT NULL,
+                            deletedAt INTEGER,
+                            FOREIGN KEY(baby_id) REFERENCES babies(id)
+                        )
+                    """.trimIndent(),
+                )
+                rebuildWithBabyFk(
+                    db, table = "health_records",
+                    columns = "id, baby_id, category, description, doctor_name, record_date, attachments, note, uuid, updatedAt, deletedAt",
+                    createSql = """
+                        CREATE TABLE health_records_new (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            baby_id INTEGER NOT NULL,
+                            category TEXT NOT NULL,
+                            description TEXT NOT NULL,
+                            doctor_name TEXT,
+                            record_date TEXT NOT NULL,
+                            attachments TEXT,
+                            note TEXT,
+                            uuid TEXT,
+                            updatedAt INTEGER NOT NULL,
+                            deletedAt INTEGER,
+                            FOREIGN KEY(baby_id) REFERENCES babies(id)
+                        )
+                    """.trimIndent(),
+                )
+                rebuildWithBabyFk(
+                    db, table = "diapers",
+                    columns = "id, baby_id, type, timestamp, note, uuid, updatedAt, deletedAt",
+                    createSql = """
+                        CREATE TABLE diapers_new (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                            baby_id INTEGER NOT NULL,
+                            type TEXT NOT NULL,
+                            timestamp TEXT NOT NULL,
+                            note TEXT,
+                            uuid TEXT,
+                            updatedAt INTEGER NOT NULL,
+                            deletedAt INTEGER,
+                            FOREIGN KEY(baby_id) REFERENCES babies(id)
+                        )
+                    """.trimIndent(),
+                )
+            }
+        }
+
+        /** 12 步重建辅助：建新表（含 FK）→ 拷贝 → 换名 → 补索引（SQLite 无法 ALTER 加 FK） */
+        private fun rebuildWithBabyFk(db: SupportSQLiteDatabase, table: String, columns: String, createSql: String) {
+            db.execSQL(createSql)
+            db.execSQL("INSERT INTO ${table}_new ($columns) SELECT $columns FROM $table")
+            db.execSQL("DROP TABLE $table")
+            db.execSQL("ALTER TABLE ${table}_new RENAME TO $table")
+            db.execSQL("CREATE INDEX IF NOT EXISTS index_${table}_baby_id ON $table(baby_id)")
+        }
+
         @Volatile private var instance: AppDatabase? = null
         fun get(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
@@ -258,6 +415,7 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_5_6,
                         MIGRATION_6_7,
                         MIGRATION_7_8,
+                        MIGRATION_8_9,
                     )
                     .build().also { instance = it }
             }

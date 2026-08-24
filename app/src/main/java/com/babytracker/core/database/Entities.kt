@@ -6,7 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "babies")
+@Entity(tableName = "babies", indices = [Index("familyId")])
 data class BabyEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
@@ -23,7 +23,18 @@ data class BabyEntity(
     val familyId: String? = null,          // 本地家庭隔离；离线未选家庭时可为空
 )
 
-@Entity(tableName = "feedings")
+@Entity(
+    tableName = "feedings",
+    foreignKeys = [
+        ForeignKey(
+            entity = BabyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["baby_id"],
+            // 不带 CASCADE：删除语义由业务层控制（soft delete + sync tombstone 链路），勿物理级联
+        ),
+    ],
+    indices = [Index("baby_id")],
+)
 data class FeedingEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "baby_id") val babyId: Int,
@@ -42,7 +53,17 @@ data class FeedingEntity(
     val deletedAt: Long? = null,
 )
 
-@Entity(tableName = "sleeps")
+@Entity(
+    tableName = "sleeps",
+    foreignKeys = [
+        ForeignKey(
+            entity = BabyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["baby_id"],
+        ),
+    ],
+    indices = [Index("baby_id")],
+)
 data class SleepEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "baby_id") val babyId: Int,
@@ -56,7 +77,17 @@ data class SleepEntity(
     val deletedAt: Long? = null,
 )
 
-@Entity(tableName = "growths")
+@Entity(
+    tableName = "growths",
+    foreignKeys = [
+        ForeignKey(
+            entity = BabyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["baby_id"],
+        ),
+    ],
+    indices = [Index("baby_id")],
+)
 data class GrowthEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "baby_id") val babyId: Int,
@@ -70,7 +101,17 @@ data class GrowthEntity(
     val deletedAt: Long? = null,
 )
 
-@Entity(tableName = "vaccinations")
+@Entity(
+    tableName = "vaccinations",
+    foreignKeys = [
+        ForeignKey(
+            entity = BabyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["baby_id"],
+        ),
+    ],
+    indices = [Index("baby_id")],
+)
 data class VaccinationEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "baby_id") val babyId: Int,
@@ -86,7 +127,17 @@ data class VaccinationEntity(
     val deletedAt: Long? = null,
 )
 
-@Entity(tableName = "health_records")
+@Entity(
+    tableName = "health_records",
+    foreignKeys = [
+        ForeignKey(
+            entity = BabyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["baby_id"],
+        ),
+    ],
+    indices = [Index("baby_id")],
+)
 data class HealthRecordEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "baby_id") val babyId: Int,
@@ -102,7 +153,17 @@ data class HealthRecordEntity(
     val deletedAt: Long? = null,
 )
 
-@Entity(tableName = "diapers")
+@Entity(
+    tableName = "diapers",
+    foreignKeys = [
+        ForeignKey(
+            entity = BabyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["baby_id"],
+        ),
+    ],
+    indices = [Index("baby_id")],
+)
 data class DiaperEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "baby_id") val babyId: Int,

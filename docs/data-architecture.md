@@ -67,17 +67,17 @@
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 15 张表清单（Room version 8 基线）
+### 15 张表清单（Room version 9 基线）
 
 | # | 表名 | PK | 含 babyId | 有 FK | 同步字段 | 说明 |
 |---|------|----|-----------|-------|----------|------|
-| 1 | `babies` | Int auto | — | — | uuid/updatedAt/deletedAt/familyId | 宝宝容器，本地唯一含 familyId 的表 |
-| 2 | `feedings` | Int auto | ✅ | — | uuid/updatedAt/deletedAt | 喂养 |
-| 3 | `sleeps` | Int auto | ✅ | — | uuid/updatedAt/deletedAt | 睡眠 |
-| 4 | `growths` | Int auto | ✅ | — | uuid/updatedAt/deletedAt | 生长 |
-| 5 | `vaccinations` | Int auto | ✅ | — | uuid/updatedAt/deletedAt | 疫苗 |
-| 6 | `health_records` | Int auto | ✅ | — | uuid/updatedAt/deletedAt | 健康 |
-| 7 | `diapers` | Int auto | ✅ | — | uuid/updatedAt/deletedAt | 尿布 |
+| 1 | `babies` | Int auto | — | — | uuid/updatedAt/deletedAt/familyId | 宝宝容器，本地唯一含 familyId 的表（v9：+ `index_babies_familyId`） |
+| 2 | `feedings` | Int auto | ✅ | ✅ → babies.id（NO ACTION） | uuid/updatedAt/deletedAt | 喂养（v9：+ FK + `index_feedings_baby_id`） |
+| 3 | `sleeps` | Int auto | ✅ | ✅ → babies.id（NO ACTION） | uuid/updatedAt/deletedAt | 睡眠（v9：+ FK + `index_sleeps_baby_id`） |
+| 4 | `growths` | Int auto | ✅ | ✅ → babies.id（NO ACTION） | uuid/updatedAt/deletedAt | 生长（v9：+ FK + `index_growths_baby_id`） |
+| 5 | `vaccinations` | Int auto | ✅ | ✅ → babies.id（NO ACTION） | uuid/updatedAt/deletedAt | 疫苗（v9：+ FK + `index_vaccinations_baby_id`） |
+| 6 | `health_records` | Int auto | ✅ | ✅ → babies.id（NO ACTION） | uuid/updatedAt/deletedAt | 健康（v9：+ FK + `index_health_records_baby_id`） |
+| 7 | `diapers` | Int auto | ✅ | ✅ → babies.id（NO ACTION） | uuid/updatedAt/deletedAt | 尿布（v9：+ FK + `index_diapers_baby_id`） |
 | 8 | `development_assessments` | Int auto | ✅ | ✅ → babies.id | uuid/updatedAt/deletedAt | 发育评估（5 项能力 0-3 分） |
 | 9 | `reminders` | Int auto | ✅ | ✅ → babies.id | uuid/updatedAt/deletedAt | 提醒 |
 | 10 | `messages` | Long auto | ❌ | — | 有字段但不参与同步 | 消息中心，type 存 MessageType.name |
@@ -86,6 +86,8 @@
 | 13 | `sync_cursors` | (familyId, tableName) 复合 | — | — | ❌ 同步元数据 | 每家庭每表服务端 sync_version 游标 |
 | 14 | `ai_conversations` | Long auto | ✅ | ✅ → babies.id | ❌ 仅本机 | AI 会话（v8 新增，绑定家庭+宝宝） |
 | 15 | `ai_messages` | Long auto | 间接（经会话） | ✅ → ai_conversations.id | ❌ 仅本机 | AI 消息（v8 新增，含思考/安全字段） |
+
+> v9 说明（Batch 6）：六张业务表从「仅逻辑关联」补齐 `FOREIGN KEY(baby_id) REFERENCES babies(id)`（**NO ACTION，不带 CASCADE**——删除语义由业务层 soft delete / sync tombstone 控制）+ `Index(baby_id)`；babies 补 `Index(familyId)`。迁移原则：**孤儿预检**（任一表存在 baby_id 不在 babies 的记录即抛异常失败，绝不自动 DELETE），见 `MIGRATION_8_9` 与 `tools/migrate-8to9-preview.sql`；时间字段仍为 TEXT（时间模型统一属 P2-A 单独立项）。
 
 ### 关键表字段
 
@@ -249,6 +251,7 @@
 | MIGRATION_5_6 | 10 表加 uuid/updatedAt/deletedAt + 建 sync_metadata（旧版 6 字段） | ✅ |
 | MIGRATION_6_7 | babies +familyId；重建 sync_metadata（10 业务字段 + 唯一索引）；建 sync_cursors；清除 messages 同步元数据 | ✅ |
 | MIGRATION_7_8 | 建 ai_conversations / ai_messages（含复合索引与 FK 级联） | ✅ |
+| MIGRATION_8_9 | 孤儿预检（非 0 即失败，不自动删）→ babies +familyId 索引 → 六表重建补 FK(NO ACTION) + baby_id 索引；同步元数据表零改动 | ✅ |
 
 > `exportSchema = true`，schema JSON 导出在 `app/schemas/com.babytracker.core.database.AppDatabase/8.json`。
 
@@ -272,7 +275,7 @@
 
 ## 数据模型维护约定
 
-- 当前基线：**15 张表 / Room version 8**。新增 @Entity 必须同步提供 Migration（AppDatabase.kt 注册），并提升 version。
+- 当前基线：**15 张表 / Room version 9**。新增 @Entity 必须同步提供 Migration（AppDatabase.kt 注册），并提升 version。
 - 新增表进同步前，先确认该表在 Supabase 的 RLS 策略与同步机制一致（必须有 `family_id` 且策略为 `is_family_member(family_id)`），并把表名加入 SyncEngine 的 `syncedTables`、`getEntityDao()`、`markExistingPending()` 三处。
 - 从同步摘除某表时，必须在 `markExistingPending()` 开头 `DELETE FROM sync_metadata WHERE tableName='<表名>'` 清理存量，避免 conflict→pending 死循环。
 - 改动表结构/新增表后，同步更新本文件与 `docs/project-structure.md`。

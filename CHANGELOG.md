@@ -43,6 +43,14 @@
 - 新增 `AppButtonApiAuditTest`：designsystem 之外禁止给 AppButton 传裸 token 参数（业务代码不得绕过 Design Token）
 - design-system.md 优先级模型更新为「语义参数 > XxxDefaults > 组件令牌」；全站约 50 处 AppButton 调用点核对清理
 
+**六、批次 6：Room baby_id 外键 + 索引（Migration 8→9，最后一批）：**
+- 六张业务表（feedings/sleeps/growths/vaccinations/health_records/diapers）补 `FOREIGN KEY(baby_id) REFERENCES babies(id)`（**NO ACTION，不带 CASCADE**，删除语义保持业务层 soft delete / tombstone 控制）+ `Index(baby_id)`；babies 补 `Index(familyId)`
+- `MIGRATION_8_9`：**孤儿预检**（六表逐一统计 baby_id 不在 babies 的数量，任一非 0 抛异常失败，绝不自动 DELETE——迁移默认不做不可逆数据删除）→ 6 表 12 步重建（建新表含 FK → INSERT SELECT → DROP → RENAME → CREATE INDEX；列序/类型与 Room v9 schema 严格一致）
+- 验证：`assembleDebug`（Room schema 导出 9.json）与 `testDebugUnitTest` 全绿；v9 schema JSON 与迁移 SQL **逐列/逐索引交叉核对一致**；提供 `tools/migrate-8to9-preview.sql` 预演脚本（sqlite3 环境对库副本执行）；sync_metadata/sync_cursors 零改动
+- 待用户：真机升级冒烟（旧版本数据 → 迁移成功 → 六表读写 + 同步正常）；时间模型统一仍为 P2-A 独立立项
+
+**七、架构收敛波次收官**：Batch 1~6 全部完成，`designsystem` 零业务依赖、全部 *Screen.kt 纯 UI、Token 单一来源、AppButton 语义化、六表引用完整性就位。预留项：时间模型迁移（P2-A）、Room 复合索引评估（并入 P2-A）、`SettingsMenuScreen` 双 SettingsViewModel 实例（评估后维持现状）。
+
 版本号 2.2.4 → 2.3.0（本波次统一起点；versionCode 48 不变，发布构建时递增）。
 
 ### [2.2.4] — 2026-08-23
