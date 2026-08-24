@@ -4,7 +4,6 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,13 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.ui.draw.rotate
 import com.babytracker.designsystem.theme.AppColors
-import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -31,10 +27,6 @@ import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
-import com.babytracker.core.util.BabyController
-import com.babytracker.core.data.repository.HealthRepository
-import com.babytracker.core.data.repository.VaccinationRepository
-import kotlinx.coroutines.launch
 import com.babytracker.core.domain.model.HealthRecord
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
@@ -47,9 +39,10 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
-import org.koin.compose.koinInject
+import com.babytracker.designsystem.i18n.AppStrings
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
 private data class HealthCategoryMeta(
     val key: String,
@@ -83,19 +76,26 @@ private fun categorySummary(category: String, items: List<HealthRecord>): String
     }
 }
 
+/**
+ * 健康档案 — 纯 UI 渲染层：只收 state + 命名回调，不接触导航 / Koin / Repository / Controller。
+ *
+ * - 卡片展开/表单显隐/详情弹层/Snackbar 撤销均为 UI 临时状态，留在本地 remember；
+ * - 删除 / 撤销 / 保存 / 疫苗页跳转走命名回调（Route 映射到 ViewModel）；
+ * - 无 bottomBar（本屏为 AppScaffold 独立页，不挂底部导航）。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HealthScreen(navController: NavController) {
+fun HealthScreen(
+    state: HealthUiState,
+    onBack: () -> Unit,
+    onOpenVaccination: () -> Unit,
+    onDelete: (HealthRecord) -> Unit,
+    onRestore: (HealthRecord) -> Unit,
+    onSave: (HealthRecord, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val healthRepo: HealthRepository = koinInject()
-    val vacRepo: VaccinationRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
-    val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
-    val records by healthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
-    val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
     var showForm by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<HealthRecord?>(null) }
     var detailRecord by remember { mutableStateOf<HealthRecord?>(null) }
@@ -104,18 +104,28 @@ fun HealthScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
-    val grouped = remember(records) { records.groupBy { it.category } }
-    val vaccinatedCount = remember(vaccinations) {
-        completedVaccinationCount(vaccinations)
+    val grouped = remember(state.records) { state.records.groupBy { it.category } }
+    val vaccinatedCount = remember(state.vaccinations) {
+        completedVaccinationCount(state.vaccinations)
     }
 
     AppScaffold(
-        topBar = { AppTopBar(title = "健康档案", onBack = { navController.popBackStack() }) },
+        modifier = modifier,
+        topBar = { AppTopBar(title = "健康档案", onBack = onBack) },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { editingRecord = null; showForm = true })
         },
     ) { padding ->
+        if (state.babyId == 0) {
+            EmptyState(
+                emoji = "❤️",
+                title = AppStrings.noBabyTitle,
+                subtitle = AppStrings.noBabySubtitle,
+                modifier = Modifier.padding(padding),
+            )
+            return@AppScaffold
+        }
         if (grouped.isEmpty() && vaccinatedCount == 0) {
             Box(
                 Modifier.fillMaxSize().padding(padding),
@@ -140,7 +150,7 @@ fun HealthScreen(navController: NavController) {
                                 bgColor = meta.bgColor,
                                 label = meta.label,
                                 count = vaccinatedCount,
-                                onClick = { navController.navigate(com.babytracker.navigation.Vaccination) },
+                                onClick = onOpenVaccination,
                             )
                         } else {
                             val items = grouped[meta.key].orEmpty()
@@ -168,9 +178,9 @@ fun HealthScreen(navController: NavController) {
                                         showForm = true
                                     },
                                     onDelete = { record ->
+                                        onDelete(record)
                                         scope.launch {
-                                            healthRepo.delete(record)
-                                            appSnackbar.showUndo(message = "已删除「${record.description.take(20)}」") { healthRepo.update(record) }
+                                            appSnackbar.showUndo(message = "已删除「${record.description.take(20)}」") { onRestore(record) }
                                         }
                                     },
                                 )
@@ -198,9 +208,9 @@ fun HealthScreen(navController: NavController) {
             },
             onDelete = {
                 detailRecord = null
+                onDelete(r)
                 scope.launch {
-                    healthRepo.delete(r)
-                    appSnackbar.showUndo(message = "已删除「${r.description.take(20)}」") { healthRepo.update(r) }
+                    appSnackbar.showUndo(message = "已删除「${r.description.take(20)}」") { onRestore(r) }
                 }
             },
             onDismiss = { detailRecord = null },
@@ -209,22 +219,16 @@ fun HealthScreen(navController: NavController) {
 
     if (showForm) {
         HealthFormDialog(
-            babyId = babyId,
+            babyId = state.babyId,
             editEntity = editingRecord,
             onDismiss = {
                 showForm = false
                 editingRecord = null
             },
             onSave = { record ->
-                scope.launch {
-                    if (editingRecord != null) {
-                        healthRepo.update(record)
-                    } else {
-                        healthRepo.insert(record)
-                    }
-                    showForm = false
-                    editingRecord = null
-                }
+                onSave(record, editingRecord != null)
+                showForm = false
+                editingRecord = null
             },
         )
     }

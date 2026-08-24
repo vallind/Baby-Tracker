@@ -1,6 +1,5 @@
 package com.babytracker.feature.sleep
 
-import android.content.SharedPreferences
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,10 +18,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import com.babytracker.core.domain.model.Sleep
 import com.babytracker.core.domain.model.SleepType
@@ -38,9 +35,6 @@ import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
-import com.babytracker.core.util.BabyController
-import com.babytracker.core.data.repository.SleepRepository
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.quickstat.QuickStatPill
 import com.babytracker.designsystem.components.recordcard.RecordCard
@@ -57,9 +51,7 @@ import com.babytracker.designsystem.components.summarycard.AppSummaryCard
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -68,15 +60,22 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun SleepListScreen(navController: NavController) {
+fun SleepListScreen(
+    state: SleepUiState,
+    babyId: Int,
+    bottomBar: @Composable () -> Unit = {},
+    onBack: () -> Unit,
+    onAdd: (Sleep) -> Unit,
+    onUpdate: (Sleep) -> Unit,
+    onDelete: (Sleep) -> Unit,
+    onUndoDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val sleepRepo: SleepRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
-    val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
-    val sleeps by sleepRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
+    val sleeps = state.sleeps
     var showForm by remember { mutableStateOf(false) }
     var editingSleep by remember { mutableStateOf<Sleep?>(null) }
     var detailSleep by remember { mutableStateOf<Sleep?>(null) }
@@ -120,7 +119,7 @@ fun SleepListScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = AppStrings.sleepRecords,
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
@@ -131,7 +130,7 @@ fun SleepListScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
     ) { padding ->
         Column(
             Modifier
@@ -218,8 +217,8 @@ fun SleepListScreen(navController: NavController) {
                             RecordCard(
                                 onDelete = {
                                     scope.launch {
-                                        sleepRepo.delete(nap)
-                                        appSnackbar.showUndo(message = AppStrings.deletedNap) { sleepRepo.update(nap) }
+                                        onDelete(nap)
+                                        appSnackbar.showUndo(message = AppStrings.deletedNap) { onUndoDelete() }
                                     }
                                 },
                                 onClick = { detailSleep = nap },
@@ -281,8 +280,8 @@ fun SleepListScreen(navController: NavController) {
             },
             onDelete = {
                 scope.launch {
-                    sleepRepo.delete(s)
-                    appSnackbar.showUndo(message = AppStrings.deletedSleep) { sleepRepo.update(s) }
+                    onDelete(s)
+                    appSnackbar.showUndo(message = AppStrings.deletedSleep) { onUndoDelete() }
                 }
             },
             onDismiss = { detailSleep = null },
@@ -299,11 +298,7 @@ fun SleepListScreen(navController: NavController) {
             },
             onSave = { sleep ->
                 scope.launch {
-                    if (editingSleep != null) {
-                        sleepRepo.update(sleep)
-                    } else {
-                        sleepRepo.insert(sleep)
-                    }
+                    if (editingSleep != null) onUpdate(sleep) else onAdd(sleep)
                     showForm = false
                     editingSleep = null
                 }
@@ -322,207 +317,6 @@ fun SleepListScreen(navController: NavController) {
         },
         onDismiss = { showDatePicker = false },
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SleepFormDialog(
-    babyId: Int,
-    editEntity: Sleep? = null,
-    onDismiss: () -> Unit,
-    onSave: (Sleep) -> Unit,
-) {
-    val spacing = LocalAppSpacing.current
-    val isEdit = editEntity != null
-    var selectedType by remember { mutableStateOf(editEntity?.let { SleepType.raw(it.type) } ?: "night") }
-    val now = LocalDateTime.now()
-    val prefs: SharedPreferences = koinInject()
-
-    var startTime by remember {
-        mutableStateOf(
-            editEntity?.startTime?.let { ts ->
-                try {
-                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                } catch (_: Exception) { now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
-            } ?: if (prefs.getBoolean("sleep_timer_running", false)) {
-                prefs.getString("sleep_timer_form_start_time", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))!!
-            } else {
-                now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-            }
-        )
-    }
-    var endTime by remember {
-        mutableStateOf(
-            editEntity?.endTime?.let { ts ->
-                try {
-                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                } catch (_: Exception) { now.plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
-            } ?: now.plusHours(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        )
-    }
-    var note by remember { mutableStateOf(editEntity?.note ?: "") }
-    var showCascadePicker by remember { mutableStateOf(false) }
-    var pickerTarget by remember { mutableIntStateOf(0) }
-
-    // 计时器（持久化：关闭表单再打开继续计时）
-    var timerRunning by remember {
-        mutableStateOf(prefs.getBoolean("sleep_timer_running", false))
-    }
-    var timerStartMs by remember {
-        mutableLongStateOf(prefs.getLong("sleep_timer_start_millis", 0L))
-    }
-    var elapsed by remember {
-        mutableIntStateOf(
-            if (editEntity != null && !prefs.getBoolean("sleep_timer_running", false)) {
-                val start = try { LocalDateTime.parse(editEntity.startTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { null }
-                val end = try { LocalDateTime.parse(editEntity.endTime, DateTimeFormatter.ISO_DATE_TIME) } catch (_: Exception) { null }
-                if (start != null && end != null) Duration.between(start, end).seconds.toInt() else 0
-            } else {
-                0
-            }
-        )
-    }
-
-    LaunchedEffect(timerRunning) {
-        if (timerRunning) {
-            while (true) {
-                elapsed = ((System.currentTimeMillis() - timerStartMs) / 1000).toInt()
-                delay(1000L)
-            }
-        }
-    }
-
-    val timerDisplay = String.format(Locale.US, "%02d:%02d", elapsed / 60, elapsed % 60)
-    val timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-
-    val buildEntity = {
-        if (timerRunning) {
-            timerRunning = false
-            endTime = LocalDateTime.now().format(timeFormatter)
-            prefs.edit()
-                .putBoolean("sleep_timer_running", false)
-                .remove("sleep_timer_form_start_time")
-                .apply()
-        }
-        if (isEdit) {
-            editEntity.copy(
-                type = SleepType.fromRaw(selectedType),
-                startTime = startTime.replace(" ", "T") + ":00",
-                endTime = endTime.replace(" ", "T") + ":00",
-                note = note.ifBlank { null },
-            )
-        } else {
-            Sleep(
-                babyId = babyId,
-                type = SleepType.fromRaw(selectedType),
-                startTime = startTime.replace(" ", "T") + ":00",
-                endTime = endTime.replace(" ", "T") + ":00",
-                note = note.ifBlank { null },
-            )
-        }
-    }
-
-    AppFormSheet(
-        title = if (isEdit) AppStrings.editSleep else AppStrings.recordSleep,
-        onDismiss = onDismiss,
-        onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            AppFilterChip(selected = selectedType == "night", onClick = { selectedType = "night" }, label = AppStrings.sleepOptionNight, modifier = Modifier.weight(1f))
-            AppFilterChip(selected = selectedType == "nap", onClick = { selectedType = "nap" }, label = AppStrings.sleepOptionNap, modifier = Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(spacing.md))
-        // 计时器 UI
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-        ) {
-            Text(
-                text = timerDisplay,
-                style = LocalAppTypography.current.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (timerRunning) LocalAppColors.current.primary else LocalAppColors.current.textSecondary,
-                modifier = Modifier.weight(1f).widthIn(min = 100.dp),
-                textAlign = TextAlign.Start,
-            )
-            if (timerRunning) {
-                AppButton(
-                    onClick = {
-                        timerRunning = false
-                        val endNow = LocalDateTime.now()
-                        endTime = endNow.format(timeFormatter)
-                        prefs.edit()
-                            .putBoolean("sleep_timer_running", false)
-                            .remove("sleep_timer_form_start_time")
-                            .apply()
-                    },
-                    label = AppStrings.timerStop,
-                )
-            } else {
-                AppButton(
-                    onClick = {
-                        val currentStartTime = startTime
-                        timerStartMs = System.currentTimeMillis()
-                        elapsed = 0
-                        timerRunning = true
-                        prefs.edit()
-                            .putBoolean("sleep_timer_running", true)
-                            .putLong("sleep_timer_start_millis", timerStartMs)
-                            .putString("sleep_timer_form_start_time", currentStartTime)
-                            .apply()
-                    },
-                    label = AppStrings.timerStart,
-                )
-            }
-        }
-        QuickTimeChipRow(onPick = { startTime = it.format(timeFormatter) })
-        Spacer(Modifier.height(spacing.xs))
-        AppInput(value = startTime, onValueChange = {}, label = AppStrings.startTimeLabel, enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 0; showCascadePicker = true })
-        Spacer(Modifier.height(12.dp))
-        AppInput(value = endTime, onValueChange = {}, label = AppStrings.endTimeLabel, enabled = false, modifier = Modifier.fillMaxWidth().clickable { pickerTarget = 1; showCascadePicker = true })
-        Spacer(Modifier.height(12.dp))
-        AppInput(value = note, onValueChange = { note = it }, label = AppStrings.detailNote, modifier = Modifier.fillMaxWidth())
-    }
-
-    fun pickerField() = if (pickerTarget == 0) startTime else endTime
-    fun updatePickerField(v: String) { if (pickerTarget == 0) startTime = v else endTime = v }
-
-    DateTimeCascadeDialog(
-        show = showCascadePicker,
-        initialDateTime = pickerField(),
-        onConfirm = { updatePickerField(it) },
-        onDismiss = { showCascadePicker = false },
-    )
-}
-
-@Composable
-private fun SleepStatCell(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    c: AppColors,
-) {
-    val spacing = LocalAppSpacing.current
-    Column(
-        modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            value,
-            style = LocalAppTypography.current.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = c.textPrimary,
-        )
-        Spacer(Modifier.height(spacing.xxs))
-        Text(
-            label,
-            style = LocalAppTypography.current.bodySmall,
-            color = c.textSecondary,
-        )
-    }
 }
 
 

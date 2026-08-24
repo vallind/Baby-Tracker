@@ -318,3 +318,20 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 **规则：** 目录豁免必须构造 `File(kotlinRoot, 包路径)` 后用 `it.path.startsWith(themeDir.path)` 前缀比较（`File` 构造会自动把 `/` 转为平台分隔符，两端同源）。错误写法：`it.path.contains("com/a/b")`（正斜杠 vs 反斜杠）；正确写法：`it.path.startsWith(File(kotlinRoot, "com/a/b").path)`。
 
+---
+
+## 25. Paparazzi 2.0 是 snapshot(name){} 无 setContent；领域模型构造先查枚举类型
+
+**现象：** 为 Batch 2 写 HomeScreen Paparazzi 截图测试时编译失败：`Unresolved reference 'setContent'`、`@Composable invocations can only happen from the context of a @Composable function`（lambda 未进入可组合上下文）；以及 `Diaper(type = "wet")` 报 `Argument type mismatch: actual type is 'String', but 'DiaperType' was expected`。
+
+**原因：**
+
+- Paparazzi 2.0.0-alpha05 移除了 1.x 的 `PaparazziRule` + `rule.setContent{}` 路径，入口改为 **`paparazzi.snapshot(name = "...") { @Composable 内容 }`**（由旧 Showcase 测试的 git 历史确认；2.x 也没有可用的 `setContent` 符号）。
+- `Diaper.type` 等部分领域模型字段是**枚举**（`DiaperType`），不是 String；凭直觉传字符串不编译。
+
+**规则：**
+
+- Paparazzi 截图测试一律用 `Paparazzi(deviceConfig = DeviceConfig.PIXEL_5)` + `paparazzi.snapshot(name) { ... }`，不要写 `setContent`；快照落到 `app/build/reports/paparazzi/`（构建产物，不入库，已入 .gitignore）。
+- 构造领域模型前先查字段类型（grep `data class Diaper` 等），枚举字段传枚举值（`DiaperType.WET`）。
+- 测试断言需要与生产代码一致的证据时，优先从 git 历史里找该技术栈的旧用法（`git log --diff-filter=D` + `git show`），不要凭记忆猜新版本 API。
+

@@ -1,6 +1,5 @@
 package com.babytracker.feature.feeding
 
-import android.content.SharedPreferences
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,9 +23,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.navigation.NavController
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.FeedingType
 import com.babytracker.designsystem.theme.AppColors
@@ -39,9 +36,6 @@ import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
-import com.babytracker.core.util.BabyController
-import com.babytracker.core.data.repository.FeedingRepository
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
@@ -59,9 +53,7 @@ import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.feature.common.feedingTone
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -69,15 +61,22 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun FeedingListScreen(navController: NavController) {
+fun FeedingListScreen(
+    state: FeedingUiState,
+    babyId: Int,
+    bottomBar: @Composable () -> Unit = {},
+    onBack: () -> Unit,
+    onAdd: (Feeding) -> Unit,
+    onUpdate: (Feeding) -> Unit,
+    onDelete: (Feeding) -> Unit,
+    onUndoDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val feedingRepo: FeedingRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
-    val babyId = babyCtrl.currentBabyId
     if (babyId == 0) return
-    val feedings by feedingRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
+    val feedings = state.feedings
     var showForm by remember { mutableStateOf(false) }
     var editingFeeding by remember { mutableStateOf<Feeding?>(null) }
     var detailFeeding by remember { mutableStateOf<Feeding?>(null) }
@@ -111,7 +110,7 @@ fun FeedingListScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = AppStrings.feedingRecords,
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
@@ -122,7 +121,7 @@ fun FeedingListScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
     ) { padding ->
         Column(
             Modifier
@@ -161,8 +160,8 @@ fun FeedingListScreen(navController: NavController) {
                     onDetail = { f -> detailFeeding = f },
                     onDelete = { f ->
                         scope.launch {
-                            feedingRepo.delete(f)
-                            appSnackbar.showUndo(message = AppStrings.deletedFeeding) { feedingRepo.update(f) }
+                            onDelete(f)
+                            appSnackbar.showUndo(message = AppStrings.deletedFeeding) { onUndoDelete() }
                         }
                     },
                     onEdit = { f ->
@@ -200,8 +199,8 @@ fun FeedingListScreen(navController: NavController) {
             },
             onDelete = {
                 scope.launch {
-                    feedingRepo.delete(d)
-                    appSnackbar.showUndo(message = AppStrings.deletedFeeding) { feedingRepo.update(d) }
+                    onDelete(d)
+                    appSnackbar.showUndo(message = AppStrings.deletedFeeding) { onUndoDelete() }
                 }
             },
             onDismiss = { detailFeeding = null },
@@ -218,11 +217,7 @@ fun FeedingListScreen(navController: NavController) {
             },
             onSave = { feeding ->
                 scope.launch {
-                    if (editingFeeding != null) {
-                        feedingRepo.update(feeding)
-                    } else {
-                        feedingRepo.insert(feeding)
-                    }
+                    if (editingFeeding != null) onUpdate(feeding) else onAdd(feeding)
                     showForm = false
                     editingFeeding = null
                 }
@@ -340,272 +335,6 @@ private fun FeedingTimeline(
             }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FeedingFormDialog(
-    babyId: Int,
-    editEntity: Feeding? = null,
-    onDismiss: () -> Unit,
-    onSave: (Feeding) -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val isEdit = editEntity != null
-    var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
-    var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
-    var durationMin by remember { mutableStateOf(editEntity?.durationMin?.toString() ?: "") }
-    var breastSide by remember { mutableStateOf(editEntity?.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: AppStrings.breastSideBoth) }
-    var foodName by remember { mutableStateOf(editEntity?.foodName ?: "") }
-    var amountG by remember { mutableStateOf(editEntity?.amountG?.toString() ?: "") }
-    var brand by remember { mutableStateOf(editEntity?.brand ?: "") }
-    val now = LocalDateTime.now()
-    val prefs: SharedPreferences = koinInject()
-
-    var feedingDateTime by remember {
-        mutableStateOf(
-            editEntity?.timestamp?.let { ts ->
-                try {
-                    LocalDateTime.parse(ts, DateTimeFormatter.ISO_DATE_TIME).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                } catch (_: Exception) { now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) }
-            } ?: if (prefs.getBoolean("feeding_timer_running", false)) {
-                prefs.getString("feeding_timer_form_start_time", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))!!
-            } else {
-                now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-            }
-        )
-    }
-    var showCascadePicker by remember { mutableStateOf(false) }
-
-    // 计时器（持久化：关闭表单再打开继续计时）
-    var timerRunning by remember {
-        mutableStateOf(prefs.getBoolean("feeding_timer_running", false))
-    }
-    var timerStartMs by remember {
-        mutableLongStateOf(prefs.getLong("feeding_timer_start_millis", 0L))
-    }
-    var elapsed by remember {
-        mutableIntStateOf(
-            if (editEntity != null && !prefs.getBoolean("feeding_timer_running", false)) {
-                (editEntity.durationMin ?: 0) * 60
-            } else {
-                0
-            }
-        )
-    }
-
-    LaunchedEffect(timerRunning) {
-        if (timerRunning) {
-            while (true) {
-                elapsed = ((System.currentTimeMillis() - timerStartMs) / 1000).toInt()
-                delay(1000L)
-            }
-        }
-    }
-
-    val timerDisplay = String.format(Locale.US, "%02d:%02d", elapsed / 60, elapsed % 60)
-
-    val buildEntity = {
-        if (timerRunning) {
-            timerRunning = false
-            durationMin = (elapsed / 60).toString()
-            feedingDateTime = java.time.Instant.ofEpochMilli(timerStartMs)
-                .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
-                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-            prefs.edit()
-                .putBoolean("feeding_timer_running", false)
-                .remove("feeding_timer_form_start_time")
-                .apply()
-        }
-        if (isEdit) {
-            editEntity.copy(
-                type = FeedingType.fromRaw(type),
-                amountMl = amountMl.toIntOrNull(),
-                durationMin = durationMin.toIntOrNull(),
-                breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
-                foodName = if (type == "food") foodName else null,
-                amountG = amountG.toIntOrNull(),
-                brand = brand.ifBlank { null },
-                timestamp = feedingDateTime.replace(" ", "T") + ":00",
-            )
-        } else {
-            Feeding(
-                babyId = babyId, type = FeedingType.fromRaw(type),
-                amountMl = amountMl.toIntOrNull(),
-                durationMin = durationMin.toIntOrNull(),
-                breastSide = if (type == "breast") com.babytracker.core.domain.model.BreastSide.fromRaw(breastSide) else null,
-                foodName = if (type == "food") foodName else null,
-                amountG = amountG.toIntOrNull(),
-                brand = brand.ifBlank { null },
-                timestamp = feedingDateTime.replace(" ", "T") + ":00",
-            )
-        }
-    }
-
-    AppFormSheet(
-        title = if (isEdit) AppStrings.editFeeding else AppStrings.recordFeeding,
-        onDismiss = onDismiss,
-        onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
-    ) {
-        Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("breast" to AppStrings.feedingOptionBreast, "formula" to AppStrings.feedingOptionFormula, "food" to AppStrings.feedingOptionFood, "water" to AppStrings.feedingOptionWater).forEach { (t, label) ->
-                AppFilterChip(
-                    selected = type == t,
-                    onClick = { type = t },
-                    label = label,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-
-        when (type) {
-            "breast" -> {
-                Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    listOf(AppStrings.breastSideLeft, AppStrings.breastSideRight, AppStrings.breastSideBoth).forEach { s ->
-                        AppFilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = s, modifier = Modifier.weight(1f))
-                    }
-                }
-                // 计时器
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                ) {
-                    Text(
-                        text = timerDisplay,
-                        style = LocalAppTypography.current.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (timerRunning) c.primary else c.textSecondary,
-                        modifier = Modifier.weight(1f).widthIn(min = 100.dp),
-                        textAlign = TextAlign.Start,
-                    )
-                    if (timerRunning) {
-                        AppButton(
-                    onClick = {
-                        timerRunning = false
-                        durationMin = (elapsed / 60).toString()
-                        feedingDateTime = java.time.Instant.ofEpochMilli(timerStartMs)
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDateTime()
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                        prefs.edit()
-                            .putBoolean("feeding_timer_running", false)
-                            .remove("feeding_timer_form_start_time")
-                            .apply()
-                    },
-                            label = AppStrings.timerStop,
-                        )
-                    } else {
-                        AppButton(
-                            onClick = {
-                        timerStartMs = System.currentTimeMillis()
-                        elapsed = 0
-                        timerRunning = true
-                        prefs.edit()
-                            .putBoolean("feeding_timer_running", true)
-                            .putLong("feeding_timer_start_millis", timerStartMs)
-                            .putString("feeding_timer_form_start_time", feedingDateTime)
-                            .apply()
-                            },
-                            label = AppStrings.timerStart,
-                        )
-                    }
-                }
-                AppInput(
-                    value = durationMin,
-                    onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.feedingDurationLabel,
-                    leadingIcon = { Text("⏱", style = LocalAppTypography.current.titleLarge) },
-                    isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
-                    errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) AppStrings.durationRangeError else null,
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            "formula" -> {
-                AppInput(
-                    value = amountMl,
-                    onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.feedingAmountLabel,
-                    leadingIcon = { Text("💧", style = LocalAppTypography.current.titleLarge) },
-                    isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
-                    errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) AppStrings.amountRangeError500 else null,
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                // 常用量一键填
-                Row(Modifier.fillMaxWidth().padding(top = spacing.xs), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    listOf("60", "90", "120", "180").forEach { v ->
-                        AppFilterChip(selected = amountMl == v, onClick = { amountMl = v }, label = "${v}ml", modifier = Modifier.weight(1f))
-                    }
-                }
-                AppInput(
-                    value = brand,
-                    onValueChange = { brand = it },
-                    label = AppStrings.brandOptional,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            "food" -> {
-                AppInput(
-                    value = foodName,
-                    onValueChange = { foodName = it },
-                    label = AppStrings.foodNameLabel,
-                    leadingIcon = { Text("🥣", style = LocalAppTypography.current.titleLarge) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                AppInput(
-                    value = amountG,
-                    onValueChange = { amountG = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.portionGramLabel,
-                    isError = amountG.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    errorMessage = if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStrings.amountRangeError1000 else null,
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            "water" -> {
-                AppInput(
-                    value = amountMl,
-                    onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.waterAmountLabel,
-                    // 饮水量预设由下方 chip 行提供
-                    leadingIcon = { Text("🥤", style = LocalAppTypography.current.titleLarge) },
-                    isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStrings.amountRangeError1000 else null,
-                    keyboardType = KeyboardType.Number,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                // 常用饮水量一键填
-                Row(Modifier.fillMaxWidth().padding(top = spacing.xs), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    listOf("50", "100", "150", "200").forEach { v ->
-                        AppFilterChip(selected = amountMl == v, onClick = { amountMl = v }, label = "${v}ml", modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-        // 高频场景免开滚轮：一键回填时间（精确调整仍点输入框开级联选择器）
-        QuickTimeChipRow(onPick = { feedingDateTime = it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) })
-        Spacer(Modifier.height(12.dp))
-        AppInput(
-            value = feedingDateTime,
-            onValueChange = {},
-            label = AppStrings.feedingTimeLabel,
-            enabled = false,
-            modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
-        )
-    }
-
-    DateTimeCascadeDialog(
-        show = showCascadePicker,
-        initialDateTime = feedingDateTime,
-        onConfirm = { feedingDateTime = it },
-        onDismiss = { showCascadePicker = false },
-    )
 }
 
 

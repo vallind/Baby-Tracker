@@ -11,19 +11,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 import com.babytracker.feature.home.HomeRoute
-import com.babytracker.feature.feeding.FeedingListScreen
+import com.babytracker.feature.feeding.FeedingRoute
 import com.babytracker.feature.timeline.TimelineRoute
-import com.babytracker.feature.sleep.SleepListScreen
-import com.babytracker.feature.growth.GrowthScreen
-import com.babytracker.feature.vaccination.VaccinationListScreen
-import com.babytracker.feature.health.HealthScreen
-import com.babytracker.feature.diaper.DiaperListScreen
+import com.babytracker.feature.sleep.SleepRoute
+import com.babytracker.feature.growth.GrowthRoute
+import com.babytracker.feature.vaccination.VaccinationRoute
+import com.babytracker.feature.health.HealthRoute
+import com.babytracker.feature.diaper.DiaperRoute
 import com.babytracker.feature.stats.StatsRoute
 import com.babytracker.feature.settings.SettingsScreen
-import com.babytracker.feature.settings.BabyProfileScreen
+import com.babytracker.feature.settings.BabyProfileRoute
 import com.babytracker.feature.settings.BabyManagementScreen
 import com.babytracker.feature.settings.BackupScreen
-import com.babytracker.feature.settings.LogViewerScreen
+import com.babytracker.feature.settings.LogViewerRoute
 import com.babytracker.feature.settings.SyncSettingsRoute
 import com.babytracker.feature.settings.PreferenceSettingsScreen
 import com.babytracker.feature.settings.DataSettingsScreen
@@ -72,21 +72,21 @@ fun AppNavigation() {
     NavHost(navController, startDestination = Home) {
         instantComposable<Home> { HomeRoute(navController) }
         instantComposable<Timeline> { TimelineRoute(navController) }
-        instantComposable<Feeding> { FeedingListScreen(navController) }
-        instantComposable<Sleep> { SleepListScreen(navController) }
-        instantComposable<Growth> { GrowthScreen(navController) }
-        instantComposable<Vaccination> { VaccinationListScreen(navController) }
-        instantComposable<Health> { HealthScreen(navController) }
-        instantComposable<Diaper> { DiaperListScreen(navController) }
+        instantComposable<Feeding> { FeedingRoute(navController) }
+        instantComposable<Sleep> { SleepRoute(navController) }
+        instantComposable<Growth> { GrowthRoute(navController) }
+        instantComposable<Vaccination> { VaccinationRoute(navController) }
+        instantComposable<Health> { HealthRoute(navController) }
+        instantComposable<Diaper> { DiaperRoute(navController) }
         instantComposable<Stats> { StatsRoute(navController) }
         instantComposable<Settings> { SettingsScreen(navController) }
         instantComposable<PreferenceSettings> { PreferenceSettingsScreen(navController) }
         instantComposable<DataSettings> { DataSettingsScreen(navController) }
         instantComposable<SupportSettings> { SupportSettingsScreen(navController) }
         instantComposable<BabyManagement> { BabyManagementScreen(navController) }
-        instantComposable<BabyProfile> { BabyProfileScreen(navController) }
+        instantComposable<BabyProfile> { BabyProfileRoute(navController) }
         instantComposable<Backup> { BackupScreen(navController) }
-        instantComposable<LogViewer> { LogViewerScreen(navController) }
+        instantComposable<LogViewer> { LogViewerRoute(navController) }
         instantComposable<SyncSettings> { SyncSettingsRoute(navController) }
         instantComposable<Family> { FamilyRoute(navController) }
         instantComposable<Message> { MessageRoute(navController) }

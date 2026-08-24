@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.ChevronLeft
@@ -36,10 +35,7 @@ import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
-import com.babytracker.core.util.BabyController
-import com.babytracker.core.data.repository.DiaperRepository
 import kotlinx.coroutines.launch
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.quickstat.QuickStatPill
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
@@ -57,32 +53,43 @@ import com.babytracker.designsystem.components.summarycard.AppSummaryCard
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
-import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/**
+ * 尿布记录页 — 纯 UI 渲染层：只收 state + 命名回调，不接触导航 / Koin / Repository / Controller。
+ * 表单 Sheet 显隐、日期选择器显隐等 UI 临时状态留在本地 remember；
+ * 数据加载、日期筛选、删除/撤销、表单保存全部在 DiaperViewModel。
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun DiaperListScreen(navController: NavController) {
+fun DiaperListScreen(
+    state: DiaperUiState,
+    bottomBar: @Composable () -> Unit = {},
+    onBack: () -> Unit = {},
+    onDateChange: (LocalDate) -> Unit = {},
+    onDelete: (Diaper) -> Unit = {},
+    onUndoDelete: () -> Unit = {},
+    onSave: (Diaper) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val diaperRepo: DiaperRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
     val scope = rememberCoroutineScope()
-    val babyId = babyCtrl.currentBabyId
+    val babyId = state.babyId
     if (babyId == 0) return
-    val diapers by diaperRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
+    val diapers = state.diapers
     var showForm by remember { mutableStateOf(false) }
     var editingDiaper by remember { mutableStateOf<Diaper?>(null) }
     var detailDiaper by remember { mutableStateOf<Diaper?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
-    // 日期选择状态
+    // 日期选择状态（日期本身在 VM，显隐留 Screen）
     val today = LocalDate.now()
-    var selectedDate by remember { mutableStateOf(today) }
+    val selectedDate = state.selectedDate
     var showDatePicker by remember { mutableStateOf(false) }
 
     // 按所选日期过滤
@@ -113,11 +120,12 @@ fun DiaperListScreen(navController: NavController) {
     }
 
     AppScaffold(
+        modifier = modifier,
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = AppStrings.diaperRecords,
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
@@ -128,7 +136,7 @@ fun DiaperListScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
     ) { padding ->
         Column(
             Modifier
@@ -139,10 +147,10 @@ fun DiaperListScreen(navController: NavController) {
             // —— 日期选择器（现代胶囊行） ——
             DateNavCapsule(
                 dateLabel = dateLabel,
-                onPrev = { selectedDate = selectedDate.minusDays(1) },
-                onNext = { selectedDate = selectedDate.plusDays(1) },
+                onPrev = { onDateChange(selectedDate.minusDays(1)) },
+                onNext = { onDateChange(selectedDate.plusDays(1)) },
                 onOpenPicker = { showDatePicker = true },
-                onToday = if (selectedDate != today) ({ selectedDate = today }) else null,
+                onToday = if (selectedDate != today) ({ onDateChange(today) }) else null,
                 modifier = Modifier.padding(horizontal = spacing.md),
             )
 
@@ -205,9 +213,9 @@ fun DiaperListScreen(navController: NavController) {
 
                         RecordCard(
                         onDelete = {
+                            onDelete(d)
                             scope.launch {
-                                diaperRepo.delete(d)
-                                appSnackbar.showUndo(message = AppStrings.deletedDiaper) { diaperRepo.update(d) }
+                                appSnackbar.showUndo(message = AppStrings.deletedDiaper) { onUndoDelete() }
                             }
                         },
                             onClick = { detailDiaper = d },
@@ -278,9 +286,9 @@ fun DiaperListScreen(navController: NavController) {
                 showForm = true
             },
             onDelete = {
+                onDelete(d)
                 scope.launch {
-                    diaperRepo.delete(d)
-                    appSnackbar.showUndo(message = AppStrings.deletedDiaper) { diaperRepo.update(d) }
+                    appSnackbar.showUndo(message = AppStrings.deletedDiaper) { onUndoDelete() }
                 }
             },
             onDismiss = { detailDiaper = null },
@@ -296,15 +304,9 @@ fun DiaperListScreen(navController: NavController) {
                 editingDiaper = null
             },
             onSave = { d ->
-                scope.launch {
-                    if (editingDiaper != null) {
-                        diaperRepo.update(d)
-                    } else {
-                        diaperRepo.insert(d)
-                    }
-                    showForm = false
-                    editingDiaper = null
-                }
+                onSave(d)
+                showForm = false
+                editingDiaper = null
             },
         )
     }
@@ -315,7 +317,7 @@ fun DiaperListScreen(navController: NavController) {
         initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00",
         dateOnly = true,
         onConfirm = { dt ->
-            selectedDate = LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE)
+            onDateChange(LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE))
             showDatePicker = false
         },
         onDismiss = { showDatePicker = false },

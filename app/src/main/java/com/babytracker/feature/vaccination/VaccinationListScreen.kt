@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -16,38 +17,31 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
-import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.designsystem.theme.LocalAppTypography
-import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppShapes
-import com.babytracker.designsystem.theme.AppColorScale
-import com.babytracker.designsystem.theme.tintContainer
-import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.recordcard.RecordCard
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.dialog.AppConfirmDialog
-import com.babytracker.designsystem.components.input.AppInput
-import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.core.util.DateUtils
-import com.babytracker.core.util.BabyController
-import com.babytracker.core.util.VaccineSchedule
-import com.babytracker.core.data.repository.VaccinationRepository
-import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.SegmentedControl
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.fab.AppFAB
-import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
-import com.babytracker.designsystem.components.SegmentedControl
-import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
-import org.koin.compose.koinInject
+import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.LocalAppShapes
+import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.tintContainer
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -82,27 +76,36 @@ private fun isExpired(v: Vaccination): Boolean {
     } catch (_: Exception) { false }
 }
 
+/**
+ * 疫苗接种记录 — 纯 UI 渲染层：只收 state + baby + 命名回调，
+ * 不接触导航 / Koin / Repository / Controller。
+ *
+ * - Tab/状态筛选、表单/确认弹层显隐、Snackbar 撤销均为 UI 临时状态，留在本地 remember；
+ * - 删除 / 撤销 / 保存 / 生成计划走命名回调（Route 映射到 ViewModel）；
+ * - 无 bottomBar（本屏为 AppScaffold 独立页，不挂底部导航）。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VaccinationListScreen(navController: NavController) {
+fun VaccinationListScreen(
+    state: VaccinationUiState,
+    baby: Baby?,
+    onBack: () -> Unit,
+    onDelete: (Vaccination) -> Unit,
+    onRestore: (Vaccination) -> Unit,
+    onSave: (Vaccination, Boolean) -> Unit,
+    onGenerateSchedule: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val vacRepo: VaccinationRepository = koinInject()
-    val babyRepo: BabyRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
-    val babyId = babyCtrl.currentBabyId
-    if (babyId == 0) return
-    val vaccinations by vacRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val baby = babies.find { it.id == babyId }
-
-    val today = remember { LocalDate.now().toString().take(10) }
 
     var tab by remember { mutableStateOf("plan") }
     var statusFilter by remember { mutableStateOf("all") }
 
-    val filtered = remember(vaccinations, tab, statusFilter, today) {
-        vaccinations.filter { v ->
+    val today = remember { LocalDate.now().toString().take(10) }
+
+    val filtered = remember(state.vaccinations, tab, statusFilter, today) {
+        state.vaccinations.filter { v ->
             val baseOk = when (tab) {
                 "plan" -> v.status == VaccinationStatus.PENDING || v.status == VaccinationStatus.SKIPPED
                 else -> v.status == VaccinationStatus.DONE
@@ -125,14 +128,25 @@ fun VaccinationListScreen(navController: NavController) {
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     AppScaffold(
+        modifier = modifier,
         topBar = {
-            AppTopBar(title = "疫苗接种", onBack = { navController.popBackStack() })
+            AppTopBar(title = "疫苗接种", onBack = onBack)
         },
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         fab = {
             AppFAB(icon = Icons.Default.Add, onClick = { editingVac = null; showForm = true })
         },
     ) { padding ->
+        if (baby == null) {
+            EmptyState(
+                emoji = "\uD83D\uDC89",
+                title = AppStrings.noBabyTitle,
+                subtitle = AppStrings.noBabySubtitle,
+                modifier = Modifier.padding(padding),
+            )
+            return@AppScaffold
+        }
+
         Column(
             Modifier
                 .fillMaxSize()
@@ -188,14 +202,14 @@ fun VaccinationListScreen(navController: NavController) {
                         emoji = if (tab == "plan") "\uD83D\uDC89" else "\u2705",
                         title = if (tab == "plan") "暂无接种计划" else "暂无接种记录",
                         subtitle = when {
-                            tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING } ->
+                            tab == "plan" && state.vaccinations.none { it.status == VaccinationStatus.PENDING } ->
                                 "点击下方按钮生成默认接种计划，或手动添加"
                             statusFilter == "expired" -> "暂无过期疫苗，继续保持 \uD83D\uDC4F"
                             statusFilter == "pending" -> "所有计划疫苗均已按时接种或已过期"
                             else -> ""
                         },
-                        actionText = if (tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING }) "生成接种计划" else null,
-                        onAction = if (tab == "plan" && vaccinations.none { it.status == VaccinationStatus.PENDING }) ({ showGenerateConfirm = true }) else null,
+                        actionText = if (tab == "plan" && state.vaccinations.none { it.status == VaccinationStatus.PENDING }) "生成接种计划" else null,
+                        onAction = if (tab == "plan" && state.vaccinations.none { it.status == VaccinationStatus.PENDING }) ({ showGenerateConfirm = true }) else null,
                     )
                 }
             } else {
@@ -211,15 +225,15 @@ fun VaccinationListScreen(navController: NavController) {
                     items(items = filtered, key = { it.id }) { v ->
                         VaccinationCard(
                             vaccination = v,
-                            birthDate = baby?.birthDate ?: "",
+                            birthDate = baby.birthDate,
                             onClick = {
                                 editingVac = v
                                 showForm = true
                             },
                             onDelete = {
+                                onDelete(v)
                                 scope.launch {
-                                    vacRepo.delete(v)
-                                    appSnackbar.showUndo(message = "已删除\u300C${v.name}\u300D") { vacRepo.update(v) }
+                                    appSnackbar.showUndo(message = "已删除\u300C${v.name}\u300D") { onRestore(v) }
                                 }
                             },
                         )
@@ -244,14 +258,12 @@ fun VaccinationListScreen(navController: NavController) {
 
     if (showForm) {
         VaccinationFormDialog(
-            babyId = babyId,
+            babyId = state.babyId,
             editEntity = editingVac,
             onSave = { vac ->
-                scope.launch {
-                    if (editingVac != null) vacRepo.update(vac) else vacRepo.insert(vac)
-                    showForm = false
-                    editingVac = null
-                }
+                onSave(vac, editingVac != null)
+                showForm = false
+                editingVac = null
             },
             onDismiss = { showForm = false; editingVac = null },
         )
@@ -266,12 +278,7 @@ fun VaccinationListScreen(navController: NavController) {
             cancelText = "取消",
             onConfirm = {
                 showGenerateConfirm = false
-                scope.launch {
-                    val b = babyRepo.getById(babyId)
-                    if (b != null) {
-                        VaccineSchedule.createForBaby(babyId, b.birthDate).forEach { vacRepo.insert(it) }
-                    }
-                }
+                onGenerateSchedule()
             },
             onDismiss = { showGenerateConfirm = false },
         )

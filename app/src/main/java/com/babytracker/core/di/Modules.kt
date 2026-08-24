@@ -18,12 +18,19 @@ import com.babytracker.core.util.BabyController
 import com.babytracker.core.data.repository.*
 import com.babytracker.feature.stats.StatsViewModel
 import com.babytracker.feature.home.HomeViewModel
+import com.babytracker.feature.feeding.FeedingViewModel
+import com.babytracker.feature.sleep.SleepViewModel
+import com.babytracker.feature.growth.GrowthViewModel
+import com.babytracker.feature.vaccination.VaccinationViewModel
+import com.babytracker.feature.health.HealthViewModel
+import com.babytracker.feature.diaper.DiaperViewModel
 import com.babytracker.feature.message.MessageViewModel
 import com.babytracker.feature.development.DevelopmentAssessmentViewModel
 import com.babytracker.feature.reminder.ReminderViewModel
 import com.babytracker.feature.timeline.TimelineViewModel
 import com.babytracker.feature.auth.LoginViewModel
 import com.babytracker.feature.settings.SettingsViewModel
+import com.babytracker.feature.settings.BabyProfileViewModel
 import com.babytracker.feature.family.FamilyViewModel
 import com.babytracker.feature.ai.AiChatViewModel
 import com.babytracker.feature.ai.AiContextBuilder
@@ -61,12 +68,19 @@ val appModule = module {
     single { AiSettingsStore(get()) }
     viewModel { StatsViewModel(get(), get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get(), get(), get(), get()) }
+    viewModel { FeedingViewModel(get(), get()) }
+    viewModel { SleepViewModel(get(), get()) }
+    viewModel { GrowthViewModel(get(), get(), get()) }
+    viewModel { VaccinationViewModel(get(), get(), get()) }
+    viewModel { HealthViewModel(get(), get(), get()) }
+    viewModel { DiaperViewModel(get(), get()) }
     viewModel { MessageViewModel(get()) }
     viewModel { DevelopmentAssessmentViewModel(get(), get(), get()) }
     viewModel { ReminderViewModel(get(), get(), get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
+    viewModel { BabyProfileViewModel(get(), get(), get()) }
     viewModel { SyncViewModel(get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
     viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }

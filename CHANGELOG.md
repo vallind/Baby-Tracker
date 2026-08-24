@@ -23,6 +23,14 @@
 - 新增 `HomeScreenPaparazziTest` 截图样板：fake state 直渲染（无需 NavHost / Koin / Room / Supabase），Paparazzi 2.0 管线恢复可用（输出 `build/reports/paparazzi`，样本不含中文基准图入 gitignore）
 - `ScreenBoundaryAuditTest` 违规清单从 25 屏缩至 Batch 3/4 范围（记录六屏 + Settings 家族），Batch 2 全部 11 屏通过审计
 
+**三、批次 3：记录六屏建 VM 收编 + BabyProfile / LogViewer 收敛：**
+- Feeding / Sleep / Growth / Diaper / Vaccination / Health 六屏按 Feature 三文件模板收编：新建 `XxxViewModel`（UiState 同文件；BabyController 进构造器，snapshotFlow / watchAll 自动加载，方法不带 babyId）+ `XxxRoute`（组合根）；Screen 纯 UI 化（state + 命名回调 + bottomBar 槽位）
+- 收编内容：watchByBaby 订阅、删除（repo.delete + VM 内部暂存最近删除实体用于撤销，VM 不持 UI lambda）、表单保存（add/update 分发）；Snackbar 展示与日期筛选等 UI 态留 Screen（Growth/Diaper 的日期筛选按屏进 VM，Feeding/Sleep 留 Screen 本地态）
+- `FeedingFormDialog` / `SleepFormDialog` 拆至独立文件（TimelineScreen 继续引用，签名不变；计时器持久化逻辑随迁；Screen 边界审计只约束 *Screen.kt 文件）
+- BabyProfile：新建 `BabyProfileViewModel`（flatMapLatest 串接宝宝列表 → 生长记录）+ Route；LogViewer：无业务状态不建 VM，Route 直装配（符合「不增层」原则）
+- `ScreenBoundaryAuditTest` 违规收敛至仅剩 Settings 家族 2 屏（Batch 4 范围）；清理 TimelineScreen 遗留 NavController import
+- 删除 `tools/parked-batch2-routes/`（旧约定 Route 参考物，Batch 2 已按 v4 重写）；lessons.md 新增 #25（Paparazzi 2.0 snapshot API 与领域模型枚举字段）
+
 版本号 2.2.4 → 2.3.0（本波次统一起点；versionCode 48 不变，发布构建时递增）。
 
 ### [2.2.4] — 2026-08-23

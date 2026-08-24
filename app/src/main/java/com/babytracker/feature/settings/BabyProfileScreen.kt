@@ -14,12 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.babytracker.core.domain.model.*
-import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
-import com.babytracker.core.data.repository.BabyRepository
-import com.babytracker.core.data.repository.GrowthRepository
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
@@ -32,36 +28,30 @@ import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.navigation.BabyManagement
-import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun BabyProfileScreen(navController: NavController) {
+fun BabyProfileScreen(
+    state: BabyProfileUiState,
+    onBack: () -> Unit,
+    onOpenBabyManagement: () -> Unit,
+    onSaveBaby: (Baby) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val typography = LocalAppTypography.current
     val spacing = LocalAppSpacing.current
     val elev = LocalAppElevation.current
 
-    val babyCtrl: BabyController = koinInject()
-    val babyRepo: BabyRepository = koinInject()
-    val growthRepo: GrowthRepository = koinInject()
-
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val baby = babies.find { it.id == babyCtrl.currentBabyId } ?: babies.firstOrNull()
-
-    val growths by growthRepo.watchByBaby(baby?.id ?: 0).collectAsState(initial = emptyList())
-    val activeGrowths = growths.filter { it.deletedAt == null }
-
-    val latestHeight = activeGrowths.filter { it.type == GrowthType.HEIGHT }.maxByOrNull { it.measuredAt }
-    val latestWeight = activeGrowths.filter { it.type == GrowthType.WEIGHT }.maxByOrNull { it.measuredAt }
-    val latestHead = activeGrowths.filter { it.type == GrowthType.HEAD }.maxByOrNull { it.measuredAt }
+    val baby = state.baby
+    val latestHeight = state.latestHeight
+    val latestWeight = state.latestWeight
+    val latestHead = state.latestHead
 
     var showEdit by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
 
     if (baby == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -74,7 +64,7 @@ fun BabyProfileScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "宝宝信息",
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
             )
         },
     ) { padding ->
@@ -203,7 +193,7 @@ fun BabyProfileScreen(navController: NavController) {
             ) {
                 AppButton(
                     variant = ButtonVariant.Text,
-                    onClick = { navController.navigate(BabyManagement) },
+                    onClick = onOpenBabyManagement,
                     label = "管理全部宝宝",
                     contentColor = c.textSecondary,
                 )
@@ -224,9 +214,7 @@ fun BabyProfileScreen(navController: NavController) {
             baby = baby,
             onDismiss = { showEdit = false },
             onSave = { updated ->
-                coroutineScope.launch {
-                    babyRepo.update(updated)
-                }
+                onSaveBaby(updated)
                 showEdit = false
             },
         )

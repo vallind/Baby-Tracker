@@ -29,15 +29,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.domain.model.Growth
 import com.babytracker.core.domain.model.GrowthType
-import com.babytracker.core.util.BabyController
 import com.babytracker.core.util.DateUtils
-import com.babytracker.core.data.repository.GrowthRepository
-import com.babytracker.core.data.repository.BabyRepository
 import com.babytracker.core.util.GrowthReference
-import com.babytracker.navigation.AppBottomBar
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
@@ -63,28 +59,37 @@ import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+/**
+ * 生长记录页 — 纯 UI 渲染层：只收 state + baby + 命名回调，不接触导航 / Koin / Repository / Controller。
+ * SegmentedControl 类型切换、表单 Sheet 显隐、日期选择器显隐等 UI 临时状态留在本地 remember；
+ * 数据加载、日期筛选、删除/撤销、表单保存全部在 GrowthViewModel。
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun GrowthScreen(navController: NavController) {
+fun GrowthScreen(
+    state: GrowthUiState,
+    baby: Baby?,
+    bottomBar: @Composable () -> Unit = {},
+    onBack: () -> Unit = {},
+    onDateChange: (LocalDate) -> Unit = {},
+    onDelete: (Growth) -> Unit = {},
+    onUndoDelete: () -> Unit = {},
+    onSave: (Growth) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
-    val growthRepo: GrowthRepository = koinInject()
-    val babyRepo: BabyRepository = koinInject()
-    val babyCtrl: BabyController = koinInject()
-    val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
-    val baby = babies.find { it.id == babyCtrl.currentBabyId }
     val scope = rememberCoroutineScope()
-    val babyId = babyCtrl.currentBabyId
+    val babyId = state.babyId
     if (babyId == 0) return
-    val growths by growthRepo.watchByBaby(babyId).collectAsState(initial = emptyList())
+    val growths = state.growths
     var showForm by remember { mutableStateOf(false) }
     var editingGrowth by remember { mutableStateOf<Growth?>(null) }
     var detailGrowth by remember { mutableStateOf<Growth?>(null) }
@@ -92,18 +97,19 @@ fun GrowthScreen(navController: NavController) {
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     val today = LocalDate.now()
-    var selectedDate by remember { mutableStateOf(today) }
+    val selectedDate = state.selectedDate
     var showDatePicker by remember { mutableStateOf(false) }
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf(AppStrings.growthHeight, AppStrings.growthWeight, AppStrings.growthHead)
     val types = listOf(GrowthType.HEIGHT, GrowthType.WEIGHT, GrowthType.HEAD)
     val units = listOf("cm", "kg", "cm")
     AppScaffold(
+        modifier = modifier,
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
                 title = AppStrings.growthRecords,
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
@@ -114,7 +120,7 @@ fun GrowthScreen(navController: NavController) {
                 },
             )
         },
-        bottomBar = { AppBottomBar(navController) },
+        bottomBar = bottomBar,
     ) { padding ->
         Column(
             Modifier
@@ -148,10 +154,10 @@ fun GrowthScreen(navController: NavController) {
             // 日期选择行（现代胶囊行）
             DateNavCapsule(
                 dateLabel = dateLabel,
-                onPrev = { selectedDate = selectedDate.minusDays(1) },
-                onNext = { selectedDate = selectedDate.plusDays(1) },
+                onPrev = { onDateChange(selectedDate.minusDays(1)) },
+                onNext = { onDateChange(selectedDate.plusDays(1)) },
                 onOpenPicker = { showDatePicker = true },
-                onToday = if (selectedDate != today) ({ selectedDate = today }) else null,
+                onToday = if (selectedDate != today) ({ onDateChange(today) }) else null,
                 modifier = Modifier.padding(horizontal = spacing.md),
             )
 
@@ -393,9 +399,9 @@ fun GrowthScreen(navController: NavController) {
                             }
                             RecordCard(
                             onDelete = {
+                                onDelete(g)
                                 scope.launch {
-                                    growthRepo.delete(g)
-                                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { growthRepo.update(g) }
+                                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { onUndoDelete() }
                                 }
                             },
                                 onClick = { detailGrowth = g },
@@ -476,9 +482,9 @@ fun GrowthScreen(navController: NavController) {
                 showForm = true
             },
             onDelete = {
+                onDelete(g)
                 scope.launch {
-                    growthRepo.delete(g)
-                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { growthRepo.update(g) }
+                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { onUndoDelete() }
                 }
             },
             onDismiss = { detailGrowth = null },
@@ -494,15 +500,9 @@ fun GrowthScreen(navController: NavController) {
                 editingGrowth = null
             },
             onSave = { growth ->
-                scope.launch {
-                    if (editingGrowth != null) {
-                        growthRepo.update(growth)
-                    } else {
-                        growthRepo.insert(growth)
-                    }
-                    showForm = false
-                    editingGrowth = null
-                }
+                onSave(growth)
+                showForm = false
+                editingGrowth = null
             },
         )
     }
@@ -512,7 +512,7 @@ fun GrowthScreen(navController: NavController) {
         initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00",
         dateOnly = true,
         onConfirm = { dt ->
-            selectedDate = LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE)
+            onDateChange(LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE))
             showDatePicker = false
         },
         onDismiss = { showDatePicker = false },

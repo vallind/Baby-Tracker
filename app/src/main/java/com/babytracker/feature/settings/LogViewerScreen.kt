@@ -31,7 +31,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
-import androidx.navigation.NavController
 import com.babytracker.BabyTrackerApp
 import com.babytracker.core.util.LogBuffer
 import com.babytracker.core.util.LogEntry
@@ -66,7 +65,10 @@ private data class LevelOption(val level: Char, val label: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LogViewerScreen(navController: NavController) {
+fun LogViewerScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
@@ -116,7 +118,7 @@ fun LogViewerScreen(navController: NavController) {
         topBar = {
             AppTopBar(
                 title = "日志查看",
-                onBack = { navController.popBackStack() },
+                onBack = onBack,
             )
         },
     ) { padding ->

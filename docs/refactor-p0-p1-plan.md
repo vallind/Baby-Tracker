@@ -276,7 +276,7 @@ SELECT COUNT(*) FROM sleeps        WHERE baby_id NOT IN (SELECT id FROM babies);
 |---|---|---|---|---|
 | Batch 1（已完成 ✅） | DS 边界（BottomNav 拆层 + Controller 迁 core/settings + 审计守门） | 无 | 低 | 编译+测试全绿（唯一红 = 既有 Batch 2 守门 ScreenBoundaryAuditTest）+ DS 边界审计通过 |
 | Batch 2（已完成 ✅） | 11 个已有 VM 屏 Route/Screen 拆分 + Paparazzi 样板 | 1 | 低 | 编译+测试全绿（唯一红 = 既有 Batch 2 守门，已收敛至 Batch 3/4 范围）+ Home Screen 测试脱离 Koin/Room 运行 |
-| Batch 3 | 六记录屏建 VM + 状态迁移（逐屏提交） | 2 | 中 | 每屏提交全绿 |
+| Batch 3（已完成 ✅） | 六记录屏建 VM + 状态迁移（逐屏提交） | 2 | 中 | 每屏提交全绿 |
 | Batch 4 | Settings 拆文件 + BackupVM / BabyManagementVM / 薄 SettingsVM | 3 | 中 | 全绿 + 按职责无 God VM |
 | Batch 5 | Token 桥接 + AppButton 收紧 | 无（可与 4 并行） | 低～中 | 全绿 + 审计守门 |
 | Batch 6 | Room FK + Index（Migration 8→9） | 5 | 中 | 孤儿预检 + 迁移预演 + 真机冒烟 + 全绿 |
