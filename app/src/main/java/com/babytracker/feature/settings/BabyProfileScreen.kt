@@ -137,11 +137,9 @@ fun BabyProfileScreen(
             SectionHeader("出生信息")
 
             AppCard(
-                containerColor = c.surface,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.md),
-                elevation = elev.level2,
             ) {
                 Column(Modifier.padding(spacing.md)) {
                     InfoRow("出生日期", baby.birthDate)
@@ -157,11 +155,9 @@ fun BabyProfileScreen(
             SectionHeader("当前生长数据")
 
             AppCard(
-                containerColor = c.surface,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = spacing.md),
-                elevation = elev.level2,
             ) {
                 Column(Modifier.padding(spacing.md)) {
                     GrowthValueRow(

@@ -33,8 +33,6 @@ Design System 只负责 UI 的视觉、交互组件与 Design Token；Feature �
 10. 除非真实复杂度证明必要，否则不增加架构层。
 ```
 
-> 不要为了让代码"看起来架构完整"而创建抽象。
-
 **Feature 默认模板**：`feature/<x>/` 默认 Route（组合根）/ Screen（纯 UI）/ ViewModel（业务）三文件，`UiState` 与 ViewModel 同文件；**三文件是默认形态，不是死规则**——仅当真实复杂度出现时才增加文件。Repository 契约保持薄接口（`observeByBaby`/`insert`/`update`/`delete`），不包 UseCase/Service 壳。ViewModel 按职责拆分（是否存在多个互不相关的状态生命周期），行数只是警戒线不是规则。
 
 ## 二、开发命令
@@ -58,8 +56,6 @@ Design System 只负责 UI 的视觉、交互组件与 Design Token；Feature �
 ### 2. 简单优先，不堆料
 
 - 只写解决**当前问题**的最少代码。不做超前设计。
-- 单次用途的代码**不做抽象**（不抽 Manager / 不建 sealed class / 不写泛型工具，除非明确要求）。
-- 写完自问："这代码会被骂过度设计吗？"——如果是，立即简化。
 
 
 ### 3. 目标驱动，自我闭环

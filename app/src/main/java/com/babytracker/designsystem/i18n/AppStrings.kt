@@ -25,6 +25,7 @@ object AppStrings {
     const val search = "搜索"
     const val viewAll = "查看全部"
     const val loading = "加载中..."
+    const val selected = "已选中"
     const val noData = "暂无数据"
 
     // —— 账户 ——

@@ -62,6 +62,12 @@ class TokenAuditCheckerTest {
             "com/babytracker/designsystem/theme/AppComponentTokens.kt",
             "object AppComponentTokens { val divider: DividerTokens; val surface: SurfaceTokens; val snackbarHost: SnackbarHostTokens; val emptyState: EmptyStateTokens }\n",
         )
+        // 规则 6 合规路径：feature 目录存在且无 *Card 定义时不得报 ScanEmpty/FeatureLayerGenericCard
+        write(
+            "com/babytracker/feature/good/GoodScreen.kt",
+            "package com.babytracker.feature.good\n" +
+                "fun GoodRow() = Unit\n",
+        )
         val violations = TokenAuditChecker.audit(
             kotlinRoot = tmp.root,
             themeRelDir = "com/babytracker/designsystem/theme",
@@ -83,6 +89,36 @@ class TokenAuditCheckerTest {
         assertTrue(
             "规则 4 扫描为空未检出: ${violations.joinToString { "${it.rule}:${it.detail}" }}",
             violations.any { it.rule == "ScanEmpty" && it.detail.contains("规则 4") },
+        )
+    }
+
+    @Test
+    fun `规则 6 feature 层新定义卡片容器应被拦截且白名单豁免`() {
+        // 白名单外：新 feature 文件定义 *Card → 必须拦截
+        write(
+            "com/babytracker/feature/newfeature/NewScreen.kt",
+            "package com.babytracker.feature.newfeature\n" +
+                "fun NewThingCard() = Unit\n",
+        )
+        // 白名单内（存量债）：同模式函数豁免，待收编批次移除白名单条目
+        write(
+            "com/babytracker/feature/stats/StatsScreen.kt",
+            "package com.babytracker.feature.stats\n" +
+                "private fun LegacyCard() = Unit\n",
+        )
+        val violations = TokenAuditChecker.audit(
+            kotlinRoot = tmp.root,
+            themeRelDir = "com/babytracker/designsystem/theme",
+            componentsRelDir = "com/babytracker/designsystem/components",
+            componentTokensFile = File(tmp.root, "AppComponentTokens.kt"),
+        )
+        assertTrue(
+            "feature 层新增 *Card 未被拦截: ${violations.joinToString { "${it.file}:${it.rule}" }}",
+            violations.any { it.rule == "FeatureLayerGenericCard" && it.file.endsWith("NewScreen.kt") },
+        )
+        assertTrue(
+            "白名单文件被误拦: ${violations.filter { it.file.endsWith("StatsScreen.kt") }}",
+            violations.none { it.rule == "FeatureLayerGenericCard" && it.file.endsWith("StatsScreen.kt") },
         )
     }
 }

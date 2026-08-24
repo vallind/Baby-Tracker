@@ -156,11 +156,8 @@ fun UserInfoCard(
     val displayName = nickname ?: displayAccount ?: babyName
 
     AppCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        elevation = elev.level2,
-        containerColor = c.surface,
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
     ) {
         Row(
             Modifier

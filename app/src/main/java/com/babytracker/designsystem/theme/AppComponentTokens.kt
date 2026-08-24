@@ -65,16 +65,30 @@ data class ButtonTokens(
     }
 }
 
-// —— TT-018 卡片 ——
+// —— TT-018 卡片（A 批升级为全功能基座：variant 颜色组参照 Palette 的 per-variant 字段模式）——
 @Immutable
 data class CardTokens(
-    val containerColor: Color,
-    val contentColor: Color,
-    val borderColor: Color,
-    val borderWidth: Dp,
+    // 共享几何：三种变体共用一套圆角与圆角缩放；innerPadding 为 Medium 档，Compact/Large 由 spacing 派生
     val cornerRadius: Dp,
     val innerPadding: Dp,
-    val elevation: Dp,
+    val elevation: Dp,                           // 仅 Elevated 变体消费的暖阴影高度
+    // Filled：平面色差卡
+    val filledContainerColor: Color,
+    val filledContentColor: Color,
+    // Elevated：surface + 暖阴影（历史全站卡片观感）
+    val elevatedContainerColor: Color,
+    val elevatedContentColor: Color,
+    // Outlined：描边卡
+    val outlinedContainerColor: Color,
+    val outlinedContentColor: Color,
+    val outlinedBorderColor: Color,
+    val outlinedBorderWidth: Dp,
+    // Transparent：透明容器（仅前景色有意义的场景）
+    val transparentContentColor: Color,
+    // 选中态：主色描边高亮；禁用态：整体降透明
+    val selectedBorderColor: Color,
+    val selectedBorderWidth: Dp,
+    val disabledAlpha: Float,
 ) {
     companion object {
         fun default(
@@ -83,13 +97,21 @@ data class CardTokens(
             spacing: AppSpacing,
             elevation: AppElevation,
         ): CardTokens = CardTokens(
-            containerColor = colors.surface,
-            contentColor = colors.onSurface,
-            borderColor = colors.outline,
-            borderWidth = 0.dp,                          // 无描边：奶油底上靠柔和暖阴影分层，更现代
             cornerRadius = shapes.scaled(shapes.largeIncreased), // 24dp 大圆角卡片
             innerPadding = spacing.md,
             elevation = elevation.level2,                // 轻量暖阴影，替代旧发丝描边
+            filledContainerColor = colors.surfaceMuted,  // 奶油浅底平面卡
+            filledContentColor = colors.onSurface,
+            elevatedContainerColor = colors.surface,     // 历史默认观感归入 Elevated
+            elevatedContentColor = colors.onSurface,
+            outlinedContainerColor = colors.surface,
+            outlinedContentColor = colors.onSurface,
+            outlinedBorderColor = colors.outline,
+            outlinedBorderWidth = 1.dp,
+            transparentContentColor = colors.onSurface,
+            selectedBorderColor = colors.primary,
+            selectedBorderWidth = 2.dp,
+            disabledAlpha = 0.38f,
         )
     }
 }

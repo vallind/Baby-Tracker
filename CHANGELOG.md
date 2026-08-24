@@ -2,6 +2,25 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.4.0] — 2026-08-24
+
+**Baby Design System 全量建设波次 · A 批：AppCard 全功能基座 + 守门规则①**
+
+> 本波次（A~H 八批）共用版本号起点 2.4.0，后续批次不另升版本；versionCode 在发布构建时递增。
+
+**A 批内容：**
+
+- **`AppCard` 升级为全功能卡片基座**（三轴模型）：
+  - 视觉轴：`variant`（Filled/Elevated/Outlined/Transparent，默认 Elevated 保持历史全站观感）× `size`（Compact/Medium/Large → spacing 边距三档，密度体系自动缩放）
+  - 交互轴：`onClick`/`onLongClick`/`enabled`/`selected`/`loading`；选中态主色描边高亮 + `stateDescription` 读屏补充（AppStrings 新增 `selected` 键），禁用态令牌化降透明
+  - 结构轴：`header`/`content`/`footer` 可选槽位（纵向排布，槽间距 spacing.sm）
+- `CardTokens` 重构为 per-variant 颜色组字段（参照 Palette 模式：filled/elevated/outlined/transparent 各自 container/content 色 + outlined 描边档），共享几何字段 cornerRadius/innerPadding/elevation 保持原供 `RecordCardDefaults` 等消费
+- 新增 `CardColors` 整体覆盖逃生口（未指定字段回落变体解析值）与 `SkeletonBar` 骨架条原语（从 SkeletonLoader 抽取 shimmer 画刷复用）；卡片 loading 态内置标准骨架占位
+- **全站 38 处调用点迁移至新 API**：裸 `containerColor`/`elevation`/`borderColor`/`borderWidth` 参数全部改为 variant/colors/onClick 表达（如 `elevation=level2+surface` 即默认 Elevated 直接删参）；主题选择、密度选择、宝宝管理三处手工 `.border` 选中态统一改用 `selected` 参数；AI 会话卡/快捷分析卡改用 onClick 轴替代 modifier.clickable
+- **守门规则① `FeatureLayerGenericCard`**（TokenAuditChecker 规则 6）：feature 层禁止新定义通用卡片容器（`*Card` 命名 Composable），新增即红；存量债 12 文件入白名单、G 批收编后逐条移除。`themeTokenAudit` Gradle 任务与 JVM 单测双路生效，新增规则测试（拦截 + 白名单豁免）
+- docs/design-system.md 同步（组件速查、门禁表规则 6）
+- 版本号 2.3.1 → 2.4.0（波次起点；versionCode 48 不变，发布构建时递增）
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

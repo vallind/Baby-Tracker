@@ -51,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.card.CardColors
+import com.babytracker.designsystem.components.card.CardVariant
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
@@ -351,14 +353,15 @@ private fun AiHistorySheet(
             ) {
                 items(conversations, key = { it.id }) { conversation ->
                     AppCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onLoadConversation(conversation.id) },
-                        containerColor = if (state.conversationId == conversation.id) {
-                            colors.primaryContainer
-                        } else {
-                            colors.surfaceElevated
-                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onLoadConversation(conversation.id) },
+                        colors = CardColors(
+                            containerColor = if (state.conversationId == conversation.id) {
+                                colors.primaryContainer
+                            } else {
+                                colors.surfaceElevated
+                            },
+                        ),
                     ) {
                         Row(
                             modifier = Modifier
@@ -502,12 +505,13 @@ private fun AiAnalysisCard(
     }
     val selected = state.analysisContext == source
     AppCard(
-        modifier = modifier
-            .heightIn(min = 96.dp)
-            .clickable(onClick = onClick),
-        containerColor = if (selected) colors.primaryContainer else colors.surfaceElevated,
-        borderColor = if (selected) colors.primary else colors.outline,
-        borderWidth = 1.dp,
+        modifier = modifier.heightIn(min = 96.dp),
+        variant = CardVariant.Outlined,
+        onClick = onClick,
+        selected = selected,
+        colors = CardColors(
+            containerColor = if (selected) colors.primaryContainer else colors.surfaceElevated,
+        ),
     ) {
         Column(Modifier.padding(spacing.md)) {
             Text(
@@ -549,7 +553,7 @@ private fun AiAnalysisContextBar(
         modifier = Modifier
             .padding(horizontal = spacing.md, vertical = spacing.xs)
             .fillMaxWidth(),
-        containerColor = colors.primaryContainer,
+        colors = CardColors(containerColor = colors.primaryContainer),
     ) {
         Row(
             modifier = Modifier
@@ -634,7 +638,7 @@ private fun AiBabySummary(state: AiChatUiState, onCollapse: () -> Unit = {}) {
         modifier = Modifier
             .padding(horizontal = spacing.md, vertical = spacing.sm)
             .fillMaxWidth(),
-        containerColor = colors.primaryContainer,
+        colors = CardColors(containerColor = colors.primaryContainer),
     ) {
         Column(Modifier.padding(start = spacing.md, end = spacing.xs, top = spacing.sm, bottom = spacing.sm)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -679,9 +683,9 @@ private fun CollapsedAiHeader(state: AiChatUiState, onExpand: () -> Unit) {
     AppCard(
         modifier = Modifier
             .padding(horizontal = spacing.md, vertical = spacing.sm)
-            .fillMaxWidth()
-            .clickable(onClick = onExpand),
-        containerColor = colors.primaryContainer,
+            .fillMaxWidth(),
+        onClick = onExpand,
+        colors = CardColors(containerColor = colors.primaryContainer),
     ) {
         Row(
             Modifier.padding(horizontal = spacing.md, vertical = 10.dp),
@@ -998,9 +1002,8 @@ private fun AiRiskCard(riskLevel: AiRiskLevel) {
     }
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = colors.surfaceElevated,
-        borderColor = accent,
-        borderWidth = 1.dp,
+        variant = CardVariant.Outlined,
+        colors = CardColors(borderColor = accent),
     ) {
         Column(Modifier.padding(spacing.md)) {
             Text(title, style = typography.titleMedium, color = accent)

@@ -36,6 +36,8 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.card.CardColors
+import com.babytracker.designsystem.components.card.CardVariant
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
@@ -103,13 +105,10 @@ fun BabyManagementScreen(
                     AppCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = spacing.xs)
-                            .border(
-                                BorderStroke(if (isCurrent) 2.dp else 1.dp, if (isCurrent) c.primary else c.outline),
-                                RoundedCornerShape(shapes.large),
-                            )
-                            .clickable { editingBaby = b; showForm = true },
-                        elevation = elev.level1,
+                            .padding(vertical = spacing.xs),
+                        variant = CardVariant.Outlined,
+                        onClick = { editingBaby = b; showForm = true },
+                        selected = isCurrent,
                     ) {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(44.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {
@@ -158,7 +157,7 @@ fun BabyManagementScreen(
                         deletedBabies.forEach { b ->
                             AppCard(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs),
-                                elevation = elev.level1,
+                                colors = CardColors(elevation = elev.level1),
                             ) {
                                 Row(Modifier.padding(spacing.md), verticalAlignment = Alignment.CenterVertically) {
                                     Box(Modifier.size(36.dp).clip(CircleShape).background(c.primaryContainer), contentAlignment = Alignment.Center) {

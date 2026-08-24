@@ -400,7 +400,6 @@ private fun StatCardFrame(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     AppCard(
-        containerColor = c.surface,
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(spacing.md), content = content)

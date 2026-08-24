@@ -544,7 +544,6 @@ private fun AiConfigStatusCard(state: AiSettingsUiState, onRefresh: () -> Unit) 
 
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = c.surface,
     ) {
         Row(
             Modifier.padding(spacing.md),

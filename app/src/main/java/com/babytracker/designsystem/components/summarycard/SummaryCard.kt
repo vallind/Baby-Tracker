@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.card.CardVariant
 import com.babytracker.designsystem.components.summarycard.SummaryCardDefaults
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -47,8 +48,7 @@ fun AppSummaryCard(
     val cornerRadius = SummaryCardDefaults.cornerRadius()
 
     AppCard(
-        containerColor = Color.Transparent,
-        elevation = 0.dp,
+        variant = CardVariant.Transparent,
         modifier = modifier,
     ) {
         Box(

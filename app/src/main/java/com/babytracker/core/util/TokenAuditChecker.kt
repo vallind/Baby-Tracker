@@ -22,6 +22,7 @@ object TokenAuditChecker {
     const val RULE_DEFAULTS_IMPORTS_COLORS = "DefaultsImportsLocalAppColors"
     const val RULE_COMPONENT_M3_TOKEN = "ComponentLayerM3Token"
     const val RULE_TOKENS_MISSING_REGISTRATION = "ComponentTokensMissingRegistration"
+    const val RULE_FEATURE_GENERIC_CARD = "FeatureLayerGenericCard"
 
     private val hardcodedColorPatterns = listOf(
         "Color.Black" to "hardcoded Color.Black",
@@ -33,6 +34,30 @@ object TokenAuditChecker {
         "import androidx.compose.material3.Typography",
         "import androidx.compose.material3.ColorScheme",
         "import androidx.compose.material3.Shapes",
+    )
+
+    /**
+     * 规则 6：feature 层禁止新定义通用卡片容器（*Card 命名的 Composable）。
+     * 卡片能力统一由 designsystem 的 AppCard 基座承担，业务形态用 variant/slots 组合表达；
+     * 私有 *Card 是"影子设计系统"的种子（AI 辅助开发下会按页面数累积）。
+     *
+     * 白名单为存量债（G 批收编后逐文件移除）：白名单按文件豁免，文件内新增同模式函数同样会被拦截。
+     */
+    private val featureCardDefRegex = Regex("""\bfun\s+\w*Card\w*\s*\(""")
+
+    private val featureCardBaselineRelPaths = setOf(
+        "com/babytracker/feature/ai/AiChatScreen.kt",
+        "com/babytracker/feature/ai/AiSettingsScreen.kt",
+        "com/babytracker/feature/development/DevelopmentAssessmentScreen.kt",
+        "com/babytracker/feature/diaper/DiaperListScreen.kt",
+        "com/babytracker/feature/health/HealthScreen.kt",
+        "com/babytracker/feature/home/HomeScreen.kt",
+        "com/babytracker/feature/message/MessageScreen.kt",
+        "com/babytracker/feature/reminder/ReminderScreen.kt",
+        "com/babytracker/feature/settings/SettingsComponents.kt",
+        "com/babytracker/feature/sleep/SleepListScreen.kt",
+        "com/babytracker/feature/stats/StatsScreen.kt",
+        "com/babytracker/feature/vaccination/VaccinationListScreen.kt",
     )
 
     // 检查器自身源码含扫描模式串（如 "import androidx.compose.material3.Typography"），规则 4 须豁免本文件，否则自查必报。
@@ -101,6 +126,31 @@ object TokenAuditChecker {
         } else {
             // 防呆（lessons #14/#17）：文件缺失必须报错，禁止静默假绿（否则注册校验随路径漂移失效）
             violations.add(AuditViolation(componentTokensFile.path, "ScanEmpty", "AppComponentTokens.kt 不存在，注册校验已失效"))
+        }
+        // 规则 6：feature 层通用卡片容器守门。目录豁免用 File 前缀比较（lessons #24），
+        // 相对路径统一 invariantSeparatorsPath（正斜杠），与白名单同源比较。
+        val featureDir = File(kotlinRoot, "com/babytracker/feature")
+        if (!featureDir.exists()) {
+            violations.add(AuditViolation(featureDir.path, "ScanEmpty", "规则 6 扫描为空，feature 目录不存在或路径漂移"))
+        } else {
+            val featureFiles = featureDir.walkTopDown()
+                .filter { it.isFile && it.name.endsWith(".kt") }
+                .toList()
+            if (featureFiles.isEmpty()) {
+                violations.add(AuditViolation(featureDir.path, "ScanEmpty", "规则 6 扫描为空，路径可能漂移"))
+            }
+            for (file in featureFiles) {
+                if (file.extension != "kt") continue
+                val relPath = file.relativeTo(kotlinRoot).invariantSeparatorsPath
+                if (relPath in featureCardBaselineRelPaths) continue
+                val text = file.readText()
+                val matches = featureCardDefRegex.findAll(text).map { it.value }.toList()
+                if (matches.isNotEmpty()) {
+                    violations.add(
+                        AuditViolation(file.path, RULE_FEATURE_GENERIC_CARD, "feature 层定义卡片容器: $matches；请改用 AppCard variant/slots 组合"),
+                    )
+                }
+            }
         }
         return violations
     }

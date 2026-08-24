@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.babytracker.core.settings.DensityController
 import com.babytracker.core.settings.ThemeController
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.card.CardColors
+import com.babytracker.designsystem.components.card.CardVariant
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.AppDensity
@@ -68,14 +70,11 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                     AppCard(
                         modifier = Modifier
                             .width(120.dp)
-                            .height(96.dp)
-                            .border(
-                                if (selected) BorderStroke(2.dp, c.primary) else BorderStroke(1.dp, c.outline),
-                                RoundedCornerShape(shapes.large),
-                            )
-                            .clickable { themeCtrl.switchTheme(theme.name) },
-                        elevation = elev.level1,
-                        containerColor = theme.colors.surface,
+                            .height(96.dp),
+                        variant = CardVariant.Outlined,
+                        onClick = { themeCtrl.switchTheme(theme.name) },
+                        selected = selected,
+                        colors = CardColors(containerColor = theme.colors.surface),
                     ) {
                         Box(Modifier.fillMaxSize().padding(spacing.md)) {
                             Column {
@@ -125,13 +124,10 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
                     AppCard(
                         modifier = Modifier
                             .width(120.dp)
-                            .height(96.dp)
-                            .border(
-                                if (selected) BorderStroke(2.dp, c.primary) else BorderStroke(1.dp, c.outline),
-                                RoundedCornerShape(shapes.large),
-                            )
-                            .clickable { ctrl.switchDensity(density) },
-                        elevation = elev.level1,
+                            .height(96.dp),
+                        variant = CardVariant.Outlined,
+                        onClick = { ctrl.switchDensity(density) },
+                        selected = selected,
                     ) {
                         Box(Modifier.fillMaxSize().padding(spacing.md)) {
                             Column {

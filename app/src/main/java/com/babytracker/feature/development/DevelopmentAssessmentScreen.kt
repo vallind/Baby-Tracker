@@ -314,7 +314,6 @@ private fun AssessmentItemCard(
     val shapes = LocalAppShapes.current
     val statusColor = scoreColor(score)
     AppCard(
-        containerColor = c.surface,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(horizontal = spacing.md, vertical = 14.dp)) {

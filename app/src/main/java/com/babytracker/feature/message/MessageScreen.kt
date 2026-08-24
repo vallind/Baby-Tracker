@@ -31,6 +31,7 @@ import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.card.CardColors
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
@@ -195,10 +196,11 @@ private fun CategoryOverviewBar(
             val unread = unreadMap[cat.type] ?: 0
             val selected = selectedType == cat.type
             AppCard(
-                containerColor = if (selected) cat.bgColor else c.surface,
-                modifier = Modifier
-                    .weight(1f)
-                    .clickable { onSelect(cat.type) },
+                modifier = Modifier.weight(1f),
+                onClick = { onSelect(cat.type) },
+                colors = CardColors(
+                    containerColor = if (selected) cat.bgColor else Color.Unspecified,
+                ),
             ) {
                 Row(
                     Modifier
@@ -252,10 +254,9 @@ private fun MessageCard(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     AppCard(
-        containerColor = c.surface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        onLongClick = onLongClick,
     ) {
         Row(
             Modifier

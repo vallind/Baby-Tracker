@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.card.CardColors
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -102,7 +103,7 @@ fun AppMarkdownText(
                 }
                 is MarkdownBlock.CodeBlock -> AppCard(
                     modifier = Modifier.fillMaxWidth(),
-                    containerColor = colors.pageBackground,
+                    colors = CardColors(containerColor = colors.pageBackground),
                 ) {
                     Text(
                         text = block.code,

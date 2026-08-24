@@ -40,6 +40,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.card.CardColors
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -111,7 +112,7 @@ fun BackupScreen(
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md, vertical = spacing.md)) {
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = elev.level1,
+                colors = CardColors(elevation = elev.level1),
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -155,7 +156,7 @@ fun BackupScreen(
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = elev.level1,
+                colors = CardColors(elevation = elev.level1),
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -190,7 +191,7 @@ fun BackupScreen(
 
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = elev.level1,
+                colors = CardColors(elevation = elev.level1),
             ) {
                 Column(Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

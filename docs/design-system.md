@@ -1,6 +1,6 @@
 # 设计系统详细文档
 
-> 最后更新：2026-08-23 · 对应版本：2.2.0
+> 最后更新：2026-08-24 · 对应版本：2.4.0
 >
 > 从 AGENTS.md 拆分，供需要深入了解设计系统时查阅。
 
@@ -75,7 +75,14 @@ tokens.derive { field = value } → 部分覆盖语法糖（⏳ TODO，TT-032，
 ## 组件用法速查
 
 ```kotlin
-AppCard { Text("内容") }                          // 替代 Card + shadow + shape + CardDefaults 样板
+AppCard(                                            // 统一卡片基座（三轴模型）
+    variant = CardVariant.Elevated,                 //   Filled/Elevated/Outlined/Transparent（默认 Elevated=历史观感）
+    size = CardSize.Medium,                         //   Compact/Medium/Large → spacing 边距三档，密度自动缩放
+    onClick = {...}, onLongClick = null,            //   交互轴：整卡点击（enabled/selected/loading 同轴）
+    header = { ... }, footer = { ... },             //   结构轴：可选槽位（槽间距 spacing.sm）
+) { Text("内容") }                                  // 替代 Card + shadow + shape + CardDefaults 样板；
+                                                    // colors = CardColors(...) 为整体覆盖逃生口（勿滥用）
+                                                    // feature 层禁止再定义私有 *Card（审计规则 6 守门）
 AppTopBar(title = "标题", onBack = { ... })       // 替代 CenterAlignedTopAppBar
 AppButton(label = "保存", onClick = { ... }, variant = ButtonVariant.Secondary) // 统一按钮（Primary/Secondary/Text/Danger 变体 + size 档位；Batch 5 起为语义 API，禁止裸 token 覆盖，审计测试守门）
 AppDivider(thickness = 0.5.dp)                      // 分割线（替代 HorizontalDivider）
@@ -224,6 +231,7 @@ data class XxxTokens(
 | 3 | `DefaultsImportsLocalAppColors` | Defaults 直接 import `LocalAppColors`（跳过组件令牌消费层） |
 | 4 | `ComponentLayerM3Token` | theme 层之外 import M3 `Typography`/`ColorScheme`/`Shapes` 或直用 `MaterialTheme.typography/colorScheme/shapes` |
 | 5 | `ComponentTokensMissingRegistration` | 新增组件令牌未注册进 `AppComponentTokens` 聚合（divider/surface/snackbarHost/emptyState 硬校验） |
+| 6 | `FeatureLayerGenericCard` | feature 层禁止新定义通用卡片容器（`*Card` 命名 Composable）；卡片形态统一用 `AppCard` variant/slots 组合表达。白名单为存量债（G 批收编后逐文件移除），白名单文件内新增同模式函数同样拦截 |
 
 **防呆（lessons #14/#17）**：`ScanEmpty` 违规——任何扫描范围为空、`AppComponentTokens.kt` 缺失时以违规形式报错，禁止路径漂移后静默假绿。
 

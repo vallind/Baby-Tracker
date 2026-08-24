@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.skeleton.SkeletonDefaults as AppSkeletonDefaults
@@ -24,25 +25,7 @@ fun SkeletonLoader(
     cornerRadius: Dp = AppSkeletonDefaults.cornerRadius(),
     avatarSize: Dp = AppSkeletonDefaults.avatarSize(),
 ) {
-    val shimmerColors = listOf(
-        shimmerColor1,
-        shimmerColor2,
-        shimmerColor1,
-    )
-    val transition = rememberInfiniteTransition()
-    val translateAnim = transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = AppSkeletonDefaults.shimmerDurationMs(), easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-    )
-    val brush = Brush.linearGradient(
-        colors = shimmerColors,
-        start = Offset.Zero,
-        end = Offset(x = translateAnim.value, y = translateAnim.value),
-    )
+    val brush = rememberShimmerBrush(shimmerColor1, shimmerColor2)
 
     Column(
         modifier.padding(horizontal = 20.dp),
@@ -89,4 +72,48 @@ fun SkeletonLoader(
             }
         }
     }
+}
+
+/** 骨架 shimmer 画刷（无限位移动画），骨架条与骨架列表共用 */
+@Composable
+private fun rememberShimmerBrush(
+    shimmerColor1: Color,
+    shimmerColor2: Color,
+): Brush {
+    val transition = rememberInfiniteTransition()
+    val translateAnim = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = AppSkeletonDefaults.shimmerDurationMs(), easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+    )
+    return Brush.linearGradient(
+        colors = listOf(shimmerColor1, shimmerColor2, shimmerColor1),
+        start = Offset.Zero,
+        end = Offset(x = translateAnim.value, y = translateAnim.value),
+    )
+}
+
+/**
+ * 骨架条原语：shimmer 底 + 圆角的矩形占位。
+ * 供 AppCard 加载态等场景复用；宽度由调用方 modifier 控制（如 fillMaxWidth(0.6f)）。
+ */
+@Composable
+fun SkeletonBar(
+    modifier: Modifier = Modifier,
+    height: Dp = 12.dp,
+    cornerRadius: Dp = AppSkeletonDefaults.cornerRadius(),
+) {
+    val brush = rememberShimmerBrush(
+        shimmerColor1 = AppSkeletonDefaults.shimmerColor1(),
+        shimmerColor2 = AppSkeletonDefaults.shimmerColor2(),
+    )
+    androidx.compose.foundation.layout.Box(
+        modifier
+            .height(height)
+            .clip(RoundedCornerShape(cornerRadius))
+            .background(brush),
+    )
 }

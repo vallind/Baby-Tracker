@@ -248,11 +248,11 @@ private fun HealthCategorySummaryCard(
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     AppCard(
-        containerColor = c.surface,
         modifier = Modifier
             .padding(horizontal = spacing.md)
-            .fillMaxWidth()
-            .clickable(enabled = hasItems, onClick = onClick),
+            .fillMaxWidth(),
+        onClick = onClick,
+        enabled = hasItems,
     ) {
         Row(
             Modifier.padding(horizontal = spacing.md, vertical = 14.dp),
@@ -296,11 +296,10 @@ private fun VaccinationSummaryCard(
     val typography = LocalAppTypography.current
     val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
     AppCard(
-        containerColor = c.surface,
         modifier = Modifier
             .padding(horizontal = spacing.md)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .fillMaxWidth(),
+        onClick = onClick,
     ) {
         Row(
             Modifier.padding(horizontal = spacing.md, vertical = 14.dp),

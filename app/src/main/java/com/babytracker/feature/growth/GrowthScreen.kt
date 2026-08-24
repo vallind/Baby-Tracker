@@ -223,7 +223,6 @@ fun GrowthScreen(
                             val referenceText = GrowthReference.rangeText(ageMonths, types[tab], units[tab])
 
                             AppCard(
-                                containerColor = c.surface,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(bottom = spacing.md),
@@ -292,7 +291,6 @@ fun GrowthScreen(
                         }
 
                         AppCard(
-                            containerColor = c.surface,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = spacing.md),
