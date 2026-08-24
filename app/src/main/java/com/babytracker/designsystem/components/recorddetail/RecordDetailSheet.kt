@@ -105,9 +105,8 @@ fun RecordDetailSheet(
             )
             Spacer(Modifier.height(10.dp))
             AppButton(
-                variant = ButtonVariant.Secondary,
+                variant = ButtonVariant.Danger,
                 label = deleteText,
-                contentColor = RecordDetailSheetDefaults.deleteColor(),
                 onClick = { showDeleteConfirm = true },
                 modifier = Modifier.fillMaxWidth(),
             )

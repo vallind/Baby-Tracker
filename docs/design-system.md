@@ -22,7 +22,7 @@
 
 ```
 优先级模型：
-  显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
+  语义参数（variant/size 等）> XxxDefaults > 组件令牌 > 核心语义令牌 > 可控回退值
 
 三层令牌：
   designsystem/theme/AppTokens.kt           — 核心语义令牌（AppColors 42字段 + 分档色板/Spacing/Elevation/Opacity/Motion/Shapes/自建 12 级 AppTypography/ControlSizeTokens/AppDensity 密度体系）
@@ -77,7 +77,7 @@ tokens.derive { field = value } → 部分覆盖语法糖（⏳ TODO，TT-032，
 ```kotlin
 AppCard { Text("内容") }                          // 替代 Card + shadow + shape + CardDefaults 样板
 AppTopBar(title = "标题", onBack = { ... })       // 替代 CenterAlignedTopAppBar
-AppButton(label = "保存", onClick = { ... }, variant = ButtonVariant.Secondary) // 统一按钮（Primary/Secondary/Text 变体枚举）
+AppButton(label = "保存", onClick = { ... }, variant = ButtonVariant.Secondary) // 统一按钮（Primary/Secondary/Text/Danger 变体 + size 档位；Batch 5 起为语义 API，禁止裸 token 覆盖，审计测试守门）
 AppDivider(thickness = 0.5.dp)                      // 分割线（替代 HorizontalDivider）
 AppSurface { ... }                                  // 表面容器（替代 M3 Surface，可选 color/shape）
 AppSnackbarHost(hostState)                          // 全局提示宿主（替代 M3 SnackbarHost）
@@ -232,7 +232,7 @@ data class XxxTokens(
 ### Step 7：优先级验证
 
 ```
-显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 回退值
+显式参数 > XxxDefaults > 组件令牌 > 核心语义令牌 > 回退值（Batch 5 收紧：组件参数只保留业务语义参数，token 覆盖项已下线）
 ```
 
 集成测试在 `ThemeTokenizationStaticAuditTest` 中补充。

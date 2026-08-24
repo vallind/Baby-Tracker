@@ -31,6 +31,8 @@ import com.babytracker.feature.timeline.TimelineViewModel
 import com.babytracker.feature.auth.LoginViewModel
 import com.babytracker.feature.settings.SettingsViewModel
 import com.babytracker.feature.settings.BabyProfileViewModel
+import com.babytracker.feature.settings.BabyManagementViewModel
+import com.babytracker.feature.settings.BackupViewModel
 import com.babytracker.feature.family.FamilyViewModel
 import com.babytracker.feature.ai.AiChatViewModel
 import com.babytracker.feature.ai.AiContextBuilder
@@ -79,8 +81,10 @@ val appModule = module {
     viewModel { ReminderViewModel(get(), get(), get()) }
     viewModel { TimelineViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { LoginViewModel(get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get()) }
     viewModel { BabyProfileViewModel(get(), get(), get()) }
+    viewModel { BabyManagementViewModel(get(), get(), get()) }
+    viewModel { BackupViewModel(get(), androidContext()) }
     viewModel { SyncViewModel(get(), get(), get(), get(), get()) }
     viewModel { FamilyViewModel(get(), get(), get(), get()) }
     viewModel { AiChatViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }

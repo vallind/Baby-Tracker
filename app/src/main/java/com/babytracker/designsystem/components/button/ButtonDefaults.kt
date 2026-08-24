@@ -6,13 +6,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.babytracker.designsystem.theme.LocalAppComponentTokens
+import com.babytracker.designsystem.theme.LocalAppControl
 
 object ButtonDefaults {
-    @Composable fun height(): Dp = LocalAppComponentTokens.current.button.height
+    /** 高度随尺寸档位：小/默认/大（默认档 = ButtonTokens 基准，其余映射 AppControlTokens） */
+    @Composable fun height(size: ButtonSize): Dp = when (size) {
+        ButtonSize.Small -> LocalAppControl.current.small.height
+        ButtonSize.Medium -> LocalAppComponentTokens.current.button.height
+        ButtonSize.Large -> LocalAppControl.current.large.height
+    }
+
     @Composable fun cornerRadius(): Dp = LocalAppComponentTokens.current.button.cornerRadius
-    @Composable fun fontSize(): TextUnit = LocalAppComponentTokens.current.button.fontSize
+
+    @Composable fun fontSize(size: ButtonSize): TextUnit = when (size) {
+        ButtonSize.Small -> LocalAppControl.current.small.fontSize
+        ButtonSize.Medium -> LocalAppComponentTokens.current.button.fontSize
+        ButtonSize.Large -> LocalAppControl.current.large.fontSize
+    }
+
     @Composable fun fontWeight(): FontWeight = LocalAppComponentTokens.current.button.fontWeight
-    @Composable fun iconSize(): Dp = LocalAppComponentTokens.current.button.iconSize
+
+    @Composable fun iconSize(size: ButtonSize): Dp = when (size) {
+        ButtonSize.Small -> LocalAppControl.current.small.iconSize
+        ButtonSize.Medium -> LocalAppComponentTokens.current.button.iconSize
+        ButtonSize.Large -> LocalAppControl.current.large.iconSize
+    }
+
     @Composable fun disabledAlpha(): Float = LocalAppComponentTokens.current.button.disabledAlpha
     @Composable fun containerColor(): Color = LocalAppComponentTokens.current.button.containerColor
     @Composable fun contentColor(): Color = LocalAppComponentTokens.current.button.contentColor
@@ -20,4 +39,6 @@ object ButtonDefaults {
     @Composable fun disabledContentColor(): Color = LocalAppComponentTokens.current.button.disabledContentColor
     @Composable fun secondaryContentColor(): Color = LocalAppComponentTokens.current.button.secondaryContentColor
     @Composable fun textContentColor(): Color = LocalAppComponentTokens.current.button.textContentColor
+    @Composable fun dangerContainerColor(): Color = LocalAppComponentTokens.current.button.dangerContainerColor
+    @Composable fun dangerContentColor(): Color = LocalAppComponentTokens.current.button.dangerContentColor
 }

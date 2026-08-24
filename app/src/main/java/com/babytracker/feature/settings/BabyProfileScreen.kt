@@ -195,7 +195,6 @@ fun BabyProfileScreen(
                     variant = ButtonVariant.Text,
                     onClick = onOpenBabyManagement,
                     label = "管理全部宝宝",
-                    contentColor = c.textSecondary,
                 )
                 Text("·", color = c.textTertiary, style = typography.bodyMedium)
                 AppButton(

@@ -31,6 +31,18 @@
 - `ScreenBoundaryAuditTest` 违规收敛至仅剩 Settings 家族 2 屏（Batch 4 范围）；清理 TimelineScreen 遗留 NavController import
 - 删除 `tools/parked-batch2-routes/`（旧约定 Route 参考物，Batch 2 已按 v4 重写）；lessons.md 新增 #25（Paparazzi 2.0 snapshot API 与领域模型枚举字段）
 
+**四、批次 4：Settings God Screen 拆解（ScreenBoundaryAuditTest 首次全绿）：**
+- `SettingsScreen.kt`（917 行 = 3 屏 + 2 对话框 + 共享组件）拆为：`SettingsScreen`（纯 Section 编排 + bottomBar 槽位）、`SettingsComponents`（SettingsRow/Card/Divider/SectionTitle/UserInfoCard/ThemeDots + SettingsMenuScaffold）、`SettingsDialogs`（BabyFormDialog + NicknameEditDialog，Timeline/BabyProfile 共用签名不变）、`BabyManagementScreen`、`BackupScreen`、`PreferenceSettingsScreen`/`DataSettingsScreen`/`SupportSettingsScreen`（原 SettingsMenuScreen 三子屏拆独立文件）
+- 新建 VM：`BabyManagementViewModel`（增删改/切换/疫苗计划生成）、`BackupViewModel`（BackupManager 全部操作 + WebDAV 表单状态）；`SettingsViewModel` 扩为薄聚合（AuthService + BabyRepository，主页展示状态与退出/改名动作）；主题/密度仍走 Controller（PreferenceSettingsRoute 装配并把弹层作槽位注入）
+- 三条新 Route（Settings/BabyManagement/Backup）+ 三子屏 Route；5 处 AppButton 裸 contentColor/containerColor 覆盖按批次 5 新 API 清理
+- **`ScreenBoundaryAuditTest` 首次全绿**：全部 *Screen.kt 文件不再 import navigation/koin/repository/controller
+
+**五、批次 5：Token 单一来源 + AppButton 语义化：**
+- `Theme.kt` 删除 `internalMaterialTypography` + `BabyTrackerShapes` 双源定义，改为 `AppTypography.toMaterialTypography()` / `AppShapes.toMaterialShapes()` 桥接（数值等价映射，M3 默认形零变化；radiusScale 双源漂移根治）
+- `AppButton` 收紧为语义 API：`(label/onClick/icon/enabled/variant/size/modifier)`，删除 9 个裸 token 覆盖参数；新增 `ButtonSize`（映射 AppControlTokens 三档）与 `ButtonVariant.Danger`（破坏性操作，ButtonTokens 增 danger 色对）；RecordDetailSheet 删除按钮、设置页退出登录改用 Danger
+- 新增 `AppButtonApiAuditTest`：designsystem 之外禁止给 AppButton 传裸 token 参数（业务代码不得绕过 Design Token）
+- design-system.md 优先级模型更新为「语义参数 > XxxDefaults > 组件令牌」；全站约 50 处 AppButton 调用点核对清理
+
 版本号 2.2.4 → 2.3.0（本波次统一起点；versionCode 48 不变，发布构建时递增）。
 
 ### [2.2.4] — 2026-08-23

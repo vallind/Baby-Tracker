@@ -19,15 +19,15 @@ import com.babytracker.feature.vaccination.VaccinationRoute
 import com.babytracker.feature.health.HealthRoute
 import com.babytracker.feature.diaper.DiaperRoute
 import com.babytracker.feature.stats.StatsRoute
-import com.babytracker.feature.settings.SettingsScreen
+import com.babytracker.feature.settings.SettingsRoute
 import com.babytracker.feature.settings.BabyProfileRoute
-import com.babytracker.feature.settings.BabyManagementScreen
-import com.babytracker.feature.settings.BackupScreen
+import com.babytracker.feature.settings.BabyManagementRoute
+import com.babytracker.feature.settings.BackupRoute
 import com.babytracker.feature.settings.LogViewerRoute
 import com.babytracker.feature.settings.SyncSettingsRoute
-import com.babytracker.feature.settings.PreferenceSettingsScreen
-import com.babytracker.feature.settings.DataSettingsScreen
-import com.babytracker.feature.settings.SupportSettingsScreen
+import com.babytracker.feature.settings.PreferenceSettingsRoute
+import com.babytracker.feature.settings.DataSettingsRoute
+import com.babytracker.feature.settings.SupportSettingsRoute
 import com.babytracker.feature.message.MessageRoute
 import com.babytracker.feature.development.DevelopmentAssessmentRoute
 import com.babytracker.feature.reminder.ReminderRoute
@@ -79,13 +79,13 @@ fun AppNavigation() {
         instantComposable<Health> { HealthRoute(navController) }
         instantComposable<Diaper> { DiaperRoute(navController) }
         instantComposable<Stats> { StatsRoute(navController) }
-        instantComposable<Settings> { SettingsScreen(navController) }
-        instantComposable<PreferenceSettings> { PreferenceSettingsScreen(navController) }
-        instantComposable<DataSettings> { DataSettingsScreen(navController) }
-        instantComposable<SupportSettings> { SupportSettingsScreen(navController) }
-        instantComposable<BabyManagement> { BabyManagementScreen(navController) }
+        instantComposable<Settings> { SettingsRoute(navController) }
+        instantComposable<PreferenceSettings> { PreferenceSettingsRoute(navController) }
+        instantComposable<DataSettings> { DataSettingsRoute(navController) }
+        instantComposable<SupportSettings> { SupportSettingsRoute(navController) }
+        instantComposable<BabyManagement> { BabyManagementRoute(navController) }
         instantComposable<BabyProfile> { BabyProfileRoute(navController) }
-        instantComposable<Backup> { BackupScreen(navController) }
+        instantComposable<Backup> { BackupRoute(navController) }
         instantComposable<LogViewer> { LogViewerRoute(navController) }
         instantComposable<SyncSettings> { SyncSettingsRoute(navController) }
         instantComposable<Family> { FamilyRoute(navController) }

@@ -327,7 +327,6 @@ private fun FamilyDetailView(
                     },
                     label = "复制",
                     icon = Icons.Default.ContentCopy,
-                    contentColor = c.primary,
                 )
             }
         }

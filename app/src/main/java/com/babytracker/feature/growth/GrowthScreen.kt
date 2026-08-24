@@ -461,7 +461,6 @@ fun GrowthScreen(
                     },
                     label = "${String.format(Locale.US, AppStrings.growthRecordTemplate, tabs[tab])}",
                     icon = Icons.Default.Add,
-                    height = 48.dp,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

@@ -36,6 +36,8 @@ data class ButtonTokens(
     val disabledAlpha: Float,
     val secondaryContentColor: Color,   // Secondary 变体内容色（描边色）
     val textContentColor: Color,        // Text 变体内容色
+    val dangerContainerColor: Color,    // Danger 变体容器色（破坏性操作，如删除）
+    val dangerContentColor: Color,      // Danger 变体内容色
 ) {
     companion object {
         fun default(
@@ -57,6 +59,8 @@ data class ButtonTokens(
             disabledAlpha = opacity.disabled,
             secondaryContentColor = colors.primary,
             textContentColor = colors.primary,
+            dangerContainerColor = colors.danger,
+            dangerContentColor = colors.onError,
         )
     }
 }

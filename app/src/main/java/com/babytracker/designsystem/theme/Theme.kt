@@ -15,10 +15,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
 // ═══════════════════════════════════════════════════════════
@@ -137,29 +133,37 @@ private fun Color.mix(other: Color, weight: Float): Color = Color(
 
 val LocalAppTypography = compositionLocalOf { AppTypography() }
 
-// 内部 M3 Typography：数值与自建 AppTypography 保持一致，
-// 仅提供给 MaterialTheme 内部使用，不对外暴露 M3 Typography 类型
-private val internalMaterialTypography = Typography(
-    displayLarge = TextStyle(fontSize = 40.sp, lineHeight = 46.sp, fontWeight = FontWeight.Bold),
-    headlineLarge = TextStyle(fontSize = 30.sp, lineHeight = 38.sp, fontWeight = FontWeight.Bold),
-    headlineMedium = TextStyle(fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
-    headlineSmall = TextStyle(fontSize = 21.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
-    titleLarge = TextStyle(fontSize = 18.sp, lineHeight = 26.sp, fontWeight = FontWeight.SemiBold),
-    titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium),
-    titleSmall = TextStyle(fontSize = 15.sp, lineHeight = 22.sp, fontWeight = FontWeight.Medium),
-    bodyLarge = TextStyle(fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontSize = 14.sp, lineHeight = 21.sp),
-    bodySmall = TextStyle(fontSize = 13.sp, lineHeight = 18.sp),
-    labelMedium = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
-    labelSmall = TextStyle(fontSize = 11.sp, lineHeight = 15.sp, fontWeight = FontWeight.Medium),
+// ── MaterialTheme 桥接（Batch 5：Token 单一来源）──
+// 自建 AppTypography / AppShapes 是唯一事实来源；M3 类型只在此桥接，
+// 不再维护第二套 Typography/Shapes 定义（曾造成 radiusScale 双源漂移）。
+
+/** AppTypography → M3 Typography：12 级逐项映射（数值本就一致，零视觉变化） */
+private fun AppTypography.toMaterialTypography(): Typography = Typography(
+    displayLarge = displayLarge,
+    headlineLarge = headlineLarge,
+    headlineMedium = headlineMedium,
+    headlineSmall = headlineSmall,
+    titleLarge = titleLarge,
+    titleMedium = titleMedium,
+    titleSmall = titleSmall,
+    bodyLarge = bodyLarge,
+    bodyMedium = bodyMedium,
+    bodySmall = bodySmall,
+    labelMedium = labelMedium,
+    labelSmall = labelSmall,
 )
 
-val BabyTrackerShapes = Shapes(
-    extraSmall = RoundedCornerShape(12.dp),    // 输入框/小元素
-    small = RoundedCornerShape(16.dp),         // 标准卡片
-    medium = RoundedCornerShape(20.dp),        // 中等卡片
-    large = RoundedCornerShape(24.dp),         // 大卡片/对话框
-    extraLarge = RoundedCornerShape(32.dp),    // 底部弹层/超大圆角
+/**
+ * AppShapes → M3 Shapes：数值等价映射（保持迁移前后 M3 默认形不变）：
+ * extraSmall←small(12) small←medium(16) medium←large(20)
+ * large←largeIncreased(24) extraLarge←extraLarge(32)
+ */
+private fun AppShapes.toMaterialShapes(): Shapes = Shapes(
+    extraSmall = RoundedCornerShape(small),          // 12dp
+    small = RoundedCornerShape(medium),              // 16dp
+    medium = RoundedCornerShape(large),              // 20dp
+    large = RoundedCornerShape(largeIncreased),      // 24dp
+    extraLarge = RoundedCornerShape(extraLarge),     // 32dp
 )
 
 fun AppTheme.toColorScheme(isDark: Boolean = false): androidx.compose.material3.ColorScheme {
@@ -290,8 +294,8 @@ fun BabyTrackerTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = internalMaterialTypography,
-            shapes = BabyTrackerShapes,
+            typography = tokensTypography.toMaterialTypography(),
+            shapes = tokensShapes.toMaterialShapes(),
             content = content,
         )
     }
