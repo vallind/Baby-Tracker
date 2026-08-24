@@ -61,7 +61,8 @@ import java.util.Locale
 /**
  * 尿布记录页 — 纯 UI 渲染层：只收 state + 命名回调，不接触导航 / Koin / Repository / Controller。
  * 表单 Sheet 显隐、日期选择器显隐等 UI 临时状态留在本地 remember；
- * 数据加载、日期筛选、删除/撤销、表单保存全部在 DiaperViewModel。
+ * 数据加载、删除/撤销、表单保存全部在 DiaperViewModel；
+ * 日期筛选为页面状态（原则 #9），与表单显隐一起留 Screen 本地 remember。
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -69,7 +70,6 @@ fun DiaperListScreen(
     state: DiaperUiState,
     bottomBar: @Composable () -> Unit = {},
     onBack: () -> Unit = {},
-    onDateChange: (LocalDate) -> Unit = {},
     onDelete: (Diaper) -> Unit = {},
     onUndoDelete: () -> Unit = {},
     onSave: (Diaper) -> Unit = {},
@@ -87,9 +87,9 @@ fun DiaperListScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
-    // 日期选择状态（日期本身在 VM，显隐留 Screen）
+    // 日期选择状态（筛选为页面状态留 Screen，显隐也留 Screen）
     val today = LocalDate.now()
-    val selectedDate = state.selectedDate
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     // 按所选日期过滤
@@ -147,10 +147,10 @@ fun DiaperListScreen(
             // —— 日期选择器（现代胶囊行） ——
             DateNavCapsule(
                 dateLabel = dateLabel,
-                onPrev = { onDateChange(selectedDate.minusDays(1)) },
-                onNext = { onDateChange(selectedDate.plusDays(1)) },
+                onPrev = { selectedDate = selectedDate.minusDays(1) },
+                onNext = { selectedDate = selectedDate.plusDays(1) },
                 onOpenPicker = { showDatePicker = true },
-                onToday = if (selectedDate != today) ({ onDateChange(today) }) else null,
+                onToday = if (selectedDate != today) ({ selectedDate = today }) else null,
                 modifier = Modifier.padding(horizontal = spacing.md),
             )
 
@@ -317,7 +317,7 @@ fun DiaperListScreen(
         initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00",
         dateOnly = true,
         onConfirm = { dt ->
-            onDateChange(LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE))
+            selectedDate = LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE)
             showDatePicker = false
         },
         onDismiss = { showDatePicker = false },

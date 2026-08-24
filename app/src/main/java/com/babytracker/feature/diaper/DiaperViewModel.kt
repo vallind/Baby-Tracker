@@ -9,18 +9,18 @@ import com.babytracker.core.util.BabyController
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 /**
  * 尿布记录页状态。
  * - [diapers]：当前宝宝全部尿布记录（按日过滤 / 分类计数等展示派生由 Screen 计算，纯 UI 逻辑）
- * - [selectedDate]：当前筛选日期（业务查询状态，Batch 3 自 Screen 的 remember 收编）
  * - [babyId]：当前宝宝 id（0 = 无宝宝，Screen 不渲染）
  * - [loading]：首屏加载中
+ *
+ * 日期筛选属于页面状态（原则 #9：筛选默认留 Screen 本地态，仅需跨页面/跨生命周期保留才进 VM），
+ * 故 selectedDate 不在此处。
  */
 data class DiaperUiState(
     val diapers: List<Diaper> = emptyList(),
-    val selectedDate: LocalDate = LocalDate.now(),
     val babyId: Int = 0,
     val loading: Boolean = true,
 )
@@ -69,11 +69,6 @@ class DiaperViewModel(
                 .filter { it != 0 }
                 .collectLatest { babyId -> _trigger.value = babyId }
         }
-    }
-
-    /** 日期切换（原 Screen 内 selectedDate 状态迁入，日期本身是业务查询状态） */
-    fun updateDate(date: LocalDate) {
-        _state.value = _state.value.copy(selectedDate = date)
     }
 
     /** 删除尿布记录，并在内部暂存实体副本用于可能的撤销操作（原 Screen 内 repo.delete 迁入） */

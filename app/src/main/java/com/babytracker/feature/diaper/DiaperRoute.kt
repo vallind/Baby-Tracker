@@ -24,7 +24,6 @@ fun DiaperRoute(navController: NavController) {
         state = state,
         bottomBar = { AppBottomBar(navController) },
         onBack = { navController.popBackStack() },
-        onDateChange = viewModel::updateDate,
         onDelete = viewModel::delete,
         onUndoDelete = viewModel::undoDelete,
         onSave = viewModel::save,

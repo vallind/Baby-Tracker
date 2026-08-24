@@ -67,7 +67,8 @@ import java.util.Locale
 /**
  * 生长记录页 — 纯 UI 渲染层：只收 state + baby + 命名回调，不接触导航 / Koin / Repository / Controller。
  * SegmentedControl 类型切换、表单 Sheet 显隐、日期选择器显隐等 UI 临时状态留在本地 remember；
- * 数据加载、日期筛选、删除/撤销、表单保存全部在 GrowthViewModel。
+ * 数据加载、删除/撤销、表单保存全部在 GrowthViewModel；
+ * 日期筛选为页面状态（原则 #9），与表单显隐等一起留 Screen 本地 remember。
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -76,7 +77,6 @@ fun GrowthScreen(
     baby: Baby?,
     bottomBar: @Composable () -> Unit = {},
     onBack: () -> Unit = {},
-    onDateChange: (LocalDate) -> Unit = {},
     onDelete: (Growth) -> Unit = {},
     onUndoDelete: () -> Unit = {},
     onSave: (Growth) -> Unit = {},
@@ -97,7 +97,7 @@ fun GrowthScreen(
     val appSnackbar = remember { AppSnackbar(snackbarHostState) }
 
     val today = LocalDate.now()
-    val selectedDate = state.selectedDate
+    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var tab by remember { mutableIntStateOf(0) }
     val tabs = listOf(AppStrings.growthHeight, AppStrings.growthWeight, AppStrings.growthHead)
@@ -154,10 +154,10 @@ fun GrowthScreen(
             // 日期选择行（现代胶囊行）
             DateNavCapsule(
                 dateLabel = dateLabel,
-                onPrev = { onDateChange(selectedDate.minusDays(1)) },
-                onNext = { onDateChange(selectedDate.plusDays(1)) },
+                onPrev = { selectedDate = selectedDate.minusDays(1) },
+                onNext = { selectedDate = selectedDate.plusDays(1) },
                 onOpenPicker = { showDatePicker = true },
-                onToday = if (selectedDate != today) ({ onDateChange(today) }) else null,
+                onToday = if (selectedDate != today) ({ selectedDate = today }) else null,
                 modifier = Modifier.padding(horizontal = spacing.md),
             )
 
@@ -512,7 +512,7 @@ fun GrowthScreen(
         initialDateTime = selectedDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00",
         dateOnly = true,
         onConfirm = { dt ->
-            onDateChange(LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE))
+            selectedDate = LocalDate.parse(dt.take(10), DateTimeFormatter.ISO_LOCAL_DATE)
             showDatePicker = false
         },
         onDismiss = { showDatePicker = false },

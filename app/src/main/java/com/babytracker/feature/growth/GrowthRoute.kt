@@ -26,7 +26,6 @@ fun GrowthRoute(navController: NavController) {
         baby = baby,
         bottomBar = { AppBottomBar(navController) },
         onBack = { navController.popBackStack() },
-        onDateChange = viewModel::updateDate,
         onDelete = viewModel::delete,
         onUndoDelete = viewModel::undoDelete,
         onSave = viewModel::save,
