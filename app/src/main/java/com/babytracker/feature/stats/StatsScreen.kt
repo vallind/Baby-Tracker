@@ -36,7 +36,6 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.progress.AppCircularProgress
-import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -153,12 +152,6 @@ fun StatsScreen(navController: NavController) {
                             minutes = state.sleepMinutes,
                             compare = state.sleepCompare,
                             points = state.sleepPoints,
-                        )
-                        DiaperCard(
-                            count = state.diaperCount,
-                            wet = state.diaperWetCount,
-                            poop = state.diaperPoopCount,
-                            both = state.diaperBothCount,
                         )
                         HeightCard(
                             value = state.height,
@@ -303,39 +296,6 @@ private fun SleepCard(
             emptyText = "本周期暂无睡眠记录",
         ) {
             MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.secondary)
-        }
-    }
-}
-
-@Composable
-private fun DiaperCard(
-    count: Int,
-    wet: Int,
-    poop: Int,
-    both: Int,
-    modifier: Modifier = Modifier,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    StatCardFrame(modifier) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
-        ) {
-            Column {
-                StatCardIcon("🧷", c.tertiary)
-                Spacer(Modifier.height(spacing.sm))
-                Text(AppStrings.diaper, style = typography.labelMedium, color = c.textTertiary)
-            }
-            Text(String.format(java.util.Locale.US, AppStrings.countTimes, count), style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
-        }
-        Spacer(Modifier.height(12.dp))
-        Row(Modifier.fillMaxWidth()) {
-            Text("💧 $wet", style = typography.bodyMedium, color = c.textSecondary, modifier = Modifier.weight(1f))
-            Text("💩 $poop", style = typography.bodyMedium, color = c.textSecondary, modifier = Modifier.weight(1f))
-            Text("🔄 $both", style = typography.bodyMedium, color = c.textSecondary, modifier = Modifier.weight(1f))
         }
     }
 }

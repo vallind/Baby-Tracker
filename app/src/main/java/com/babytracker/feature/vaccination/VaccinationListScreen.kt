@@ -155,28 +155,28 @@ fun VaccinationListScreen(navController: NavController) {
                 )
             }
 
-            // 状态筛选仅计划 Tab 展示且只保留「待接种/已过期」两枚（H3：已接种 Tab 下旧筛选永远为空）
-            if (tab == "plan") {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = spacing.md)
-                        .padding(bottom = spacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-                ) {
-                    listOf(FILTER_PILLS[1], FILTER_PILLS[3]).forEach { pill ->
-                        val active = statusFilter == pill.key
-                        AppFilterChip(
-                            selected = active,
-                            onClick = {
-                                // 点击已选中的胶囊即取消筛选（回到全部）
-                                statusFilter = if (active) "all" else pill.key
-                            },
-                            label = pill.label,
-                            selectedColor = if (pill.key == "expired") c.error else c.primary,
-                            modifier = Modifier.weight(1f),
-                        )
+            // 状态筛选双 Tab 均展示四枚（全部/待接种/已接种/已过期），点击即切换不取消
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = spacing.md)
+                    .padding(bottom = spacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
+            ) {
+                FILTER_PILLS.forEach { pill ->
+                    val active = statusFilter == pill.key
+                    val pillColor = when (pill.key) {
+                        "done" -> c.success
+                        "expired" -> c.error
+                        else -> c.primary
                     }
+                    AppFilterChip(
+                        selected = active,
+                        onClick = { statusFilter = pill.key },
+                        label = pill.label,
+                        selectedColor = pillColor,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
 

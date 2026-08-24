@@ -78,9 +78,6 @@ object AppStrings {
     const val homeGreetingAfternoon = "下午好"
     const val homeGreetingEvening = "晚上好"
     const val todayOverview = "今日概览"
-    const val quickFeeding = "记喂养"
-    const val quickSleep = "记睡眠"
-    const val quickDiaper = "记尿布"
 
     // —— 喂养 ——
     const val feeding = "喂养"
@@ -371,9 +368,6 @@ object AppStrings {
     const val updateLabel = "更新"
     const val editGrowthLabel = "编辑生长"
     const val recordGrowthLabel = "记录生长"
-    const val recordedFeeding = "已记录喂养"
-    const val recordedSleep = "已记录睡眠"
-    const val recordedDiaper = "已记录换尿布"
     // 喂养
     const val emptyFeedingTitle = "还没有喂养记录"
     const val emptyFeedingSubtitle = "点击底部按钮，记录宝宝的每一次进食"

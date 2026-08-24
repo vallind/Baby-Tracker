@@ -308,3 +308,13 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 
 **规则：** 注释正文禁止出现 `/*` 字样。要写文件通配路径时改成不含 `/*` 的表述（如「colors 目录各色表文件」），或用 `⭐` 等占位符替代星号。
 
+---
+
+## 24. 静态审计的目录豁免必须用 File 路径前缀比较，禁止把正斜杠包路径与 File.path 做 contains
+
+**现象：** `ThemeTokenizationStaticAuditTest`/`TokenAuditCheckerTest` 在 Windows 上必红（存量 6 失败）：`theme/Theme.kt` 被报 `ComponentLayerM3Token`，而同一套代码在类 Unix 环境可能全绿，误导为"测试没问题"。
+
+**原因：** `TokenAuditChecker` 用 `it.path.contains(themeRelDir.replace('.', '/'))` 做 theme 层豁免：`File.path` 按**平台分隔符**生成（Windows 反斜杠 `\`），与配置里的正斜杠包路径永远不匹配，豁免静默失效，theme 目录自身落入规则 4 扫描范围。
+
+**规则：** 目录豁免必须构造 `File(kotlinRoot, 包路径)` 后用 `it.path.startsWith(themeDir.path)` 前缀比较（`File` 构造会自动把 `/` 转为平台分隔符，两端同源）。错误写法：`it.path.contains("com/a/b")`（正斜杠 vs 反斜杠）；正确写法：`it.path.startsWith(File(kotlinRoot, "com/a/b").path)`。
+

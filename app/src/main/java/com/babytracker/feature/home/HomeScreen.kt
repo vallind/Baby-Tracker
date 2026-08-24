@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,7 +27,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,9 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.babytracker.core.data.repository.BabyRepository
-import com.babytracker.core.data.repository.DiaperRepository
-import com.babytracker.core.data.repository.FeedingRepository
-import com.babytracker.core.data.repository.SleepRepository
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.domain.model.Diaper
 import com.babytracker.core.domain.model.Feeding
@@ -55,8 +50,6 @@ import com.babytracker.designsystem.components.bottomnav.BottomNavBar
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.snackbar.AppSnackbar
-import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.AppColorScale
@@ -69,21 +62,20 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.isDarkTheme
 import com.babytracker.designsystem.theme.tintContainer
-import com.babytracker.feature.diaper.DiaperFormDialog
 import com.babytracker.feature.common.feedingTone
-import com.babytracker.feature.feeding.FeedingFormDialog
-import com.babytracker.feature.sleep.SleepFormDialog
 import com.babytracker.navigation.AiAssistant
 import com.babytracker.navigation.BabyManagement
 import com.babytracker.navigation.BabyProfile
 import com.babytracker.navigation.DevelopmentAssessment
+import com.babytracker.navigation.Diaper as DiaperRoute
+import com.babytracker.navigation.Feeding as FeedingRoute
 import com.babytracker.navigation.Growth
 import com.babytracker.navigation.Health
 import com.babytracker.navigation.Reminder
+import com.babytracker.navigation.Sleep as SleepRoute
 import com.babytracker.navigation.Timeline
 import com.babytracker.navigation.Vaccination
 import com.babytracker.navigation.navigateToRoot
-import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.util.Locale
@@ -97,10 +89,6 @@ fun HomeScreen(navController: NavController) {
     val spacing = LocalAppSpacing.current
     val babyRepo: BabyRepository = koinInject()
     val babyCtrl: BabyController = koinInject()
-    // 快捷记录三仓库（宫格直达表单用）
-    val feedingRepo: FeedingRepository = koinInject()
-    val sleepRepo: SleepRepository = koinInject()
-    val diaperRepo: DiaperRepository = koinInject()
     val viewModel: HomeViewModel = org.koin.androidx.compose.koinViewModel()
     val babies by babyRepo.watchAll().collectAsState(initial = emptyList())
     val currentBabyId = babyCtrl.currentBabyId
@@ -113,14 +101,7 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // —— 快捷记录：宫格点击直接弹表单，省去"进列表页再点按钮"两步 ——
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val appSnackbar = remember { AppSnackbar(snackbarHostState) }
-    var quickRecord by remember { mutableStateOf<String?>(null) }
-
     AppScaffold(
-        snackbarHost = { AppSnackbarHost(snackbarHostState) },
         bottomBar = { BottomNavBar(navController) },
     ) { padding ->
         if (baby == null) {
@@ -145,15 +126,14 @@ fun HomeScreen(navController: NavController) {
             // —— 顶部 hero 区：奶油渐变 + 大标题 + 渐变光环头像 ——
             HeroHeader(baby, onClickProfile = { navController.navigate(BabyProfile) })
 
-            // 今日概览紧随 hero（2.1 信息架构：高频数据优先，H1）
             Spacer(Modifier.height(spacing.md))
-            TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
-
-            Spacer(Modifier.height(spacing.md))
-            FeatureGrid(navController, onQuickRecord = { quickRecord = it })
+            FeatureGrid(navController)
 
             Spacer(Modifier.height(spacing.md))
             AiAssistantEntryCard(navController)
+
+            Spacer(Modifier.height(spacing.md))
+            TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
 
             if (state.recentItems.isNotEmpty()) {
                 Spacer(Modifier.height(spacing.md))
@@ -166,48 +146,6 @@ fun HomeScreen(navController: NavController) {
             // 底部导航为悬浮胶囊，留出呼吸空间
             Spacer(Modifier.height(88.dp))
         }
-    }
-
-    // —— 快捷记录表单：保存后留在首页（今日概览自动刷新），撤销即删除该条 ——
-    // grid 仅在 baby 非空时渲染，quickRecord 只能由其触发；此处仍显式判空兜底
-    val quickBabyId = baby?.id
-    if (quickBabyId != null && quickBabyId != 0) when (quickRecord) {
-        "feeding" -> FeedingFormDialog(
-            babyId = quickBabyId,
-            onDismiss = { quickRecord = null },
-            onSave = { f ->
-                scope.launch {
-                    feedingRepo.insert(f)
-                    quickRecord = null
-                    viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
-                    appSnackbar.showUndo(message = AppStrings.recordedFeeding) { feedingRepo.delete(f) }
-                }
-            },
-        )
-        "sleep" -> SleepFormDialog(
-            babyId = quickBabyId,
-            onDismiss = { quickRecord = null },
-            onSave = { sl ->
-                scope.launch {
-                    sleepRepo.insert(sl)
-                    quickRecord = null
-                    viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
-                    appSnackbar.showUndo(message = AppStrings.recordedSleep) { sleepRepo.delete(sl) }
-                }
-            },
-        )
-        "diaper" -> DiaperFormDialog(
-            babyId = quickBabyId,
-            onDismiss = { quickRecord = null },
-            onSave = { d ->
-                scope.launch {
-                    diaperRepo.insert(d)
-                    quickRecord = null
-                    viewModel.loadData(quickBabyId)   // 刷新今日概览与最近记录
-                    appSnackbar.showUndo(message = AppStrings.recordedDiaper) { diaperRepo.delete(d) }
-                }
-            },
-        )
     }
 }
 
@@ -233,7 +171,7 @@ private fun HeroHeader(baby: Baby, onClickProfile: () -> Unit) {
             .padding(horizontal = spacing.md),
     ) {
         Row(
-            Modifier.padding(vertical = 20.dp),
+            Modifier.padding(vertical = 26.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
@@ -295,14 +233,14 @@ private fun HeroHeader(baby: Baby, onClickProfile: () -> Unit) {
             // 渐变光环头像（品牌蓝→紫）
             Box(
                 Modifier
-                    .size(64.dp)
+                    .size(92.dp)
                     .clip(RoundedCornerShape(999.dp))
                     .background(Brush.linearGradient(listOf(c.primary, c.secondary))),
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
                     Modifier
-                        .size(58.dp)
+                        .size(82.dp)
                         .clip(RoundedCornerShape(999.dp))
                         .background(c.surface),
                     contentAlignment = Alignment.Center,
@@ -453,13 +391,13 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
 }
 
 @Composable
-fun FeatureGrid(navController: NavController, onQuickRecord: (String) -> Unit = {}) {
+fun FeatureGrid(navController: NavController) {
     val spacing = LocalAppSpacing.current
     val items = listOf(
-        // 记录类三格点击直达表单（高频动作前置）；历史浏览走底部"记录"Tab，统计走底部"统计"Tab
-        FeatureGridItemData({ onQuickRecord("feeding") }, "🍼", AppStrings.quickFeeding, FeatureTone.Feeding),
-        FeatureGridItemData({ onQuickRecord("sleep") }, "🌙", AppStrings.quickSleep, FeatureTone.Sleep),
-        FeatureGridItemData({ onQuickRecord("diaper") }, "🧷", AppStrings.quickDiaper, FeatureTone.Diaper),
+        // 记录类三格点击进入对应记录页（宫格直达表单已于 2.2.1 回滚）
+        FeatureGridItemData({ navController.navigateToRoot(FeedingRoute) }, "🍼", AppStrings.feedingRecords, FeatureTone.Feeding),
+        FeatureGridItemData({ navController.navigateToRoot(SleepRoute) }, "🌙", AppStrings.sleepRecords, FeatureTone.Sleep),
+        FeatureGridItemData({ navController.navigateToRoot(DiaperRoute) }, "🧷", AppStrings.diaperRecords, FeatureTone.Diaper),
         FeatureGridItemData({ navController.navigateToRoot(Growth) }, "📏", AppStrings.growthRecords, FeatureTone.Growth),
         FeatureGridItemData({ navController.navigateToRoot(DevelopmentAssessment) }, "🧠", AppStrings.developmentAssessment, FeatureTone.Development),
         FeatureGridItemData({ navController.navigateToRoot(Vaccination) }, "💉", AppStrings.vaccinationRecords, FeatureTone.Vaccination),

@@ -2,6 +2,31 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+### [2.2.4] — 2026-08-23
+
+**回滚与工程清理合并批次（原 2.2.1~2.2.3 计划小节合并为一）：**
+
+**一、回滚 1.10.0 引入的首页宫格直达记录表单：**
+- 喂养/睡眠/尿布三宫格恢复跳转对应记录列表页，移除"宫格点击直弹表单 + 保存留首页自动刷新 + Snackbar 撤销"整条链路（quickRecord 状态、三仓库注入、三个 FormDialog 挂载）
+- 宫格保留"提醒中心"格（统计让位的信息架构调整不受回滚影响）；三表单时间快捷条 `QuickTimeChipRow` 与奶量/饮水量一键填不受影响，继续保留
+- 清理 AppStrings 中仅宫格直达使用的 6 个键（quickFeeding/quickSleep/quickDiaper/recordedFeeding/recordedSleep/recordedDiaper）
+
+**二、回滚 2.1.4（cc18013）重设计批次 P1-B：**
+- 首页：今日概览移回宫格与 AI 助手卡片之后，hero 头像恢复 92dp（外环 82dp 内芯）、纵向留白恢复 26dp
+- 疫苗：状态筛选恢复双 Tab 均展示的四枚胶囊（全部/待接种/已接种/已过期），点击已选中胶囊不再取消筛选；筛选文案保留 AppStrings 键引用（不倒退 2.1.2 起的 i18n 纪律），`vaccinePlan/vaccineRecordsTab/vaccineDoneTab` 键继续使用
+- 统计：移除尿布卡（次数 + 小便/大便/混合计数）；`aggregateStats` 撤销 diapers 维度，`StatsViewModel` 数据流恢复三仓库合并，`StatsLogicTest` 7 处调用恢复 5 参数
+
+**三、修复存量测试失败：令牌审计 theme 层豁免的跨平台路径 bug：**
+- `TokenAuditChecker` 规则 4 的 theme 豁免改用 `File(kotlinRoot, 包路径).path` 前缀比较：原实现把正斜杠包路径与 `File.path`（Windows 为反斜杠）做 contains，Windows 上豁免永不命中，导致 `Theme.kt` 被误报 `ComponentLayerM3Token`，牵出 `ThemeTokenizationStaticAuditTest` 5 例与 `TokenAuditCheckerTest` 1 例共 6 个存量失败
+- `TokenAuditCheckerTest` 合规样本用例即回归测试（重建后全绿）；教训入 `docs/lessons.md` #24
+
+**四、移除 Showcase 截图测试（Paparazzi 插件保留）：**
+- 删除 `DesignShowcaseTest.kt`（2.0.0 引入的组件墙截图测试）及 `app/src/test/snapshots/` 全部基准图
+- 删除仅 Showcase 使用的 Noto Sans SC 三字重字体资源（res/font，约 700KB）
+- 清理 `app/build.gradle.kts` 中为 Showcase 服务的截图运行机制（`-PpaparazziScreenshots` agent 模式与 aarch64 排除块）；Paparazzi 插件与 `testImplementation` 依赖保留，后续截图方案可复用
+
+版本号 2.2.0 → 2.2.4（versionCode 44 → 48）。
+
 ### [2.2.0] — 2026-08-23
 
 **2.1 全站 UI/UX 重设计批次完成（里程碑）：**

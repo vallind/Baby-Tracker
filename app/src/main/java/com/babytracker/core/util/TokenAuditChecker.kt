@@ -69,9 +69,12 @@ object TokenAuditChecker {
             }
         }
         val themeRelPath = themeRelDir.replace('.', '/')
+        // theme 豁免必须用 File 构造目录再前缀比较：File.path 按平台分隔符（Windows 反斜杠）生成，
+        // 直接把正斜杠包路径与 it.path 做 contains 在 Windows 上永不命中，豁免静默失效（见 lessons #23）
+        val themeDir = File(kotlinRoot, themeRelPath)
         val scanned = kotlinRoot.walkTopDown()
             .filter { it.isFile && it.name.endsWith(".kt") }
-            .filterNot { it.path.contains(themeRelPath) }
+            .filterNot { it.path.startsWith(themeDir.path) }
             .filterNot { it.path == File(kotlinRoot, SELF_FILE_REL_PATH).path }
             .toList()
         // 防呆（lessons #14）：规则 4 扫描为空必须报错，禁止静默假绿
