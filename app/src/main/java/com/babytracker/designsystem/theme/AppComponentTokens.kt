@@ -1388,6 +1388,91 @@ data class TileGridTokens(
     }
 }
 
+// —— 聊天气泡（用户/助手双色壳 + 内容槽，自 AiChatScreen.AiMessageBubble 收编） ——
+@Immutable
+data class ChatBubbleTokens(
+    val userContainerColor: Color,      // 用户侧实底（primary）
+    val assistantContainerColor: Color, // 助手侧浅底（存量实测 surfaceElevated，视觉保真优先）
+    val cornerRadius: Dp,               // shapes.large（存量 RoundedCornerShape(shapes.large)）
+    val innerPadding: Dp,               // 气泡内容内边距 spacing.md
+    val maxWidth: Dp,                   // 气泡内容最大宽度（340dp 存量事实标准收编）
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            spacing: AppSpacing,
+        ): ChatBubbleTokens = ChatBubbleTokens(
+            userContainerColor = colors.primary,
+            assistantContainerColor = colors.surfaceElevated,
+            cornerRadius = shapes.scaled(shapes.large),
+            innerPadding = spacing.md,
+            maxWidth = 340.dp,
+        )
+    }
+}
+
+// —— 聊天输入条（多行输入 + 发送/停止切换，自 AiChatScreen.AiComposer 收编） ——
+@Immutable
+data class ChatInputBarTokens(
+    val containerColor: Color,       // 输入条底色（surface，与消息区页面底形成分层）
+    val horizontalPadding: Dp,       // spacing.md
+    val verticalPadding: Dp,         // spacing.md（存量四边等距内边距拆轴）
+    val fieldActionGap: Dp,          // 输入框 ↔ 动作按钮间距 spacing.sm
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            spacing: AppSpacing,
+        ): ChatInputBarTokens = ChatInputBarTokens(
+            containerColor = colors.surface,
+            horizontalPadding = spacing.md,
+            verticalPadding = spacing.md,
+            fieldActionGap = spacing.sm,
+        )
+    }
+}
+
+// —— 折叠态胶囊头（emoji 徽章 + 标题 + 尾部副文本 + 展开箭头 + 点击展开，自 CollapsedAiHeader 收编） ——
+@Immutable
+data class CollapsedHeaderTokens(
+    val containerColor: Color,       // primaryContainer 胶囊底
+    val emojiStyle: TextStyle,       // emoji 圆徽章字号（titleMedium 存量值）
+    val titleStyle: TextStyle,       // titleSmall 存量值
+    val titleFontWeight: FontWeight, // SemiBold 存量值
+    val titleColor: Color,
+    val subtitleStyle: TextStyle,    // labelMedium 存量值
+    val subtitleColor: Color,
+    val chevronTint: Color,          // 展开箭头色 textTertiary
+    val chevronSize: Dp,             // 16dp 存量事实标准收编
+    val horizontalPadding: Dp,       // 行内边距横 md
+    val verticalPadding: Dp,         // 10dp 存量事实标准收编（8dp 网格外值，仅此一处）
+    val emojiTitleGap: Dp,           // emoji ↔ 标题 spacing.sm
+    val titleTrailingGap: Dp,        // 副文本 ↔ 箭头 spacing.xs
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): CollapsedHeaderTokens = CollapsedHeaderTokens(
+            containerColor = colors.primaryContainer,
+            emojiStyle = typography.titleMedium,
+            titleStyle = typography.titleSmall,
+            titleFontWeight = FontWeight.SemiBold,
+            titleColor = colors.textPrimary,
+            subtitleStyle = typography.labelMedium,
+            subtitleColor = colors.textSecondary,
+            chevronTint = colors.textTertiary,
+            chevronSize = 16.dp,
+            horizontalPadding = spacing.md,
+            verticalPadding = 10.dp,
+            emojiTitleGap = spacing.sm,
+            titleTrailingGap = spacing.xs,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1435,6 +1520,9 @@ data class AppComponentTokens(
     val inlineBanner: InlineBannerTokens,
     val heroStatCard: HeroStatCardTokens,
     val tileGrid: TileGridTokens,
+    val chatBubble: ChatBubbleTokens,
+    val chatInputBar: ChatInputBarTokens,
+    val collapsedHeader: CollapsedHeaderTokens,
 ) {
     companion object {
         fun default(
@@ -1494,6 +1582,9 @@ data class AppComponentTokens(
             inlineBanner = InlineBannerTokens.default(colors, shapes, spacing),
             heroStatCard = HeroStatCardTokens.default(shapes, typography, spacing),
             tileGrid = TileGridTokens.default(colors, shapes, typography, spacing),
+            chatBubble = ChatBubbleTokens.default(colors, shapes, spacing),
+            chatInputBar = ChatInputBarTokens.default(colors, spacing),
+            collapsedHeader = CollapsedHeaderTokens.default(colors, typography, spacing),
         )
     }
 }

@@ -15,24 +15,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,16 +38,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.card.CardColors
 import com.babytracker.designsystem.components.card.CardVariant
+import com.babytracker.designsystem.components.chatinput.AppChatInputBar
+import com.babytracker.designsystem.components.chatheader.AppCollapsedHeader
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.chip.AppChipCarouselRow
+import com.babytracker.designsystem.components.chip.AppChipSpec
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
@@ -65,11 +62,11 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.typingindicator.AppTypingIndicator
+import com.babytracker.designsystem.composites.chatbubble.AppChatBubble
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.tintContainer
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.core.util.DateUtils
@@ -679,39 +676,20 @@ private fun AiBabySummary(state: AiChatUiState, onCollapse: () -> Unit = {}) {
     }
 }
 
-/** 折叠态顶栏：一枚胶囊展示宝宝名 + 当前模型，点击展开（H4） */
+/** 折叠态顶栏：一枚胶囊展示宝宝名 + 当前模型，点击展开（H4）；胶囊基座收编为 AppCollapsedHeader */
 @Composable
 private fun CollapsedAiHeader(state: AiChatUiState, onExpand: () -> Unit) {
     val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
     val modelName = state.modelOptions.firstOrNull { it.id == state.selectedOptionId }?.name ?: ""
-    AppCard(
+    AppCollapsedHeader(
+        emoji = "👶",
+        title = state.baby?.name ?: AppStrings.aiNoBaby,
+        subtitle = modelName,
+        onClick = onExpand,
         modifier = Modifier
             .padding(horizontal = spacing.md, vertical = spacing.sm)
             .fillMaxWidth(),
-        onClick = onExpand,
-        colors = CardColors(containerColor = colors.primaryContainer),
-    ) {
-        Row(
-            Modifier.padding(horizontal = spacing.md, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("👶", style = typography.titleMedium)
-            Spacer(Modifier.width(spacing.sm))
-            Text(
-                text = state.baby?.name ?: AppStrings.aiNoBaby,
-                style = typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textPrimary,
-                maxLines = 1,
-                modifier = Modifier.weight(1f),
-            )
-            Text(modelName, style = typography.labelMedium, color = colors.textSecondary)
-            Spacer(Modifier.width(spacing.xs))
-            Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = colors.textTertiary, modifier = Modifier.size(16.dp))
-        }
-    }
+    )
 }
 
 @Composable
@@ -742,21 +720,14 @@ private fun AiModelSelector(
                     AppButton(variant = ButtonVariant.Ghost, onClick = onRefresh, label = AppStrings.aiRetry)
                 }
             }
-            else -> Row(
-                Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-            ) {
-                state.modelOptions.forEach { option ->
-                    val selected = option.id == state.selectedOptionId
-                    AppChip(
-                        label = option.name,
-                        onClick = { onSelect(option.id) },
-                        selected = selected,
-                    )
-                }
-            }
+            else -> AppChipCarouselRow(
+                // 模型枚举→(key,label) 映射留在 feature；横滚单选 chip 条收编为 AppChipCarouselRow
+                options = state.modelOptions.map { option ->
+                    AppChipSpec(key = option.id, label = option.name)
+                },
+                selectedKey = state.selectedOptionId,
+                onSelect = onSelect,
+            )
         }
     }
 }
@@ -785,92 +756,81 @@ private fun AiMessageBubble(
 ) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
     val typography = LocalAppTypography.current
     val isUser = message.role == AiChatRole.USER
     var answerBasisExpanded by remember(message.id) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start,
-        ) {
-            Column(
-                Modifier
-                    .widthIn(max = 340.dp)
-                    .clip(RoundedCornerShape(shapes.large))
-                    .background(if (isUser) colors.primary else colors.surfaceElevated)
-                    .padding(spacing.md),
-            ) {
-                if (!isUser && message.reasoningContent.isNotBlank()) {
-                    AiReasoningBlock(
-                        reasoning = message.reasoningContent,
-                        isStreaming = isStreaming,
-                        renderMarkdown = renderMarkdown,
-                    )
-                    if (message.content.isNotBlank()) Spacer(Modifier.height(spacing.sm))
-                }
-                if (!isUser && message.safetyStatus != null) {
-                    Text(
-                        text = when (message.safetyStatus) {
-                            AiAnswerSafetyStatus.SUPPLEMENTED -> AppStrings.aiSafetySupplemented
-                            AiAnswerSafetyStatus.BLOCKED -> AppStrings.aiSafetyBlocked
-                        },
-                        style = typography.labelMedium,
-                        color = if (message.safetyStatus == AiAnswerSafetyStatus.BLOCKED) {
-                            colors.error
-                        } else {
-                            colors.warning
-                        },
-                    )
-                    Spacer(Modifier.height(spacing.sm))
-                }
-                if (message.content.isNotBlank()) {
-                    if (!isUser && renderMarkdown) {
-                        AppMarkdownText(
-                            markdown = message.content,
-                            style = typography.bodyLarge,
-                            color = colors.textPrimary,
-                        )
+        // 气泡壳收编为 AppChatBubble：角色对齐 + 双色底 + 内容槽；业务组合经槽注入
+        AppChatBubble(fromUser = isUser) {
+            if (!isUser && message.reasoningContent.isNotBlank()) {
+                AiReasoningBlock(
+                    reasoning = message.reasoningContent,
+                    isStreaming = isStreaming,
+                    renderMarkdown = renderMarkdown,
+                )
+                if (message.content.isNotBlank()) Spacer(Modifier.height(spacing.sm))
+            }
+            if (!isUser && message.safetyStatus != null) {
+                Text(
+                    text = when (message.safetyStatus) {
+                        AiAnswerSafetyStatus.SUPPLEMENTED -> AppStrings.aiSafetySupplemented
+                        AiAnswerSafetyStatus.BLOCKED -> AppStrings.aiSafetyBlocked
+                    },
+                    style = typography.labelMedium,
+                    color = if (message.safetyStatus == AiAnswerSafetyStatus.BLOCKED) {
+                        colors.error
                     } else {
-                        Text(
-                            text = message.content,
-                            style = typography.bodyLarge,
-                            color = if (isUser) colors.onPrimary else colors.textPrimary,
-                        )
-                    }
+                        colors.warning
+                    },
+                )
+                Spacer(Modifier.height(spacing.sm))
+            }
+            if (message.content.isNotBlank()) {
+                if (!isUser && renderMarkdown) {
+                    AppMarkdownText(
+                        markdown = message.content,
+                        style = typography.bodyLarge,
+                        color = colors.textPrimary,
+                    )
+                } else {
+                    Text(
+                        text = message.content,
+                        style = typography.bodyLarge,
+                        color = if (isUser) colors.onPrimary else colors.textPrimary,
+                    )
                 }
-                if (!isUser && !isStreaming && message.content.isNotBlank()) {
-                    Spacer(Modifier.height(spacing.sm))
+            }
+            if (!isUser && !isStreaming && message.content.isNotBlank()) {
+                Spacer(Modifier.height(spacing.sm))
+                AppButton(
+                    variant = ButtonVariant.Ghost,
+                    onClick = { answerBasisExpanded = !answerBasisExpanded },
+                    label = if (answerBasisExpanded) {
+                        AppStrings.aiHideAnswerBasis
+                    } else {
+                        AppStrings.aiShowAnswerBasis
+                    },
+                )
+                if (answerBasisExpanded) {
+                    AiAnswerBasis(message.references)
+                }
+                Row {
                     AppButton(
                         variant = ButtonVariant.Ghost,
-                        onClick = { answerBasisExpanded = !answerBasisExpanded },
-                        label = if (answerBasisExpanded) {
-                            AppStrings.aiHideAnswerBasis
-                        } else {
-                            AppStrings.aiShowAnswerBasis
-                        },
+                        onClick = { onCopy(message.content) },
+                        label = AppStrings.aiCopy,
                     )
-                    if (answerBasisExpanded) {
-                        AiAnswerBasis(message.references)
-                    }
-                    Row {
+                    if (canRevise) {
                         AppButton(
                             variant = ButtonVariant.Ghost,
-                            onClick = { onCopy(message.content) },
-                            label = AppStrings.aiCopy,
+                            onClick = onEditQuestion,
+                            label = AppStrings.aiEditQuestion,
                         )
-                        if (canRevise) {
-                            AppButton(
-                                variant = ButtonVariant.Ghost,
-                                onClick = onEditQuestion,
-                                label = AppStrings.aiEditQuestion,
-                            )
-                            AppButton(
-                                variant = ButtonVariant.Ghost,
-                                onClick = onRegenerate,
-                                label = AppStrings.aiRegenerate,
-                            )
-                        }
+                        AppButton(
+                            variant = ButtonVariant.Ghost,
+                            onClick = onRegenerate,
+                            label = AppStrings.aiRegenerate,
+                        )
                     }
                 }
             }
@@ -1039,6 +999,10 @@ private fun AiHistorySaveStatusBanner(status: AiHistorySaveStatus) {
     )
 }
 
+/**
+ * 底部输入条 — 业务态→参数映射留在 feature（前置条件轴/错误枚举不进 DS）；
+ * 「多行输入 + 发送/停止切换」收编为 AppChatInputBar。
+ */
 @Composable
 private fun AiComposer(
     state: AiChatUiState,
@@ -1046,32 +1010,15 @@ private fun AiComposer(
     onSend: () -> Unit,
     onStop: () -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .background(LocalAppColors.current.surface)
-            .padding(spacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        AppInput(
-            value = state.input,
-            onValueChange = onInputChange,
-            label = AppStrings.aiInputLabel,
-            placeholder = AppStrings.aiInputPlaceholder,
-            enabled = state.prerequisite == AiChatPrerequisite.READY && !state.isSending,
-            isError = state.error == AiChatError.INPUT_TOO_LONG,
-            errorMessage = if (state.error == AiChatError.INPUT_TOO_LONG) AppStrings.aiInputTooLong else null,
-            singleLine = false,
-            minLines = 1,
-            maxLines = 4,
-            modifier = Modifier.weight(1f),
-        )
-        Spacer(Modifier.width(spacing.sm))
-        AppButton(
-            onClick = if (state.isSending) onStop else onSend,
-            label = if (state.isSending) AppStrings.aiStop else AppStrings.aiSend,
-            enabled = state.isSending || state.canSend,
-        )
-    }
+    AppChatInputBar(
+        value = state.input,
+        onValueChange = onInputChange,
+        isSending = state.isSending,
+        onSend = onSend,
+        onStop = onStop,
+        enabled = state.prerequisite == AiChatPrerequisite.READY && !state.isSending,
+        canSend = state.canSend,
+        isError = state.error == AiChatError.INPUT_TOO_LONG,
+        errorMessage = if (state.error == AiChatError.INPUT_TOO_LONG) AppStrings.aiInputTooLong else null,
+    )
 }
