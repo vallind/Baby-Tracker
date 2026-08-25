@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import com.babytracker.designsystem.theme.LocalAppMotion
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 
@@ -30,7 +31,7 @@ fun AppLinearProgress(
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progress ?: 0f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(LocalAppMotion.current.duration.medium, easing = LocalAppMotion.current.easing.standard),
     )
 
     if (progress == null) {
@@ -77,7 +78,7 @@ fun AppCircularProgress(
 ) {
     val animatedProgress by animateFloatAsState(
         targetValue = progress ?: 0f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(LocalAppMotion.current.duration.medium, easing = LocalAppMotion.current.easing.standard),
     )
 
     if (progress == null) {

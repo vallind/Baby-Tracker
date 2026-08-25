@@ -10,6 +10,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.babytracker.designsystem.theme.LocalAppMotion
 import kotlinx.coroutines.delay
 
 /**
@@ -27,6 +28,7 @@ fun AnimatedListItem(
     index: Int,
     content: @Composable () -> Unit,
 ) {
+    val motion = LocalAppMotion.current
     val visible = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(index * 25L)
@@ -34,9 +36,9 @@ fun AnimatedListItem(
     }
     AnimatedVisibility(
         visible = visible.value,
-        enter = fadeIn(animationSpec = tween(300)) +
+        enter = fadeIn(animationSpec = tween(motion.duration.medium, easing = motion.easing.standard)) +
             slideInVertically(
-                animationSpec = tween(300),
+                animationSpec = tween(motion.duration.medium, easing = motion.easing.standard),
                 initialOffsetY = { it / 4 },
             ),
     ) {
@@ -53,9 +55,10 @@ fun AnimatedListItem(
  */
 @Composable
 fun animateNumber(target: Int): Int {
+    val motion = LocalAppMotion.current
     val animated by animateIntAsState(
         targetValue = target,
-        animationSpec = tween(durationMillis = 600),
+        animationSpec = tween(motion.duration.long, easing = motion.easing.standard),
         label = "number",
     )
     return animated

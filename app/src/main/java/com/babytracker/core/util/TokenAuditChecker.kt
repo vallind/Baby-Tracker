@@ -23,6 +23,7 @@ object TokenAuditChecker {
     const val RULE_COMPONENT_M3_TOKEN = "ComponentLayerM3Token"
     const val RULE_TOKENS_MISSING_REGISTRATION = "ComponentTokensMissingRegistration"
     const val RULE_FEATURE_GENERIC_CARD = "FeatureLayerGenericCard"
+    const val RULE_MOTION_HARDCODED_DURATION = "MotionHardcodedDuration"
 
     private val hardcodedColorPatterns = listOf(
         "Color.Black" to "hardcoded Color.Black",
@@ -44,6 +45,9 @@ object TokenAuditChecker {
      * 白名单为存量债（G 批收编后逐文件移除）：白名单按文件豁免，文件内新增同模式函数同样会被拦截。
      */
     private val featureCardDefRegex = Regex("""\bfun\s+\w*Card\w*\s*\(""")
+
+    // 规则 7：动画时长必须走 AppMotion 令牌，禁止字面量毫秒（tween(300) / tween(durationMillis = 300) 等）
+    private val motionHardcodedRegex = Regex("""tween\(\s*(durationMillis\s*=\s*)?[0-9]""")
 
     private val featureCardBaselineRelPaths = setOf(
         "com/babytracker/feature/ai/AiChatScreen.kt",
@@ -113,6 +117,10 @@ object TokenAuditChecker {
                 text.contains("MaterialTheme.colorScheme") || text.contains("MaterialTheme.shapes")
             if (hitM3Import || hitMaterialTheme) {
                 violations.add(AuditViolation(file.path, RULE_COMPONENT_M3_TOKEN, "组件层暴露 M3 令牌/主题类型"))
+            }
+            // 规则 7：动效时长收敛（F 批）——字面量毫秒改读 LocalAppMotion
+            if (motionHardcodedRegex.containsMatchIn(text)) {
+                violations.add(AuditViolation(file.path, RULE_MOTION_HARDCODED_DURATION, "动画时长字面量，应改读 LocalAppMotion"))
             }
         }
         val required = listOf("divider", "surface", "snackbarHost", "emptyState")

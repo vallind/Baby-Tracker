@@ -1,6 +1,8 @@
 package com.babytracker.feature.home
 
 import androidx.compose.foundation.background
+import com.babytracker.designsystem.components.animateNumber
+import com.babytracker.designsystem.theme.LocalAppMotion
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -284,9 +286,9 @@ fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, f
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     val shapes = LocalAppShapes.current
-    val animatedFeed by androidx.compose.animation.core.animateIntAsState(targetValue = feedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "feed")
-    val animatedBreast by androidx.compose.animation.core.animateIntAsState(targetValue = breastFeedCount, animationSpec = androidx.compose.animation.core.tween(600), label = "breast")
-    val animatedDiaper by androidx.compose.animation.core.animateIntAsState(targetValue = diaperCount, animationSpec = androidx.compose.animation.core.tween(600), label = "diaper")
+    val animatedFeed = animateNumber(target = feedCount)
+    val animatedBreast = animateNumber(target = breastFeedCount)
+    val animatedDiaper = animateNumber(target = diaperCount)
     val showBreast = breastFeedCount > 0
     val showFormula = formulaCount > 0
     val showGeneric = !showBreast && !showFormula

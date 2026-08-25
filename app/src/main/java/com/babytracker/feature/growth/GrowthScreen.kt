@@ -2,6 +2,7 @@ package com.babytracker.feature.growth
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import com.babytracker.designsystem.theme.LocalAppMotion
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -273,7 +274,7 @@ fun GrowthScreen(
                     item {
                         val chartProgress by animateFloatAsState(
                             targetValue = if (chartData.size > 1) 1f else 0f,
-                            animationSpec = tween(durationMillis = 800),
+                            animationSpec = tween(LocalAppMotion.current.duration.long, easing = LocalAppMotion.current.easing.standard),
                         )
                         val chartCardShape = RoundedCornerShape(shapes.medium)   // shapes.medium（原硬编码 12dp 收编）
                         val gridColor = c.divider

@@ -50,6 +50,12 @@
 - **`SectionHeader`** 新增 `trailingContent` 尾槽（放计数/Switch 等自定义尾部，位于 action 链接之后）
 - 收编 `BabyProfileScreen` 私有 `SectionHeader`（影子组件）：删除私有实现改用 DS 版，分组标题全站归一；顺带清理重复 @Composable 注解
 
+**F 批内容：Motion 收敛**
+
+- 存量硬编码动画时长全部迁移至 `LocalAppMotion`（duration + easing）：`Animations.kt`（tween(300)×2 / tween(600)）、`AppProgress.kt`（tween(300)×2）、`GrowthScreen.kt`（tween(800)）、HomeScreen 三处数字滚动；全库字面量毫秒 tween 归零
+- **影子组件收编**：`HomeScreen` 自写的三个 `animateIntAsState` 数字滚动改为消费 DS `animateNumber`
+- **守门规则⑦ `MotionHardcodedDuration`**（TokenAuditChecker 规则 7）：全树禁止 `tween(<字面量毫秒>)`，时长一律走 AppMotion 令牌；theme 桥接层豁免不变
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

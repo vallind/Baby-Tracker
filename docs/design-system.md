@@ -245,6 +245,7 @@ data class XxxTokens(
 | 4 | `ComponentLayerM3Token` | theme 层之外 import M3 `Typography`/`ColorScheme`/`Shapes` 或直用 `MaterialTheme.typography/colorScheme/shapes` |
 | 5 | `ComponentTokensMissingRegistration` | 新增组件令牌未注册进 `AppComponentTokens` 聚合（divider/surface/snackbarHost/emptyState 硬校验） |
 | 6 | `FeatureLayerGenericCard` | feature 层禁止新定义通用卡片容器（`*Card` 命名 Composable）；卡片形态统一用 `AppCard` variant/slots 组合表达。白名单为存量债（G 批收编后逐文件移除），白名单文件内新增同模式函数同样拦截 |
+| 7 | `MotionHardcodedDuration` | 全树禁止动画时长字面量（`tween(300)` / `tween(durationMillis = 300)` 等）；时长/缓动一律读 `LocalAppMotion`（theme 桥接层豁免） |
 
 **防呆（lessons #14/#17）**：`ScanEmpty` 违规——任何扫描范围为空、`AppComponentTokens.kt` 缺失时以违规形式报错，禁止路径漂移后静默假绿。
 
