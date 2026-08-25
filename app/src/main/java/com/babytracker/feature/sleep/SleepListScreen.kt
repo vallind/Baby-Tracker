@@ -30,6 +30,7 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.composites.herostat.AppHeroStatCard
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.card.AppCard
@@ -169,54 +170,39 @@ fun SleepListScreen(
                     val durSec = DateUtils.durationToTotalSeconds(nightStart, nightEnd)
                     val timeRange = "${nightStart.format(DateTimeFormatter.ofPattern("HH:mm"))}-${nightEnd.format(DateTimeFormatter.ofPattern("HH:mm"))}"
 
-                    // 夜间睡眠合并行：渐变紫大卡 + 时长 + 入睡/起床两格（G3 收编为调用点内联组合）
+                    // 夜间睡眠合并行：渐变紫大卡 + 时长 + 入睡/起床两格
+                    // 收编：渐变底容器统一走设计系统 AppHeroStatCard（观感与原实现一致，点击进详情保留在调用点）
                     val nightTypography = LocalAppTypography.current
                     val nightShapes = LocalAppShapes.current
                     val nightContentColor = c.onSecondary
-                    Box(
-                        Modifier
+                    AppHeroStatCard(
+                        modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = spacing.md)
                             .padding(bottom = spacing.md)
                             .clip(RoundedCornerShape(nightShapes.largeIncreased))
-                            .background(Gradients.sleepHeader(c))
                             .clickable(onClick = { detailSleep = nightSleep }),
+                        gradient = Gradients.sleepHeader(c),
+                        contentColor = nightContentColor,
+                        emoji = "\uD83C\uDF19",
+                        title = AppStrings.nightSleep,
                     ) {
-                        Column(Modifier.padding(spacing.lg)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    Modifier
-                                        .size(spacing.xl)
-                                        .clip(RoundedCornerShape(nightShapes.medium))
-                                        .background(nightContentColor.copy(alpha = 0.22f)),
-                                    contentAlignment = Alignment.Center,
-                                ) { Text("\uD83C\uDF19", style = nightTypography.titleMedium) }
-                                Spacer(Modifier.width(spacing.sm))
-                                Text(
-                                    AppStrings.nightSleep,
-                                    style = nightTypography.titleMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = nightContentColor.copy(alpha = 0.90f),
-                                )
-                            }
-                            Spacer(Modifier.height(spacing.md))
-                            Text(
-                                DateUtils.durationFullText(durSec),
-                                style = nightTypography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = nightContentColor,
-                            )
-                            Spacer(Modifier.height(spacing.xs))
-                            Text(
-                                timeRange,
-                                style = nightTypography.bodyMedium,
-                                color = nightContentColor.copy(alpha = 0.78f),
-                            )
-                            Spacer(Modifier.height(spacing.lg))
-                            Row(Modifier.fillMaxWidth()) {
-                                QuickStatPill(value = nightStart.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.fallAsleepTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
-                                QuickStatPill(value = nightEnd.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.wakeUpTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
-                            }
+                        Text(
+                            DateUtils.durationFullText(durSec),
+                            style = nightTypography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = nightContentColor,
+                        )
+                        Spacer(Modifier.height(spacing.xs))
+                        Text(
+                            timeRange,
+                            style = nightTypography.bodyMedium,
+                            color = nightContentColor.copy(alpha = 0.78f),
+                        )
+                        Spacer(Modifier.height(spacing.lg))
+                        Row(Modifier.fillMaxWidth()) {
+                            QuickStatPill(value = nightStart.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.fallAsleepTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
+                            QuickStatPill(value = nightEnd.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.wakeUpTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
                         }
                     }
                 }

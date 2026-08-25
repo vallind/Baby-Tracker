@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.designsystem.components.chip.AppOptionChipRow
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,8 +27,8 @@ import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.composites.herostat.AppHeroStatCard
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
@@ -169,48 +168,30 @@ fun DiaperListScreen(
                 }
             } else {
                 // 今日尿布合并行：青渐变大卡 + n 次大数字 + 小便/大便/混合三格（2.1 合并原「换尿布详情」卡）
-                // G3 收编：渐变底容器非通用卡片基座形态，按调用点内联保留原有观感
+                // 收编：渐变底容器统一走设计系统 AppHeroStatCard（观感与原实现一致）
                 val summaryTypography = LocalAppTypography.current
-                val summaryShapes = LocalAppShapes.current
                 val contentColor = c.onTertiary
-                Box(
-                    Modifier
+                AppHeroStatCard(
+                    modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.md)
-                        .padding(bottom = spacing.md)
-                        .clip(RoundedCornerShape(summaryShapes.largeIncreased))
-                        .background(Gradients.diaperSummary(c)),
+                        .padding(bottom = spacing.md),
+                    gradient = Gradients.diaperSummary(c),
+                    contentColor = contentColor,
+                    emoji = "🧷",
+                    title = AppStrings.diaperToday,
                 ) {
-                    Column(Modifier.padding(spacing.lg)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                Modifier
-                                    .size(spacing.xl)
-                                    .clip(RoundedCornerShape(summaryShapes.medium))
-                                    .background(contentColor.copy(alpha = 0.22f)),
-                                contentAlignment = Alignment.Center,
-                            ) { Text("🧷", style = summaryTypography.titleMedium) }
-                            Spacer(Modifier.width(spacing.sm))
-                            Text(
-                                AppStrings.diaperToday,
-                                style = summaryTypography.titleMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = contentColor.copy(alpha = 0.90f),
-                            )
-                        }
-                        Spacer(Modifier.height(spacing.md))
-                        Text(
-                            "${String.format(Locale.US, AppStrings.countTimes, filtered.size)}",
-                            style = summaryTypography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = contentColor,
-                        )
-                        Spacer(Modifier.height(spacing.lg))
-                        Row(Modifier.fillMaxWidth()) {
-                            QuickStatPill(value = wetCount.toString(), label = AppStrings.diaperWet, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-                            QuickStatPill(value = poopCount.toString(), label = AppStrings.diaperPoop, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-                            QuickStatPill(value = bothCount.toString(), label = AppStrings.diaperBoth, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-                        }
+                    Text(
+                        "${String.format(Locale.US, AppStrings.countTimes, filtered.size)}",
+                        style = summaryTypography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = contentColor,
+                    )
+                    Spacer(Modifier.height(spacing.lg))
+                    Row(Modifier.fillMaxWidth()) {
+                        QuickStatPill(value = wetCount.toString(), label = AppStrings.diaperWet, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                        QuickStatPill(value = poopCount.toString(), label = AppStrings.diaperPoop, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                        QuickStatPill(value = bothCount.toString(), label = AppStrings.diaperBoth, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
                     }
                 }
 

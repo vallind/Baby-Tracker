@@ -29,9 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.domain.model.Diaper
 import com.babytracker.core.domain.model.Feeding
@@ -43,9 +43,13 @@ import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.quickstat.QuickStatPill
+import com.babytracker.designsystem.components.recordcard.AppRecordRow
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.tilegrid.AppTileGrid
+import com.babytracker.designsystem.components.tilegrid.AppTileSpec
+import com.babytracker.designsystem.composites.herostat.AppHeroStatCard
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -53,7 +57,6 @@ import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.accentContent
-import com.babytracker.designsystem.theme.isDarkTheme
 import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.feature.common.feedingTone
 import java.time.LocalDateTime
@@ -103,7 +106,17 @@ fun HomeScreen(
             HeroHeader(baby, onClickProfile = onOpenProfile)
 
             Spacer(Modifier.height(spacing.md))
-            FeatureGrid(onOpenFeature)
+            // 宫格页边距与首行上方留白留在调用点（6dp 为存量事实值）
+            Column(Modifier.padding(horizontal = spacing.md)) {
+                Spacer(Modifier.height(6.dp))
+                AppTileGrid(
+                    tiles = homeFeatureTiles(c),
+                    onTileClick = { spec ->
+                        // key 反查语义枚举（宫格组件领域无关，路由映射仍留在 Route）
+                        HomeFeature.entries.firstOrNull { it.name == spec.key }?.let(onOpenFeature)
+                    },
+                )
+            }
 
             Spacer(Modifier.height(spacing.md))
             AiAssistantEntry(onClick = onOpenAiAssistant)
@@ -281,180 +294,52 @@ private fun AiAssistantEntry(onClick: () -> Unit) {
     }
 }
 
-/** 今日概览：渐变主卡上的白色统计格（G3 收编：领域内容组合非通用卡片基座，改名去卡片化命名） */
+/** 今日概览：渐变主卡上的白色统计格（收编为 AppHeroStatCard + QuickStatPill 组合） */
 @Composable
 fun TodayOverview(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formulaTotalMl: Int, sleepHours: String, diaperCount: Int) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
     val animatedFeed = animateNumber(target = feedCount)
     val animatedBreast = animateNumber(target = breastFeedCount)
     val animatedDiaper = animateNumber(target = diaperCount)
     val showBreast = breastFeedCount > 0
     val showFormula = formulaCount > 0
     val showGeneric = !showBreast && !showFormula
-    val contentColor = c.onPrimary
 
-    // 渐变主卡上的白色统计格（不套用 StatCell 令牌色，白字版本）
-    // 注意：局部 Composable 不继承外层 RowScope 接收者，weight 由调用方传入
-    @Composable
-    fun StatItem(value: String, label: String, unit: String? = null, modifier: Modifier = Modifier) {
-        Column(
-            modifier,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    value,
-                    style = typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = contentColor,
-                )
-                if (!unit.isNullOrBlank()) {
-                    Spacer(Modifier.width(2.dp))
-                    Text(unit, style = typography.labelMedium, color = contentColor.copy(alpha = 0.78f))
-                }
-            }
-            Spacer(Modifier.height(2.dp))
-            Text(label, style = typography.labelMedium, color = contentColor.copy(alpha = 0.70f))
-        }
-    }
-
-    @Composable
-    fun StatDivider() {
-        Box(
-            Modifier
-                .width(1.dp)
-                .height(36.dp)
-                .background(contentColor.copy(alpha = 0.18f)),
-        )
-    }
-
-    Box(
-        Modifier
-            .padding(horizontal = spacing.md)
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(shapes.largeIncreased))
-            .background(Gradients.overviewCard(c)),
+    AppHeroStatCard(
+        modifier = Modifier.padding(horizontal = spacing.md),
+        gradient = Gradients.overviewCard(c),
+        contentColor = c.onPrimary,
+        title = AppStrings.todayOverview,
     ) {
-        Column(Modifier.padding(spacing.lg)) {
-            Text(
-                AppStrings.todayOverview,
-                style = typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = contentColor.copy(alpha = 0.92f),
-            )
-            Spacer(Modifier.height(spacing.md))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (showBreast) {
-                    StatItem(value = animatedBreast.toString(), label = AppStrings.breastFeeding, unit = AppStrings.countsUnit, modifier = Modifier.weight(1f))
-                    StatDivider()
-                }
-                if (showFormula) {
-                    StatItem(value = if (formulaTotalMl > 0) formulaTotalMl.toString() else "0", label = AppStrings.formulaFeeding, unit = "ml", modifier = Modifier.weight(1f))
-                    StatDivider()
-                }
-                if (showGeneric) {
-                    StatItem(value = animatedFeed.toString(), label = AppStrings.feedingCount, unit = AppStrings.countsUnit, modifier = Modifier.weight(1f))
-                    StatDivider()
-                }
-                StatItem(value = sleepHours, label = AppStrings.sleepHours, modifier = Modifier.weight(1f))
-                StatDivider()
-                StatItem(value = animatedDiaper.toString(), label = AppStrings.diaperChange, unit = AppStrings.countsUnit, modifier = Modifier.weight(1f))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (showBreast) {
+                QuickStatPill(value = animatedBreast.toString(), label = AppStrings.breastFeeding, unit = AppStrings.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
             }
-        }
-    }
-}
-
-@Composable
-fun FeatureGrid(onOpenFeature: (HomeFeature) -> Unit) {
-    val spacing = LocalAppSpacing.current
-    val items = listOf(
-        // 记录类三格点击进入对应记录页（宫格直达表单已于 2.2.1 回滚）
-        FeatureGridItemData(HomeFeature.Feeding, "🍼", AppStrings.feedingRecords),
-        FeatureGridItemData(HomeFeature.Sleep, "🌙", AppStrings.sleepRecords),
-        FeatureGridItemData(HomeFeature.Diaper, "🧷", AppStrings.diaperRecords),
-        FeatureGridItemData(HomeFeature.Growth, "📏", AppStrings.growthRecords),
-        FeatureGridItemData(HomeFeature.Development, "🧠", AppStrings.developmentAssessment),
-        FeatureGridItemData(HomeFeature.Vaccination, "💉", AppStrings.vaccinationRecords),
-        FeatureGridItemData(HomeFeature.Health, "❤️", AppStrings.healthRecords),
-        // 提醒中心原只有设置页一个深入口，宫格补位后可达性提升
-        FeatureGridItemData(HomeFeature.Reminder, "⏰", AppStrings.reminderCenter),
-    )
-    Column(Modifier.padding(horizontal = spacing.md)) {
-        Spacer(Modifier.height(6.dp))
-        // 第一行 4 个
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            items.subList(0, 4).forEach { item ->
-                FeatureGridItem(item, onOpenFeature, Modifier.weight(1f))
+            if (showFormula) {
+                QuickStatPill(value = if (formulaTotalMl > 0) formulaTotalMl.toString() else "0", label = AppStrings.formulaFeeding, unit = "ml", contentColor = c.onPrimary, modifier = Modifier.weight(1f))
             }
-        }
-        Spacer(Modifier.height(spacing.sm))
-        // 第二行 4 个
-        Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            items.subList(4, 8).forEach { item ->
-                FeatureGridItem(item, onOpenFeature, Modifier.weight(1f))
+            if (showGeneric) {
+                QuickStatPill(value = animatedFeed.toString(), label = AppStrings.feedingCount, unit = AppStrings.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
             }
+            QuickStatPill(value = sleepHours, label = AppStrings.sleepHours, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
+            QuickStatPill(value = animatedDiaper.toString(), label = AppStrings.diaperChange, unit = AppStrings.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
         }
     }
 }
 
 /** 宫格功能分区（设计语言映射到五个语义色系）；语义枚举定义在 HomeRoute（路由映射留在 Route） */
-private fun HomeFeature.color(c: AppColors) = when (this) {
-    HomeFeature.Feeding -> c.danger          // 喂养珊瑚红
-    HomeFeature.Sleep -> c.secondary         // 睡眠紫
-    HomeFeature.Diaper -> c.tertiary         // 尿布青
-    HomeFeature.Growth -> c.success          // 生长绿
-    HomeFeature.Development -> c.primary     // 发育蓝
-    HomeFeature.Vaccination -> c.warning     // 疫苗琥珀
-    HomeFeature.Health -> c.danger           // 健康珊瑚（医疗红）
-    HomeFeature.Reminder -> c.warning        // 提醒琥珀
-}
-
-@Composable
-private fun FeatureGridItem(
-    item: FeatureGridItemData,
-    onOpenFeature: (HomeFeature) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
-    val scale = AppColorScale.fromSeed(item.feature.color(c))
-    // 亮色：粉彩渐变（shade100→shade200）；暗色：深彩渐变（shade800→shade700）
-    val tileBrush = Brush.verticalGradient(
-        if (c.isDarkTheme) listOf(scale.shade800, scale.shade700)
-        else listOf(scale.shade100, scale.shade200),
-    )
-    Column(
-        modifier
-            .clip(RoundedCornerShape(shapes.large))
-            .clickable { onOpenFeature(item.feature) }
-            .padding(vertical = spacing.sm),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Box(
-            Modifier
-                .size(60.dp)
-                .clip(RoundedCornerShape(shapes.largeIncreased))
-                .background(tileBrush),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(item.emoji, fontSize = 26.sp)
-        }
-        Spacer(Modifier.height(8.dp))
-        Text(item.label, style = typography.titleSmall, color = c.textPrimary, fontWeight = FontWeight.Medium)
-    }
-}
-
-private data class FeatureGridItemData(
-    val feature: HomeFeature,
-    val emoji: String,
-    val label: String,
+private fun homeFeatureTiles(c: AppColors): List<AppTileSpec> = listOf(
+    // 记录类三格点击进入对应记录页（宫格直达表单已于 2.2.1 回滚）
+    AppTileSpec(HomeFeature.Feeding.name, "🍼", AppStrings.feedingRecords, c.danger),              // 喂养珊瑚红
+    AppTileSpec(HomeFeature.Sleep.name, "🌙", AppStrings.sleepRecords, c.secondary),               // 睡眠紫
+    AppTileSpec(HomeFeature.Diaper.name, "🧷", AppStrings.diaperRecords, c.tertiary),              // 尿布青
+    AppTileSpec(HomeFeature.Growth.name, "📏", AppStrings.growthRecords, c.success),               // 生长绿
+    AppTileSpec(HomeFeature.Development.name, "🧠", AppStrings.developmentAssessment, c.primary),  // 发育蓝
+    AppTileSpec(HomeFeature.Vaccination.name, "💉", AppStrings.vaccinationRecords, c.warning),     // 疫苗琥珀
+    AppTileSpec(HomeFeature.Health.name, "❤️", AppStrings.healthRecords, c.danger),                // 健康珊瑚（医疗红）
+    // 提醒中心原只有设置页一个深入口，宫格补位后可达性提升
+    AppTileSpec(HomeFeature.Reminder.name, "⏰", AppStrings.reminderCenter, c.warning),             // 提醒琥珀
 )
 
 @Composable
@@ -502,58 +387,46 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                     isFirst = false
                 }
                 groupItems.forEach { item ->
-                    TimelineRecordRow(item)
+                    val data = recordRowData(item, c) ?: return@forEach
+                    AppRecordRow(
+                        emoji = data.emoji,
+                        tint = data.tint,
+                        title = data.title,
+                        subtitle = summaryText(item),
+                        trailingText = recordTimeText(item),
+                    )
                 }
             }
         }
     }
 }
 
-/** 最近记录行：粉彩 emoji 徽章 + 标题/摘要 + 时间（分区色） */
-@Composable
-private fun TimelineRecordRow(item: Any) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
-    val (emoji, tint, title) = when (item) {
-        is Feeding -> {
-            val type = FeedingType.raw(item.type)
-            val (emoji, tint) = feedingTone(item.type, c)
-            Triple(emoji, tint, DateUtils.feedingTypeLabel(type))
-        }
-        is Sleep -> {
-            val night = item.type == SleepType.NIGHT
-            Triple(if (night) "🌙" else "☀️", if (night) c.secondary else c.tertiary, if (night) AppStrings.nightSleep else AppStrings.nap)
-        }
-        is Diaper -> {
-            Triple("🧷", c.tertiary, AppStrings.diaperChange)
-        }
-        else -> return
+/** 记录行语义映射（分区色纪律保留在 feature）：emoji 徽章 / 分区色 / 标题 */
+private data class RecordRowData(val emoji: String, val tint: Color, val title: String)
+
+private fun recordRowData(item: Any, c: AppColors): RecordRowData? = when (item) {
+    is Feeding -> {
+        val type = FeedingType.raw(item.type)
+        val (emoji, tint) = feedingTone(item.type, c)
+        RecordRowData(emoji, tint, DateUtils.feedingTypeLabel(type))
     }
-    val scale = AppColorScale.fromSeed(tint)
-    val time = when (item) {
-        is Feeding -> item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: ""
-        is Sleep -> item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: ""
-        is Diaper -> item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: ""
-        else -> ""
+    is Sleep -> {
+        val night = item.type == SleepType.NIGHT
+        RecordRowData(
+            emoji = if (night) "🌙" else "☀️",
+            tint = if (night) c.secondary else c.tertiary,
+            title = if (night) AppStrings.nightSleep else AppStrings.nap,
+        )
     }
-    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(shapes.medium))
-                .background(scale.tintContainer(c)),
-            contentAlignment = Alignment.Center,
-        ) { Text(emoji, fontSize = 20.sp) }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, style = typography.titleSmall, color = c.textPrimary)
-            Spacer(Modifier.height(1.dp))
-            Text(summaryText(item), style = typography.labelMedium, color = c.textSecondary, maxLines = 1)
-        }
-        Text(time, style = typography.labelMedium, color = c.textTertiary)
-    }
+    is Diaper -> RecordRowData("🧷", c.tertiary, AppStrings.diaperChange)
+    else -> null
+}
+
+private fun recordTimeText(item: Any): String = when (item) {
+    is Feeding -> item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: ""
+    is Sleep -> item.startTime.takeIf { it.length >= 16 }?.substring(11, 16) ?: ""
+    is Diaper -> item.timestamp.takeIf { it.length >= 16 }?.substring(11, 16) ?: ""
+    else -> ""
 }
 
 private fun summaryText(item: Any): String = when (item) {

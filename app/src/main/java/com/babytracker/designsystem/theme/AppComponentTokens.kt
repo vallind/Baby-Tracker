@@ -1320,6 +1320,74 @@ data class InlineBannerTokens(
     }
 }
 
+// —— 渐变统计大卡（首页今日概览 / 尿布日汇总 / 夜间睡眠三处同构形态收编） ——
+@Immutable
+data class HeroStatCardTokens(
+    val cornerRadius: Dp,
+    val innerPadding: Dp,
+    val badgeSize: Dp,
+    val badgeCornerRadius: Dp,
+    val iconContainerAlpha: Float,
+    val titleAlpha: Float,
+    val titleStyle: TextStyle,
+    val emojiStyle: TextStyle,
+    val headerGap: Dp,      // 徽章 ↔ 标题
+    val contentGap: Dp,     // 头部行 ↔ 内容槽
+) {
+    companion object {
+        fun default(
+            shapes: AppShapes,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): HeroStatCardTokens = HeroStatCardTokens(
+            // 几何/透明度取尿布·睡眠卡实测值（概览卡 0.92f 标题透明度并入 0.90f 全站档）
+            cornerRadius = shapes.scaled(shapes.largeIncreased),
+            innerPadding = spacing.lg,
+            badgeSize = spacing.xl,                      // 32dp 徽章块
+            badgeCornerRadius = shapes.scaled(shapes.medium),
+            iconContainerAlpha = 0.22f,                  // contentColor × 0.22 半透明底
+            titleAlpha = 0.90f,
+            titleStyle = typography.titleMedium.copy(fontWeight = FontWeight.Medium),
+            emojiStyle = typography.titleMedium,
+            headerGap = spacing.sm,
+            contentGap = spacing.md,
+        )
+    }
+}
+
+// —— 功能宫格（emoji 色块 + 标题，自 HomeScreen FeatureGrid 收编） ——
+@Immutable
+data class TileGridTokens(
+    val tileSize: Dp,
+    val tileCornerRadius: Dp,       // 色块圆角（largeIncreased）
+    val cellCornerRadius: Dp,       // 可点击单元格涟漪裁剪圆角（large）
+    val emojiFontSize: TextUnit,
+    val labelTextStyle: TextStyle,
+    val labelColor: Color,
+    val labelTopGap: Dp,            // 色块 ↔ 标题
+    val cellVerticalPadding: Dp,
+    val crossAxisSpacing: Dp,       // 列距（行距同值）
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): TileGridTokens = TileGridTokens(
+            tileSize = 60.dp,
+            tileCornerRadius = shapes.scaled(shapes.largeIncreased),
+            cellCornerRadius = shapes.scaled(shapes.large),
+            emojiFontSize = 26.sp,
+            labelTextStyle = typography.titleSmall.copy(fontWeight = FontWeight.Medium),
+            labelColor = colors.textPrimary,
+            labelTopGap = spacing.sm,
+            cellVerticalPadding = spacing.sm,
+            crossAxisSpacing = spacing.sm,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1365,6 +1433,8 @@ data class AppComponentTokens(
     val settingItem: SettingItemTokens,
     val keyValueRow: KeyValueRowTokens,
     val inlineBanner: InlineBannerTokens,
+    val heroStatCard: HeroStatCardTokens,
+    val tileGrid: TileGridTokens,
 ) {
     companion object {
         fun default(
@@ -1422,6 +1492,8 @@ data class AppComponentTokens(
             settingItem = SettingItemTokens.default(colors, shapes, typography),
             keyValueRow = KeyValueRowTokens.default(colors, typography),
             inlineBanner = InlineBannerTokens.default(colors, shapes, spacing),
+            heroStatCard = HeroStatCardTokens.default(shapes, typography, spacing),
+            tileGrid = TileGridTokens.default(colors, shapes, typography, spacing),
         )
     }
 }
