@@ -1,46 +1,27 @@
 package com.babytracker.feature.stats
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.chart.MiniBarChart
+import com.babytracker.designsystem.components.chart.MiniLineChart
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
-import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.errorstate.AppErrorState
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.composites.metriccard.AppMetricCard
-import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.composites.metriccard.MetricTrendLabel
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.tintContainer
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -102,12 +83,13 @@ fun StatsScreen(
                 )
             }
 
-            DateRangeNav(
-                dateRangeText = state.dateRangeText,
-                canGoBack = true,
-                canGoForward = state.periodOffset < 0,
-                onBack = onGoBack,
-                onForward = onGoForward,
+            // 与记录四页统一为 DateNavCapsule 形态（无日期选择器，胶囊只读展示）
+            DateNavCapsule(
+                dateLabel = state.dateRangeText,
+                onPrev = onGoBack,
+                onNext = { if (state.periodOffset < 0) onGoForward() },
+                onOpenPicker = {},
+                modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
             )
 
             Spacer(Modifier.height(spacing.md))
@@ -186,25 +168,6 @@ private fun StatsLoadingState() {
 }
 
 @Composable
-private fun DateRangeNav(
-    dateRangeText: String,
-    canGoBack: Boolean,
-    canGoForward: Boolean,
-    onBack: () -> Unit,
-    onForward: () -> Unit,
-) {
-    val spacing = LocalAppSpacing.current
-    // 与记录四页统一为 DateNavCapsule 形态（无日期选择器，胶囊只读展示）
-    DateNavCapsule(
-        dateLabel = dateRangeText,
-        onPrev = { if (canGoBack) onBack() },
-        onNext = { if (canGoForward) onForward() },
-        onOpenPicker = {},
-        modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
-    )
-}
-
-@Composable
 private fun FeedingMetric(
     count: Int,
     breastFeedCount: Int,
@@ -236,7 +199,7 @@ private fun FeedingMetric(
                 Text("${count}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
             }
             if (compare.isNotEmpty()) {
-                StatCompareLabel(compare)
+                MetricTrendLabel(compare)
             }
         },
         chart = { MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.danger) },
@@ -265,7 +228,7 @@ private fun SleepMetric(
         valueContent = {
             Text("${hours}时${mins}分", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
             if (compare.isNotEmpty()) {
-                StatCompareLabel(compare)
+                MetricTrendLabel(compare)
             }
         },
         chart = { MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.secondary) },
@@ -292,7 +255,7 @@ private fun HeightMetric(
         valueContent = {
             Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
             if (compare.isNotEmpty()) {
-                StatCompareLabel(compare)
+                MetricTrendLabel(compare)
             }
         },
         chart = { MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp)) },
@@ -319,103 +282,11 @@ private fun WeightMetric(
         valueContent = {
             Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
             if (compare.isNotEmpty()) {
-                StatCompareLabel(compare)
+                MetricTrendLabel(compare)
             }
         },
         chart = { MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp)) },
         hasChartData = points.isNotEmpty(),
         chartEmptyText = "本周期暂无体重记录",
     )
-}
-
-@Composable
-private fun StatCompareLabel(compare: String) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val isPositive = compare.startsWith("+")
-    Text(
-        compare,
-        style = typography.labelMedium,
-        color = if (isPositive) c.success else c.textSecondary,
-        modifier = Modifier.padding(top = spacing.xs),
-    )
-}
-
-@Composable
-fun MiniBarChart(
-    points: List<Float>,
-    modifier: Modifier = Modifier,
-    barColor: Color = LocalAppColors.current.primary,
-) {
-    val shapes = LocalAppShapes.current
-    Canvas(modifier) {
-        if (points.none { it > 0f }) return@Canvas
-
-        val maxVal = points.max().coerceAtLeast(1f)
-        val barCount = points.size
-        val gapRatio = 0.35f
-        val totalBars = barCount + (barCount - 1) * gapRatio
-        val barWidth = size.width / totalBars
-        val gapWidth = barWidth * gapRatio
-        val barCornerRadius = shapes.extraSmall.toPx()
-
-        points.forEachIndexed { i, v ->
-            if (v <= 0f) return@forEachIndexed
-            val barHeight = ((v / maxVal).coerceIn(0f, 1f) * size.height)
-            val x = i * (barWidth + gapWidth)
-            val y = size.height - barHeight
-            val radius = minOf(barCornerRadius, barWidth / 2f, barHeight / 2f)
-            drawRoundRect(
-                color = barColor.copy(alpha = if (v == maxVal) 1f else 0.6f),
-                topLeft = Offset(x, y),
-                size = Size(barWidth, barHeight),
-                cornerRadius = CornerRadius(radius, radius),
-            )
-        }
-    }
-}
-
-@Composable
-fun MiniLineChart(points: List<Float>, modifier: Modifier = Modifier) {
-    val c = LocalAppColors.current
-    val lineColor = c.primary
-    val areaBrush = androidx.compose.ui.graphics.Brush.verticalGradient(
-        colors = listOf(c.primary.copy(alpha = 0.25f), Color.Transparent),
-    )
-    Canvas(modifier) {
-        if (points.size < 2) {
-            if (points.size == 1) {
-                drawCircle(color = lineColor, radius = 3.dp.toPx(), center = Offset(size.width / 2, size.height / 2))
-            }
-            return@Canvas
-        }
-        val max = points.max()
-        val min = points.min()
-        val range = (max - min).coerceAtLeast(1f)
-        val stepX = size.width / (points.size - 1)
-        val pointRadius = 3.dp.toPx()
-        val chartHeight = (size.height - pointRadius * 2).coerceAtLeast(0f)
-        val coords = points.mapIndexed { i, v ->
-            val progress = ((v - min) / range).coerceIn(0f, 1f)
-            Offset(i * stepX, pointRadius + chartHeight * (1f - progress))
-        }
-        val areaPath = Path().apply {
-            moveTo(coords.first().x, size.height)
-            coords.forEach { lineTo(it.x, it.y) }
-            lineTo(coords.last().x, size.height)
-            close()
-        }
-        drawPath(areaPath, areaBrush)
-        for (i in 0 until coords.size - 1) {
-            drawLine(
-                color = lineColor,
-                start = coords[i],
-                end = coords[i + 1],
-                strokeWidth = 2.dp.toPx(),
-                cap = StrokeCap.Round,
-            )
-        }
-        drawCircle(lineColor, 3.dp.toPx(), coords.last())
-    }
 }

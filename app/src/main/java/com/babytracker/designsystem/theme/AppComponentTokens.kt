@@ -1176,6 +1176,28 @@ data class RecordDetailSheetTokens(
     }
 }
 
+// —— 迷你图表（指标卡内嵌 sparkline：柱状/折线两形态，自 StatsScreen 收编） ——
+@Immutable
+data class MiniChartTokens(
+    val barGapRatio: Float,         // 柱间距 / 柱宽
+    val barDimmedAlpha: Float,      // 非峰值柱透明度（峰值柱为实色）
+    val lineStrokeWidth: Dp,
+    val pointRadius: Dp,
+    val areaFillAlpha: Float,       // 折线下方渐变面积顶部透明度
+    val lineColor: Color,           // 折线默认色（可用参数覆盖）
+) {
+    companion object {
+        fun default(colors: AppColors): MiniChartTokens = MiniChartTokens(
+            barGapRatio = 0.35f,
+            barDimmedAlpha = 0.6f,
+            lineStrokeWidth = 2.dp,
+            pointRadius = 3.dp,
+            areaFillAlpha = 0.25f,
+            lineColor = colors.primary,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1217,6 +1239,7 @@ data class AppComponentTokens(
     val dateNavCapsule: DateNavCapsuleTokens,
     val quickStatPill: QuickStatPillTokens,
     val recordDetailSheet: RecordDetailSheetTokens,
+    val miniChart: MiniChartTokens,
 ) {
     companion object {
         fun default(
@@ -1270,6 +1293,7 @@ data class AppComponentTokens(
             dateNavCapsule = DateNavCapsuleTokens.default(colors, shapes),
             quickStatPill = QuickStatPillTokens.default(colors, typography, spacing),
             recordDetailSheet = RecordDetailSheetTokens.default(colors, typography, spacing),
+            miniChart = MiniChartTokens.default(colors),
         )
     }
 }
