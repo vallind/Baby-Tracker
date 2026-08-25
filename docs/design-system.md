@@ -116,6 +116,19 @@ snackbar.showUndo(onUndo = { repo.update(r) })     // 替代 showSnackbar + Acti
 
 > 完整组件/令牌清单与对应关系以代码为准（`designsystem/components/`、`AppComponentTokens.kt`）。
 
+## 内容状态四态书写约定（E 批）
+
+页面数据区块统一按 Loading → Empty → Error → Success 四态分支书写（`when { isLoading -> …; errorMessage != null -> …; isEmpty -> …; else -> 内容 }`）：
+
+| 态 | 唯一入口 | 说明 |
+|---|---|---|
+| Loading | 列表=`SkeletonLoader`；卡片=`AppCard(loading = true)`；局部=`AppCircularProgress` | 骨架优先于转圈 |
+| Empty | `EmptyState(emoji, title, subtitle, actionText?, onAction?)` | 全站已统一 |
+| Error | `AppErrorState(status = Generic/Network/NotFound, message?, onRetry?)` | status 给默认文案与图标（PResult 形态），参数留逃生口；retryLabel 默认「重试」 |
+| Success | 页面自身内容 | 不包一层伪抽象 |
+
+轻提示**不使用** AppErrorState：表单校验走 `AppInput(errorMessage)`、操作反馈走 snackbar（`showUndo`）、既有页面的内联短文案允许保留。禁止新增私有 `*LoadingState`/`*ErrorState` 组合函数（守门审计后续批次纳入）。
+
 ## 密度变体（AppDensity）
 
 页面级密度三档，全项目零组件迁移即可生效：

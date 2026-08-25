@@ -30,6 +30,13 @@
 - Tonal 语义统一取色 `secondaryScale.shade100/shade600`（AppColors 为自建分档体系，无 M3 secondaryContainer 字段可直引）
 - AGENTS.md / docs/design-system.md 枚举描述同步；lessons 新增 #28（审计注释自命中）、#29（提交门禁看退出码）
 
+**E 批内容：内容状态编排**
+
+- 新增 `AppErrorState(status = Generic/Network/NotFound, message?, onRetry?, retryLabel?, title?)`：Error 态唯一入口；status 驱动默认文案与图标（对标 Palette PResult 形态），内部组合 `EmptyState` 复用其令牌体系，不新增令牌族
+- AppStrings 新增错误文案键组（retry/reload/errorGeneric*/errorNetwork*/errorNotFound*/errorStatsTitle）
+- `StatsScreen` 错误分支迁移至 AppErrorState（顺带消除「统计数据加载失败」「重新加载」两处硬编码中文 i18n 债）
+- docs/design-system.md 新增「内容状态四态书写约定」章节：Loading→SkeletonLoader/AppCard(loading)/AppCircularProgress、Empty→EmptyState、Error→AppErrorState、Success 不包装；轻提示（表单校验/snackbar）明确不使用该组件；禁止新增私有 *LoadingState/*ErrorState
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

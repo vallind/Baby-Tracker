@@ -32,6 +32,8 @@ import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.errorstate.AppErrorState
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.AppColorScale
@@ -112,12 +114,11 @@ fun StatsScreen(
             when {
                 state.isLoading -> StatsLoadingState()
                 state.errorMessage != null -> {
-                    EmptyState(
-                        emoji = "⚠️",
-                        title = "统计数据加载失败",
-                        subtitle = state.errorMessage.orEmpty(),
-                        actionText = "重新加载",
-                        onAction = onRetry,
+                    AppErrorState(
+                        title = AppStrings.errorStatsTitle,
+                        message = state.errorMessage,
+                        retryLabel = AppStrings.reload,
+                        onRetry = onRetry,
                     )
                 }
                 !state.hasAnyData -> {

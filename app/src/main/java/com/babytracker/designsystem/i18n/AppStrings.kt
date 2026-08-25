@@ -28,6 +28,17 @@ object AppStrings {
     const val selected = "已选中"
     const val noData = "暂无数据"
 
+    // —— 错误状态（E 批：AppErrorState 默认文案）——
+    const val retry = "重试"
+    const val reload = "重新加载"
+    const val errorGenericTitle = "出错了"
+    const val errorGenericHint = "加载失败，请稍后重试"
+    const val errorNetworkTitle = "网络不可用"
+    const val errorNetworkHint = "请检查网络连接后重试"
+    const val errorNotFoundTitle = "没有找到"
+    const val errorNotFoundHint = "内容不存在或已被删除"
+    const val errorStatsTitle = "统计数据加载失败"
+
     // —— 账户 ——
     const val nickname = "昵称"
     const val editNickname = "修改昵称"
