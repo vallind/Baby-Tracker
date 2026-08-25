@@ -1198,6 +1198,52 @@ data class MiniChartTokens(
     }
 }
 
+// —— 设置行（emoji 徽章 + 标题/副标题 + 尾部插槽的设置项家族，自 feature/settings 收编） ——
+@Immutable
+data class SettingItemTokens(
+    val badgeSize: Dp,
+    val badgeCornerRadius: Dp,
+    val badgeFontSize: TextUnit,
+    val badgeContainerColor: Color,
+    val titleFontSize: TextUnit,
+    val titleColor: Color,
+    val subtitleFontSize: TextUnit,
+    val subtitleColor: Color,
+    val trailingIconSize: Dp,
+    val chevronTint: Color,
+    // 胶囊单选行（AppSettingChoiceItem）标题/副标题
+    val choiceLabelFontSize: TextUnit,
+    val choiceSubtitleFontSize: TextUnit,
+    val choiceSubtitleColor: Color,
+    // 分组标题（AppSettingGroupTitle）
+    val groupTitleFontSize: TextUnit,
+    val groupTitleColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+        ): SettingItemTokens = SettingItemTokens(
+            badgeSize = 40.dp,                            // 全站设置行徽章统一尺寸（存量事实标准收编）
+            badgeCornerRadius = shapes.scaled(shapes.large),
+            badgeFontSize = typography.titleMedium.fontSize,
+            badgeContainerColor = colors.primaryContainer,
+            titleFontSize = typography.bodyMedium.fontSize,
+            titleColor = colors.textPrimary,
+            subtitleFontSize = typography.bodySmall.fontSize,
+            subtitleColor = colors.textTertiary,
+            trailingIconSize = 18.dp,
+            chevronTint = colors.textTertiary,
+            choiceLabelFontSize = typography.bodyLarge.fontSize,
+            choiceSubtitleFontSize = typography.bodyMedium.fontSize,
+            choiceSubtitleColor = colors.textSecondary,
+            groupTitleFontSize = typography.labelMedium.fontSize,
+            groupTitleColor = colors.textSecondary,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1240,6 +1286,7 @@ data class AppComponentTokens(
     val quickStatPill: QuickStatPillTokens,
     val recordDetailSheet: RecordDetailSheetTokens,
     val miniChart: MiniChartTokens,
+    val settingItem: SettingItemTokens,
 ) {
     companion object {
         fun default(
@@ -1294,6 +1341,7 @@ data class AppComponentTokens(
             quickStatPill = QuickStatPillTokens.default(colors, typography, spacing),
             recordDetailSheet = RecordDetailSheetTokens.default(colors, typography, spacing),
             miniChart = MiniChartTokens.default(colors),
+            settingItem = SettingItemTokens.default(colors, shapes, typography),
         )
     }
 }

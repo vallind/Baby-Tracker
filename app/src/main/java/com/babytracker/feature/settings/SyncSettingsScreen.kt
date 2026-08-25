@@ -16,6 +16,7 @@ import com.babytracker.core.sync.SyncState
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.switchcontrol.AppRadioButton
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
@@ -65,7 +66,7 @@ fun SyncSettingsScreen(
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md)) {
 
             AppCardGroup {
-                SettingsRow(
+                AppSettingItem(
                     emoji = "🔄",
                     label = "自动同步",
                     trailing = {
@@ -77,7 +78,7 @@ fun SyncSettingsScreen(
                 )
                 SettingsDivider()
 
-                SettingsRow(
+                AppSettingItem(
                     emoji = "⏱",
                     label = "同步延迟",
                     subtitle = config.syncDelay.label,
@@ -85,7 +86,7 @@ fun SyncSettingsScreen(
                 )
                 SettingsDivider()
 
-                SettingsRow(
+                AppSettingItem(
                     emoji = "📅",
                     label = "后台同步",
                     subtitle = config.bgInterval.label,
@@ -93,7 +94,7 @@ fun SyncSettingsScreen(
                 )
                 SettingsDivider()
 
-                SettingsRow(
+                AppSettingItem(
                     emoji = "🚪",
                     label = "退出时同步",
                     trailing = {
@@ -105,7 +106,7 @@ fun SyncSettingsScreen(
                 )
                 SettingsDivider()
 
-                SettingsRow(
+                AppSettingItem(
                     emoji = "📶",
                     label = "仅 Wi‑Fi",
                     trailing = {

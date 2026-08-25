@@ -36,11 +36,20 @@ package com.babytracker.designsystem.components
 // AppCheckbox        主题化复选框           (switchcontrol/)
 // AppRadioButton     主题化单选按钮         (switchcontrol/)
 // AppScaffold        Scaffold 包装（自动 bg） (scaffold/)
+// SubPageScaffold    设置子页等二级页通用骨架 (scaffold/)
 // AppLinearProgress  线性进度条             (progress/)
 // AppCircularProgress 圆形进度指示器         (progress/)
 // AppSlider          主题化滑块             (slider/)
 // AppLabeledSlider   带标签滑块             (slider/)
 // AppRate            星级评分               (rate/)
+
+// —— 设置行家族 ——
+// AppSettingItem          设置行（emoji 徽章+标题+尾部）   (settingitem/)
+// AppSettingSwitchItem    开关设置行                       (settingitem/)
+// AppSettingChoiceItem    胶囊单选设置行                   (settingitem/)
+// AppSettingGroupTitle    设置分组标题                     (settingitem/)
+// SettingItemDefaults     设置行令牌读取
+// AppColorDots       颜色圆点组（选中描边环）(colordots/)
 
 // —— 专用组件 ——
 // BabyIllustration   宝宝头像

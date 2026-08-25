@@ -57,7 +57,6 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
     val elev = LocalAppElevation.current
-    val names = mapOf("pure" to "纯净蓝", "aurora" to "极光紫", "warm" to "暖阳粉", "sunny" to "阳光黄", "night" to "暗夜深", "morandi" to "莫兰迪")
     AppBottomSheet(
         show = true,
         onDismiss = onDismiss,
@@ -91,7 +90,7 @@ fun ThemePickerSheet(themeCtrl: ThemeController, onDismiss: () -> Unit) {
                                         ),
                                 )
                                 Spacer(Modifier.height(6.dp))
-                                Text(names[theme.name] ?: theme.name, style = LocalAppTypography.current.bodySmall, color = theme.colors.textPrimary)
+                                Text(appThemeDisplayName(theme.name), style = LocalAppTypography.current.bodySmall, color = theme.colors.textPrimary)
                             }
                             if (selected) {
                                 Icon(Icons.Default.Check, contentDescription = null, tint = c.primary, modifier = Modifier.align(Alignment.TopEnd).size(18.dp))

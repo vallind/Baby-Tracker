@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.settingitem.AppSettingItem
+import com.babytracker.designsystem.components.scaffold.SubPageScaffold
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppSpacing
 
@@ -25,12 +27,12 @@ fun DataSettingsScreen(
 ) {
     val spacing = LocalAppSpacing.current
 
-    SettingsMenuScaffold(
+    SubPageScaffold(
         title = "数据与同步",
         onBack = onBack,
     ) {
         AppCardGroup {
-            SettingsRow(
+            AppSettingItem(
                 emoji = "🔄",
                 label = "同步设置",
                 subtitle = if (autoSync) {
@@ -41,14 +43,14 @@ fun DataSettingsScreen(
                 onClick = onOpenSyncSettings,
             )
             SettingsDivider()
-            SettingsRow(
+            AppSettingItem(
                 emoji = "📦",
                 label = "备份与恢复",
                 subtitle = "本地备份、WebDAV 与数据恢复",
                 onClick = onOpenBackup,
             )
             SettingsDivider()
-            SettingsRow(
+            AppSettingItem(
                 emoji = "🔐",
                 label = "隐私设置",
                 subtitle = "管理数据与隐私选项",

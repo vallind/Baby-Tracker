@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.scaffold.SubPageScaffold
+import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppSpacing
 
@@ -33,26 +35,26 @@ fun PreferenceSettingsScreen(
     var showThemePicker by remember { mutableStateOf(false) }
     var showDensityPicker by remember { mutableStateOf(false) }
 
-    SettingsMenuScaffold(
+    SubPageScaffold(
         title = "使用偏好",
         onBack = onBack,
     ) {
         AppCardGroup {
-            SettingsRow(
+            AppSettingItem(
                 emoji = "🎨",
                 label = "主题模式",
                 subtitle = themeName,
                 onClick = { showThemePicker = true },
             )
             SettingsDivider()
-            SettingsRow(
+            AppSettingItem(
                 emoji = "📐",
                 label = AppStrings.densityLabel,
                 subtitle = densityLabel,
                 onClick = { showDensityPicker = true },
             )
             SettingsDivider()
-            SettingsRow(
+            AppSettingItem(
                 emoji = "✨",
                 label = AppStrings.aiSettings,
                 subtitle = "模型、宝宝数据与回答偏好",

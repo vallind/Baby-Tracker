@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.scaffold.SubPageScaffold
+import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -26,19 +28,19 @@ fun SupportSettingsScreen(
 ) {
     val spacing = LocalAppSpacing.current
 
-    SettingsMenuScaffold(
+    SubPageScaffold(
         title = "帮助与关于",
         onBack = onBack,
     ) {
         AppCardGroup {
-            SettingsRow(
+            AppSettingItem(
                 emoji = "❓",
                 label = "帮助与反馈",
                 subtitle = "使用问题与意见反馈",
                 trailing = { AppChip(label = AppStrings.comingSoon) },
             )
             SettingsDivider()
-            SettingsRow(
+            AppSettingItem(
                 emoji = "📋",
                 label = "运行日志",
                 subtitle = if (logCaptureEnabled) "日志抓取中，点击查看" else "已关闭",
@@ -51,7 +53,7 @@ fun SupportSettingsScreen(
                 onClick = onOpenLogViewer,
             )
             SettingsDivider()
-            SettingsRow(
+            AppSettingItem(
                 emoji = "ℹ️",
                 label = "关于 Baby Tracker",
                 subtitle = "版本 $versionName",

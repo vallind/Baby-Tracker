@@ -37,6 +37,8 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.settingitem.AppSettingGroupTitle
+import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -163,23 +165,23 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(spacing.md))
 
-            SettingsSectionTitle("宝宝与家庭")
+            AppSettingGroupTitle("宝宝与家庭")
             AppCardGroup {
-                SettingsRow(
+                AppSettingItem(
                     emoji = "👶",
                     label = "宝宝管理",
                     subtitle = "资料、成长信息与宝宝切换",
                     onClick = onOpenBabyManagement,
                 )
                 SettingsDivider()
-                SettingsRow(
+                AppSettingItem(
                     emoji = "👨‍👩‍👧",
                     label = "家庭与账号",
                     subtitle = if (isLoggedIn) "成员管理与账号信息" else "登录后与家人共享记录",
                     onClick = onOpenUserAccount,
                 )
                 SettingsDivider()
-                SettingsRow(
+                AppSettingItem(
                     emoji = "🔔",
                     label = "提醒设置",
                     subtitle = "喂养、睡眠与护理提醒",
@@ -190,16 +192,16 @@ fun SettingsScreen(
             Spacer(Modifier.height(spacing.md))
 
             // 快捷工具组（2.1 H7：高频工具从深层上提，原深层路由保留）
-            SettingsSectionTitle("快捷工具")
+            AppSettingGroupTitle("快捷工具")
             AppCardGroup {
-                SettingsRow(
+                AppSettingItem(
                     emoji = "📦",
                     label = AppStrings.backupManage,
                     subtitle = AppStrings.backupManageSubtitle,
                     onClick = onOpenBackup,
                 )
                 SettingsDivider()
-                SettingsRow(
+                AppSettingItem(
                     emoji = "📋",
                     label = AppStrings.logViewer,
                     subtitle = AppStrings.logViewerSubtitle,
@@ -209,23 +211,23 @@ fun SettingsScreen(
 
             Spacer(Modifier.height(spacing.md))
 
-            SettingsSectionTitle("更多设置")
+            AppSettingGroupTitle("更多设置")
             AppCardGroup {
-                SettingsRow(
+                AppSettingItem(
                     emoji = "🎨",
                     label = "使用偏好",
                     subtitle = "主题与 AI 助手",
                     onClick = onOpenPreference,
                 )
                 SettingsDivider()
-                SettingsRow(
+                AppSettingItem(
                     emoji = "🔒",
                     label = "数据与同步",
                     subtitle = "云同步、备份与隐私",
                     onClick = onOpenData,
                 )
                 SettingsDivider()
-                SettingsRow(
+                AppSettingItem(
                     emoji = "❓",
                     label = "帮助与关于",
                     subtitle = "问题反馈、运行日志与版本信息",

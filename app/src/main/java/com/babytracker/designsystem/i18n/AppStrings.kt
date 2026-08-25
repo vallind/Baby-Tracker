@@ -137,6 +137,15 @@ object AppStrings {
     const val backup = "备份"
     const val backupManage = "备份管理"
     const val theme = "主题"
+    // —— G4 设置族批次新增 ——
+    // 主题显示名（feature 层 ThemeNames 单一映射的文案来源）
+    const val themeNamePure = "纯净蓝"
+    const val themeNameAurora = "极光紫"
+    const val themeNameWarm = "暖阳粉"
+    const val themeNameSunny = "阳光黄"
+    const val themeNameNight = "暗夜深"
+    const val themeNameMorandi = "莫兰迪"
+    const val themeFollowSystem = "跟随系统"
     const val densityLabel = "界面密度"
     const val about = "关于"
     const val logViewer = "运行日志"

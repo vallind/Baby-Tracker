@@ -1,6 +1,5 @@
 package com.babytracker.feature.ai
 
-import androidx.compose.foundation.clickable
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.card.AppCard
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,20 +36,21 @@ import com.babytracker.core.ai.settings.AiAnswerDetail
 import com.babytracker.core.ai.settings.AiAnswerTone
 import com.babytracker.core.ai.settings.AiReasoningEffort
 import com.babytracker.core.ai.settings.AiThinkingMode
-import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
+import com.babytracker.designsystem.components.settingitem.AppSettingChoiceItem
+import com.babytracker.designsystem.components.settingitem.AppSettingGroupTitle
+import com.babytracker.designsystem.components.settingitem.AppSettingItem
+import com.babytracker.designsystem.components.settingitem.AppSettingSwitchItem
 import com.babytracker.designsystem.components.slider.AppSlider
-import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
-import com.babytracker.feature.settings.SettingsDivider
-import com.babytracker.feature.settings.SettingsRow
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -154,9 +152,10 @@ fun AiSettingsScreen(
 
             Spacer(Modifier.height(spacing.sm))
 
-            AiSettingsSectionTitle(AppStrings.aiSettingsGeneral)
+            // AiSettingsSectionTitle → AppSettingGroupTitle 收编：组间大间隔走 showTopSpacing
+            AppSettingGroupTitle(AppStrings.aiSettingsGeneral, showTopSpacing = true)
             AppCardGroup {
-                AiSwitchRow(
+                AppSettingSwitchItem(
                     emoji = "✨",
                     label = AppStrings.aiSettingsEnabled,
                     subtitle = AppStrings.aiSettingsEnabledSubtitle,
@@ -165,19 +164,19 @@ fun AiSettingsScreen(
                 )
             }
 
-            AiSettingsSectionTitle(AppStrings.aiSettingsModelAndAnswer)
+            AppSettingGroupTitle(AppStrings.aiSettingsModelAndAnswer, showTopSpacing = true)
             AppCardGroup {
-                AiChoiceSetting(
+                AppSettingChoiceItem(
                     emoji = "🧠",
                     label = AppStrings.aiSettingsDefaultModel,
                     options = state.modelOptions.map { it.id to it.name },
                     selectedId = state.selectedModelId,
                     onSelect = onSetDefaultModel,
                 )
-                SettingsDivider()
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
                 AiCapabilitySetting(state.selectedModel)
-                SettingsDivider()
-                AiChoiceSetting(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingChoiceItem(
                     emoji = "🧩",
                     label = AppStrings.aiSettingsContextRounds,
                     subtitle = AppStrings.aiSettingsContextRoundsSubtitle,
@@ -191,8 +190,8 @@ fun AiSettingsScreen(
                     selectedId = preferences.contextRounds.toString(),
                     onSelect = { onSetContextRounds(it.toInt()) },
                 )
-                SettingsDivider()
-                AiChoiceSetting(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingChoiceItem(
                     emoji = "🔢",
                     label = AppStrings.aiSettingsMaxTokens,
                     subtitle = AppStrings.aiSettingsMaxTokensSubtitle,
@@ -219,8 +218,8 @@ fun AiSettingsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = spacing.md, vertical = spacing.sm),
                 )
-                SettingsDivider()
-                AiSwitchRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingSwitchItem(
                     emoji = "⚡",
                     label = AppStrings.aiSettingsStreaming,
                     subtitle = if (capabilities?.streaming == true) {
@@ -232,9 +231,9 @@ fun AiSettingsScreen(
                     enabled = capabilities?.streaming == true,
                     onCheckedChange = onSetStreaming,
                 )
-                SettingsDivider()
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
                 if (capabilities?.thinking == true) {
-                    AiChoiceSetting(
+                    AppSettingChoiceItem(
                         emoji = "💭",
                         label = AppStrings.aiSettingsThinking,
                         options = AiThinkingMode.entries.map { it.name to thinkingLabel(it) },
@@ -243,8 +242,8 @@ fun AiSettingsScreen(
                     )
                     val supportedEfforts = capabilities.reasoningEfforts
                     if (supportedEfforts.isNotEmpty()) {
-                        SettingsDivider()
-                        AiChoiceSetting(
+                        AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                        AppSettingChoiceItem(
                             emoji = "⚙️",
                             label = AppStrings.aiSettingsReasoningEffort,
                             options = AiReasoningEffort.entries
@@ -260,7 +259,7 @@ fun AiSettingsScreen(
                         )
                     }
                 } else {
-                    SettingsRow(
+                    AppSettingItem(
                         emoji = "💭",
                         label = AppStrings.aiSettingsThinking,
                         subtitle = AppStrings.aiSettingsUnsupported,
@@ -268,8 +267,8 @@ fun AiSettingsScreen(
                     )
                 }
                 if (capabilities?.temperature == true) {
-                    SettingsDivider()
-                    AiSwitchRow(
+                    AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                    AppSettingSwitchItem(
                         emoji = "🌡️",
                         label = AppStrings.aiSettingsTemperature,
                         subtitle = AppStrings.aiSettingsTemperatureSubtitle,
@@ -298,25 +297,25 @@ fun AiSettingsScreen(
                 }
             }
 
-            AiSettingsSectionTitle(AppStrings.aiSettingsAnswerPreference)
+            AppSettingGroupTitle(AppStrings.aiSettingsAnswerPreference, showTopSpacing = true)
             AppCardGroup {
-                AiChoiceSetting(
+                AppSettingChoiceItem(
                     emoji = "📏",
                     label = AppStrings.aiSettingsDetail,
                     options = AiAnswerDetail.entries.map { it.name to detailLabel(it) },
                     selectedId = preferences.answerDetail.name,
                     onSelect = { onSetAnswerDetail(AiAnswerDetail.valueOf(it)) },
                 )
-                SettingsDivider()
-                AiChoiceSetting(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingChoiceItem(
                     emoji = "💬",
                     label = AppStrings.aiSettingsTone,
                     options = AiAnswerTone.entries.map { it.name to toneLabel(it) },
                     selectedId = preferences.answerTone.name,
                     onSelect = { onSetAnswerTone(AiAnswerTone.valueOf(it)) },
                 )
-                SettingsDivider()
-                AiSwitchRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingSwitchItem(
                     emoji = "✅",
                     label = AppStrings.aiSettingsChecklist,
                     checked = preferences.includeActionChecklist,
@@ -324,49 +323,49 @@ fun AiSettingsScreen(
                 )
             }
 
-            AiSettingsSectionTitle(AppStrings.aiSettingsBabyData)
+            AppSettingGroupTitle(AppStrings.aiSettingsBabyData, showTopSpacing = true)
             AppCardGroup {
-                AiSwitchRow(
+                AppSettingSwitchItem(
                     emoji = "📊",
                     label = AppStrings.aiSettingsUseRecords,
                     subtitle = AppStrings.aiSettingsUseRecordsSubtitle,
                     checked = preferences.useRecentRecords,
                     onCheckedChange = onSetUseRecentRecords,
                 )
-                SettingsDivider()
-                AiSwitchRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingSwitchItem(
                     emoji = "🍼",
                     label = AppStrings.aiSettingsFeeding,
                     checked = preferences.useFeedingRecords,
                     enabled = preferences.useRecentRecords,
                     onCheckedChange = onSetUseFeeding,
                 )
-                SettingsDivider()
-                AiSwitchRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingSwitchItem(
                     emoji = "🌙",
                     label = AppStrings.aiSettingsSleep,
                     checked = preferences.useSleepRecords,
                     enabled = preferences.useRecentRecords,
                     onCheckedChange = onSetUseSleep,
                 )
-                SettingsDivider()
-                AiSwitchRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingSwitchItem(
                     emoji = "🧷",
                     label = AppStrings.aiSettingsDiaper,
                     checked = preferences.useDiaperRecords,
                     enabled = preferences.useRecentRecords,
                     onCheckedChange = onSetUseDiaper,
                 )
-                SettingsDivider()
-                AiSwitchRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingSwitchItem(
                     emoji = "📏",
                     label = AppStrings.aiSettingsGrowth,
                     checked = preferences.useGrowthRecords,
                     enabled = preferences.useRecentRecords,
                     onCheckedChange = onSetUseGrowth,
                 )
-                SettingsDivider()
-                AiSwitchRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingSwitchItem(
                     emoji = "❤️",
                     label = AppStrings.aiSettingsHealth,
                     checked = preferences.useHealthRecords,
@@ -375,9 +374,9 @@ fun AiSettingsScreen(
                 )
             }
 
-            AiSettingsSectionTitle(AppStrings.aiSettingsExperience)
+            AppSettingGroupTitle(AppStrings.aiSettingsExperience, showTopSpacing = true)
             AppCardGroup {
-                AiSwitchRow(
+                AppSettingSwitchItem(
                     emoji = "💡",
                     label = AppStrings.aiSettingsRecommended,
                     checked = preferences.showRecommendedQuestions,
@@ -385,23 +384,23 @@ fun AiSettingsScreen(
                 )
             }
 
-            AiSettingsSectionTitle(AppStrings.aiSettingsPrivacyAndStatus)
+            AppSettingGroupTitle(AppStrings.aiSettingsPrivacyAndStatus, showTopSpacing = true)
             AppCardGroup {
-                SettingsRow(
+                AppSettingItem(
                     emoji = "🛡️",
                     label = AppStrings.aiSettingsSafety,
                     subtitle = AppStrings.aiSettingsSafetySubtitle,
                     trailing = { Text(AppStrings.aiSettingsAlwaysOn) },
                 )
-                SettingsDivider()
-                SettingsRow(
+                AppDivider(modifier = Modifier.padding(horizontal = spacing.md))
+                AppSettingItem(
                     emoji = "🔐",
                     label = AppStrings.aiSettingsDataNotice,
                     subtitle = AppStrings.aiSettingsDataNoticeSubtitle,
                     trailing = { },
                 )
 
-                SettingsRow(
+                AppSettingItem(
                     emoji = "🗑️",
                     label = AppStrings.aiSettingsClearChat,
                     subtitle = AppStrings.aiSettingsClearChatSubtitle,
@@ -426,94 +425,6 @@ fun AiSettingsScreen(
 }
 
 @Composable
-private fun AiSettingsSectionTitle(title: String) {
-    Text(
-        text = title,
-        style = LocalAppTypography.current.labelMedium,
-        color = LocalAppColors.current.textSecondary,
-        modifier = Modifier.padding(top = LocalAppSpacing.current.lg, bottom = LocalAppSpacing.current.sm),
-    )
-}
-
-@Composable
-private fun AiSwitchRow(
-    emoji: String,
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    subtitle: String? = null,
-    enabled: Boolean = true,
-) {
-    SettingsRow(
-        emoji = emoji,
-        label = label,
-        subtitle = subtitle,
-        trailing = {
-            AppSwitch(
-                checked = checked,
-                onCheckedChange = null,
-                enabled = enabled,
-            )
-        },
-        onClick = {
-            if (enabled) onCheckedChange(!checked)
-        },
-    )
-}
-
-@Composable
-private fun AiChoiceSetting(
-    emoji: String,
-    label: String,
-    options: List<Pair<String, String>>,
-    selectedId: String?,
-    onSelect: (String) -> Unit,
-    subtitle: String? = null,
-    interactive: Boolean = true,
-) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    Column(Modifier.fillMaxWidth().padding(horizontal = spacing.md, vertical = spacing.sm)) {
-        Text(
-            text = "$emoji  $label",
-            style = LocalAppTypography.current.bodyLarge,
-            color = colors.textPrimary,
-        )
-        if (subtitle != null) {
-            Text(
-                text = subtitle,
-                style = LocalAppTypography.current.bodyMedium,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(top = spacing.xs),
-            )
-        }
-        Spacer(Modifier.height(spacing.sm))
-        if (options.isEmpty()) {
-            Text(
-                text = AppStrings.aiConfigUnavailable,
-                style = LocalAppTypography.current.bodyMedium,
-                color = colors.textSecondary,
-            )
-        } else {
-            Row(
-                Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-            ) {
-                options.forEach { (id, optionLabel) ->
-                    val selected = id == selectedId
-                    AppChip(
-                        label = optionLabel,
-                        onClick = { onSelect(id) },
-                        enabled = interactive,
-                        selected = selected,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun AiCapabilitySetting(model: AiModelOption?) {
     val capabilities = model?.capabilities
     val labels = buildList {
@@ -522,7 +433,7 @@ private fun AiCapabilitySetting(model: AiModelOption?) {
         if (capabilities?.temperature == true) add(AppStrings.aiCapabilityTemperature)
         if (isEmpty()) add(AppStrings.aiCapabilityBasic)
     }
-    AiChoiceSetting(
+    AppSettingChoiceItem(
         emoji = "✨",
         label = AppStrings.aiSettingsModelCapabilities,
         options = labels.map { it to it },
