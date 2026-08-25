@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -40,6 +41,7 @@ fun SegmentedControl(
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     containerColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.containerColor(),
     selectedContainerColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.selectedContainerColor(),
     selectedContentColor: androidx.compose.ui.graphics.Color = AppSegmentedControlDefaults.selectedContentColor(),
@@ -55,7 +57,9 @@ fun SegmentedControl(
         modifier = modifier
             .clip(RoundedCornerShape(cornerRadius))
             .background(containerColor)
-            .padding(borderWidth),
+            .padding(borderWidth)
+            // 禁用态：整体降透明（与按钮/卡片 disabledAlpha 同语义）
+            .alpha(if (enabled) 1f else 0.38f),
     ) {
         labels.forEachIndexed { index, label ->
             val selected = index == selectedIndex
@@ -64,7 +68,7 @@ fun SegmentedControl(
                     .weight(1f)
                     .clip(RoundedCornerShape(innerCornerRadius))
                     .then(if (selected) Modifier.background(selectedContainerColor) else Modifier)
-                    .clickable { onSelect(index) }
+                    .clickable(enabled = enabled) { onSelect(index) }
                     .semantics {
                         // 无障碍：声明 Tab 角色与选中态，让 TalkBack 朗读"哪个段、选中与否"
                         role = Role.Tab

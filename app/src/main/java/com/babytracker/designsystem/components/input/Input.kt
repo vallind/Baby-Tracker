@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.input.InputDefaults
 import com.babytracker.designsystem.i18n.AppStrings
 
@@ -44,6 +45,8 @@ fun AppInput(
     errorMessage: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     leadingIcon: @Composable (() -> Unit)? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    suffix: String? = null,
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
@@ -63,17 +66,31 @@ fun AppInput(
         label = { androidx.compose.material3.Text(label) },
         placeholder = placeholder?.let { { androidx.compose.material3.Text(it) } },
         leadingIcon = leadingIcon,
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(onClick = { onPasswordToggle?.invoke() }) {
-                    Icon(
-                        if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+        // 密码开关优先（历史契约）；其余场景走通用尾槽（如清除按钮）
+        trailingIcon = when {
+            isPassword -> {
+                {
+                    AppIconButton(
+                        icon = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        onClick = { onPasswordToggle?.invoke() },
                         contentDescription = if (passwordVisible) AppStrings.hidePassword else AppStrings.showPassword,
-                        modifier = Modifier.size(iconSize),
+                        iconSize = iconSize,
                     )
                 }
             }
-        } else null,
+            trailingIcon != null -> trailingIcon
+            else -> null
+        },
+        // 单位后缀（如 ml/g），替代调用方手拼 Row 的旧模式
+        suffix = suffix?.let { unit ->
+            {
+                androidx.compose.material3.Text(
+                    unit,
+                    fontSize = fontSize,
+                    color = InputDefaults.placeholderColor(),
+                )
+            }
+        },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = singleLine,
         minLines = minLines,

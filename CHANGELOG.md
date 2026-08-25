@@ -37,6 +37,13 @@
 - `StatsScreen` 错误分支迁移至 AppErrorState（顺带消除「统计数据加载失败」「重新加载」两处硬编码中文 i18n 债）
 - docs/design-system.md 新增「内容状态四态书写约定」章节：Loading→SkeletonLoader/AppCard(loading)/AppCircularProgress、Empty→EmptyState、Error→AppErrorState、Success 不包装；轻提示（表单校验/snackbar）明确不使用该组件；禁止新增私有 *LoadingState/*ErrorState
 
+**C 批内容：输入系基座**
+
+- **`AppInput`**：新增通用 `trailingIcon` 槽（密码开关保持历史优先契约）与 `suffix` 单位后缀槽（替代喂养/生长表单手拼 Row 的旧模式）；内部密码开关由裸 M3 `IconButton`+`Icon` 换为自家 `AppIconButton`，消除组件层直用原生控件的孤例
+- **`SegmentedControl`**：补 `enabled` 轴——禁用时整体降透明（disabledAlpha 同语义）且段点击失效；选中态读屏语义维持 lessons #15 的 mergeDescendants 契约不变
+- 选择控件盘点结论：`AppCheckbox`/`AppRadioButton` 已有 `enabled` + size 令牌参数；`AppSwitch` 因 material3 1.4 的 Switch 公开参数不含尺寸项而不设 size 轴（与 AppFAB 同原则），三件套 disabled 视觉由 M3 内建
+- 输入框 variant 轴判定为取值集合为空不设轴（填充式是唯一产品形态，令牌已收敛）
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**
