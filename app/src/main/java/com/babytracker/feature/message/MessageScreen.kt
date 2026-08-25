@@ -26,12 +26,14 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.AppColorScale
+import com.babytracker.designsystem.theme.CategoryStripAccentColors
 import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
+import com.babytracker.designsystem.components.categorystrip.AppCategoryStrip
+import com.babytracker.designsystem.components.categorystrip.AppCategoryTab
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.card.CardColors
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
@@ -222,6 +224,9 @@ fun MessageScreen(
     )
 }
 
+// 分类统计条已收编为设计系统 AppCategoryStrip；MessageType ↔ key 映射留在 feature 私有层。
+private fun messageTypeKey(type: MessageType): String = type.name
+
 @Composable
 private fun CategoryOverviewBar(
     interactionUnread: Int,
@@ -231,69 +236,28 @@ private fun CategoryOverviewBar(
     onSelect: (MessageType) -> Unit,
 ) {
     val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = spacing.md, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        val unreadMap = mapOf(
-            MessageType.INTERACTION to interactionUnread,
-            MessageType.SYSTEM to systemUnread,
-            MessageType.SERVICE to serviceUnread,
-        )
-        categoryOverviews().forEachIndexed { i, cat ->
-            val unread = unreadMap[cat.type] ?: 0
-            val selected = selectedType == cat.type
-            AppCard(
-                modifier = Modifier.weight(1f),
-                onClick = { onSelect(cat.type) },
-                colors = CardColors(
-                    containerColor = if (selected) cat.bgColor else Color.Unspecified,
-                ),
-            ) {
-                Row(
-                    Modifier
-                        .padding(horizontal = 12.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column {
-                        Text(
-                            cat.emoji,
-                            style = LocalAppTypography.current.titleLarge,
-                        )
-                        Spacer(Modifier.height(spacing.xs))
-                        Text(
-                            cat.label,
-                            style = LocalAppTypography.current.bodyMedium,
-                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                            color = if (selected) cat.contentColor else c.textPrimary,
-                        )
-                    }
-                    if (unread > 0) {
-                        Box(
-                            Modifier
-                                .size(20.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (selected) cat.contentColor.copy(alpha = 0.3f) else c.danger,
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                if (unread > 99) "99+" else unread.toString(),
-                                style = LocalAppTypography.current.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (selected) cat.contentColor else c.onError,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
+    val unreadMap = mapOf(
+        MessageType.INTERACTION to interactionUnread,
+        MessageType.SYSTEM to systemUnread,
+        MessageType.SERVICE to serviceUnread,
+    )
+    val overviews = categoryOverviews()
+    AppCategoryStrip(
+        tabs = overviews.map { cat ->
+            AppCategoryTab(
+                key = messageTypeKey(cat.type),
+                emoji = cat.emoji,
+                label = cat.label,
+                badgeCount = unreadMap[cat.type] ?: 0,
+            )
+        },
+        selectedKey = selectedType?.let(::messageTypeKey),
+        onSelect = { key -> onSelect(MessageType.valueOf(key)) },
+        // 逐分类强调组保真源码：互动/系统=主色组，服务=次要色组
+        tabAccents = overviews.associate { cat ->
+            messageTypeKey(cat.type) to CategoryStripAccentColors(cat.bgColor, cat.contentColor)
+        },
+    )
 }
 
 @Composable

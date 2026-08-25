@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -457,21 +455,16 @@ private fun AiQuickAnalysisSection(
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(spacing.xs))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-        ) {
-            AiAnalysisPeriod.entries.forEach { period ->
-                val selected = state.analysisPeriod == period
-                AppChip(
-                    label = "${period.days} 天",
-                    onClick = { onSelectPeriod(period) },
-                    selected = selected,
-                )
-            }
-        }
+        // 周期枚举→(key,label) 映射留在 feature；横滚单选 chip 条复用 AppChipCarouselRow（G4 遗留项接线）
+        AppChipCarouselRow(
+            options = AiAnalysisPeriod.entries.map { period ->
+                AppChipSpec(key = period.name, label = "${period.days} 天")
+            },
+            selectedKey = state.analysisPeriod.name,
+            onSelect = { key ->
+                AiAnalysisPeriod.entries.firstOrNull { it.name == key }?.let(onSelectPeriod)
+            },
+        )
         Spacer(Modifier.height(spacing.sm))
         AiAnalysisRow(
             sources = listOf(AiAnalysisSource.SLEEP, AiAnalysisSource.FEEDING),

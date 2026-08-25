@@ -22,15 +22,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.babytracker.core.domain.model.Baby
 import com.babytracker.designsystem.theme.Gradients
-import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
+import com.babytracker.designsystem.theme.ScoreSelectorOptionColors
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
+import com.babytracker.designsystem.components.scoreselector.AppScoreSelector
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -82,14 +83,6 @@ private fun scoreColor(score: Int): Color {
         3 -> c.primary
         else -> c.textDisabled
     }
-}
-
-/** 选中评分格的内容色：与 chipColor 成对，避免硬编码白字 */
-private fun selectedScoreColor(c: AppColors, score: Int): Color = when (score) {
-    1 -> c.onWarning
-    2 -> c.onSuccess
-    3 -> c.onPrimary
-    else -> c.textPrimary
 }
 
 private fun abilityDescription(title: String, score: Int): String = when (title) {
@@ -434,6 +427,15 @@ private fun AssessmentFormDialog(
     }
 }
 
+// 评分选择条已收编为设计系统 AppScoreSelector；分数 Int ↔ key 映射与四档中文 label
+// 为本页存量私有映射，保留在 feature 层不动文案体系。
+private val SCORE_OPTIONS: List<Pair<String, String>> = listOf(
+    "0" to "未观察",
+    "1" to "落后",
+    "2" to "正常",
+    "3" to "超前",
+)
+
 @Composable
 private fun ScoreSelector(
     title: String,
@@ -443,56 +445,20 @@ private fun ScoreSelector(
     useAccent: Boolean,
 ) {
     val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    val tint = if (useAccent) c.warning else c.primary
-    val options = listOf(
-        0 to "未观察",
-        1 to "落后",
-        2 to "正常",
-        3 to "超前",
+    AppScoreSelector(
+        title = title,
+        icon = icon,
+        options = SCORE_OPTIONS,
+        selectedKey = selected.toString(),
+        onSelect = { key -> onSelect(key.toInt()) },
+        useAccent = useAccent,
+        subtitle = abilityDescription(title, selected),
+        // 四档各自语义色（未观察灰 / 落后琥珀 / 正常绿 / 超前蓝）——保真源码逐档配色
+        optionColors = mapOf(
+            "0" to ScoreSelectorOptionColors(c.textDisabled, c.textPrimary),
+            "1" to ScoreSelectorOptionColors(c.warning, c.onWarning),
+            "2" to ScoreSelectorOptionColors(c.success, c.onSuccess),
+            "3" to ScoreSelectorOptionColors(c.primary, c.onPrimary),
+        ),
     )
-    Column {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(shapes.large))
-                    .background(AppColorScale.fromSeed(tint).tintContainer(c)),
-                contentAlignment = Alignment.Center,
-            ) {
-                // 图标取强调前景档，与浅底形成层次
-                Icon(icon, contentDescription = title, tint = AppColorScale.fromSeed(tint).accentContent(c), modifier = Modifier.size(20.dp))
-            }
-            Spacer(Modifier.width(10.dp))
-            Column {
-                Text(title, style = LocalAppTypography.current.bodyLarge, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Text(abilityDescription(title, selected), style = LocalAppTypography.current.labelMedium, color = c.textSecondary)
-            }
-        }
-        Spacer(Modifier.height(spacing.sm))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            options.forEach { (value, label) ->
-                val isSelected = selected == value
-                val chipColor = scoreColor(value)
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(shapes.medium))
-                        // 选中=整档实底；未选中=浅底档（替代 alpha 叠加）
-                        .background(if (isSelected) chipColor else AppColorScale.fromSeed(chipColor).tintContainer(c))
-                        .clickable { onSelect(value) }
-                        .padding(vertical = spacing.sm),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        label,
-                        style = LocalAppTypography.current.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) selectedScoreColor(c, value) else c.textSecondary,
-                    )
-                }
-            }
-        }
-    }
 }

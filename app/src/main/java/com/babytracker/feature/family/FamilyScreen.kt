@@ -2,7 +2,6 @@ package com.babytracker.feature.family
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,7 +9,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Text
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.chip.AppChipCarouselRow
+import com.babytracker.designsystem.components.chip.AppChipSpec
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -177,6 +177,9 @@ fun FamilyScreen(
     )
 }
 
+// 本机数据档专用 key（与云端家庭 id 同轴参与单选；family.id 为服务端 String id，不会撞键）
+private const val LOCAL_MODE_KEY = "local"
+
 @Composable
 private fun FamilyModeSelector(
     families: List<Family>,
@@ -186,26 +189,23 @@ private fun FamilyModeSelector(
     onSelectFamily: (Family) -> Unit,
     onSelectLocal: () -> Unit,
 ) {
-    val spacing = LocalAppSpacing.current
-    Row(
-        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(spacing.sm),
-    ) {
+    // 模式选择条收编为 AppChipCarouselRow：「本机数据 · N」计数并入 label（key/label 装配留 feature 私有层）
+    val options = buildList {
         if (localCount > 0) {
-            AppFilterChip(
-                selected = localSelected,
-                onClick = onSelectLocal,
-                label = "本机数据 · $localCount",
-            )
+            add(AppChipSpec(key = LOCAL_MODE_KEY, label = "本机数据 · $localCount"))
         }
         families.forEach { family ->
-            AppFilterChip(
-                selected = !localSelected && currentFamily?.id == family.id,
-                onClick = { onSelectFamily(family) },
-                label = family.name,
-            )
+            add(AppChipSpec(key = family.id, label = family.name))
         }
     }
+    AppChipCarouselRow(
+        options = options,
+        selectedKey = if (localSelected) LOCAL_MODE_KEY else currentFamily?.id,
+        onSelect = { key ->
+            if (key == LOCAL_MODE_KEY) onSelectLocal()
+            else families.firstOrNull { it.id == key }?.let(onSelectFamily)
+        },
+    )
 }
 
 @Composable

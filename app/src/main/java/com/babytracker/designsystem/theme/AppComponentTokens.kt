@@ -1473,6 +1473,121 @@ data class CollapsedHeaderTokens(
     }
 }
 
+// —— 评分选择器（图标+标题头行 + 横向等宽分档选择条，自 feature/development/ScoreSelector 收编） ——
+/** 单档选中态颜色对：容器=实底档；未选中底由容器色作种子派生浅底档（与源实现一致） */
+@Immutable
+data class ScoreSelectorOptionColors(
+    val selectedContainer: Color,
+    val selectedContent: Color,
+)
+
+@Immutable
+data class ScoreSelectorTokens(
+    val accent: ScoreSelectorOptionColors,      // useAccent=true 轴（警示琥珀组）
+    val neutral: ScoreSelectorOptionColors,     // 默认品牌轴（主色组）
+    val unselectedContent: Color,               // 未选中档前景
+    val titleStyle: TextStyle,
+    val titleColor: Color,
+    val subtitleStyle: TextStyle,
+    val subtitleColor: Color,
+    val optionTextStyle: TextStyle,
+    val optionFontWeight: FontWeight,
+    val selectedOptionFontWeight: FontWeight,
+    // 几何取源码实测值：40dp 图标块 / 20dp 图标 / 图标↔标题列 10dp（存量事实标准收编）
+    val iconTileSize: Dp,
+    val iconTileCornerRadius: Dp,
+    val iconSize: Dp,
+    val headerGap: Dp,                          // 图标 ↔ 标题列
+    val optionsTopGap: Dp,                      // 头行 ↔ 选项行
+    val optionGap: Dp,                          // 选项横向间距
+    val optionCornerRadius: Dp,
+    val optionVerticalPadding: Dp,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): ScoreSelectorTokens = ScoreSelectorTokens(
+            accent = ScoreSelectorOptionColors(selectedContainer = colors.warning, selectedContent = colors.onWarning),
+            neutral = ScoreSelectorOptionColors(selectedContainer = colors.primary, selectedContent = colors.onPrimary),
+            unselectedContent = colors.textSecondary,
+            titleStyle = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+            titleColor = colors.textPrimary,
+            subtitleStyle = typography.labelMedium,
+            subtitleColor = colors.textSecondary,
+            optionTextStyle = typography.labelMedium,
+            optionFontWeight = FontWeight.Normal,
+            selectedOptionFontWeight = FontWeight.SemiBold,
+            iconTileSize = 40.dp,
+            iconTileCornerRadius = shapes.scaled(shapes.large),
+            iconSize = 20.dp,
+            headerGap = 10.dp,
+            optionsTopGap = spacing.sm,
+            optionGap = spacing.sm,
+            optionCornerRadius = shapes.scaled(shapes.medium),
+            optionVerticalPadding = spacing.sm,
+        )
+    }
+}
+
+// —— 分类统计条（emoji+标签+未读角标的分类卡横条，自 feature/message/CategoryOverviewBar 收编） ——
+/** 单分类选中态强调组：卡片选中实底 + 标签/角标选中前景 */
+@Immutable
+data class CategoryStripAccentColors(
+    val container: Color,
+    val content: Color,
+)
+
+@Immutable
+data class CategoryStripTokens(
+    val accent: CategoryStripAccentColors,      // 默认强调组（品牌主色组；调用方可按 tab key 覆盖）
+    val labelColor: Color,                      // 未选中标签前景
+    val badgeContainerColor: Color,             // 未选中角标底（危险红提醒）
+    val badgeContentColor: Color,               // 未选中角标前景
+    val selectedBadgeContainerAlpha: Float,     // 选中角标底 = content × alpha 半透明
+    // 几何取源码实测值：条纵边距 12dp / 卡距 10dp / 卡内边距横 12dp 纵 14dp / 角标 20dp 圆
+    val rowVerticalPadding: Dp,
+    val cardSpacing: Dp,
+    val innerHorizontalPadding: Dp,
+    val innerVerticalPadding: Dp,
+    val badgeSize: Dp,
+    val emojiLabelGap: Dp,
+    val emojiStyle: TextStyle,
+    val labelTextStyle: TextStyle,
+    val labelFontWeight: FontWeight,
+    val selectedLabelFontWeight: FontWeight,
+    val badgeTextStyle: TextStyle,
+    val badgeFontWeight: FontWeight,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            typography: AppTypography,
+            spacing: AppSpacing,
+        ): CategoryStripTokens = CategoryStripTokens(
+            accent = CategoryStripAccentColors(container = colors.primary, content = colors.onPrimary),
+            labelColor = colors.textPrimary,
+            badgeContainerColor = colors.danger,
+            badgeContentColor = colors.onError,
+            selectedBadgeContainerAlpha = 0.30f,
+            rowVerticalPadding = 12.dp,
+            cardSpacing = 10.dp,
+            innerHorizontalPadding = 12.dp,
+            innerVerticalPadding = 14.dp,
+            badgeSize = 20.dp,
+            emojiLabelGap = spacing.xs,
+            emojiStyle = typography.titleLarge,
+            labelTextStyle = typography.bodyMedium,
+            labelFontWeight = FontWeight.Medium,
+            selectedLabelFontWeight = FontWeight.SemiBold,
+            badgeTextStyle = typography.labelMedium,
+            badgeFontWeight = FontWeight.Bold,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1523,6 +1638,8 @@ data class AppComponentTokens(
     val chatBubble: ChatBubbleTokens,
     val chatInputBar: ChatInputBarTokens,
     val collapsedHeader: CollapsedHeaderTokens,
+    val scoreSelector: ScoreSelectorTokens,
+    val categoryStrip: CategoryStripTokens,
 ) {
     companion object {
         fun default(
@@ -1585,6 +1702,8 @@ data class AppComponentTokens(
             chatBubble = ChatBubbleTokens.default(colors, shapes, spacing),
             chatInputBar = ChatInputBarTokens.default(colors, spacing),
             collapsedHeader = CollapsedHeaderTokens.default(colors, typography, spacing),
+            scoreSelector = ScoreSelectorTokens.default(colors, shapes, typography, spacing),
+            categoryStrip = CategoryStripTokens.default(colors, typography, spacing),
         )
     }
 }
