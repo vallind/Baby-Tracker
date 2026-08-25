@@ -11,6 +11,7 @@ app/src/main/java/com/babytracker/
 ├── designsystem/                # 设计系统（主题令牌 + 可复用组件 + Hooks + i18n）
 │   ├── theme/                   # AppTokens（核心令牌）/ AppComponentTokens（组件令牌）/ AppDensity 密度体系 / Theme.kt
 │   ├── components/              # 可复用组件（29 个目录 + 根级组件，含 Defaults）
+│   ├── composites/              # 复合组件（2.4.0 G 批：AppMetricCard/AppChartContainer/AppInsightCard；参数领域无关，红线由边界审计守门）
 │   ├── hooks/                   # useDebounce/useState/useLatestState + Logic 类
 │   ├── i18n/                    # AppStrings
 │   ├── foundation/              # BorderContainer/CenterVerticallyRow
@@ -69,7 +70,7 @@ designsystem/
 | 核心令牌 | `designsystem/theme/AppTokens.kt` — AppColors(42字段)/Spacing/Shapes/Elevation/Opacity/Motion/Typography |
 | 组件令牌 | `designsystem/theme/AppComponentTokens.kt` — 37 种组件令牌（derive{} 部分覆盖为 TODO，未实现）；AppDensityTokens 为非组件令牌（见 design-system.md） |
 | 密度/无障碍 | `designsystem/theme/DensityController.kt` + `DensityPickerSheet`（`feature/settings/SettingsScreen.kt`）；`docs/a11y-baseline.md` |
-| 组件库 | `designsystem/components/`（29 个组件目录 + 根级组件，含 Defaults；badge/statcell/actionbar 为收敛批次新增） |
+| 组件库 | `designsystem/components/`（29 个组件目录 + 根级组件，含 Defaults；badge/statcell/actionbar 为收敛批次新增）；复合组件 `designsystem/composites/`（G 批） |
 | 国际化 | `designsystem/i18n/AppStrings.kt` |
 | Hooks/Logic | `designsystem/hooks/Hooks.kt` + `ButtonLogic.kt`/`FormLogic.kt`/`TableLogic.kt` |
 | 备份逻辑 | `core/backup/BackupManager.kt` |
