@@ -56,6 +56,14 @@
 - **影子组件收编**：`HomeScreen` 自写的三个 `animateIntAsState` 数字滚动改为消费 DS `animateNumber`
 - **守门规则⑦ `MotionHardcodedDuration`**（TokenAuditChecker 规则 7）：全树禁止 `tween(<字面量毫秒>)`，时长一律走 AppMotion 令牌；theme 桥接层豁免不变
 
+**G 批内容：composites 复合组件层（新建）**
+
+- 新建 `designsystem/composites/` 目录，与 components（原语）分层；红线「领域模型不入参」由既有 `DesignSystemBoundaryAuditTest` 自动覆盖（designsystem 全目录禁 import core/feature/koin）
+- **`AppMetricCard(emoji, title, accentColor, valueContent?, chart?, hasChartData, chartEmptyText?)`**：指标卡标准骨架——图标徽章+标题 | 右对齐自由数值列 | 图表槽+空态占位；内壳透传 AppCard variant
+- **`AppChartContainer(title?, trailingContent?, isEmpty, content)`**：无壳图表布局骨架（标题行+空态占位）
+- **`AppInsightCard(title, message, emoji?, actionLabel?, onAction?)`**：AI 洞察/建议卡通用形态
+- **收编示范**：StatsScreen 四胞胎（喂养/睡眠/身高/体重卡）全部改写为 AppMetricCard 组合，删除私有 StatCardFrame/StatCardIcon/StatChartArea 骨架三件套；StatsScreen 移出规则⑥白名单（存量白名单余 11 文件，后续批次继续消化）
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

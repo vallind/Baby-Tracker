@@ -36,6 +36,7 @@ import com.babytracker.designsystem.components.errorstate.AppErrorState
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.composites.metriccard.AppMetricCard
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.tintContainer
@@ -218,41 +219,30 @@ private fun FeedingCard(
     val typography = LocalAppTypography.current
     val showBreast = breastFeedCount > 0
     val showFormula = formulaCount > 0
-    StatCardFrame(modifier) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
-        ) {
-            Column {
-                StatCardIcon("🍼", c.danger)
-                Spacer(Modifier.height(spacing.sm))
-                Text("喂养", style = typography.labelMedium, color = c.textTertiary)
+    AppMetricCard(
+        emoji = "🍼",
+        title = "喂养",
+        accentColor = c.danger,
+        modifier = modifier,
+        valueContent = {
+            if (showBreast && showFormula) {
+                Text("母乳 ${breastFeedCount}次", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
+                Text("配方 ${formulaTotalMl}ml", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            } else if (showBreast) {
+                Text("母乳 ${breastFeedCount}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            } else if (showFormula) {
+                Text("配方 ${formulaTotalMl}ml", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            } else {
+                Text("${count}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
             }
-            Column(horizontalAlignment = Alignment.End) {
-                if (showBreast && showFormula) {
-                    Text("母乳 ${breastFeedCount}次", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                    Text("配方 ${formulaTotalMl}ml", style = typography.titleMedium, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                } else if (showBreast) {
-                    Text("母乳 ${breastFeedCount}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                } else if (showFormula) {
-                    Text("配方 ${formulaTotalMl}ml", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                } else {
-                    Text("${count}次", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                }
-                if (compare.isNotEmpty()) {
-                    StatCompareLabel(compare)
-                }
+            if (compare.isNotEmpty()) {
+                StatCompareLabel(compare)
             }
-        }
-        Spacer(Modifier.height(12.dp))
-        StatChartArea(
-            hasData = points.any { it > 0f },
-            emptyText = "本周期暂无喂养记录",
-        ) {
-            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.danger)
-        }
-    }
+        },
+        chart = { MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.danger) },
+        hasChartData = points.any { it > 0f },
+        chartEmptyText = "本周期暂无喂养记录",
+    )
 }
 
 @Composable
@@ -267,32 +257,21 @@ private fun SleepCard(
     val typography = LocalAppTypography.current
     val hours = minutes / 60
     val mins = minutes % 60
-    StatCardFrame(modifier) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
-        ) {
-            Column {
-                StatCardIcon("🌙", c.secondary)
-                Spacer(Modifier.height(spacing.sm))
-                Text("睡眠时长", style = typography.labelMedium, color = c.textTertiary)
+    AppMetricCard(
+        emoji = "🌙",
+        title = "睡眠时长",
+        accentColor = c.secondary,
+        modifier = modifier,
+        valueContent = {
+            Text("${hours}时${mins}分", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            if (compare.isNotEmpty()) {
+                StatCompareLabel(compare)
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text("${hours}时${mins}分", style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                if (compare.isNotEmpty()) {
-                    StatCompareLabel(compare)
-                }
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        StatChartArea(
-            hasData = points.any { it > 0f },
-            emptyText = "本周期暂无睡眠记录",
-        ) {
-            MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.secondary)
-        }
-    }
+        },
+        chart = { MiniBarChart(points, Modifier.fillMaxWidth().height(52.dp), barColor = c.secondary) },
+        hasChartData = points.any { it > 0f },
+        chartEmptyText = "本周期暂无睡眠记录",
+    )
 }
 
 @Composable
@@ -305,32 +284,21 @@ private fun HeightCard(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
-    StatCardFrame(modifier) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
-        ) {
-            Column {
-                StatCardIcon("📏", c.primary)
-                Spacer(Modifier.height(spacing.sm))
-                Text("身高增长", style = typography.labelMedium, color = c.textTertiary)
+    AppMetricCard(
+        emoji = "📏",
+        title = "身高增长",
+        accentColor = c.primary,
+        modifier = modifier,
+        valueContent = {
+            Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            if (compare.isNotEmpty()) {
+                StatCompareLabel(compare)
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                if (compare.isNotEmpty()) {
-                    StatCompareLabel(compare)
-                }
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        StatChartArea(
-            hasData = points.isNotEmpty(),
-            emptyText = "本周期暂无身高记录",
-        ) {
-            MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp))
-        }
-    }
+        },
+        chart = { MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp)) },
+        hasChartData = points.isNotEmpty(),
+        chartEmptyText = "本周期暂无身高记录",
+    )
 }
 
 @Composable
@@ -343,85 +311,21 @@ private fun WeightCard(
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
-    StatCardFrame(modifier) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top,
-        ) {
-            Column {
-                StatCardIcon("⚖️", c.success)
-                Spacer(Modifier.height(spacing.sm))
-                Text("体重增长", style = typography.labelMedium, color = c.textTertiary)
+    AppMetricCard(
+        emoji = "⚖️",
+        title = "体重增长",
+        accentColor = c.success,
+        modifier = modifier,
+        valueContent = {
+            Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
+            if (compare.isNotEmpty()) {
+                StatCompareLabel(compare)
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(value, style = typography.titleLarge, fontWeight = FontWeight.Bold, color = c.textPrimary)
-                if (compare.isNotEmpty()) {
-                    StatCompareLabel(compare)
-                }
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        StatChartArea(
-            hasData = points.isNotEmpty(),
-            emptyText = "本周期暂无体重记录",
-        ) {
-            MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp))
-        }
-    }
-}
-
-@Composable
-private fun StatChartArea(
-    hasData: Boolean,
-    emptyText: String,
-    content: @Composable () -> Unit,
-) {
-    val c = LocalAppColors.current
-    val typography = LocalAppTypography.current
-    if (hasData) {
-        content()
-    } else {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Text(emptyText, style = typography.labelMedium, color = c.textTertiary)
-        }
-    }
-}
-
-@Composable
-private fun StatCardFrame(
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    AppCard(
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(spacing.md), content = content)
-    }
-}
-
-@Composable
-private fun StatCardIcon(emoji: String, tint: Color, modifier: Modifier = Modifier) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    Box(
-        modifier
-            .size(spacing.xl)
-            .clip(CircleShape)
-            // 小尺寸圆形变体：仅底色收编分档浅底（40dp 标准形态请用 AppEmojiBadge）
-            .background(AppColorScale.fromSeed(tint).tintContainer(c)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(emoji, style = typography.titleMedium)
-    }
+        },
+        chart = { MiniLineChart(points, Modifier.fillMaxWidth().height(52.dp)) },
+        hasChartData = points.isNotEmpty(),
+        chartEmptyText = "本周期暂无体重记录",
+    )
 }
 
 @Composable

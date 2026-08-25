@@ -60,7 +60,6 @@ object TokenAuditChecker {
         "com/babytracker/feature/reminder/ReminderScreen.kt",
         "com/babytracker/feature/settings/SettingsComponents.kt",
         "com/babytracker/feature/sleep/SleepListScreen.kt",
-        "com/babytracker/feature/stats/StatsScreen.kt",
         "com/babytracker/feature/vaccination/VaccinationListScreen.kt",
     )
 
