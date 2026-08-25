@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import com.babytracker.designsystem.components.chip.AppOptionChipRow
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
+import com.babytracker.designsystem.components.datenav.appDateNavLabel
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
@@ -143,15 +144,7 @@ fun GrowthScreen(
                 )
             }
 
-            val dateLabel = remember(selectedDate, today) {
-                val md = selectedDate.format(DateTimeFormatter.ofPattern("M月d日"))
-                when {
-                    selectedDate == today -> "${AppStrings.today} · $md"
-                    selectedDate == today.minusDays(1) -> "${AppStrings.yesterday} · $md"
-                    selectedDate == today.plusDays(1) -> "${AppStrings.tomorrow} · $md"
-                    else -> md
-                }
-            }
+            val dateLabel = remember(selectedDate, today) { appDateNavLabel(selectedDate, today) }
 
             // 日期选择行（现代胶囊行）
             DateNavCapsule(

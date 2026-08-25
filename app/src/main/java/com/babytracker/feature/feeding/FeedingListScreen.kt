@@ -36,6 +36,7 @@ import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
+import com.babytracker.designsystem.components.datenav.appDateNavLabel
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
@@ -95,15 +96,7 @@ fun FeedingListScreen(
     }
 
     // 日期显示文本（简写：今天 · 8月23日，不再拼 ISO 日期）
-    val dateLabel = remember(selectedDate, today) {
-        val md = selectedDate.format(DateTimeFormatter.ofPattern("M月d日"))
-        when {
-            selectedDate == today -> "${AppStrings.today} · $md"
-            selectedDate == today.minusDays(1) -> "${AppStrings.yesterday} · $md"
-            selectedDate == today.plusDays(1) -> "${AppStrings.tomorrow} · $md"
-            else -> md
-        }
-    }
+    val dateLabel = remember(selectedDate, today) { appDateNavLabel(selectedDate, today) }
 
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },

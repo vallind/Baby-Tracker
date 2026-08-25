@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
+import com.babytracker.designsystem.components.datenav.appDateNavLabel
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
@@ -105,15 +106,7 @@ fun SleepListScreen(
     }
 
     // 日期显示文本（简写：今天 · 8月23日，不再拼 ISO 日期）
-    val dateLabel = remember(selectedDate, today) {
-        val md = selectedDate.format(DateTimeFormatter.ofPattern("M月d日"))
-        when {
-            selectedDate == today -> "${AppStrings.today} · $md"
-            selectedDate == today.minusDays(1) -> "${AppStrings.yesterday} · $md"
-            selectedDate == today.plusDays(1) -> "${AppStrings.tomorrow} · $md"
-            else -> md
-        }
-    }
+    val dateLabel = remember(selectedDate, today) { appDateNavLabel(selectedDate, today) }
 
     AppScaffold(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
