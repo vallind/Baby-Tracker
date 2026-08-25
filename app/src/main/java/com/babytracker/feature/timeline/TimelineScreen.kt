@@ -313,7 +313,7 @@ fun TimelineScreen(
                 )
                 types.forEach { (label, onSelect) ->
                     AppButton(
-                        variant = ButtonVariant.Text,
+                        variant = ButtonVariant.Ghost,
                         onClick = {
                             showTypePicker = false
                             onSelect()

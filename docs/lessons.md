@@ -360,3 +360,19 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
 **原因：** Paparazzi 的 layoutlib-runtime 只发布 x86_64 原生库，ByteBuddy 自附加在受限容器里同样失败，二者都与业务代码无关；新增 per-screen Paparazzi 测试时没有同步落实文档声称的排除机制，文档与实现漂移。
 
 **规则：** 平台限制类排除必须真实存在于构建脚本并覆盖全部相关测试类，禁止「只写文档不写代码」。错误写法：文档声明「aarch64 自动排除」但 build.gradle.kts 无对应逻辑；正确写法：`tasks.withType<Test>().configureEach { if (isArm64Host) exclude("**/*PaparazziTest*") }`。提交此类变更前 grep 构建脚本确认实现存在，并让 CHANGELOG 与实现一致。
+
+## 28. 审计器扫描源码原文：注释里复述违规模式会自我命中
+
+**现象：** B 批给 IconButtonDefaults 写 KDoc「禁止直接 import LocalAppColors（审计门禁）」后，themeTokenAudit 与 5 个静态审计测试全部转红，报 `DefaultsImportsLocalAppColors`——而文件实际 import 干净。
+
+**原因：** TokenAuditChecker/detekt 系守门规则按**源码原文**做文本/AST 匹配，不区分注释与代码；注释里出现与违规模式同构的字符串（如 `import.*LocalAppColors`、`Color(0xFF`）即命中。写注释时复述"错误示例"等于亲手制造违规。
+
+**规则：** 在被审计目录（components/feature 层）的源码注释中，禁止出现与审计正则同构的字符串；要说明禁令本身时用不含模式串的表述（如「颜色一律经组件令牌层派生」），或把示例放进检查器的白名单/测试夹具里。新增守门规则时同步自查：规则的 pattern 字符串不得出现在任何被扫描文件的注释中。
+
+## 29. 提交门禁必须依据退出码，不能依据输出内容匹配
+
+**现象：** `testDebugUnitTest ... | grep -E "FAILED|BUILD"` 出现 FAILED 行后仍继续执行了 git commit——grep 匹配到 "BUILD FAILED" 字符串即退出码 0，`&&` 链继续放行，坏提交入库。
+
+**原因：** shell 管道中 grep 的退出码只表示「是否匹配到」，不表达上游命令成败；用 grep 输出当构建结果判据会把失败当成功放行后续步骤。
+
+**规则：** 构建结果判定一律以 Gradle 退出码为准（`set -o pipefail` 或先跑构建看 `$?`/任务状态，再单独查看日志）；禁止把「grep 到 BUILD SUCCESSFUL 字样」作为放行 git commit 的条件。

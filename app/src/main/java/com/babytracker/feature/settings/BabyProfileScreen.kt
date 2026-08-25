@@ -188,13 +188,13 @@ fun BabyProfileScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 AppButton(
-                    variant = ButtonVariant.Text,
+                    variant = ButtonVariant.Ghost,
                     onClick = onOpenBabyManagement,
                     label = "管理全部宝宝",
                 )
                 Text("·", color = c.textTertiary, style = typography.bodyMedium)
                 AppButton(
-                    variant = ButtonVariant.Text,
+                    variant = ButtonVariant.Ghost,
                     onClick = { showEdit = true },
                     label = "编辑资料",
                 )

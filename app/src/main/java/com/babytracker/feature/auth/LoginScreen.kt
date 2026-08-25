@@ -139,7 +139,7 @@ fun LoginScreen(
                     Spacer(Modifier.height(spacing.xs))
 
                     AppButton(
-                        variant = ButtonVariant.Text,
+                        variant = ButtonVariant.Ghost,
                         onClick = onToggleMode,
                         label = if (state.isRegisterMode) AppStrings.toLogin else AppStrings.toRegister,
                     )

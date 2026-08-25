@@ -108,7 +108,7 @@ Design System 只负责 UI 的视觉、交互组件与 Design Token；Feature �
 
 ## 八、设计系统与 i18n
 
-- **必须<使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button`/`OutlinedButton`/`TextButton` → `AppButton`（variant 枚举 Primary/Secondary/Text），`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`HorizontalDivider` → `AppDivider`，`Surface` → `AppSurface`，`SnackbarHost` → `AppSnackbarHost`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
+- **必须<使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button`/`OutlinedButton`/`TextButton` → `AppButton`（variant 枚举 Primary/Tonal/Outline/Ghost/Danger），`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`HorizontalDivider` → `AppDivider`，`Surface` → `AppSurface`，`SnackbarHost` → `AppSnackbarHost`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
 - **DS 组件缺失时的决策路径**：
   1. 满足新增标准（见下）→ 新增组件，走完整流程并更新 `docs/design-system.md`
 - **新增组件流程**：判断标准 → 定义令牌 → 写 Defaults → 组件本体 → 注册到 `AppComponentTokens` → 更新 `docs/design-system.md`。

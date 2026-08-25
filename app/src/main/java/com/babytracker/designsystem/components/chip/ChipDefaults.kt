@@ -15,4 +15,7 @@ object ChipDefaults {
     @Composable fun verticalPadding(): Dp = LocalAppComponentTokens.current.chip.verticalPadding
     @Composable fun backgroundColor(): Color = LocalAppComponentTokens.current.chip.backgroundColor
     @Composable fun textColor(): Color = LocalAppComponentTokens.current.chip.textColor
+    // B 批交互胶囊：选中态颜色组
+    @Composable fun selectedContainerColor(): Color = LocalAppComponentTokens.current.chip.selectedContainerColor
+    @Composable fun selectedTextColor(): Color = LocalAppComponentTokens.current.chip.selectedTextColor
 }

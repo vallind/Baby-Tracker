@@ -5,7 +5,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -16,6 +15,9 @@ import com.babytracker.designsystem.components.fab.FabDefaults
 
 /**
  * 浮动操作按钮 — 对标 Palette FAB，消费 AppComponentTokens.fab
+ *
+ * 说明：material3 1.4 的 FAB 公开参数无 enabled（lessons #13 同源原则：先核对 API 再写），
+ * 交互轴暂不提供禁用态；Extended 形态由 label 参数承担，不再另设 variant 轴。
  *
  * 用法：
  *   AppFAB(icon = Icons.Default.Add, onClick = { showForm = true })

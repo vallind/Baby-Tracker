@@ -462,13 +462,9 @@ private fun AiChoiceSetting(
                     val selected = id == selectedId
                     AppChip(
                         label = optionLabel,
-                        backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
-                        textColor = if (selected) colors.onPrimary else colors.textSecondary,
-                        modifier = if (interactive) {
-                            Modifier.clickable { onSelect(id) }
-                        } else {
-                            Modifier
-                        },
+                        onClick = { onSelect(id) },
+                        enabled = interactive,
+                        selected = selected,
                     )
                 }
             }
@@ -575,7 +571,7 @@ private fun AiConfigStatusCard(state: AiSettingsUiState, onRefresh: () -> Unit) 
                 )
             }
             AppButton(
-                variant = ButtonVariant.Text,
+                variant = ButtonVariant.Ghost,
                 onClick = onRefresh,
                 label = AppStrings.aiRetry,
                 enabled = !state.isRefreshing,

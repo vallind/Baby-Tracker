@@ -21,6 +21,15 @@
 - docs/design-system.md 同步（组件速查、门禁表规则 6）
 - 版本号 2.3.1 → 2.4.0（波次起点；versionCode 48 不变，发布构建时递增）
 
+**B 批内容：按钮系三轴补全**
+
+- **`AppButton`**：type 轴补全 `Tonal`；`Secondary→Outline`、`Text→Ghost` 改名对齐完整语义（全站 20 处枚举调用点同步迁移）；新增 `loading`（转圈替代前导图标、锁交互）与 `selected`（Outline/Ghost/Tonal 主色高亮）交互轴；`ButtonTokens` 增 tonal 颜色组
+- **`AppIconButton`**：新增 `variant` 轴 Standard/Filled/Tonal/Outlined（M3 实名 `FilledTonalIconButton`）+ `enabled`；`IconButtonTokens` 增四组颜色字段，带底形态容器尺寸随图标令牌派生
+- **Chip 家族职责切分**：`AppTag`=静态语义标签（5 色变体不变）；`AppChip`=交互胶囊，新增 `onClick/enabled/selected` 轴，选中实心高亮走令牌颜色组——4 处「clickable-modifier + 手写条件色」样板收敛至新轴
+- **`AppFAB`**：核对 material3 1.4 公开 API 后确认 FAB 无 `enabled` 参数（lessons #13 同源原则），Extended 形态由 `label` 参数承担、不另设 variant 轴（KDoc 说明理由）
+- Tonal 语义统一取色 `secondaryScale.shade100/shade600`（AppColors 为自建分档体系，无 M3 secondaryContainer 字段可直引）
+- AGENTS.md / docs/design-system.md 枚举描述同步；lessons 新增 #28（审计注释自命中）、#29（提交门禁看退出码）
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

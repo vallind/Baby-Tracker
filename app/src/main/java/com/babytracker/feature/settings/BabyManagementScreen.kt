@@ -136,7 +136,7 @@ fun BabyManagementScreen(
                             }
                             if (!isCurrent) {
                                 AppButton(
-                                    variant = ButtonVariant.Text,
+                                    variant = ButtonVariant.Ghost,
                                     onClick = { onSelectBaby(b.id) },
                                     label = "切换",
                                 )
@@ -149,7 +149,7 @@ fun BabyManagementScreen(
                 if (deletedBabies.isNotEmpty()) {
                     Spacer(Modifier.height(spacing.md))
                     AppButton(
-                        variant = ButtonVariant.Text,
+                        variant = ButtonVariant.Ghost,
                         onClick = { showDeleted = !showDeleted },
                         label = "已删除的宝宝 (${deletedBabies.size}) ${if (showDeleted) "▲" else "▼"}",
                     )
@@ -169,7 +169,7 @@ fun BabyManagementScreen(
                                         Text("已删除", style = LocalAppTypography.current.labelSmall, color = c.textTertiary)
                                     }
                                     AppButton(
-                                        variant = ButtonVariant.Text,
+                                        variant = ButtonVariant.Ghost,
                                         onClick = { onRestore(b) },
                                         label = "恢复",
                                     )

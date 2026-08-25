@@ -1,6 +1,7 @@
 package com.babytracker.designsystem.components.chip
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,15 +23,24 @@ import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
 
 /**
- * 标签组件 — 对标 Palette Tag/Chip 组件，消费 AppComponentTokens.chip
+ * 交互胶囊组件 — 对标 Palette Tag/Chip 组件，消费 AppComponentTokens.chip
+ *
+ * 家族职责切分（B 批收敛）：静态语义标签用 AppTag；可点选择胶囊用 AppChip。
+ *
+ * 三轴：selected（选中实心高亮，颜色组走令牌）× onClick/enabled（交互轴）
+ *      × backgroundColor/textColor（未选中态覆盖逃生口，历史 API 保持兼容）。
  *
  * 用法：
- *   AppChip("已完成")
- *   AppChip("进行中", backgroundColor = Color.Green.copy(alpha = 0.12f), textColor = Color.Green)
+ *   AppChip("已完成")                                          // 静态展示
+ *   AppChip("7 天", selected = isSel, onClick = { pick(7) })   // 选择胶囊
  */
 @Composable
 fun AppChip(
     label: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    enabled: Boolean = true,
+    selected: Boolean = false,
     backgroundColor: Color = ChipDefaults.backgroundColor(),
     textColor: Color = ChipDefaults.textColor(),
     cornerRadius: Dp = ChipDefaults.cornerRadius(),
@@ -38,16 +48,23 @@ fun AppChip(
     fontWeight: FontWeight = ChipDefaults.fontWeight(),
     horizontalPadding: Dp = ChipDefaults.horizontalPadding(),
     verticalPadding: Dp = ChipDefaults.verticalPadding(),
-    modifier: Modifier = Modifier,
 ) {
+    // 选中态优先走令牌颜色组；未选中回落调用方覆盖或默认令牌
+    val bg = if (selected) ChipDefaults.selectedContainerColor() else backgroundColor
+    val fg = if (selected) ChipDefaults.selectedTextColor() else textColor
+    val interactiveModifier = if (onClick != null && enabled) {
+        modifier.clickable(onClick = onClick)
+    } else {
+        modifier
+    }
     Text(
         label,
-        color = textColor,
+        color = fg,
         fontSize = fontSize,
         fontWeight = fontWeight,
-        modifier = modifier
+        modifier = interactiveModifier
             .clip(RoundedCornerShape(cornerRadius))
-            .background(backgroundColor)
+            .background(bg)
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
     )
 }

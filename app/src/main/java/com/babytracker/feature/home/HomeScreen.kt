@@ -473,7 +473,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                     fontWeight = FontWeight.SemiBold,
                     color = c.textPrimary,
                 )
-                AppButton(variant = ButtonVariant.Text, onClick = onSeeAll, label = AppStrings.viewAll)
+                AppButton(variant = ButtonVariant.Ghost, onClick = onSeeAll, label = AppStrings.viewAll)
             }
             Spacer(Modifier.height(spacing.sm))
             val recentItems = items.take(5)

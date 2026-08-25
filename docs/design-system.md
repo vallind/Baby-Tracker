@@ -84,7 +84,7 @@ AppCard(                                            // 统一卡片基座（三�
                                                     // colors = CardColors(...) 为整体覆盖逃生口（勿滥用）
                                                     // feature 层禁止再定义私有 *Card（审计规则 6 守门）
 AppTopBar(title = "标题", onBack = { ... })       // 替代 CenterAlignedTopAppBar
-AppButton(label = "保存", onClick = { ... }, variant = ButtonVariant.Secondary) // 统一按钮（Primary/Secondary/Text/Danger 变体 + size 档位；Batch 5 起为语义 API，禁止裸 token 覆盖，审计测试守门）
+AppButton(label = "保存", onClick = { ... }, variant = ButtonVariant.Outline) // 统一按钮（Primary/Tonal/Outline/Ghost/Danger 变体 + size + loading/selected 态；Batch 5 起语义 API，禁止裸 token 覆盖，审计守门）
 AppDivider(thickness = 0.5.dp)                      // 分割线（替代 HorizontalDivider）
 AppSurface { ... }                                  // 表面容器（替代 M3 Surface，可选 color/shape）
 AppSnackbarHost(hostState)                          // 全局提示宿主（替代 M3 SnackbarHost）

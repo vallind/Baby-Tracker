@@ -445,9 +445,8 @@ private fun AiQuickAnalysisSection(
                 val selected = state.analysisPeriod == period
                 AppChip(
                     label = "${period.days} 天",
-                    backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
-                    textColor = if (selected) colors.onPrimary else colors.textSecondary,
-                    modifier = Modifier.clickable { onSelectPeriod(period) },
+                    onClick = { onSelectPeriod(period) },
+                    selected = selected,
                 )
             }
         }
@@ -578,7 +577,7 @@ private fun AiAnalysisContextBar(
                 )
             }
             AppButton(
-                variant = ButtonVariant.Text,
+                variant = ButtonVariant.Ghost,
                 onClick = onRemove,
                 label = AppStrings.aiAnalysisRemove,
                 enabled = canRemove,
@@ -733,7 +732,7 @@ private fun AiModelSelector(
                     modifier = Modifier.weight(1f),
                 )
                 if (state.prerequisite == AiChatPrerequisite.CONFIG_UNAVAILABLE) {
-                    AppButton(variant = ButtonVariant.Text, onClick = onRefresh, label = AppStrings.aiRetry)
+                    AppButton(variant = ButtonVariant.Ghost, onClick = onRefresh, label = AppStrings.aiRetry)
                 }
             }
             else -> Row(
@@ -746,9 +745,8 @@ private fun AiModelSelector(
                     val selected = option.id == state.selectedOptionId
                     AppChip(
                         label = option.name,
-                        backgroundColor = if (selected) colors.primary else colors.surfaceElevated,
-                        textColor = if (selected) colors.onPrimary else colors.textSecondary,
-                        modifier = Modifier.clickable { onSelect(option.id) },
+                        onClick = { onSelect(option.id) },
+                        selected = selected,
                     )
                 }
             }
@@ -784,11 +782,10 @@ private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
             ).forEach { question ->
                 AppChip(
                     label = question,
+                    onClick = { onQuestion(question) },
                     backgroundColor = AppColorScale.fromSeed(colors.primary).tintContainer(colors),
                     textColor = colors.textPrimary,
-                    modifier = Modifier
-                        .padding(bottom = spacing.sm)
-                        .clickable { onQuestion(question) },
+                    modifier = Modifier.padding(bottom = spacing.sm),
                 )
             }
         }
@@ -864,7 +861,7 @@ private fun AiMessageBubble(
                 if (!isUser && !isStreaming && message.content.isNotBlank()) {
                     Spacer(Modifier.height(spacing.sm))
                     AppButton(
-                        variant = ButtonVariant.Text,
+                        variant = ButtonVariant.Ghost,
                         onClick = { answerBasisExpanded = !answerBasisExpanded },
                         label = if (answerBasisExpanded) {
                             AppStrings.aiHideAnswerBasis
@@ -877,18 +874,18 @@ private fun AiMessageBubble(
                     }
                     Row {
                         AppButton(
-                            variant = ButtonVariant.Text,
+                            variant = ButtonVariant.Ghost,
                             onClick = { onCopy(message.content) },
                             label = AppStrings.aiCopy,
                         )
                         if (canRevise) {
                             AppButton(
-                                variant = ButtonVariant.Text,
+                                variant = ButtonVariant.Ghost,
                                 onClick = onEditQuestion,
                                 label = AppStrings.aiEditQuestion,
                             )
                             AppButton(
-                                variant = ButtonVariant.Text,
+                                variant = ButtonVariant.Ghost,
                                 onClick = onRegenerate,
                                 label = AppStrings.aiRegenerate,
                             )
@@ -958,7 +955,7 @@ private fun AiReasoningBlock(
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
     AppButton(
-        variant = ButtonVariant.Text,
+        variant = ButtonVariant.Ghost,
         onClick = { expanded = !expanded },
         label = when {
             isStreaming -> AppStrings.aiThinking
@@ -1068,7 +1065,7 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
     ) {
         Text(message, style = typography.bodyMedium, color = colors.error, modifier = Modifier.weight(1f))
         if (canRetry) {
-            AppButton(variant = ButtonVariant.Text, onClick = onRetry, label = AppStrings.aiRetry)
+            AppButton(variant = ButtonVariant.Ghost, onClick = onRetry, label = AppStrings.aiRetry)
         }
     }
 }

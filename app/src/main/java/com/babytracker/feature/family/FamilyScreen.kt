@@ -230,7 +230,7 @@ private fun LocalDataView(
                 Spacer(Modifier.height(spacing.md))
                 families.forEach { family ->
                     AppButton(
-                        variant = ButtonVariant.Secondary,
+                        variant = ButtonVariant.Outline,
                         onClick = { onMigrate(family) },
                         label = "归入 ${family.name}",
                         modifier = Modifier.fillMaxWidth().padding(vertical = spacing.xs),
@@ -260,7 +260,7 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
             )
             Spacer(Modifier.height(spacing.lg))
             Row(horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
-                AppButton(variant = ButtonVariant.Secondary, onClick = onJoinClick, label = AppStrings.familyJoin, icon = Icons.Default.GroupAdd)
+                AppButton(variant = ButtonVariant.Outline, onClick = onJoinClick, label = AppStrings.familyJoin, icon = Icons.Default.GroupAdd)
                 AppButton(onClick = onCreateClick, label = AppStrings.familyCreate, icon = Icons.Default.Add)
             }
         }
@@ -319,7 +319,7 @@ private fun FamilyDetailView(
                     Text(family.inviteCode, style = typography.titleLarge, letterSpacing = 4.sp, color = c.primary)
                 }
                 AppButton(
-                    variant = ButtonVariant.Text,
+                    variant = ButtonVariant.Ghost,
                     onClick = {
                         val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                         clipboard.setPrimaryClip(android.content.ClipData.newPlainText("invite", family.inviteCode))
@@ -386,7 +386,7 @@ private fun FamilyDetailView(
 
     // 操作按钮
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-        AppButton(variant = ButtonVariant.Secondary, onClick = onJoinClick, label = "加入新家庭", icon = Icons.Default.GroupAdd, modifier = Modifier.weight(1f))
-        AppButton(variant = ButtonVariant.Secondary, onClick = onCreateClick, label = "创建新家庭", icon = Icons.Default.Add, modifier = Modifier.weight(1f))
+        AppButton(variant = ButtonVariant.Outline, onClick = onJoinClick, label = "加入新家庭", icon = Icons.Default.GroupAdd, modifier = Modifier.weight(1f))
+        AppButton(variant = ButtonVariant.Outline, onClick = onCreateClick, label = "创建新家庭", icon = Icons.Default.Add, modifier = Modifier.weight(1f))
     }
 }

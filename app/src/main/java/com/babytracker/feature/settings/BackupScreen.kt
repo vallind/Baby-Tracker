@@ -127,7 +127,7 @@ fun BackupScreen(
                     }
                     Spacer(Modifier.height(spacing.md))
                     AppButton(
-                        variant = ButtonVariant.Secondary,
+                        variant = ButtonVariant.Outline,
                         onClick = { dirPicker.launch(null) },
                         label = "选择目录",
                         icon = Icons.Default.FolderOpen,
@@ -171,7 +171,7 @@ fun BackupScreen(
                     }
                     Spacer(Modifier.height(spacing.md))
                     if (!showWebDAV) {
-                        AppButton(variant = ButtonVariant.Secondary, onClick = { showWebDAV = true }, label = "配置 WebDAV", modifier = Modifier.fillMaxWidth())
+                        AppButton(variant = ButtonVariant.Outline, onClick = { showWebDAV = true }, label = "配置 WebDAV", modifier = Modifier.fillMaxWidth())
                     } else {
                         AppInput(value = state.webdavUrl, onValueChange = onWebdavUrlChange, label = "服务器地址", modifier = Modifier.fillMaxWidth())
                         Spacer(Modifier.height(spacing.sm))
@@ -180,7 +180,7 @@ fun BackupScreen(
                         AppInput(value = state.webdavPass, onValueChange = onWebdavPassChange, label = "密码", modifier = Modifier.fillMaxWidth(), isPassword = true)
                         Spacer(Modifier.height(spacing.md))
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                            AppButton(variant = ButtonVariant.Secondary, onClick = onSaveWebdav, label = "保存", modifier = Modifier.weight(1f))
+                            AppButton(variant = ButtonVariant.Outline, onClick = onSaveWebdav, label = "保存", modifier = Modifier.weight(1f))
                             AppButton(onClick = onCreateWebdavBackup, label = "备份", modifier = Modifier.weight(1f))
                             AppButton(onClick = { showWebdavRestoreConfirm = true }, label = "恢复", modifier = Modifier.weight(1f))
                         }

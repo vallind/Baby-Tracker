@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 //  - TODO: 支持 derive {} 部分覆盖（TT-032）
 // ═══════════════════════════════════════════════════════════
 
-// —— TT-017 按钮 ——
+// —— TT-017 按钮（B 批：type 轴补全 Tonal，Text→Ghost、Secondary→Outline 改名对齐完整语义）——
 @Immutable
 data class ButtonTokens(
     val height: Dp,
@@ -34,8 +34,10 @@ data class ButtonTokens(
     val disabledContainerColor: Color,
     val disabledContentColor: Color,
     val disabledAlpha: Float,
-    val secondaryContentColor: Color,   // Secondary 变体内容色（描边色）
-    val textContentColor: Color,        // Text 变体内容色
+    val tonalContainerColor: Color,     // Tonal 变体容器色（次级容器底）
+    val tonalContentColor: Color,       // Tonal 变体内容色
+    val secondaryContentColor: Color,   // Outline 变体内容色（描边色）
+    val textContentColor: Color,        // Ghost 变体内容色
     val dangerContainerColor: Color,    // Danger 变体容器色（破坏性操作，如删除）
     val dangerContentColor: Color,      // Danger 变体内容色
 ) {
@@ -57,6 +59,8 @@ data class ButtonTokens(
             disabledContainerColor = colors.bgDisabled,
             disabledContentColor = colors.textDisabled,
             disabledAlpha = opacity.disabled,
+            tonalContainerColor = colors.secondaryScale.shade100,
+            tonalContentColor = colors.secondaryScale.shade600,
             secondaryContentColor = colors.primary,
             textContentColor = colors.primary,
             dangerContainerColor = colors.danger,
@@ -618,6 +622,8 @@ data class ChipTokens(
     val verticalPadding: Dp,
     val backgroundColor: Color,
     val textColor: Color,
+    val selectedContainerColor: Color,   // B 批交互胶囊：选中底
+    val selectedTextColor: Color,        // B 批交互胶囊：选中前景
 ) {
     companion object {
         fun default(
@@ -632,6 +638,8 @@ data class ChipTokens(
             verticalPadding = 6.dp,
             backgroundColor = colors.surfaceElevated,
             textColor = colors.primary,
+            selectedContainerColor = colors.primary,
+            selectedTextColor = colors.onPrimary,
         )
     }
 }
@@ -733,6 +741,13 @@ data class ListItemTokens(
 data class IconButtonTokens(
     val iconSize: Dp,
     val tintColor: Color,
+    // B 批 variant 轴：Filled/Tonal/Outlined 三种带底形态的颜色组（Standard 无底沿用 tintColor）
+    val filledContainerColor: Color,
+    val filledContentColor: Color,
+    val tonalContainerColor: Color,
+    val tonalContentColor: Color,
+    val outlinedContentColor: Color,
+    val outlinedBorderColor: Color,
 ) {
     companion object {
         fun default(
@@ -741,6 +756,12 @@ data class IconButtonTokens(
         ): IconButtonTokens = IconButtonTokens(
             iconSize = control.medium.iconSize,
             tintColor = colors.primary,
+            filledContainerColor = colors.primary,
+            filledContentColor = colors.onPrimary,
+            tonalContainerColor = colors.secondaryScale.shade100,
+            tonalContentColor = colors.secondaryScale.shade600,
+            outlinedContentColor = colors.textSecondary,
+            outlinedBorderColor = colors.outline,
         )
     }
 }
