@@ -85,6 +85,12 @@
 - `foundation/layout` 新增 **`AppRow` / `AppColumn`**：子项间距默认走 spacing.md 令牌，替代各页 `Arrangement.spacedBy(…)` 手写样板；AppRow 支持 `wrap = true` 自动换行（FlowRow，标签组/筛选组场景）
 - 页面组件盘点结论：**`AppScaffold` 已是页面骨架本体**（M3 Scaffold + pageBackground 令牌 + topBar/bottomBar/fab/snackbarHost 四槽），Palette 的 Screen 形态已由它覆盖，不重复造 AppPage；分区标题 SectionHeader 槽位已在 D 批补齐
 
+**docs 批内容：文档收敛**
+
+- 删除 `docs/` 全部 9 篇文档（architecture / data-architecture / sync-architecture / room-supabase-architecture / design-system / a11y-baseline / project-structure / refactor-p0-p1-plan / lessons），不再维护与代码平行的派生文档，消除漂移源
+- `AGENTS.md` 重写为唯一 agent 规范入口：分层依赖红线（静态审计守门规则）、设计系统 / 数据库与同步 / AI 模块约定、测试与提交纪律由单文件承载，内容以当前代码为准
+- README 与代码注释中指向已删文档的活引用改为指向 AGENTS.md 或就地删除；CHANGELOG 历史条目保留原貌不改写
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

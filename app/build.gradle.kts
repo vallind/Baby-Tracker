@@ -132,14 +132,14 @@ ksp {
 // —— Detekt 静态分析（配置见 config/detekt/detekt.yml）——
 detekt {
     config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-    // detekt 门禁（report-only，不阻断）：存量债务登记见 docs/design-system.md 与 CHANGELOG
+    // detekt 门禁（report-only，不阻断）：存量债务登记见 AGENTS.md 与 CHANGELOG
     // 不用 buildUponDefaultConfig：全量默认规则在 Termux 上分析过慢（>20 分钟），
     // 改用显式枚举规则（见 config/detekt/detekt.yml 注释，实测 ~9 秒）
     ignoreFailures = true
 }
 
 // —— Paparazzi 截图测试在 aarch64 宿主自动排除（layoutlib-runtime 仅发布 x86_64 原生库）——
-// 执行 docs/design-system.md「Paparazzi 平台限制」的既定意图：本机保持 testDebugUnitTest 全绿；
+// 执行「Paparazzi 平台限制」的既定意图（环境备注见 AGENTS.md 第 2 节）：本机保持 testDebugUnitTest 全绿；
 // ByteBuddy 自附加失败是受限容器环境问题，与业务代码无关。x86_64 机器不受影响（截图任务照常可跑）
 val isArm64Host = System.getProperty("os.arch")?.lowercase()?.let {
     it.contains("aarch64") || it.contains("arm64")

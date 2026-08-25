@@ -22,7 +22,7 @@ import com.babytracker.designsystem.theme.LocalAppColors
  *
  * 底色取语义色分档浅底（亮色 shade100 / 暗色 shade800），替代此前散落各页的
  * `color.copy(alpha = 0.12f)` 现场调色。emoji 为装饰性内容，对读屏静默，
- * 语义由所在行的文本承担（见 docs/a11y-baseline.md 装饰隔离约定）。
+ * 语义由所在行的文本承担。
  *
  * twoTone：双色底（左右对半），用于同时表达两类属性的场景（如尿布「混合」= 青/琥珀），
  * 传入后忽略 tint 的单一浅底。

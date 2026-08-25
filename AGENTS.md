@@ -1,165 +1,85 @@
-# AGENTS.md — AI 工作说明书
+# AGENTS.md
 
-> ⚠️ 任务前必须读取 [docs/lessons.md](docs/lessons.md)，确认无相关教训后再动手。
->
-> 核心理念：先想清楚再动代码，改完只擦自己的屁股。
->
-> 本文件只放代码库无法推导的约定（规则、坑、rationale）。目录结构等可自行从代码读取的信息见 `docs/project-structure.md`，不在此重复，避免漂移。
+本文件是本仓库的唯一 agent 规范入口（`CLAUDE.md` 指向此处）。内容以当前代码为准，改动后请同步更新本文。
 
----
+## 1. 项目概览
 
-## 一、项目概览
+Android 原生宝宝护理记录 App。单 module（`:app`）+ 自定义 detekt 规则模块（`:detekt-rules`），Jetpack Compose + Material 3，MVVM + Koin + Room + Supabase 家庭云同步。
 
-Android 原生宝宝护理记录 App（Baby Tracker）。Jetpack Compose + Material 3，MVVM + Koin + Room + Supabase 同步。
+| 维度 | 选型（版本见 `gradle/libs.versions.toml`） |
+|---|---|
+| 构建 | Gradle 9.7.1 · AGP 9.3.1 · Kotlin 2.4.10 · KSP 2.3.11 · Java 17 |
+| 目标 | compileSdk/targetSdk 36 · minSdk 24 · versionName 2.4.0 · versionCode 48 |
+| UI | Compose BOM + Material 3 · Navigation Compose 2.9.1（类型安全 @Serializable 路由） |
+| DI / 异步 | Koin 4.2.1 · Coroutines + Flow · WorkManager |
+| 数据 | Room 2.8.4（exportSchema 开启）· DataStore · kotlinx-serialization |
+| 云 | Supabase BOM 3.6.0（PostgREST/Realtime/Auth/Storage）· Edge Function `supabase/functions/ai-bootstrap` |
+| 网络 | Retrofit 3.0.0 + OkHttp 5.4.0（WebDAV 备份）· Coil 2.7.0 |
+| 质量 | detekt 1.23.8（含自定义规则）· Paparazzi 截图测试 · JUnit4 |
 
-分层：`designsystem`（设计系统）/ `core`（数据库、DI、备份、同步引擎、AI、工具）/ `feature`（业务模块）/ `navigation`（路由）。模块索引与路由见 `docs/project-structure.md`。
-
-### 核心架构（三层原则，不增层）
-
-Design System 只负责 UI 的视觉、交互组件与 Design Token；Feature 负责页面状态、用户行为和业务流程；Repository 负责数据访问。Navigation 只是"页面之间怎么走"的胶水，不是第四层业务架构；DI/Koin 是基础设施，同样不算一层。
-
-**架构十原则（违反即架构错误）：**
-
-```text
-1. Design System 只负责 UI 的视觉、交互组件和 Design Token。
-2. Design System 不知道 Feature、Repository、Navigation、Koin。
-3. Feature 负责页面状态、用户行为和业务流程。
-4. Screen 是 UI 渲染层，不直接访问 Repository、Koin、NavController。
-5. ViewModel 负责业务状态和 Repository 调用，不持有 UI lambda，不持有 NavController。
-6. Route 是组合根，只负责 DI、ViewModel 装配和 Navigation 映射，不承载业务逻辑（当前实体/参数解析、数据加载进 ViewModel）。
-7. Repository 负责数据访问；Feature 只依赖 Repository 契约（interface），不直接依赖具体实现/数据源。
-8. Navigation 是 App 胶水，不建立额外的全局导航抽象。
-9. UI 临时状态留在 Screen（刷新后不需要存在的状态）；业务状态进入 ViewModel（刷新后仍应存在的状态）。
-10. 除非真实复杂度证明必要，否则不增加架构层。
-```
-
-**Feature 默认模板**：`feature/<x>/` 默认 Route（组合根）/ Screen（纯 UI）/ ViewModel（业务）三文件，`UiState` 与 ViewModel 同文件；**三文件是默认形态，不是死规则**——仅当真实复杂度出现时才增加文件。Repository 契约保持薄接口（`observeByBaby`/`insert`/`update`/`delete`），不包 UseCase/Service 壳。ViewModel 按职责拆分（是否存在多个互不相关的状态生命周期），行数只是警戒线不是规则。
-
-## 二、开发命令
+## 2. 常用命令
 
 ```bash
-./gradlew assembleDebug          # 编译（每次改动后必跑）
-./gradlew testDebugUnitTest      # 单元测试（每次改动后必跑，全绿才算完成）
-./gradlew assembleRelease        # 发布构建（R8 + 资源压缩）
-./gradlew lint                   # Lint（改动涉及 Compose/资源/Manifest/API 时跑）
+./gradlew assembleDebug        # 构建调试包
+./gradlew testDebugUnitTest    # JVM 单元测试 —— 任何改动后必跑，全绿才算完成
+./gradlew themeTokenAudit      # 令牌化静态审计（TokenAuditChecker，违规 exit 1）
+./gradlew detekt               # 静态分析（config/detekt/detekt.yml）
+./gradlew lint                 # Android Lint
+./gradlew assembleRelease      # 发布包（R8 + 资源压缩）
 ```
 
-## 三、AI 工作流四大准则
+- detekt 配置为 report-only（`ignoreFailures = true`）：不阻断构建，但必须人工查看报告，不得对新增违规视而不见。
+- Paparazzi 截图测试在 aarch64 宿主被自动排除（`app/build.gradle.kts` 按 `os.arch` 过滤）；x86_64 上照常执行。
 
-### 1. 先想再说，不猜
+## 3. 分层架构与依赖红线
 
-- 动手前**明确陈述理解**。有歧义列出所有可能解释，让你选。
-- 如果存在更简单的方案，敢于**向上建言**。
-- **"不清楚"的判定边界**：改动触碰数据模型、同步链路、跨模块共享 API、数据库 schema → **必须请示**；纯 UI 文案/间距/颜色/布局调整 → 直接干。
-- 落在请示范围内的歧义，**立即停止**，等你澄清。
+```
+app/src/main/java/com/babytracker/
+├── designsystem/   # 纯 UI 层：theme 令牌 / components / composites / i18n(AppStrings) / hooks
+├── core/           # 基础设施：ai / auth / backup / database / data(repository) / di / domain /
+│                   #   settings(DataStore) / sync / util
+├── feature/        # 业务模块 ×16：home feeding sleep diaper growth vaccination health stats
+│                   #   timeline message development reminder settings ai auth family
+└── navigation/     # AppNavigation.kt：类型安全路由集中定义
+```
 
-### 2. 简单优先，不堆料
+依赖方向只允许 `feature → core`、`feature → designsystem`、`core → designsystem`（如需）。以下红线由静态审计测试自动守门：
 
-- 只写解决**当前问题**的最少代码。不做超前设计。
+1. **designsystem 是纯 UI 层**：禁止 import `core` / `feature` / `navigation` / `androidx.navigation` / `org.koin`（`DesignSystemBoundaryAuditTest`）。UI 长什么样它负责；业务、数据、导航、DI 一概不知。
+2. **Screen 只做展示**：`feature/**/*Screen.kt` 禁止 import navigation / koin / Repository / 各 Controller（`ScreenBoundaryAuditTest`）。Screen 只收 `viewModel + state + 回调`；DI 与导航放在同名 `*Route.kt`。
+3. **feature 层禁止新定义通用卡片容器**（`*Card` 命名的 Composable，审计规则 `FeatureLayerGenericCard`）：一律消费设计系统的 `AppCard` 三轴模型。
+4. **动画时长必须走令牌**：禁止 `tween(<字面量毫秒>)`，时长一律读 `LocalAppMotion`（审计规则 `MotionHardcodedDuration`）。
+5. **业务代码禁止直用原生 M3 组件与令牌**：不直接 import material3 控件、不读 `MaterialTheme.colorScheme/typography/shapes`；使用 `App*` 组件与 AppTokens 体系。theme 桥接层豁免。
 
+## 4. 设计系统约定
 
-### 3. 目标驱动，自我闭环
+- 核心语义令牌在 `designsystem/theme/AppTokens.kt`（`AppColors.light()/dark()`、`LocalAppSpacing`、`LocalAppShapes`、`LocalAppMotion`）；组件级颜色组集中在 `AppComponentTokens.kt`，新组件的颜色字段必须在其中注册（否则触发 `ComponentTokensMissingRegistration` 审计违规）。
+- 新组件用脚手架生成：`./scripts/generate-component.sh <Name>`，产出组件本体 + `*Defaults.kt` + `*Logic.kt`，并手动在 `AppComponentTokens.kt` 追加令牌入口。Defaults 文件禁止直读核心令牌或硬编码颜色（审计规则 `DefaultsMissingLocalAppComponentTokens` / `DefaultsHardcodedColor` / `DefaultsImportsLocalAppColors`）。
+- 所有用户可见文案走 `designsystem/i18n/AppStrings.kt`，禁止硬编码中文/英文字符串。
+- 内容状态四态：Loading → Skeleton / `loading` 态；Empty → `EmptyState`；Error → `AppErrorState(status=…)`；Success 不包装。禁止新增私有 `*LoadingState` / `*ErrorState`。
 
-- 把模糊描述转化成**可验证的具体目标**。
-- 多步骤任务先发简要计划，确认后一路执行到底。
+## 5. 数据库与同步
 
----
+- Room 当前 version 8，15 张 @Entity；schema JSON 导出到 `app/schemas/`（KSP arg 已配置）。
+- **改表必须**：版本号 +1 → 写 Migration → 补迁移审计测试（参照 `Room89MigrationAuditTest` 的写法）→ 确认 `app/schemas/` 生成新版本 JSON。
+- 表分两类：9 张同步业务表（babies/feedings/sleeps/growths/vaccinations/health_records/diapers/development_assessments/reminders）+ 仅本地表（messages、backup_config、ai_conversations/ai_messages）。仅本地表严禁进入同步引擎。
+- 同步链路在 `core/sync/`：`SyncEngine`（sync_version 游标增量）· `SyncTrigger`（手动/自动/退后台/周期）· `RealtimeManager`（Supabase Realtime）· `SyncWorker`（WorkManager，重试退避）。所有同步查询必须带 family 隔离条件（`FamilyIsolationTest` 守门）。
 
-## 四、🚨 绝对红线（无条件遵守）
+## 6. AI 助手模块
 
-| # | 规则 | 错误写法 | 正确写法 |
-|---|---|---|---|
-| 1 | **硬编码路径** | `"/data/data/..."` | 用 `context.filesDir` 等环境变量 |
-| 2 | **改共享 API 不查调用方**（流程规则） | 直接改 DAO/Repository/工具类方法签名或行为 | **先全局搜索所有调用方**，评估影响后再改；改签名需走 🔴 确认 |
+- 多供应商适配在 `core/ai/provider/`（OpenAI Responses 协议 / OpenAI 兼容协议），配置引导走 Edge Function `supabase/functions/ai-bootstrap`，设备密钥存 `AiDeviceKeyStore`。
+- 模型输出必须经过安全校验层（`core/ai/settings` + `feature/ai/AiSafetyRules` / `AiAnswerSafety`）才能上屏；会话历史仅存本地表，不同步。
+- 会话历史持久化到 ai_conversations/ai_messages（仅本机）。
 
----
+## 7. 版本 · 提交 · 文档
 
-## 五、变更分级
+- 每次构建成功后新提交。
+- CHANGELOG 遵循 Keep a Changelog（中文版）+ SemVer。
+- 提交信息用中文，格式 `<范围>：<摘要>`（如 `设计系统 G3：剩余 11 文件私有卡收编`、`docs：补记 composites 目录`）。
+- 依赖升级前先确认 `gradle/libs.versions.toml` 中标注的"本地已验证组合"，不要随意拉动 Gradle/AGP/Kotlin/KSP 组合。
+- 仓库根目录不要提交构建产物与本地配置：`local.properties`、`record_screens.log` 等属本地环境文件。
 
-| 级别 | 范围 | AI 动作 |
-|---|---|---|
-| 🔴**重大重构（必须确认）** | 改 Entities 表结构/字段类型；改色系系统；切架构；重写 BackupManager/SyncEngine 核心流程；升数据库版本号；换 DI/网络库；改 AndroidManifest 核心配置；**改 DAO/Repository/SyncEngine 等共享 API 的方法签名或行为（哪怕只加参数）** | **先出方案（影响范围 + 迁移步骤 + 调用方清单），等确认再动** |
-| 🟢**日常开发（直接干）** | 增删改 Screen/ViewModel 逻辑；新页面/路由；修 bug；调 UI 间距/颜色/文本；性能优化；补测试 | 收到指令直接写，不请示（仍须遵守准则 1 的请示边界） |
+## 8. 环境备注
 
----
-
-## 六、测试纪律
-
-- 每次改动后必跑 `./gradlew testDebugUnitTest`，全绿才算完成。
-- 以下情况**必须**补测试：
-  - 修复历史 bug（补回归测试，验证根因不再复发）
-  - 改动纯逻辑（SyncEngine、StatsViewModel.aggregate、JSON 解析、AI 安全校验等）
-  - 新增核心规则或边界逻辑
-- **禁止镜像测试**：测试必须调用生产代码，不允许复制生产逻辑到测试里（生产改了测试不会失败 = 无效测试）。
-- 已知测试盲区，优先补：SyncEngine、StatsViewModel.aggregate、BackupManager 还原路径。
-- 测试代码同样遵守红线（边界值、日期过滤、百分比夹紧等）。
-
----
-
-## 七、注释、提交与版本规范
-
-- 所有注释**必须中文**。Commit message **必须中文**。
-- 复杂逻辑写注释解释**为什么**（why），不重复代码表面意思（what）。
-- 每次构建成功新提交。
-- **版本号在每次提交前变更**（与 `app/build.gradle.kts` 的 versionName/versionCode 同步）：**versionCode 仅在产生可发布构建时递增**，内部重构提交不递增。
-- 每次提交前把本批次条目写入 CHANGELOG 对应版本小节（版本号与 build.gradle 一致），不允许 `[Unreleased]` 或“未分配版本号”的条目提交。
-
----
-
-## 八、设计系统与 i18n
-
-- **必须<使用 designsystem 组件**，禁止直接用原生 M3（Card、TopAppBar、Button、AlertDialog 等）。对应关系：`Card` → `AppCard`，`CenterAlignedTopAppBar` → `AppTopBar`，`Button`/`OutlinedButton`/`TextButton` → `AppButton`（variant 枚举 Primary/Tonal/Outline/Ghost/Danger），`AlertDialog` → `AppDialog`（表单）/`AppConfirmDialog`（确认），`OutlinedTextField` → `AppInput`，`ModalBottomSheet` → `AppBottomSheet`/`AppFormSheet`，`Switch` → `AppSwitch`，`RadioButton` → `AppRadioButton`，`IconButton` → `AppIconButton`，`CircularProgressIndicator` → `AppCircularProgress`，`HorizontalDivider` → `AppDivider`，`Surface` → `AppSurface`，`SnackbarHost` → `AppSnackbarHost`，`MaterialTheme.typography` → `LocalAppTypography`。完整列表见 `docs/design-system.md`。
-- **DS 组件缺失时的决策路径**：
-  1. 满足新增标准（见下）→ 新增组件，走完整流程并更新 `docs/design-system.md`
-- **新增组件流程**：判断标准 → 定义令牌 → 写 Defaults → 组件本体 → 注册到 `AppComponentTokens` → 更新 `docs/design-system.md`。
-- **i18n**：新增用户可见文本必须写入 `AppStrings`，禁止硬编码中文。存量硬编码文本按批次迁移。
-
----
-
-## 九、经验闭环（lessons.md）
-
-- 任务前必须全文读取 `docs/lessons.md`。
-- 出现以下情况，**提交时**必须向 lessons.md 追加条目：
-  - 修复了跨模块 bug，且根因有普适性（同类问题可能再次出现）
-  - 踩了文档未记录的坑
-  - 发现本文件或红线遗漏的规则
-- 条目格式：现象 → 原因 → 规则（含错误/正确写法）。
-
----
-
-## 十、文档同步义务
-
-改动以下内容后，必须同步更新对应文档：
-
-| 改了什么 | 要更新的文档 |
-|---|---|
-| 目录结构/模块/路由 | `docs/project-structure.md` |
-| 组件/令牌/DS 约束 | `docs/design-system.md` |
-| 同步流程/sync_metadata 表 | `docs/sync-architecture.md` |
-| 数据模型/Room 表 | `docs/data-architecture.md` |
-
----
-
-## 十一、完成定义（验证标准）
-
-一次任务满足以下全部条件才算完成：
-
-1. `./gradlew assembleDebug` 通过
-2. `./gradlew testDebugUnitTest` 全绿（新增/修改逻辑有测试覆盖）
-3. 被改动的每一行都能回溯到本次需求
-4. （如适用）CHANGELOG 已更新、相关文档已同步
-
----
-
-## 十二、参考文档
-
-| 文档 | 内容 |
-|---|---|
-| `README.md` | 项目介绍、功能列表 |
-| `docs/project-structure.md` | 完整目录结构、模块索引、技术栈 |
-| `docs/design-system.md` | 令牌架构、组件用法、新增组件指引 |
-| `docs/sync-architecture.md` | 同步引擎完整链路 |
-| `docs/data-architecture.md` | 数据架构 |
-| `docs/architecture.md` | 总体架构 |
-| `docs/room-supabase-architecture.md` | Room 与 Supabase 对接 |
-| `CHANGELOG.md` | 变更日志 |
+- 开发环境曾在 Termux/aarch64 上运行：detekt 全量默认规则在该环境过慢，故 `detekt.yml` 采用显式枚举规则（勿改回 `buildUponDefaultConfig`）；Paparazzi 仅 x86_64 可跑（见第 2 节）。
+- Maven 仓库：插件走官方源（aliyun 镜像对 KSP 新版 marker 返回 502，见 `settings.gradle.kts` 注释）；依赖解析优先 aliyun public 镜像。

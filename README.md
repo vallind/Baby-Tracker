@@ -37,7 +37,7 @@ AppConfirmDialog / AppBottomSheet / AppIconButton / AppRadioButton /
 AppSwitch / AppChip / AppSlider / RecordCard / AppMarkdownText ...
 ```
 
-6 套主题（纯净/极光/暖阳/阳光黄/暗夜/莫兰迪）+ 自定义主色。业务代码禁止直接使用原生 M3 组件（见 AGENTS.md 红线与 docs/design-system.md）。
+6 套主题（纯净/极光/暖阳/阳光黄/暗夜/莫兰迪）+ 自定义主色。业务代码禁止直接使用原生 M3 组件。
 
 ## 技术栈
 
@@ -85,7 +85,7 @@ app/src/main/java/com/babytracker/
 └── navigation/               # AppNavigation.kt（25 条类型安全路由）
 ```
 
-详细索引见 `docs/project-structure.md`。
+分层与依赖红线等工程约定见 `AGENTS.md`。
 
 ## 数据库
 

@@ -26,7 +26,7 @@ import org.jetbrains.kotlin.psi.KtNameReferenceExpression
  * - 文件未 import `androidx.compose.ui.graphics.Color` → 跳过（core 非 UI 层、其他同名 Color 类型自然豁免）
  * - 文件路径含 `designsystem/theme` → 跳过（AppColors/derive 等令牌定义处的合法默认值白名单）
  *
- * 已知盲区（不阻断，靠 TokenAuditChecker 规则 2 兜底，见 docs/design-system.md）：
+ * 已知盲区（不阻断，靠 TokenAuditChecker 规则 2 兜底）：
  * - 通配 import `androidx.compose.ui.graphics.*` 不识别（importsComposeColor 只做精确全限定名匹配）
  * - 别名 import（如 `import androidx.compose.ui.graphics.Color as C`）不识别，`C(0xFF...)` 调用漏检
  * - `0xFF` 前缀大小写敏感：只匹配大写 `0xFF`，小写 `0xff...` 漏检

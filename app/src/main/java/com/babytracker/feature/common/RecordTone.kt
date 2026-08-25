@@ -8,7 +8,7 @@ import com.babytracker.designsystem.theme.AppColors
 /**
  * 记录类型视觉映射（2.1 收敛）— 全站唯一一份「类型 → emoji + 分区色」映射。
  *
- * 分区色纪律（docs/design-system.md）：
+ * 分区色纪律：
  *   喂养：母乳=珊瑚 danger / 配方=珊瑚深档 shade600 / 辅食=琥珀 / 饮水=青
  *   尿布：小便=青 tertiary / 大便=琥珀 warning / 混合=双色徽章（各页通过 twoTone 组合）
  *
