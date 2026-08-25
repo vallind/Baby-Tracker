@@ -64,6 +64,11 @@
 - **`AppInsightCard(title, message, emoji?, actionLabel?, onAction?)`**：AI 洞察/建议卡通用形态
 - **收编示范**：StatsScreen 四胞胎（喂养/睡眠/身高/体重卡）全部改写为 AppMetricCard 组合，删除私有 StatCardFrame/StatCardIcon/StatChartArea 骨架三件套；StatsScreen 移出规则⑥白名单（存量白名单余 11 文件，后续批次继续消化）
 
+**H 批内容：Layout 原语 + 页面组件盘点**
+
+- `foundation/layout` 新增 **`AppRow` / `AppColumn`**：子项间距默认走 spacing.md 令牌，替代各页 `Arrangement.spacedBy(…)` 手写样板；AppRow 支持 `wrap = true` 自动换行（FlowRow，标签组/筛选组场景）
+- 页面组件盘点结论：**`AppScaffold` 已是页面骨架本体**（M3 Scaffold + pageBackground 令牌 + topBar/bottomBar/fab/snackbarHost 四槽），Palette 的 Screen 形态已由它覆盖，不重复造 AppPage；分区标题 SectionHeader 槽位已在 D 批补齐
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**
