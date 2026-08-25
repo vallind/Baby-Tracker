@@ -38,6 +38,8 @@ import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.divider.AppDivider
 import kotlinx.coroutines.flow.collectLatest
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
+import com.babytracker.designsystem.components.inlinebanner.AppBannerSeverity
+import com.babytracker.designsystem.components.inlinebanner.AppInlineBanner
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.surface.AppSurface
@@ -177,18 +179,11 @@ fun LogViewerScreen(
                 )
             }
             if (selectMode && selectedIds.isNotEmpty()) {
-                // 选择模式操作提示
-                AppSurface(
-                    color = c.primaryContainer,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        text = "已选 ${selectedIds.size} 条，点击图标复制",
-                        style = LocalAppTypography.current.labelSmall,
-                        color = c.primary,
-                        modifier = Modifier.padding(horizontal = spacing.md, vertical = spacing.xs),
-                    )
-                }
+                // 选择模式操作提示（内联横幅家族 Info 档）
+                AppInlineBanner(
+                    message = "已选 ${selectedIds.size} 条，点击图标复制",
+                    severity = AppBannerSeverity.Info,
+                )
             }
 
             // 日志等级过滤

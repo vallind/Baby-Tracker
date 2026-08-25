@@ -1276,6 +1276,50 @@ data class KeyValueRowTokens(
     }
 }
 
+// —— 内联横幅（浅底圆角强调色提示条：AiChatScreen 横幅家族与日志页选择模式提示收编） ——
+@Immutable
+data class BannerSeverityColors(
+    val containerColor: Color,
+    val contentColor: Color,
+)
+
+@Immutable
+data class InlineBannerTokens(
+    val info: BannerSeverityColors,
+    val warning: BannerSeverityColors,
+    val error: BannerSeverityColors,
+    val cornerRadius: Dp,
+    val horizontalPadding: Dp,
+    val verticalPadding: Dp,
+    val actionContentColor: Color,      // 尾部 Ghost 文字动作前景（与 ButtonTokens.textContentColor 同源）
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            shapes: AppShapes,
+            spacing: AppSpacing,
+        ): InlineBannerTokens = InlineBannerTokens(
+            info = BannerSeverityColors(
+                containerColor = colors.primaryScale.tintContainer(colors),
+                contentColor = colors.primaryScale.accentContent(colors),
+            ),
+            warning = BannerSeverityColors(
+                containerColor = colors.warningScale.tintContainer(colors),
+                contentColor = colors.warningScale.accentContent(colors),
+            ),
+            error = BannerSeverityColors(
+                containerColor = colors.dangerScale.tintContainer(colors),
+                contentColor = colors.dangerScale.accentContent(colors),
+            ),
+            // 几何取存量横幅众数：16dp 圆角、内容内边距横 md / 纵 sm（AiAnalysisUnavailableBanner/AiErrorBanner 实测值）
+            cornerRadius = shapes.scaled(shapes.medium),
+            horizontalPadding = spacing.md,
+            verticalPadding = spacing.sm,
+            actionContentColor = colors.primary,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1320,6 +1364,7 @@ data class AppComponentTokens(
     val miniChart: MiniChartTokens,
     val settingItem: SettingItemTokens,
     val keyValueRow: KeyValueRowTokens,
+    val inlineBanner: InlineBannerTokens,
 ) {
     companion object {
         fun default(
@@ -1376,6 +1421,7 @@ data class AppComponentTokens(
             miniChart = MiniChartTokens.default(colors),
             settingItem = SettingItemTokens.default(colors, shapes, typography),
             keyValueRow = KeyValueRowTokens.default(colors, typography),
+            inlineBanner = InlineBannerTokens.default(colors, shapes, spacing),
         )
     }
 }

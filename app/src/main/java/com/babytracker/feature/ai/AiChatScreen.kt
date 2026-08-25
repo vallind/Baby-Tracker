@@ -57,6 +57,8 @@ import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
+import com.babytracker.designsystem.components.inlinebanner.AppBannerSeverity
+import com.babytracker.designsystem.components.inlinebanner.AppInlineBanner
 import com.babytracker.designsystem.components.markdown.AppMarkdownText
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.scaffold.AppScaffold
@@ -595,14 +597,15 @@ private fun AiAnalysisContextBar(
     }
 }
 
+/**
+ * 分析不可用提示条 — 枚举→文案映射留在 feature，视觉统一交由 AppInlineBanner（Warning 档）。
+ * 存量视觉：16dp 圆角 + warning 浅底（tintContainer 档）+ 横 md/纵 sm 内边距，与令牌众数一致。
+ */
 @Composable
 private fun AiAnalysisUnavailableBanner(
     source: AiAnalysisSource,
     reason: AiAnalysisUnavailableReason,
 ) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
     val message = if (reason == AiAnalysisUnavailableReason.DATA_DISABLED) {
         AppStrings.aiAnalysisEnableRecords
     } else {
@@ -613,16 +616,12 @@ private fun AiAnalysisUnavailableBanner(
             AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisNoOverviewRecords
         }
     }
-    Text(
-        text = message,
-        style = typography.bodyMedium,
-        color = colors.warning,
+    AppInlineBanner(
+        message = message,
+        severity = AppBannerSeverity.Warning,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.md)
-            .clip(RoundedCornerShape(16.dp))
-            .background(AppColorScale.fromSeed(colors.warning).tintContainer(colors))
-            .padding(horizontal = spacing.md, vertical = spacing.sm),
+            .padding(horizontal = LocalAppSpacing.current.md),
     )
 }
 
@@ -1014,11 +1013,12 @@ private fun AiTypingIndicator() {
     }
 }
 
+/**
+ * 错误横幅 — 枚举→文案映射留在 feature；可选重试动作由 AppInlineBanner 尾部 Ghost 动作承载
+ * （与存量形态一致：AppButton Ghost「重试」）。
+ */
 @Composable
 private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> Unit) {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
     val message = when (error) {
         AiChatError.INPUT_TOO_LONG -> AppStrings.aiInputTooLong
         AiChatError.CONFIG_UNAVAILABLE -> AppStrings.aiConfigUnavailable
@@ -1030,20 +1030,15 @@ private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> 
         AiChatError.NETWORK -> AppStrings.aiNetworkError
         AiChatError.UNKNOWN -> AppStrings.aiUnknownError
     }
-    Row(
-        Modifier
+    AppInlineBanner(
+        message = message,
+        severity = AppBannerSeverity.Error,
+        actionLabel = if (canRetry) AppStrings.aiRetry else null,
+        onAction = if (canRetry) onRetry else null,
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = spacing.md)
-            .clip(RoundedCornerShape(16.dp))
-            .background(AppColorScale.fromSeed(colors.error).tintContainer(colors))
-            .padding(horizontal = spacing.md, vertical = spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(message, style = typography.bodyMedium, color = colors.error, modifier = Modifier.weight(1f))
-        if (canRetry) {
-            AppButton(variant = ButtonVariant.Ghost, onClick = onRetry, label = AppStrings.aiRetry)
-        }
-    }
+            .padding(horizontal = LocalAppSpacing.current.md),
+    )
 }
 
 @Composable
