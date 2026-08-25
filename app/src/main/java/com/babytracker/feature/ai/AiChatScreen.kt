@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -60,12 +59,12 @@ import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.inlinebanner.AppBannerSeverity
 import com.babytracker.designsystem.components.inlinebanner.AppInlineBanner
 import com.babytracker.designsystem.components.markdown.AppMarkdownText
-import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.components.typingindicator.AppTypingIndicator
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -227,7 +226,7 @@ fun AiChatScreen(
                     )
                 }
                 if (state.isSending && !state.hasStreamingAnswer) {
-                    item { AiTypingIndicator() }
+                    item { AppTypingIndicator() }
                 }
                 item(key = "ai-chat-bottom-anchor") {
                     Spacer(Modifier.height(1.dp))
@@ -981,34 +980,6 @@ private fun AiReasoningBlock(
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
             )
-        }
-    }
-}
-
-@Composable
-private fun AiTypingIndicator() {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    Row(
-        Modifier.padding(vertical = spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier
-                .clip(RoundedCornerShape(16.dp))
-                .background(colors.surfaceMuted)
-                .padding(horizontal = spacing.md, vertical = 10.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AppCircularProgress(indicatorColor = colors.primary)
-                Spacer(Modifier.width(spacing.sm))
-                Text(
-                    text = AppStrings.aiAnswering,
-                    style = typography.bodyMedium,
-                    color = colors.textSecondary,
-                )
-            }
         }
     }
 }
