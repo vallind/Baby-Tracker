@@ -91,6 +91,22 @@
 - `AGENTS.md` 重写为唯一 agent 规范入口：分层依赖红线（静态审计守门规则）、设计系统 / 数据库与同步 / AI 模块约定、测试与提交纪律由单文件承载，内容以当前代码为准
 - README 与代码注释中指向已删文档的活引用改为指向 AGENTS.md 或就地删除；CHANGELOG 历史条目保留原貌不改写
 
+**G4 收编波次：feature 层自建组件全量收归设计系统**
+
+> 盘点口径：feature 层约 60 个非页面入口的自建 @Composable，按「纯 UI 直接收编 / 去领域化后收编 / 页面私有片段保留」三分类处置；DS 红线（禁 core/feature/navigation/koin、文案走 AppStrings、颜色字段注册 AppComponentTokens）全程守门，每批 `testDebugUnitTest` + `themeTokenAudit` 全绿后独立提交。约 20 个业务映射/编排类片段（各 `xxxDetailFields`、Timeline 表单分发、MessageLeadingIcon 等）按规范留在 feature 层。
+
+- **图表**：`MiniBarChart`/`MiniLineChart` 收编 `components/chart/`（`MiniChartTokens`），指标卡趋势标签 `StatCompareLabel`→`MetricTrendLabel` 并入 metriccard 族；StatsScreen 本地 Canvas 实现删除
+- **设置行家族**：新建 `components/settingitem/`（`AppSettingItem`/`AppSettingSwitchItem`/`AppSettingChoiceItem`/`AppSettingGroupTitle`，`SettingItemTokens`）；`SettingsMenuScaffold`→`components/scaffold/SubPageScaffold`；`ThemeDots` 死代码删除、主题显示名收敛 `ThemeNames.kt` 单一来源；**斩断 feature.ai→feature.settings 横向 import**
+- **键值行与分隔线**：`components/keyvaluerow/AppKeyValueRow`（`KeyValueRowTokens`）；`AppDivider` 增 `horizontalInset` 参数；`SettingsDivider`/`BirthInfoDivider` 私有包装清零（SettingsComponents.kt 整文件删除）
+- **表单族通用件**：`AppOptionChipRow`（六个 FormDialog 类型行）、`AppDateTimeField`（七处只读时间字段+级联弹窗）、`AppOptionPickerSheet`（时间轴类型选择）、`AppTimerRow`+`hooks/TimerState`（喂养/睡眠计时器，SharedPreferences/koin 留在 feature 层不越 DS 边界）；`AppFormSheet` 合规整改（saveText 默认走 AppStrings.save、material3.Button→AppButton、间距令牌化）；VaccinationFormDialog 由自拼弹层迁入 AppFormSheet、状态胶囊改 `AppTag`
+- **横幅家族**：`components/inlinebanner/AppInlineBanner`（Info/Warning/Error 三档语义色对，`InlineBannerTokens`）；AI 聊天两横幅薄封装化、日志页多选提示条接入；`AiAnalysisContextBar`（24dp 双行卡片）与 `AiHistorySaveStatusBanner`（裸文本）实测非横幅形态，按视觉保真原则保留 feature 私有壳
+- **首页收编**：`composites/herostat/AppHeroStatCard`（`HeroStatCardTokens`）统一今日概览/尿布/睡眠三张渐变统计大卡（TodayOverview 私有 StatItem/StatDivider 删除、统计格改用既有 QuickStatPill）；`components/tilegrid/AppTileGrid`（`TileGridTokens`）替换 FeatureGrid 功能宫格；`components/recordcard/AppRecordRow` 替换 TimelineRecordRow 记录行
+- **聊天复合件**：`composites/chatbubble/AppChatBubble`（角色对齐+双色气泡壳+内容槽）、`components/chatinput/AppChatInputBar`、`components/chatheader/AppCollapsedHeader`、`components/chip/AppChipCarouselRow`（`ChatBubbleTokens`/`ChatInputBarTokens`/`CollapsedHeaderTokens`）；AiChat 气泡/输入条/折叠头/模型条四处薄封装化，AiBabySummary 结构不可无损共享保留私有壳
+- **评分器与分类条**：`components/scoreselector/AppScoreSelector`（`ScoreSelectorTokens`，选项 options 参数化去除硬编码四档文案）、`components/categorystrip/AppCategoryStrip`（`CategoryStripTabs` 未读角标+选中强调轴，`CategoryStripTokens`）；发育评估打分条、消息分类条收编，家庭模式选择与 AI 快捷分析周期 chips 复用 AppChipCarouselRow
+- **零令牌杂项**：`appDateNavLabel` 纯函数收敛四页「今天 · M月d日」标签复制粘贴（逐字符等价）；`components/typingindicator/AppTypingIndicator` 打字指示器；`components/avatar/AppInitialAvatar` 首字头像
+- **令牌体系增量**：AppComponentTokens 新增 11 组组件令牌并全部聚合装配（miniChart/settingItem/keyValueRow/heroStatCard/tileGrid/inlineBanner/chatBubble/chatInputBar/collapsedHeader/scoreSelector/categoryStrip），取色全部由 colors/shapes/typography 推导、零字面量色值
+- **有意视觉归一（逐项记录）**：今日概览卡竖直分隔线移除（与尿布/睡眠卡统一）、记录行徽章 44→40dp 走全站 Badge 规格、AppFormSheet 保存钮几何就近令牌化、家庭选择 chip 向全站胶囊体系收敛、Warning/Error 横幅内容色由 seed 现场推导改为官方 warningScale/dangerScale 档位；其余落点均像素级保真
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**
