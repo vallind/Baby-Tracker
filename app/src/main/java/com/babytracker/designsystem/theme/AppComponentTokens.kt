@@ -1244,6 +1244,38 @@ data class SettingItemTokens(
     }
 }
 
+// —— 键值行（信息展示行：label 左 / value 右 + 可选 caption 副行，自 feature/settings/BabyProfileScreen 收编） ——
+@Immutable
+data class KeyValueRowTokens(
+    val rowHeight: Dp,
+    val labelTextStyle: TextStyle,
+    val labelColor: Color,
+    val valueTextStyle: TextStyle,
+    val valueColor: Color,              // 无副行形态（源 InfoRow：值用次要色）
+    val valueEmphasizedColor: Color,    // 带副行形态（源 GrowthValueRow：值用主色强调）
+    val captionTextStyle: TextStyle,
+    val captionColor: Color,
+) {
+    companion object {
+        fun default(
+            colors: AppColors,
+            typography: AppTypography,
+        ): KeyValueRowTokens = KeyValueRowTokens(
+            // 以源码实测为准（BabyProfileScreen.InfoRow/GrowthValueRow）：
+            // label=textPrimary、value=无副行 textSecondary / 有副行 textPrimary、caption=textTertiary；
+            // 行高 44dp；字号 label/value=bodyLarge、caption=labelSmall。
+            rowHeight = 44.dp,
+            labelTextStyle = typography.bodyLarge,
+            labelColor = colors.textPrimary,
+            valueTextStyle = typography.bodyLarge,
+            valueColor = colors.textSecondary,
+            valueEmphasizedColor = colors.textPrimary,
+            captionTextStyle = typography.labelSmall,
+            captionColor = colors.textTertiary,
+        )
+    }
+}
+
 data class AppComponentTokens(
     val button: ButtonTokens,
     val card: CardTokens,
@@ -1287,6 +1319,7 @@ data class AppComponentTokens(
     val recordDetailSheet: RecordDetailSheetTokens,
     val miniChart: MiniChartTokens,
     val settingItem: SettingItemTokens,
+    val keyValueRow: KeyValueRowTokens,
 ) {
     companion object {
         fun default(
@@ -1342,6 +1375,7 @@ data class AppComponentTokens(
             recordDetailSheet = RecordDetailSheetTokens.default(colors, typography, spacing),
             miniChart = MiniChartTokens.default(colors),
             settingItem = SettingItemTokens.default(colors, shapes, typography),
+            keyValueRow = KeyValueRowTokens.default(colors, typography),
         )
     }
 }

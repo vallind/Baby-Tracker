@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.components.scaffold.SubPageScaffold
 import com.babytracker.designsystem.i18n.AppStrings
@@ -42,14 +43,14 @@ fun DataSettingsScreen(
                 },
                 onClick = onOpenSyncSettings,
             )
-            SettingsDivider()
+            AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "📦",
                 label = "备份与恢复",
                 subtitle = "本地备份、WebDAV 与数据恢复",
                 onClick = onOpenBackup,
             )
-            SettingsDivider()
+            AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "🔐",
                 label = "隐私设置",

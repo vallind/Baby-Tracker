@@ -36,6 +36,7 @@ import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.settingitem.AppSettingGroupTitle
 import com.babytracker.designsystem.components.settingitem.AppSettingItem
@@ -173,14 +174,14 @@ fun SettingsScreen(
                     subtitle = "资料、成长信息与宝宝切换",
                     onClick = onOpenBabyManagement,
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
                 AppSettingItem(
                     emoji = "👨‍👩‍👧",
                     label = "家庭与账号",
                     subtitle = if (isLoggedIn) "成员管理与账号信息" else "登录后与家人共享记录",
                     onClick = onOpenUserAccount,
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
                 AppSettingItem(
                     emoji = "🔔",
                     label = "提醒设置",
@@ -200,7 +201,7 @@ fun SettingsScreen(
                     subtitle = AppStrings.backupManageSubtitle,
                     onClick = onOpenBackup,
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
                 AppSettingItem(
                     emoji = "📋",
                     label = AppStrings.logViewer,
@@ -219,14 +220,14 @@ fun SettingsScreen(
                     subtitle = "主题与 AI 助手",
                     onClick = onOpenPreference,
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
                 AppSettingItem(
                     emoji = "🔒",
                     label = "数据与同步",
                     subtitle = "云同步、备份与隐私",
                     onClick = onOpenData,
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
                 AppSettingItem(
                     emoji = "❓",
                     label = "帮助与关于",

@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.SubPageScaffold
 import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
@@ -39,7 +40,7 @@ fun SupportSettingsScreen(
                 subtitle = "使用问题与意见反馈",
                 trailing = { AppChip(label = AppStrings.comingSoon) },
             )
-            SettingsDivider()
+            AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "📋",
                 label = "运行日志",
@@ -52,7 +53,7 @@ fun SupportSettingsScreen(
                 },
                 onClick = onOpenLogViewer,
             )
-            SettingsDivider()
+            AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "ℹ️",
                 label = "关于 Baby Tracker",

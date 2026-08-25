@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.babytracker.core.domain.model.*
 import com.babytracker.core.util.DateUtils
@@ -21,6 +20,7 @@ import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.section.SectionHeader
 import com.babytracker.designsystem.components.divider.AppDivider
+import com.babytracker.designsystem.components.keyvaluerow.AppKeyValueRow
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -143,11 +143,11 @@ fun BabyProfileScreen(
                     .padding(horizontal = spacing.md),
             ) {
                 Column(Modifier.padding(spacing.md)) {
-                    InfoRow("出生日期", baby.birthDate)
-                    BirthInfoDivider()
-                    InfoRow("出生身高", baby.birthHeight?.let { "${it}cm" } ?: "未记录")
-                    BirthInfoDivider()
-                    InfoRow("出生体重", baby.birthWeight?.let { "${it}kg" } ?: "未记录")
+                    AppKeyValueRow("出生日期", baby.birthDate)
+                    AppDivider()
+                    AppKeyValueRow("出生身高", baby.birthHeight?.let { "${it}cm" } ?: "未记录")
+                    AppDivider()
+                    AppKeyValueRow("出生体重", baby.birthWeight?.let { "${it}kg" } ?: "未记录")
                 }
             }
 
@@ -161,22 +161,22 @@ fun BabyProfileScreen(
                     .padding(horizontal = spacing.md),
             ) {
                 Column(Modifier.padding(spacing.md)) {
-                    GrowthValueRow(
+                    AppKeyValueRow(
                         label = "当前身高",
                         value = latestHeight?.let { "${it.value}cm" } ?: "未记录",
-                        date = latestHeight?.measuredAt?.let { formatMeasuredAt(it) },
+                        caption = latestHeight?.measuredAt?.let { formatMeasuredAt(it) },
                     )
-                    BirthInfoDivider()
-                    GrowthValueRow(
+                    AppDivider()
+                    AppKeyValueRow(
                         label = "当前体重",
                         value = latestWeight?.let { "${it.value}kg" } ?: "未记录",
-                        date = latestWeight?.measuredAt?.let { formatMeasuredAt(it) },
+                        caption = latestWeight?.measuredAt?.let { formatMeasuredAt(it) },
                     )
-                    BirthInfoDivider()
-                    GrowthValueRow(
+                    AppDivider()
+                    AppKeyValueRow(
                         label = "头围",
                         value = latestHead?.let { "${it.value}cm" } ?: "未记录",
-                        date = latestHead?.measuredAt?.let { formatMeasuredAt(it) },
+                        caption = latestHead?.measuredAt?.let { formatMeasuredAt(it) },
                     )
                 }
             }
@@ -215,55 +215,6 @@ fun BabyProfileScreen(
             },
         )
     }
-}
-
-@Composable
-private fun InfoRow(label: String, value: String) {
-    val c = LocalAppColors.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .height(44.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(label, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
-        Text(
-            value,
-            style = LocalAppTypography.current.bodyLarge,
-            color = c.textSecondary,
-            textAlign = TextAlign.End,
-        )
-    }
-}
-
-@Composable
-private fun GrowthValueRow(label: String, value: String, date: String?) {
-    val c = LocalAppColors.current
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 44.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(label, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
-        Column(horizontalAlignment = Alignment.End) {
-            Text(value, style = LocalAppTypography.current.bodyLarge, color = c.textPrimary)
-            if (date != null) {
-                Text(date, style = LocalAppTypography.current.labelSmall, color = c.textTertiary)
-            }
-        }
-    }
-}
-
-@Composable
-private fun BirthInfoDivider() {
-    val c = LocalAppColors.current
-    AppDivider(
-        color = c.divider,
-        thickness = 0.5.dp,
-    )
 }
 
 private fun formatMeasuredAt(isoString: String): String {

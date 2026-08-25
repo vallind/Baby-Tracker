@@ -15,6 +15,7 @@ import com.babytracker.core.sync.SyncDelay
 import com.babytracker.core.sync.SyncState
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -76,7 +77,7 @@ fun SyncSettingsScreen(
                         )
                     },
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
 
                 AppSettingItem(
                     emoji = "⏱",
@@ -84,7 +85,7 @@ fun SyncSettingsScreen(
                     subtitle = config.syncDelay.label,
                     onClick = { showDelaySheet = true },
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
 
                 AppSettingItem(
                     emoji = "📅",
@@ -92,7 +93,7 @@ fun SyncSettingsScreen(
                     subtitle = config.bgInterval.label,
                     onClick = { showBgSheet = true },
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
 
                 AppSettingItem(
                     emoji = "🚪",
@@ -104,7 +105,7 @@ fun SyncSettingsScreen(
                         )
                     },
                 )
-                SettingsDivider()
+                AppDivider(horizontalInset = spacing.md)
 
                 AppSettingItem(
                     emoji = "📶",

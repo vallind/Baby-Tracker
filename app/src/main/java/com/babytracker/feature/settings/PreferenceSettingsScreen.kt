@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
+import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.SubPageScaffold
 import com.babytracker.designsystem.components.settingitem.AppSettingItem
 import com.babytracker.designsystem.i18n.AppStrings
@@ -46,14 +47,14 @@ fun PreferenceSettingsScreen(
                 subtitle = themeName,
                 onClick = { showThemePicker = true },
             )
-            SettingsDivider()
+            AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "📐",
                 label = AppStrings.densityLabel,
                 subtitle = densityLabel,
                 onClick = { showDensityPicker = true },
             )
-            SettingsDivider()
+            AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "✨",
                 label = AppStrings.aiSettings,
