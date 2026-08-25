@@ -136,7 +136,7 @@ fun StatsScreen(
                             .padding(horizontal = spacing.md),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        FeedingCard(
+                        FeedingMetric(
                             count = state.feedingCount,
                             breastFeedCount = state.breastFeedCount,
                             formulaCount = state.formulaCount,
@@ -144,17 +144,17 @@ fun StatsScreen(
                             compare = state.feedingCompare,
                             points = state.feedingPoints,
                         )
-                        SleepCard(
+                        SleepMetric(
                             minutes = state.sleepMinutes,
                             compare = state.sleepCompare,
                             points = state.sleepPoints,
                         )
-                        HeightCard(
+                        HeightMetric(
                             value = state.height,
                             compare = state.heightCompare,
                             points = state.heightPoints,
                         )
-                        WeightCard(
+                        WeightMetric(
                             value = state.weight,
                             compare = state.weightCompare,
                             points = state.weightPoints,
@@ -205,7 +205,7 @@ private fun DateRangeNav(
 }
 
 @Composable
-private fun FeedingCard(
+private fun FeedingMetric(
     count: Int,
     breastFeedCount: Int,
     formulaCount: Int,
@@ -246,7 +246,7 @@ private fun FeedingCard(
 }
 
 @Composable
-private fun SleepCard(
+private fun SleepMetric(
     minutes: Long,
     compare: String,
     points: List<Float>,
@@ -275,7 +275,7 @@ private fun SleepCard(
 }
 
 @Composable
-private fun HeightCard(
+private fun HeightMetric(
     value: String,
     compare: String,
     points: List<Float>,
@@ -302,7 +302,7 @@ private fun HeightCard(
 }
 
 @Composable
-private fun WeightCard(
+private fun WeightMetric(
     value: String,
     compare: String,
     points: List<Float>,

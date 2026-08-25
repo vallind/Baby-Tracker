@@ -106,10 +106,10 @@ fun HomeScreen(
             FeatureGrid(onOpenFeature)
 
             Spacer(Modifier.height(spacing.md))
-            AiAssistantEntryCard(onClick = onOpenAiAssistant)
+            AiAssistantEntry(onClick = onOpenAiAssistant)
 
             Spacer(Modifier.height(spacing.md))
-            TodayOverviewCard(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
+            TodayOverview(feedCount = state.feedCount, breastFeedCount = state.breastFeedCount, formulaCount = state.formulaCount, formulaTotalMl = state.formulaTotalMl, sleepHours = state.sleepHours, diaperCount = state.diaperCount)
 
             if (state.recentItems.isNotEmpty()) {
                 Spacer(Modifier.height(spacing.md))
@@ -228,8 +228,9 @@ private fun HeroHeader(baby: Baby, onClickProfile: () -> Unit) {
     }
 }
 
+/** AI 助手入口行：渐变底 hero（G3 收编：领域内容组合非通用卡片基座，改名去卡片化命名） */
 @Composable
-private fun AiAssistantEntryCard(onClick: () -> Unit) {
+private fun AiAssistantEntry(onClick: () -> Unit) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current
@@ -280,8 +281,9 @@ private fun AiAssistantEntryCard(onClick: () -> Unit) {
     }
 }
 
+/** 今日概览：渐变主卡上的白色统计格（G3 收编：领域内容组合非通用卡片基座，改名去卡片化命名） */
 @Composable
-fun TodayOverviewCard(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formulaTotalMl: Int, sleepHours: String, diaperCount: Int) {
+fun TodayOverview(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formulaTotalMl: Int, sleepHours: String, diaperCount: Int) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val typography = LocalAppTypography.current

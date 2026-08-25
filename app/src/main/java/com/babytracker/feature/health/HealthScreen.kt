@@ -96,6 +96,7 @@ fun HealthScreen(
 ) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
+    val typography = LocalAppTypography.current
     var showForm by remember { mutableStateOf(false) }
     var editingRecord by remember { mutableStateOf<HealthRecord?>(null) }
     var detailRecord by remember { mutableStateOf<HealthRecord?>(null) }
@@ -145,30 +146,83 @@ fun HealthScreen(
                 healthCategories(c).forEach { meta ->
                     item(key = meta.key) {
                         if (meta.key == "vaccination") {
-                            VaccinationSummaryCard(
-                                emoji = meta.emoji,
-                                bgColor = meta.bgColor,
-                                label = meta.label,
-                                count = vaccinatedCount,
+                            // 疫苗入口行：徽章 + 标题 + 接种摘要 + 固定右箭头（G3 收编为调用点内联组合）
+                            val vacSummary = if (vaccinatedCount > 0) "已接种${vaccinatedCount}针" else "暂无接种记录"
+                            AppCard(
+                                modifier = Modifier
+                                    .padding(horizontal = spacing.md)
+                                    .fillMaxWidth(),
                                 onClick = onOpenVaccination,
-                            )
+                            ) {
+                                Row(
+                                    Modifier.padding(horizontal = spacing.md, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    AppEmojiBadge(emoji = meta.emoji, tint = meta.bgColor)
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(meta.label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                                        Spacer(Modifier.height(spacing.xxs))
+                                        Text(
+                                            vacSummary,
+                                            style = typography.bodyMedium,
+                                            color = if (vaccinatedCount > 0) c.textSecondary else c.textTertiary,
+                                        )
+                                    }
+                                    Spacer(Modifier.width(spacing.sm))
+                                    Icon(
+                                        Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = c.textTertiary,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .rotate(90f), // 疫苗行固定指向（点击即跳疫苗页）
+                                    )
+                                }
+                            }
                         } else {
                             val items = grouped[meta.key].orEmpty()
                             val summary = categorySummary(meta.key, items)
                             val isExpanded = expandedCategory == meta.key
-                            HealthCategorySummaryCard(
-                                emoji = meta.emoji,
-                                bgColor = meta.bgColor,
-                                label = meta.label,
-                                summary = summary,
-                                hasItems = items.isNotEmpty(),
-                                isExpanded = isExpanded,
+                            // 分类摘要行：徽章 + 标题 + 摘要 + 展开箭头，点击展开该类记录（G3 收编为调用点内联组合）
+                            AppCard(
+                                modifier = Modifier
+                                    .padding(horizontal = spacing.md)
+                                    .fillMaxWidth(),
                                 onClick = {
                                     if (items.isNotEmpty()) {
                                         expandedCategory = if (isExpanded) null else meta.key
                                     }
                                 },
-                            )
+                                enabled = items.isNotEmpty(),
+                            ) {
+                                Row(
+                                    Modifier.padding(horizontal = spacing.md, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    AppEmojiBadge(emoji = meta.emoji, tint = meta.bgColor)
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(meta.label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                                        Spacer(Modifier.height(spacing.xxs))
+                                        Text(
+                                            summary,
+                                            style = typography.bodyMedium,
+                                            color = if (items.isNotEmpty()) c.textSecondary else c.textTertiary,
+                                            maxLines = 1,
+                                        )
+                                    }
+                                    Spacer(Modifier.width(spacing.sm))
+                                    Icon(
+                                        Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = c.textTertiary,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .rotate(if (isExpanded) 90f else 0f),
+                                    )
+                                }
+                            }
                             AnimatedVisibility(visible = isExpanded && items.isNotEmpty()) {
                                 ExpandedCategoryItems(
                                     items = items,
@@ -231,101 +285,6 @@ fun HealthScreen(
                 editingRecord = null
             },
         )
-    }
-}
-
-@Composable
-private fun HealthCategorySummaryCard(
-    emoji: String,
-    bgColor: Color,
-    label: String,
-    summary: String,
-    hasItems: Boolean,
-    isExpanded: Boolean,
-    onClick: () -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    AppCard(
-        modifier = Modifier
-            .padding(horizontal = spacing.md)
-            .fillMaxWidth(),
-        onClick = onClick,
-        enabled = hasItems,
-    ) {
-        Row(
-            Modifier.padding(horizontal = spacing.md, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AppEmojiBadge(emoji = emoji, tint = bgColor)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Spacer(Modifier.height(spacing.xxs))
-                Text(
-                    summary,
-                    style = typography.bodyMedium,
-                    color = if (hasItems) c.textSecondary else c.textTertiary,
-                    maxLines = 1,
-                )
-            }
-            Spacer(Modifier.width(spacing.sm))
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = c.textTertiary,
-                modifier = Modifier
-                    .size(20.dp)
-                    .rotate(if (isExpanded) 90f else 0f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun VaccinationSummaryCard(
-    emoji: String,
-    bgColor: Color,
-    label: String,
-    count: Int,
-    onClick: () -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val summary = if (count > 0) "已接种${count}针" else "暂无接种记录"
-    AppCard(
-        modifier = Modifier
-            .padding(horizontal = spacing.md)
-            .fillMaxWidth(),
-        onClick = onClick,
-    ) {
-        Row(
-            Modifier.padding(horizontal = spacing.md, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AppEmojiBadge(emoji = emoji, tint = bgColor)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(label, style = typography.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                Spacer(Modifier.height(spacing.xxs))
-                Text(
-                    summary,
-                    style = typography.bodyMedium,
-                    color = if (count > 0) c.textSecondary else c.textTertiary,
-                )
-            }
-            Spacer(Modifier.width(spacing.sm))
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = c.textTertiary,
-                modifier = Modifier
-                    .size(20.dp)
-                    .rotate(90f), // 疫苗卡固定指向（点击即跳疫苗页）
-            )
-        }
     }
 }
 

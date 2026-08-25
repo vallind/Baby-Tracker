@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -28,7 +29,7 @@ fun DataSettingsScreen(
         title = "数据与同步",
         onBack = onBack,
     ) {
-        SettingsCard {
+        AppCardGroup {
             SettingsRow(
                 emoji = "🔄",
                 label = "同步设置",

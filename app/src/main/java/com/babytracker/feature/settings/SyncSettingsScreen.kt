@@ -13,6 +13,7 @@ import com.babytracker.core.sync.RealtimeState
 import com.babytracker.core.sync.SyncConfig
 import com.babytracker.core.sync.SyncDelay
 import com.babytracker.core.sync.SyncState
+import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
@@ -63,7 +64,7 @@ fun SyncSettingsScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = spacing.md)) {
 
-            SettingsCard {
+            AppCardGroup {
                 SettingsRow(
                     emoji = "🔄",
                     label = "自动同步",

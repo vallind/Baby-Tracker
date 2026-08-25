@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -36,7 +37,7 @@ fun PreferenceSettingsScreen(
         title = "使用偏好",
         onBack = onBack,
     ) {
-        SettingsCard {
+        AppCardGroup {
             SettingsRow(
                 emoji = "🎨",
                 label = "主题模式",

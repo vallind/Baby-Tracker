@@ -42,26 +42,15 @@ object TokenAuditChecker {
      * 卡片能力统一由 designsystem 的 AppCard 基座承担，业务形态用 variant/slots 组合表达；
      * 私有 *Card 是"影子设计系统"的种子（AI 辅助开发下会按页面数累积）。
      *
-     * 白名单为存量债（G 批收编后逐文件移除）：白名单按文件豁免，文件内新增同模式函数同样会被拦截。
+     * 白名单机制保留但存量债已于 G3 批次清零（保持空集）：任何 feature 文件定义同模式函数都会被拦截。
      */
     private val featureCardDefRegex = Regex("""\bfun\s+\w*Card\w*\s*\(""")
 
     // 规则 7：动画时长必须走 AppMotion 令牌，禁止字面量毫秒（tween(300) / tween(durationMillis = 300) 等）
     private val motionHardcodedRegex = Regex("""tween\(\s*(durationMillis\s*=\s*)?[0-9]""")
 
-    private val featureCardBaselineRelPaths = setOf(
-        "com/babytracker/feature/ai/AiChatScreen.kt",
-        "com/babytracker/feature/ai/AiSettingsScreen.kt",
-        "com/babytracker/feature/development/DevelopmentAssessmentScreen.kt",
-        "com/babytracker/feature/diaper/DiaperListScreen.kt",
-        "com/babytracker/feature/health/HealthScreen.kt",
-        "com/babytracker/feature/home/HomeScreen.kt",
-        "com/babytracker/feature/message/MessageScreen.kt",
-        "com/babytracker/feature/reminder/ReminderScreen.kt",
-        "com/babytracker/feature/settings/SettingsComponents.kt",
-        "com/babytracker/feature/sleep/SleepListScreen.kt",
-        "com/babytracker/feature/vaccination/VaccinationListScreen.kt",
-    )
+    // G3 批次收编完成后存量债清零：白名单保持空集，新定义一律直接拦截
+    private val featureCardBaselineRelPaths = emptySet<String>()
 
     // 检查器自身源码含扫描模式串（如 "import androidx.compose.material3.Typography"），规则 4 须豁免本文件，否则自查必报。
     // 按相对 kotlinRoot 的路径匹配而非文件名，避免误豁免其他同名文件（lessons #14/#17）。

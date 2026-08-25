@@ -93,14 +93,14 @@ class TokenAuditCheckerTest {
     }
 
     @Test
-    fun `规则 6 feature 层新定义卡片容器应被拦截且白名单豁免`() {
+    fun `规则 6 feature 层新定义卡片容器应被拦截且白名单已清零`() {
         // 白名单外：新 feature 文件定义 *Card → 必须拦截
         write(
             "com/babytracker/feature/newfeature/NewScreen.kt",
             "package com.babytracker.feature.newfeature\n" +
                 "fun NewThingCard() = Unit\n",
         )
-        // 白名单内（存量债）：同模式函数豁免，待收编批次移除白名单条目
+        // G3 收编后存量债清零，白名单为空集：历史文件同模式函数不再豁免
         write(
             "com/babytracker/feature/stats/StatsScreen.kt",
             "package com.babytracker.feature.stats\n" +
@@ -117,8 +117,8 @@ class TokenAuditCheckerTest {
             violations.any { it.rule == "FeatureLayerGenericCard" && it.file.endsWith("NewScreen.kt") },
         )
         assertTrue(
-            "白名单文件被误拦: ${violations.filter { it.file.endsWith("StatsScreen.kt") }}",
-            violations.none { it.rule == "FeatureLayerGenericCard" && it.file.endsWith("StatsScreen.kt") },
+            "白名单清零后历史文件未恢复拦截: ${violations.filter { it.file.endsWith("StatsScreen.kt") }}",
+            violations.any { it.rule == "FeatureLayerGenericCard" && it.file.endsWith("StatsScreen.kt") },
         )
     }
 }

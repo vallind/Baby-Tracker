@@ -198,12 +198,38 @@ fun DevelopmentAssessmentScreen(
                 .verticalScroll(rememberScrollState())
                 .background(c.pageBackground),
         ) {
-            // 宝宝摘要卡（2.1 C3：替代自建渐变 BabyHeader，与其他页面头部体系统一）
-            BabySummaryCard(
-                name = baby.name,
-                ageDetail = babyAgeDetail(baby.birthDate),
-                modifier = Modifier.padding(horizontal = spacing.md).fillMaxWidth(),
-            )
+            // 宝宝摘要行（2.1 C3：替代自建渐变头部，与其他页面头部体系统一）——G3 收编为调用点内联组合
+            AppCard(modifier = Modifier.padding(horizontal = spacing.md).fillMaxWidth()) {
+                Row(
+                    Modifier.padding(spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(c.primaryContainer),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("\uD83D\uDC76", style = LocalAppTypography.current.headlineSmall)
+                    }
+                    Spacer(Modifier.width(spacing.md))
+                    Column {
+                        Text(
+                            baby.name,
+                            style = LocalAppTypography.current.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = c.textPrimary,
+                        )
+                        Spacer(Modifier.height(spacing.xxs))
+                        Text(
+                            babyAgeDetail(baby.birthDate),
+                            style = LocalAppTypography.current.bodyMedium,
+                            color = c.textSecondary,
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(spacing.md))
 
@@ -243,104 +269,46 @@ fun DevelopmentAssessmentScreen(
 }
 
 @Composable
-private fun BabySummaryCard(
-    name: String,
-    ageDetail: String,
-    modifier: Modifier = Modifier,
-) {
+private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
     val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val shapes = LocalAppShapes.current
-    AppCard(modifier = modifier) {
-        Row(
-            Modifier.padding(spacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(c.primaryContainer),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("\uD83D\uDC76", style = LocalAppTypography.current.headlineSmall)
-            }
-            Spacer(Modifier.width(spacing.md))
-            Column {
-                Text(
-                    name,
-                    style = LocalAppTypography.current.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = c.textPrimary,
-                )
-                Spacer(Modifier.height(spacing.xxs))
-                Text(
-                    ageDetail,
-                    style = LocalAppTypography.current.bodyMedium,
-                    color = c.textSecondary,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun AssessmentItemsSection(latest: DevelopmentAssessment) {
-    val spacing = LocalAppSpacing.current
     Column(Modifier.padding(horizontal = spacing.md)) {
         abilities().forEachIndexed { index, meta ->
-            AssessmentItemCard(
-                emoji = meta.emoji,
-                bgColor = meta.bgColor,
-                title = meta.title,
-                score = meta.score(latest),
-                description = abilityDescription(meta.title, meta.score(latest)),
-            )
-            if (index != abilities().lastIndex) Spacer(Modifier.height(spacing.sm))
-        }
-    }
-}
-
-@Composable
-private fun AssessmentItemCard(
-    emoji: String,
-    bgColor: Color,
-    title: String,
-    score: Int,
-    description: String,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    val statusColor = scoreColor(score)
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(horizontal = spacing.md, vertical = 14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AppEmojiBadge(emoji = emoji, tint = bgColor)
-                Spacer(Modifier.width(12.dp))
-                Row(
-                    Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(title, style = LocalAppTypography.current.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
-                    Spacer(Modifier.width(10.dp))
-                    Box(
-                        Modifier
-                            .clip(RoundedCornerShape(shapes.full))
-                            .background(AppColorScale.fromSeed(statusColor).tintContainer(c))
-                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Text(scoreLabel(score), style = LocalAppTypography.current.labelMedium, fontWeight = FontWeight.SemiBold, // 胶囊文字取强调档，保证浅底上的对比度
-                        color = AppColorScale.fromSeed(statusColor).accentContent(c))
+            // 能力项行：徽章 + 标题 + 评分胶囊 + 描述，G3 收编为循环内 AppCard 组合
+            val score = meta.score(latest)
+            val statusColor = scoreColor(score)
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(Modifier.padding(horizontal = spacing.md, vertical = 14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppEmojiBadge(emoji = meta.emoji, tint = meta.bgColor)
+                        Spacer(Modifier.width(12.dp))
+                        Row(
+                            Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(meta.title, style = LocalAppTypography.current.titleMedium, fontWeight = FontWeight.SemiBold, color = c.textPrimary)
+                            Spacer(Modifier.width(10.dp))
+                            Box(
+                                Modifier
+                                    .clip(RoundedCornerShape(shapes.full))
+                                    .background(AppColorScale.fromSeed(statusColor).tintContainer(c))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                            ) {
+                                Text(scoreLabel(score), style = LocalAppTypography.current.labelMedium, fontWeight = FontWeight.SemiBold, // 胶囊文字取强调档，保证浅底上的对比度
+                                color = AppColorScale.fromSeed(statusColor).accentContent(c))
+                            }
+                        }
+                        Spacer(Modifier.width(spacing.xs))
+                        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = c.textTertiary, modifier = Modifier.size(20.dp))
                     }
+                    Spacer(Modifier.height(spacing.sm))
+                    Text(abilityDescription(meta.title, score), style = LocalAppTypography.current.bodyMedium.copy(lineHeight = 20.sp), color = c.textSecondary)
                 }
-                Spacer(Modifier.width(spacing.xs))
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = c.textTertiary, modifier = Modifier.size(20.dp))
             }
-            Spacer(Modifier.height(spacing.sm))
-            Text(description, style = LocalAppTypography.current.bodyMedium.copy(lineHeight = 20.sp), color = c.textSecondary)
+            if (index != abilities().lastIndex) Spacer(Modifier.height(spacing.sm))
         }
     }
 }

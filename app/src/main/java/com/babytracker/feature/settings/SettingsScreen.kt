@@ -1,15 +1,26 @@
 package com.babytracker.feature.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,14 +28,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
+import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.topbar.AppTopBar
+import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.i18n.AppStrings
 
 /**
@@ -72,21 +89,82 @@ fun SettingsScreen(
         ) {
             Spacer(Modifier.height(spacing.md))
 
-            UserInfoCard(
-                babyName = state.baby?.name ?: "未设置",
-                displayAccount = state.displayAccount,
-                nickname = state.nickname,
-                isLoggedIn = isLoggedIn,
+            // 用户信息行：渐变圆头像 + 昵称/账号摘要 + 编辑昵称入口（G3 收编为调用点内联组合）
+            val displayName = state.nickname ?: state.displayAccount ?: (state.baby?.name ?: "未设置")
+            val editNickname: (() -> Unit)? = if (isLoggedIn) {
+                { showNicknameDialog = true }
+            } else null
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
                 onClick = onOpenUserAccount,
-                onEditNickname = if (isLoggedIn) {
-                    { showNicknameDialog = true }
-                } else null,
-            )
+            ) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(Gradients.primary(c)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            displayName.take(1).ifEmpty { "?" },
+                            style = LocalAppTypography.current.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = c.onPrimary,
+                        )
+                    }
+
+                    Spacer(Modifier.width(14.dp))
+
+                    Column(Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = displayName,
+                                style = LocalAppTypography.current.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = c.textPrimary,
+                            )
+                            if (isLoggedIn && editNickname != null) {
+                                Spacer(Modifier.width(6.dp))
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "修改昵称",
+                                    tint = c.textTertiary,
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clickable(onClick = editNickname),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(spacing.xs))
+                        Text(
+                            text = if (isLoggedIn && state.displayAccount != null) {
+                                if (state.nickname != null) "账号: ${state.displayAccount.take(8)}…" else "ID: ${state.displayAccount.take(8)}…"
+                            } else "点击登录账号",
+                            style = LocalAppTypography.current.bodySmall,
+                            color = c.textTertiary,
+                            maxLines = 1,
+                        )
+                    }
+
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = c.textTertiary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
 
             Spacer(Modifier.height(spacing.md))
 
             SettingsSectionTitle("宝宝与家庭")
-            SettingsCard {
+            AppCardGroup {
                 SettingsRow(
                     emoji = "👶",
                     label = "宝宝管理",
@@ -113,7 +191,7 @@ fun SettingsScreen(
 
             // 快捷工具组（2.1 H7：高频工具从深层上提，原深层路由保留）
             SettingsSectionTitle("快捷工具")
-            SettingsCard {
+            AppCardGroup {
                 SettingsRow(
                     emoji = "📦",
                     label = AppStrings.backupManage,
@@ -132,7 +210,7 @@ fun SettingsScreen(
             Spacer(Modifier.height(spacing.md))
 
             SettingsSectionTitle("更多设置")
-            SettingsCard {
+            AppCardGroup {
                 SettingsRow(
                     emoji = "🎨",
                     label = "使用偏好",

@@ -169,20 +169,56 @@ fun SleepListScreen(
                     val durSec = DateUtils.durationToTotalSeconds(nightStart, nightEnd)
                     val timeRange = "${nightStart.format(DateTimeFormatter.ofPattern("HH:mm"))}-${nightEnd.format(DateTimeFormatter.ofPattern("HH:mm"))}"
 
-                    // 夜间睡眠合并卡：时长 + 时段 + 入睡/起床两格（2.1 合并原「睡眠详情」卡）
-                    NightSleepCard(
-                        emoji = "\uD83C\uDF19",
-                        title = AppStrings.nightSleep,
-                        value = DateUtils.durationFullText(durSec),
-                        subtitle = timeRange,
-                        fallAsleep = nightStart.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        wakeUp = nightEnd.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        onClick = { detailSleep = nightSleep },
-                        modifier = Modifier
+                    // 夜间睡眠合并行：渐变紫大卡 + 时长 + 入睡/起床两格（G3 收编为调用点内联组合）
+                    val nightTypography = LocalAppTypography.current
+                    val nightShapes = LocalAppShapes.current
+                    val nightContentColor = c.onSecondary
+                    Box(
+                        Modifier
                             .fillMaxWidth()
                             .padding(horizontal = spacing.md)
-                            .padding(bottom = spacing.md),
-                    )
+                            .padding(bottom = spacing.md)
+                            .clip(RoundedCornerShape(nightShapes.largeIncreased))
+                            .background(Gradients.sleepHeader(c))
+                            .clickable(onClick = { detailSleep = nightSleep }),
+                    ) {
+                        Column(Modifier.padding(spacing.lg)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    Modifier
+                                        .size(spacing.xl)
+                                        .clip(RoundedCornerShape(nightShapes.medium))
+                                        .background(nightContentColor.copy(alpha = 0.22f)),
+                                    contentAlignment = Alignment.Center,
+                                ) { Text("\uD83C\uDF19", style = nightTypography.titleMedium) }
+                                Spacer(Modifier.width(spacing.sm))
+                                Text(
+                                    AppStrings.nightSleep,
+                                    style = nightTypography.titleMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = nightContentColor.copy(alpha = 0.90f),
+                                )
+                            }
+                            Spacer(Modifier.height(spacing.md))
+                            Text(
+                                DateUtils.durationFullText(durSec),
+                                style = nightTypography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = nightContentColor,
+                            )
+                            Spacer(Modifier.height(spacing.xs))
+                            Text(
+                                timeRange,
+                                style = nightTypography.bodyMedium,
+                                color = nightContentColor.copy(alpha = 0.78f),
+                            )
+                            Spacer(Modifier.height(spacing.lg))
+                            Row(Modifier.fillMaxWidth()) {
+                                QuickStatPill(value = nightStart.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.fallAsleepTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
+                                QuickStatPill(value = nightEnd.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.wakeUpTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
                 }
 
                 // —— 小睡记录 ——
@@ -336,67 +372,4 @@ private fun sleepDetailFields(s: Sleep): List<Pair<String, String>> {
     list += AppStrings.detailDuration to DateUtils.durationFullText(durSec)
     s.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
     return list
-}
-
-
-/** 夜间睡眠合并卡：渐变紫大卡 + 入睡/起床两格 QuickStatPill（替代「汇总卡+详情卡」两段式） */
-@Composable
-private fun NightSleepCard(
-    emoji: String,
-    title: String,
-    value: String,
-    subtitle: String,
-    fallAsleep: String,
-    wakeUp: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
-    val contentColor = c.onSecondary
-    Box(
-        modifier
-            .clip(RoundedCornerShape(shapes.largeIncreased))
-            .background(Gradients.sleepHeader(c))
-            .clickable(onClick = onClick),
-    ) {
-        Column(Modifier.padding(spacing.lg)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .size(spacing.xl)
-                        .clip(RoundedCornerShape(shapes.medium))
-                        .background(contentColor.copy(alpha = 0.22f)),
-                    contentAlignment = Alignment.Center,
-                ) { Text(emoji, style = typography.titleMedium) }
-                Spacer(Modifier.width(spacing.sm))
-                Text(
-                    title,
-                    style = typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = contentColor.copy(alpha = 0.90f),
-                )
-            }
-            Spacer(Modifier.height(spacing.md))
-            Text(
-                value,
-                style = typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = contentColor,
-            )
-            Spacer(Modifier.height(spacing.xs))
-            Text(
-                subtitle,
-                style = typography.bodyMedium,
-                color = contentColor.copy(alpha = 0.78f),
-            )
-            Spacer(Modifier.height(spacing.lg))
-            Row(Modifier.fillMaxWidth()) {
-                QuickStatPill(value = fallAsleep, label = AppStrings.fallAsleepTime, contentColor = contentColor, modifier = Modifier.weight(1f))
-                QuickStatPill(value = wakeUp, label = AppStrings.wakeUpTime, contentColor = contentColor, modifier = Modifier.weight(1f))
-            }
-        }
-    }
 }

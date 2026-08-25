@@ -185,7 +185,31 @@ fun AiChatScreen(
                         )
                     }
                     if (state.preferences.showRecommendedQuestions) {
-                        item { AiWelcomeCard(onQuestion = onUpdateInput) }
+                        item {
+                            // 欢迎语卡：AppCard 组合（欢迎语 + 推荐问题胶囊），G3 收编为调用点内联
+                            val itemSpacing = LocalAppSpacing.current
+                            val itemColors = LocalAppColors.current
+                            val itemTypography = LocalAppTypography.current
+                            AppCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(itemSpacing.md)) {
+                                    Text(AppStrings.aiWelcome, style = itemTypography.bodyLarge, color = itemColors.textPrimary)
+                                    Spacer(Modifier.height(itemSpacing.md))
+                                    listOf(
+                                        AppStrings.aiQuestionAge,
+                                        AppStrings.aiQuestionSleep,
+                                        AppStrings.aiQuestionFeeding,
+                                    ).forEach { question ->
+                                        AppChip(
+                                            label = question,
+                                            onClick = { onUpdateInput(question) },
+                                            backgroundColor = AppColorScale.fromSeed(itemColors.primary).tintContainer(itemColors),
+                                            textColor = itemColors.textPrimary,
+                                            modifier = Modifier.padding(bottom = itemSpacing.sm),
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 items(state.messages, key = { it.id }) { message ->
@@ -451,13 +475,13 @@ private fun AiQuickAnalysisSection(
             }
         }
         Spacer(Modifier.height(spacing.sm))
-        AiAnalysisCardRow(
+        AiAnalysisRow(
             sources = listOf(AiAnalysisSource.SLEEP, AiAnalysisSource.FEEDING),
             state = state,
             onSelect = onSelect,
         )
         Spacer(Modifier.height(spacing.sm))
-        AiAnalysisCardRow(
+        AiAnalysisRow(
             sources = listOf(AiAnalysisSource.HEALTH, AiAnalysisSource.OVERVIEW),
             state = state,
             onSelect = onSelect,
@@ -465,75 +489,60 @@ private fun AiQuickAnalysisSection(
     }
 }
 
+// 快捷分析一行两卡：行容器保留命名（两个调用点共享），卡体直接用 AppCard 组合表达
 @Composable
-private fun AiAnalysisCardRow(
+private fun AiAnalysisRow(
     sources: List<AiAnalysisSource>,
     state: AiChatUiState,
     onSelect: (AiAnalysisSource) -> Unit,
 ) {
     val spacing = LocalAppSpacing.current
+    val colors = LocalAppColors.current
+    val typography = LocalAppTypography.current
     Row(Modifier.fillMaxWidth()) {
         sources.forEachIndexed { index, source ->
             if (index > 0) Spacer(Modifier.width(spacing.sm))
-            AiAnalysisCard(
-                source = source,
-                state = state,
+            val enabled = isAnalysisSourceEnabled(source, state.preferences)
+            val status = when {
+                state.isAnalysisAvailabilityLoading -> AppStrings.aiAnalysisLoading
+                !enabled -> AppStrings.aiAnalysisDataDisabled
+                source in state.availableAnalyses -> AppStrings.aiAnalysisAvailable
+                else -> AppStrings.aiAnalysisNoRecords
+            }
+            val selected = state.analysisContext == source
+            AppCard(
+                modifier = Modifier.weight(1f).heightIn(min = 96.dp),
+                variant = CardVariant.Outlined,
                 onClick = { onSelect(source) },
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-@Composable
-private fun AiAnalysisCard(
-    source: AiAnalysisSource,
-    state: AiChatUiState,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
-    val enabled = isAnalysisSourceEnabled(source, state.preferences)
-    val status = when {
-        state.isAnalysisAvailabilityLoading -> AppStrings.aiAnalysisLoading
-        !enabled -> AppStrings.aiAnalysisDataDisabled
-        source in state.availableAnalyses -> AppStrings.aiAnalysisAvailable
-        else -> AppStrings.aiAnalysisNoRecords
-    }
-    val selected = state.analysisContext == source
-    AppCard(
-        modifier = modifier.heightIn(min = 96.dp),
-        variant = CardVariant.Outlined,
-        onClick = onClick,
-        selected = selected,
-        colors = CardColors(
-            containerColor = if (selected) colors.primaryContainer else colors.surfaceElevated,
-        ),
-    ) {
-        Column(Modifier.padding(spacing.md)) {
-            Text(
-                text = analysisTitle(source),
-                style = typography.titleMedium,
-                color = colors.textPrimary,
-            )
-            Spacer(Modifier.height(spacing.xs))
-            Text(
-                text = analysisRange(state.analysisPeriod),
-                style = typography.bodyMedium,
-                color = colors.textSecondary,
-            )
-            Spacer(Modifier.height(spacing.xs))
-            Text(
-                text = status,
-                style = typography.labelMedium,
-                color = if (source in state.availableAnalyses) {
-                    colors.primary
-                } else {
-                    colors.textTertiary
-                },
-            )
+                selected = selected,
+                colors = CardColors(
+                    containerColor = if (selected) colors.primaryContainer else colors.surfaceElevated,
+                ),
+            ) {
+                Column(Modifier.padding(spacing.md)) {
+                    Text(
+                        text = analysisTitle(source),
+                        style = typography.titleMedium,
+                        color = colors.textPrimary,
+                    )
+                    Spacer(Modifier.height(spacing.xs))
+                    Text(
+                        text = analysisRange(state.analysisPeriod),
+                        style = typography.bodyMedium,
+                        color = colors.textSecondary,
+                    )
+                    Spacer(Modifier.height(spacing.xs))
+                    Text(
+                        text = status,
+                        style = typography.labelMedium,
+                        color = if (source in state.availableAnalyses) {
+                            colors.primary
+                        } else {
+                            colors.textTertiary
+                        },
+                    )
+                }
+            }
         }
     }
 }
@@ -767,32 +776,6 @@ private fun prerequisiteMessage(prerequisite: AiChatPrerequisite): String = when
 }
 
 @Composable
-private fun AiWelcomeCard(onQuestion: (String) -> Unit) {
-    val spacing = LocalAppSpacing.current
-    val colors = LocalAppColors.current
-    val typography = LocalAppTypography.current
-    AppCard(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(spacing.md)) {
-            Text(AppStrings.aiWelcome, style = typography.bodyLarge, color = colors.textPrimary)
-            Spacer(Modifier.height(spacing.md))
-            listOf(
-                AppStrings.aiQuestionAge,
-                AppStrings.aiQuestionSleep,
-                AppStrings.aiQuestionFeeding,
-            ).forEach { question ->
-                AppChip(
-                    label = question,
-                    onClick = { onQuestion(question) },
-                    backgroundColor = AppColorScale.fromSeed(colors.primary).tintContainer(colors),
-                    textColor = colors.textPrimary,
-                    modifier = Modifier.padding(bottom = spacing.sm),
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun AiMessageBubble(
     message: AiChatEntry,
     renderMarkdown: Boolean,
@@ -896,7 +879,29 @@ private fun AiMessageBubble(
         }
         message.riskLevel?.let { riskLevel ->
             Spacer(Modifier.height(spacing.sm))
-            AiRiskCard(riskLevel)
+            // 风险警示卡：描边强调色随风险档位变化，G3 收编为调用点内联
+            val accent = if (riskLevel == AiRiskLevel.ATTENTION) colors.warning else colors.error
+            val riskTitle = when (riskLevel) {
+                AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyTitle
+                AiRiskLevel.HIGH -> AppStrings.aiRiskHighTitle
+                AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionTitle
+            }
+            val riskMessage = when (riskLevel) {
+                AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyMessage
+                AiRiskLevel.HIGH -> AppStrings.aiRiskHighMessage
+                AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionMessage
+            }
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = CardVariant.Outlined,
+                colors = CardColors(borderColor = accent),
+            ) {
+                Column(Modifier.padding(spacing.md)) {
+                    Text(riskTitle, style = typography.titleMedium, color = accent)
+                    Spacer(Modifier.height(spacing.xs))
+                    Text(riskMessage, style = typography.bodyMedium, color = colors.textPrimary)
+                }
+            }
         }
     }
 }
@@ -977,35 +982,6 @@ private fun AiReasoningBlock(
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
             )
-        }
-    }
-}
-
-@Composable
-private fun AiRiskCard(riskLevel: AiRiskLevel) {
-    val colors = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val accent = if (riskLevel == AiRiskLevel.ATTENTION) colors.warning else colors.error
-    val title = when (riskLevel) {
-        AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyTitle
-        AiRiskLevel.HIGH -> AppStrings.aiRiskHighTitle
-        AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionTitle
-    }
-    val message = when (riskLevel) {
-        AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyMessage
-        AiRiskLevel.HIGH -> AppStrings.aiRiskHighMessage
-        AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionMessage
-    }
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-        variant = CardVariant.Outlined,
-        colors = CardColors(borderColor = accent),
-    ) {
-        Column(Modifier.padding(spacing.md)) {
-            Text(title, style = typography.titleMedium, color = accent)
-            Spacer(Modifier.height(spacing.xs))
-            Text(message, style = typography.bodyMedium, color = colors.textPrimary)
         }
     }
 }

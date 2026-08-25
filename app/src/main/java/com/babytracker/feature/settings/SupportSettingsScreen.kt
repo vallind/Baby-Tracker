@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.i18n.AppStrings
@@ -29,7 +30,7 @@ fun SupportSettingsScreen(
         title = "帮助与关于",
         onBack = onBack,
     ) {
-        SettingsCard {
+        AppCardGroup {
             SettingsRow(
                 emoji = "❓",
                 label = "帮助与反馈",

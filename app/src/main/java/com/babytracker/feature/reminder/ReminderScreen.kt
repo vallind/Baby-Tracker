@@ -121,10 +121,10 @@ fun ReminderScreen(
                 ) {
                     items(list, key = { it.id }) { reminder ->
                         if (tab == ReminderTab.PENDING) {
-                            PendingReminderCard(
-                                reminder = reminder,
-                                onMarkDone = { onMarkDone(reminder.id) },
-                                onToggleEnabled = { onToggleEnabled(reminder.id, it) },
+                            // 待办提醒行：滑动删除 + 徽章 + 标题/描述 + 开关或倒计时/完成（G3 收编为调用点内联组合）
+                            val shapes = LocalAppShapes.current
+                            val (emoji, typeColor) = reminder.type.toVisual(c)
+                            RecordCard(
                                 onDelete = {
                                     onDelete(reminder)
                                     scope.launch {
@@ -133,10 +133,89 @@ fun ReminderScreen(
                                         ) { onRestore(reminder) }
                                     }
                                 },
-                            )
+                                modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
+                            ) {
+                                AppEmojiBadge(emoji = emoji, tint = typeColor)
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        reminder.title,
+                                        style = LocalAppTypography.current.bodyLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = c.textPrimary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    if (reminder.description.isNotBlank()) {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            reminder.description,
+                                            style = LocalAppTypography.current.labelMedium,
+                                            color = c.textSecondary,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                    if (reminder.type == ReminderType.MEDICATION && reminder.repeatRule.isNotBlank()) {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(
+                                            reminder.repeatRule,
+                                            style = LocalAppTypography.current.labelMedium,
+                                            color = c.textTertiary,
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.width(spacing.sm))
+                                if (reminder.type == ReminderType.MEDICATION) {
+                                    AppSwitch(
+                                        checked = reminder.isEnabled,
+                                        onCheckedChange = { onToggleEnabled(reminder.id, it) },
+                                        checkedColor = c.primary,
+                                    )
+                                } else {
+                                    val countdown = reminder.countdownText()
+                                    val overdue = reminder.isOverdue()
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(
+                                                countdown,
+                                                style = LocalAppTypography.current.bodyMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = if (overdue) c.danger else c.primary,
+                                            )
+                                            Spacer(Modifier.height(2.dp))
+                                            Text(
+                                                DateUtils.formatDate(reminder.dueDate),
+                                                style = LocalAppTypography.current.labelMedium,
+                                                color = c.textTertiary,
+                                            )
+                                        }
+                                        Spacer(Modifier.width(spacing.xs))
+                                        // 完成按钮：40dp 圆形触控目标 + 柔底（2.1 放大，C7）
+                                        Box(
+                                            Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(shapes.full))
+                                                .background(c.surfaceMuted)
+                                                .clickable(onClick = { onMarkDone(reminder.id) }),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Check,
+                                                contentDescription = AppStrings.reminderMarkDone,
+                                                tint = c.success,
+                                                modifier = Modifier.size(20.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         } else {
-                            HistoryReminderCard(
-                                reminder = reminder,
+                            // 历史提醒行：柔底 + 完成时间 + 对勾（G3 收编为调用点内联组合）
+                            val (emoji, typeColor) = reminder.type.toVisual(c)
+                            val doneText = reminder.doneDate?.let { String.format(Locale.US, AppStrings.reminderDoneAt, DateUtils.formatDate(it)) }
+                                ?: AppStrings.reminderDone
+                            RecordCard(
                                 onDelete = {
                                     onDelete(reminder)
                                     scope.launch {
@@ -145,7 +224,25 @@ fun ReminderScreen(
                                         ) { onRestore(reminder) }
                                     }
                                 },
-                            )
+                                containerColor = c.surfaceMuted,
+                                modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
+                            ) {
+                                AppEmojiBadge(emoji = emoji, tint = typeColor)
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(
+                                        reminder.title,
+                                        style = LocalAppTypography.current.bodyLarge,
+                                        fontWeight = FontWeight.Medium,
+                                        color = c.textSecondary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(doneText, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
+                                }
+                                Text("\u2705", style = LocalAppTypography.current.titleLarge)
+                            }
                         }
                     }
                 }
@@ -168,133 +265,6 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
             onSelect = { idx -> onSwitch(if (idx == 0) ReminderTab.PENDING else ReminderTab.HISTORY) },
             modifier = Modifier.fillMaxWidth(),
         )
-    }
-}
-
-@Composable
-private fun PendingReminderCard(
-    reminder: Reminder,
-    onMarkDone: () -> Unit,
-    onToggleEnabled: (Boolean) -> Unit,
-    onDelete: () -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    val (emoji, typeColor) = reminder.type.toVisual(c)
-
-    RecordCard(
-        onDelete = onDelete,
-        modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
-    ) {
-        AppEmojiBadge(emoji = emoji, tint = typeColor)
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                reminder.title,
-                style = LocalAppTypography.current.bodyLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = c.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (reminder.description.isNotBlank()) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    reminder.description,
-                    style = LocalAppTypography.current.labelMedium,
-                    color = c.textSecondary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            if (reminder.type == ReminderType.MEDICATION && reminder.repeatRule.isNotBlank()) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    reminder.repeatRule,
-                    style = LocalAppTypography.current.labelMedium,
-                    color = c.textTertiary,
-                )
-            }
-        }
-        Spacer(Modifier.width(spacing.sm))
-        if (reminder.type == ReminderType.MEDICATION) {
-            AppSwitch(
-                checked = reminder.isEnabled,
-                onCheckedChange = onToggleEnabled,
-                checkedColor = c.primary,
-            )
-        } else {
-            val countdown = reminder.countdownText()
-            val overdue = reminder.isOverdue()
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        countdown,
-                        style = LocalAppTypography.current.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (overdue) c.danger else c.primary,
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        DateUtils.formatDate(reminder.dueDate),
-                        style = LocalAppTypography.current.labelMedium,
-                        color = c.textTertiary,
-                    )
-                }
-                Spacer(Modifier.width(spacing.xs))
-                // 完成按钮：40dp 圆形触控目标 + 柔底（2.1 放大，C7）
-                Box(
-                    Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(shapes.full))
-                        .background(c.surfaceMuted)
-                        .clickable(onClick = onMarkDone),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = AppStrings.reminderMarkDone,
-                        tint = c.success,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistoryReminderCard(
-    reminder: Reminder,
-    onDelete: () -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val (emoji, typeColor) = reminder.type.toVisual(c)
-    val doneText = reminder.doneDate?.let { String.format(Locale.US, AppStrings.reminderDoneAt, DateUtils.formatDate(it)) }
-        ?: AppStrings.reminderDone
-
-    RecordCard(
-        onDelete = onDelete,
-        containerColor = c.surfaceMuted,
-        modifier = Modifier.padding(horizontal = spacing.md, vertical = 6.dp),
-    ) {
-        AppEmojiBadge(emoji = emoji, tint = typeColor)
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                reminder.title,
-                style = LocalAppTypography.current.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = c.textSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(doneText, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
-        }
-        Text("\u2705", style = LocalAppTypography.current.titleLarge)
     }
 }
 

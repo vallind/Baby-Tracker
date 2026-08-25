@@ -64,6 +64,22 @@
 - **`AppInsightCard(title, message, emoji?, actionLabel?, onAction?)`**：AI 洞察/建议卡通用形态
 - **收编示范**：StatsScreen 四胞胎（喂养/睡眠/身高/体重卡）全部改写为 AppMetricCard 组合，删除私有 StatCardFrame/StatCardIcon/StatChartArea 骨架三件套；StatsScreen 移出规则⑥白名单（存量白名单余 11 文件，后续批次继续消化）
 
+**G3 收编清单：剩余 11 文件私有卡清零，规则⑥白名单归零**
+
+- 处置原则：按各私有卡实际形态判定——与 AppMetricCard 骨架同构者走复合组件；纯容器删壳换基座；唯一调用点的行卡内联展开；渐变底 hero 与可点击展开行等非卡片基座形态保留原组合、仅去 `*Card` 命名或内联，确保视觉结构零变化。逐文件处置：
+  - **AiChatScreen**：`AiAnalysisCardRow` 两处共享改名 `AiAnalysisRow`；`AiAnalysisCard` 内联进行循环；欢迎语卡、风险提示卡均为单调用点，AppCard 组合内联后删除
+  - **AiSettingsScreen**：配置状态行单调用点内联删除；六处通用卡组改用 `AppCardGroup`
+  - **DevelopmentAssessmentScreen**：宝宝摘要行、能力项行均单调用点，内联为 AppCard 组合后删除
+  - **DiaperListScreen**：今日尿布合并行为青渐变 hero（非卡片基座形态），内联至调用点保留原观感
+  - **HealthScreen**：分类摘要行（点击展开）与疫苗入口行（点击跳转）为交互列表行卡，内联至调用点保留 onClick/enabled 轴
+  - **HomeScreen**：AI 助手入口行与今日概览为渐变 hero 领域组合，保留结构改名 `AiAssistantEntry`/`TodayOverview`（去卡片化命名）
+  - **MessageScreen**：消息行整卡即一条记录，内联进 items 循环
+  - **ReminderScreen**：待办/历史提醒行内联进 items 对应分支
+  - **SettingsComponents**：通用卡组容器删除，6 文件 13 处调用点直接改用 `AppCardGroup`；用户信息行为跨文件唯一调用点，内联迁入 SettingsScreen 并顺带移除未使用的局部量
+  - **SleepListScreen**：夜间睡眠合并行为渐变紫 hero，内联至调用点
+  - **VaccinationListScreen**：接种记录行内联进 items 循环（remember 键不变）
+- **门禁收口**：StatsScreen 四胞胎补改名 `FeedingMetric`/`SleepMetric`/`HeightMetric`/`WeightMetric`（G 批（一）移除白名单时遗漏，此前 themeTokenAudit 实为红）；`featureCardBaselineRelPaths` 白名单删除 11 条后为空集（声明保留）；`TokenAuditCheckerTest` 规则⑥用例语义同步更新为「白名单已清零、历史文件不再豁免」
+
 **H 批内容：Layout 原语 + 页面组件盘点**
 
 - `foundation/layout` 新增 **`AppRow` / `AppColumn`**：子项间距默认走 spacing.md 令牌，替代各页 `Arrangement.spacedBy(…)` 手写样板；AppRow 支持 `wrap = true` 自动换行（FlowRow，标签组/筛选组场景）

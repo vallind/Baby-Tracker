@@ -2,26 +2,19 @@ package com.babytracker.feature.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,17 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.card.AppCard
-import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.section.AppListItem
 import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppElevation
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -47,12 +35,8 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 // ═══════════════════════════════════════════════════════════
 //  Settings 共享 UI 组件（自 SettingsScreen.kt 拆出，Batch 4）
 //  纯 UI 切片，不承载任何业务逻辑
+//  G3 收编：通用卡组容器删除，调用点直接改用 designsystem 的 AppCardGroup
 // ═══════════════════════════════════════════════════════════
-
-@Composable
-fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
-    AppCardGroup(content = content)
-}
 
 @Composable
 fun SettingsDivider() {
@@ -137,90 +121,6 @@ fun SettingsMenuScaffold(
                 .padding(horizontal = spacing.md, vertical = spacing.md),
         ) {
             content()
-        }
-    }
-}
-
-@Composable
-fun UserInfoCard(
-    babyName: String,
-    displayAccount: String?,
-    nickname: String?,
-    isLoggedIn: Boolean,
-    onClick: (() -> Unit)? = null,
-    onEditNickname: (() -> Unit)? = null,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val elev = LocalAppElevation.current
-    val displayName = nickname ?: displayAccount ?: babyName
-
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(spacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                Modifier
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(Gradients.primary(c)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    displayName.take(1).ifEmpty { "?" },
-                    style = LocalAppTypography.current.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = c.onPrimary,
-                )
-            }
-
-            Spacer(Modifier.width(14.dp))
-
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = displayName,
-                        style = LocalAppTypography.current.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = c.textPrimary,
-                    )
-                    if (isLoggedIn && onEditNickname != null) {
-                        Spacer(Modifier.width(6.dp))
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "修改昵称",
-                            tint = c.textTertiary,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clickable(onClick = onEditNickname),
-                        )
-                    }
-                }
-                Spacer(Modifier.height(spacing.xs))
-                Text(
-                    text = if (isLoggedIn && displayAccount != null) {
-                        if (nickname != null) "账号: ${displayAccount.take(8)}…" else "ID: ${displayAccount.take(8)}…"
-                    } else "点击登录账号",
-                    style = LocalAppTypography.current.bodySmall,
-                    color = c.textTertiary,
-                    maxLines = 1,
-                )
-            }
-
-            if (onClick != null) {
-                Icon(
-                    Icons.Default.ChevronRight,
-                    contentDescription = null,
-                    tint = c.textTertiary,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
         }
     }
 }

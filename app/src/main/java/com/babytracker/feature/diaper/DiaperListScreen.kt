@@ -168,19 +168,51 @@ fun DiaperListScreen(
                     )
                 }
             } else {
-                // 今日尿布合并卡：n 次大数字 + 小便/大便/混合三格（2.1 合并原「换尿布详情」卡）
-                DiaperSummaryCard(
-                    emoji = "🧷",
-                    title = AppStrings.diaperToday,
-                    value = "${String.format(Locale.US, AppStrings.countTimes, filtered.size)}",
-                    wet = wetCount,
-                    poop = poopCount,
-                    both = bothCount,
-                    modifier = Modifier
+                // 今日尿布合并行：青渐变大卡 + n 次大数字 + 小便/大便/混合三格（2.1 合并原「换尿布详情」卡）
+                // G3 收编：渐变底容器非通用卡片基座形态，按调用点内联保留原有观感
+                val summaryTypography = LocalAppTypography.current
+                val summaryShapes = LocalAppShapes.current
+                val contentColor = c.onTertiary
+                Box(
+                    Modifier
                         .fillMaxWidth()
                         .padding(horizontal = spacing.md)
-                        .padding(bottom = spacing.md),
-                )
+                        .padding(bottom = spacing.md)
+                        .clip(RoundedCornerShape(summaryShapes.largeIncreased))
+                        .background(Gradients.diaperSummary(c)),
+                ) {
+                    Column(Modifier.padding(spacing.lg)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                Modifier
+                                    .size(spacing.xl)
+                                    .clip(RoundedCornerShape(summaryShapes.medium))
+                                    .background(contentColor.copy(alpha = 0.22f)),
+                                contentAlignment = Alignment.Center,
+                            ) { Text("🧷", style = summaryTypography.titleMedium) }
+                            Spacer(Modifier.width(spacing.sm))
+                            Text(
+                                AppStrings.diaperToday,
+                                style = summaryTypography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = contentColor.copy(alpha = 0.90f),
+                            )
+                        }
+                        Spacer(Modifier.height(spacing.md))
+                        Text(
+                            "${String.format(Locale.US, AppStrings.countTimes, filtered.size)}",
+                            style = summaryTypography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = contentColor,
+                        )
+                        Spacer(Modifier.height(spacing.lg))
+                        Row(Modifier.fillMaxWidth()) {
+                            QuickStatPill(value = wetCount.toString(), label = AppStrings.diaperWet, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                            QuickStatPill(value = poopCount.toString(), label = AppStrings.diaperPoop, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                            QuickStatPill(value = bothCount.toString(), label = AppStrings.diaperBoth, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
 
                 // —— 记录列表 ——
                 LazyColumn(
@@ -422,60 +454,4 @@ private fun diaperDetailFields(d: Diaper): List<Pair<String, String>> {
     list += AppStrings.detailType to DateUtils.diaperTypeLabel(DiaperType.raw(d.type))
     d.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
     return list
-}
-
-
-/** 今日尿布合并卡：青渐变大卡 + 三类计数三格 QuickStatPill（替代「汇总卡+详情卡」两段式） */
-@Composable
-private fun DiaperSummaryCard(
-    emoji: String,
-    title: String,
-    value: String,
-    wet: Int,
-    poop: Int,
-    both: Int,
-    modifier: Modifier = Modifier,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val typography = LocalAppTypography.current
-    val shapes = LocalAppShapes.current
-    val contentColor = c.onTertiary
-    Box(
-        modifier
-            .clip(RoundedCornerShape(shapes.largeIncreased))
-            .background(Gradients.diaperSummary(c)),
-    ) {
-        Column(Modifier.padding(spacing.lg)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier
-                        .size(spacing.xl)
-                        .clip(RoundedCornerShape(shapes.medium))
-                        .background(contentColor.copy(alpha = 0.22f)),
-                    contentAlignment = Alignment.Center,
-                ) { Text(emoji, style = typography.titleMedium) }
-                Spacer(Modifier.width(spacing.sm))
-                Text(
-                    title,
-                    style = typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = contentColor.copy(alpha = 0.90f),
-                )
-            }
-            Spacer(Modifier.height(spacing.md))
-            Text(
-                value,
-                style = typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = contentColor,
-            )
-            Spacer(Modifier.height(spacing.lg))
-            Row(Modifier.fillMaxWidth()) {
-                QuickStatPill(value = wet.toString(), label = AppStrings.diaperWet, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-                QuickStatPill(value = poop.toString(), label = AppStrings.diaperPoop, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-                QuickStatPill(value = both.toString(), label = AppStrings.diaperBoth, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-            }
-        }
-    }
 }

@@ -223,20 +223,90 @@ fun VaccinationListScreen(
                     verticalArrangement = Arrangement.spacedBy(spacing.sm),
                 ) {
                     items(items = filtered, key = { it.id }) { v ->
-                        VaccinationCard(
-                            vaccination = v,
-                            birthDate = baby.birthDate,
-                            onClick = {
-                                editingVac = v
-                                showForm = true
-                            },
+                        // 接种记录行：滑动删除 + 名称/剂次 + 状态胶囊 + 月龄/建议日期（G3 收编为调用点内联组合）
+                        val shapes = LocalAppShapes.current
+                        val ageText = remember(v.scheduledDate, baby.birthDate) {
+                            suggestedAgeText(v.scheduledDate, baby.birthDate)
+                        }
+                        val dateText = remember(v.scheduledDate) {
+                            v.scheduledDate?.let { s ->
+                                try {
+                                    val dt = LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME)
+                                    "建议 ${DateUtils.formatDate(dt)}"
+                                } catch (_: Exception) { s.take(10) }
+                            } ?: ""
+                        }
+
+                        val isExpired = isExpired(v)
+
+                        val (tagColor, tagLabel) = when {
+                            v.status == VaccinationStatus.DONE -> c.success to "已接种"
+                            v.status == VaccinationStatus.SKIPPED -> c.textTertiary to "已跳过"
+                            isExpired -> c.error to "已过期"
+                            else -> c.warning to "未接种"
+                        }
+
+                        RecordCard(
                             onDelete = {
                                 onDelete(v)
                                 scope.launch {
                                     appSnackbar.showUndo(message = "已删除\u300C${v.name}\u300D") { onRestore(v) }
                                 }
                             },
-                        )
+                            onClick = {
+                                editingVac = v
+                                showForm = true
+                            },
+                            onLongClick = {
+                                editingVac = v
+                                showForm = true
+                            },
+                        ) {
+                            Column(Modifier.padding(start = spacing.sm)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        v.name,
+                                        style = LocalAppTypography.current.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = c.textPrimary,
+                                    )
+                                    if (!v.dose.isNullOrBlank()) {
+                                        Spacer(Modifier.width(spacing.sm))
+                                        Text(
+                                            v.dose,
+                                            style = LocalAppTypography.current.bodyMedium,
+                                            color = c.textSecondary,
+                                        )
+                                    }
+                                    Spacer(Modifier.weight(1f))
+                                    Box(
+                                        Modifier
+                                            .clip(RoundedCornerShape(shapes.full))
+                                            .background(AppColorScale.fromSeed(tagColor).tintContainer(c))
+                                            .padding(horizontal = 10.dp, vertical = 4.dp),
+                                    ) {
+                                        Text(
+                                            tagLabel,
+                                            style = LocalAppTypography.current.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = tagColor,
+                                        )
+                                    }
+                                }
+                                if (ageText.isNotBlank() || dateText.isNotBlank()) {
+                                    Spacer(Modifier.height(6.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        if (ageText.isNotBlank()) {
+                                            Text(ageText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
+                                        }
+                                        Spacer(Modifier.weight(1f))
+                                        if (dateText.isNotBlank()) {
+                                            Text(dateText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                     if (tab == "plan") {
                         item {
@@ -282,89 +352,6 @@ fun VaccinationListScreen(
             },
             onDismiss = { showGenerateConfirm = false },
         )
-    }
-}
-
-@Composable
-private fun VaccinationCard(
-    vaccination: Vaccination,
-    birthDate: String,
-    onClick: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    val shapes = LocalAppShapes.current
-    val ageText = remember(vaccination.scheduledDate, birthDate) {
-        suggestedAgeText(vaccination.scheduledDate, birthDate)
-    }
-    val dateText = remember(vaccination.scheduledDate) {
-        vaccination.scheduledDate?.let { s ->
-            try {
-                val dt = LocalDateTime.parse(s, DateTimeFormatter.ISO_DATE_TIME)
-                "建议 ${DateUtils.formatDate(dt)}"
-            } catch (_: Exception) { s.take(10) }
-        } ?: ""
-    }
-
-    val isExpired = isExpired(vaccination)
-
-    val (tagColor, tagLabel) = when {
-        vaccination.status == VaccinationStatus.DONE -> c.success to "已接种"
-        vaccination.status == VaccinationStatus.SKIPPED -> c.textTertiary to "已跳过"
-        isExpired -> c.error to "已过期"
-        else -> c.warning to "未接种"
-    }
-
-    RecordCard(
-        onDelete = onDelete,
-        onClick = onClick,
-        onLongClick = onClick,
-    ) {
-        Column(Modifier.padding(start = spacing.sm)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    vaccination.name,
-                    style = LocalAppTypography.current.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = c.textPrimary,
-                )
-                if (!vaccination.dose.isNullOrBlank()) {
-                    Spacer(Modifier.width(spacing.sm))
-                    Text(
-                        vaccination.dose,
-                        style = LocalAppTypography.current.bodyMedium,
-                        color = c.textSecondary,
-                    )
-                }
-                Spacer(Modifier.weight(1f))
-                Box(
-                    Modifier
-                        .clip(RoundedCornerShape(shapes.full))
-                        .background(AppColorScale.fromSeed(tagColor).tintContainer(c))
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
-                ) {
-                    Text(
-                        tagLabel,
-                        style = LocalAppTypography.current.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = tagColor,
-                    )
-                }
-            }
-            if (ageText.isNotBlank() || dateText.isNotBlank()) {
-                Spacer(Modifier.height(6.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (ageText.isNotBlank()) {
-                        Text(ageText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
-                    }
-                    Spacer(Modifier.weight(1f))
-                    if (dateText.isNotBlank()) {
-                        Text(dateText, style = LocalAppTypography.current.bodyMedium, color = c.textSecondary)
-                    }
-                }
-            }
-        }
     }
 }
 

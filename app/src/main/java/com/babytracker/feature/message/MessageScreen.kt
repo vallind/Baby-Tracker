@@ -147,11 +147,62 @@ fun MessageScreen(
                     verticalArrangement = Arrangement.spacedBy(spacing.sm),
                 ) {
                     items(filteredMessages, key = { it.id }) { message ->
-                        MessageCard(
-                            message = message,
+                        // 消息行：整卡即一条记录，左图标 + 标题/摘要 + 已读点（G3 收编为调用点内联组合）
+                        AppCard(
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = { onMarkRead(message.id) },
                             onLongClick = { deleteTarget = message },
-                        )
+                        ) {
+                            Row(
+                                Modifier
+                                    .padding(horizontal = spacing.md, vertical = 14.dp),
+                                verticalAlignment = Alignment.Top,
+                            ) {
+                                MessageLeadingIcon(message)
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Text(
+                                            message.title,
+                                            style = LocalAppTypography.current.bodyLarge,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = c.textPrimary,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                        Spacer(Modifier.width(spacing.sm))
+                                        Text(
+                                            relativeTime(message.createTime),
+                                            style = LocalAppTypography.current.labelMedium,
+                                            color = c.textTertiary,
+                                        )
+                                    }
+                                    Spacer(Modifier.height(spacing.xs))
+                                    Text(
+                                        message.content,
+                                        style = LocalAppTypography.current.bodyMedium,
+                                        color = c.textSecondary,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                                Spacer(Modifier.width(spacing.sm))
+                                if (!message.isRead) {
+                                    Box(
+                                        Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(c.danger),
+                                    )
+                                } else {
+                                    Text(AppStrings.messageRead, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
+                                }
+                            }
+                        }
                     }
                     item { Spacer(Modifier.height(spacing.md)) }
                 }
@@ -240,71 +291,6 @@ private fun CategoryOverviewBar(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MessageCard(
-    message: AppMessage,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        onLongClick = onLongClick,
-    ) {
-        Row(
-            Modifier
-                .padding(horizontal = spacing.md, vertical = 14.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            MessageLeadingIcon(message)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        message.title,
-                        style = LocalAppTypography.current.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = c.textPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(spacing.sm))
-                    Text(
-                        relativeTime(message.createTime),
-                        style = LocalAppTypography.current.labelMedium,
-                        color = c.textTertiary,
-                    )
-                }
-                Spacer(Modifier.height(spacing.xs))
-                Text(
-                    message.content,
-                    style = LocalAppTypography.current.bodyMedium,
-                    color = c.textSecondary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Spacer(Modifier.width(spacing.sm))
-            if (!message.isRead) {
-                Box(
-                    Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(c.danger),
-                )
-            } else {
-                Text(AppStrings.messageRead, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
             }
         }
     }
