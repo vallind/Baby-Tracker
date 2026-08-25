@@ -44,6 +44,12 @@
 - 选择控件盘点结论：`AppCheckbox`/`AppRadioButton` 已有 `enabled` + size 令牌参数；`AppSwitch` 因 material3 1.4 的 Switch 公开参数不含尺寸项而不设 size 轴（与 AppFAB 同原则），三件套 disabled 视觉由 M3 内建
 - 输入框 variant 轴判定为取值集合为空不设轴（填充式是唯一产品形态，令牌已收敛）
 
+**D 批内容：列表基座**
+
+- **`AppListItem`** 补状态轴：`selected`（bgSelected 令牌底色高亮）与 `enabled`（disabledAlpha 降透明 + 点击失效）；`ListItemTokens` 增 selectedContainerColor/disabledAlpha 字段
+- **`SectionHeader`** 新增 `trailingContent` 尾槽（放计数/Switch 等自定义尾部，位于 action 链接之后）
+- 收编 `BabyProfileScreen` 私有 `SectionHeader`（影子组件）：删除私有实现改用 DS 版，分组标题全站归一；顺带清理重复 @Composable 注解
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

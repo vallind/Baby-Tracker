@@ -714,6 +714,9 @@ data class ListItemTokens(
     val subtitleColor: Color,
     val dividerColor: Color,
     val actionColor: Color,
+    // D 批状态轴：选中底 / 禁用透明
+    val selectedContainerColor: Color,
+    val disabledAlpha: Float,
 ) {
     companion object {
         fun default(
@@ -732,6 +735,8 @@ data class ListItemTokens(
             subtitleColor = colors.textSecondary,
             dividerColor = colors.divider,
             actionColor = colors.primary,
+            selectedContainerColor = colors.bgSelected,
+            disabledAlpha = opacity.disabled,
         )
     }
 }

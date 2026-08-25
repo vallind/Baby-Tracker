@@ -19,6 +19,7 @@ import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
+import com.babytracker.designsystem.components.section.SectionHeader
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.AppColorScale
@@ -214,18 +215,6 @@ fun BabyProfileScreen(
             },
         )
     }
-}
-
-@Composable
-private fun SectionHeader(title: String) {
-    val c = LocalAppColors.current
-    val spacing = LocalAppSpacing.current
-    Text(
-        title,
-        style = LocalAppTypography.current.bodyMedium,
-        color = c.textSecondary,
-        modifier = Modifier.padding(start = spacing.md, bottom = spacing.sm),
-    )
 }
 
 @Composable

@@ -18,4 +18,8 @@ object ListItemDefaults {
     @Composable fun subtitleColor(): Color = LocalAppComponentTokens.current.listItem.subtitleColor
     @Composable fun dividerColor(): Color = LocalAppComponentTokens.current.listItem.dividerColor
     @Composable fun actionColor(): Color = LocalAppComponentTokens.current.listItem.actionColor
+
+    // D 批状态轴
+    @Composable fun selectedContainerColor(): Color = LocalAppComponentTokens.current.listItem.selectedContainerColor
+    @Composable fun disabledAlpha(): Float = LocalAppComponentTokens.current.listItem.disabledAlpha
 }

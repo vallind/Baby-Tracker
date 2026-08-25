@@ -1,5 +1,6 @@
 package com.babytracker.designsystem.components.section
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -29,6 +32,7 @@ fun SectionHeader(
     title: String,
     actionText: String? = null,
     onAction: (() -> Unit)? = null,
+    trailingContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -46,6 +50,7 @@ fun SectionHeader(
                 modifier = Modifier.clickable(onClick = onAction),
             )
         }
+        trailingContent?.invoke()
     }
 }
 
@@ -68,6 +73,8 @@ fun AppListItem(
     supportingContent: @Composable (() -> Unit)? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
+    enabled: Boolean = true,
+    selected: Boolean = false,
     minHeight: Dp = ListItemDefaults.minHeight(),
     horizontalPadding: Dp = ListItemDefaults.horizontalPadding(),
     dividerAlpha: Float = ListItemDefaults.dividerAlpha(),
@@ -79,7 +86,12 @@ fun AppListItem(
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(min = minHeight)
-                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+                .background(if (selected) ListItemDefaults.selectedContainerColor() else Color.Transparent)
+                // D 批状态轴：禁用降透明且不可点（disabledAlpha 与按钮/卡片同语义）
+                .alpha(if (enabled) 1f else ListItemDefaults.disabledAlpha())
+                .then(
+                    if (onClick != null && enabled) Modifier.clickable(onClick = onClick) else Modifier
+                )
                 .padding(horizontal = horizontalPadding, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
