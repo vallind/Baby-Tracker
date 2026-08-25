@@ -13,7 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.chip.AppOptionChipRow
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +35,7 @@ import com.babytracker.core.domain.model.Growth
 import com.babytracker.core.domain.model.GrowthType
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.util.GrowthReference
+import com.babytracker.designsystem.components.datetimecascade.AppDateTimeField
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.EmptyState
@@ -549,7 +550,6 @@ fun GrowthFormDialog(
         )
     }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
-    var showCascadePicker by remember { mutableStateOf(false) }
 
     val buildEntity = {
         if (isEdit) {
@@ -576,16 +576,12 @@ fun GrowthFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
     ) {
-        Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("height" to AppStrings.growthOptionHeight, "weight" to AppStrings.growthOptionWeight, "head" to AppStrings.growthOptionHead).forEach { (t, label) ->
-                AppFilterChip(
-                    selected = type == t,
-                    onClick = { type = t },
-                    label = label,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
+        AppOptionChipRow(
+            options = listOf("height" to AppStrings.growthOptionHeight, "weight" to AppStrings.growthOptionWeight, "head" to AppStrings.growthOptionHead),
+            selectedKey = type,
+            onSelect = { type = it },
+            modifier = Modifier.padding(bottom = spacing.md),
+        )
 
         AppInput(
             value = value,
@@ -595,12 +591,11 @@ fun GrowthFormDialog(
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
 
-        AppInput(
-            value = measuredAt,
-            onValueChange = {},
+        AppDateTimeField(
             label = AppStrings.detailMeasuredAt,
-            enabled = false,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showCascadePicker = true },
+            value = measuredAt,
+            onPick = { measuredAt = it },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
 
         AppInput(
@@ -610,13 +605,6 @@ fun GrowthFormDialog(
             modifier = Modifier.fillMaxWidth(),
         )
     }
-
-    DateTimeCascadeDialog(
-        show = showCascadePicker,
-        initialDateTime = measuredAt,
-        onConfirm = { measuredAt = it },
-        onDismiss = { showCascadePicker = false },
-    )
 }
 
 private fun whoReferenceLines(type: String, minVal: Double, maxVal: Double, range: Double): List<Double> {

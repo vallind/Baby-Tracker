@@ -476,4 +476,19 @@ object AppStrings {
     const val pickerOptionVaccine = "💉 疫苗"
     const val pickerOptionHealth = "❤️ 健康"
     const val emptyFilteredSubtitle = "点击右下角按钮开始记录"
+
+    // —— G4 表单族批次新增 ——
+    // 疫苗表单（VaccinationFormDialog 迁移 AppFormSheet 时收编的硬编码文案）
+    const val vaccinationEditTitle = "编辑疫苗"
+    const val vaccinationAddTitle = "添加疫苗"
+    const val vaccineNameLabel = "疫苗名称"
+    const val vaccineNameRequiredError = "名称不能为空"
+    const val vaccineDoseLabel = "剂次 (可选)"
+    const val vaccineDosePlaceholder = "第1剂"
+    const val vaccineStatusLabel = "状态"
+    const val vaccineStatusPending = "未接种"
+    const val vaccineStatusDone = "已接种"
+    const val vaccineStatusSkipped = "已跳过"
+    const val vaccineScheduledDateLabel = "计划接种日期 (可选)"
+    const val vaccineAdministeredDateLabel = "实际接种日期 (可选)"
 }

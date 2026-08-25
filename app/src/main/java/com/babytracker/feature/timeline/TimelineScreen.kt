@@ -21,12 +21,10 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.sheet.AppBottomSheet
+import com.babytracker.designsystem.components.dialog.AppOptionPickerSheet
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.button.AppButton
-import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.fab.AppFAB
@@ -293,38 +291,29 @@ fun TimelineScreen(
 
     // ── 类型选择底部弹窗 ──
     if (showTypePicker) {
-        AppBottomSheet(
-            show = true,
-            onDismiss = { showTypePicker = false },
-        ) {
-            Column(Modifier.padding(horizontal = spacing.md, vertical = spacing.sm)) {
-                Text(
-                    AppStrings.pickRecordType,
-                    style = typography.headlineMedium,
-                    modifier = Modifier.padding(bottom = spacing.md),
-                )
-                val types = listOf(
-                    AppStrings.pickerOptionFeeding to { showAddFeeding = true },
-                    AppStrings.pickerOptionSleep to { showAddSleep = true },
-                    AppStrings.pickerOptionDiaper to { showAddDiaper = true },
-                    AppStrings.pickerOptionGrowth to onOpenGrowth,
-                    AppStrings.pickerOptionVaccine to onOpenVaccination,
-                    AppStrings.pickerOptionHealth to onOpenHealth,
-                )
-                types.forEach { (label, onSelect) ->
-                    AppButton(
-                        variant = ButtonVariant.Ghost,
-                        onClick = {
-                            showTypePicker = false
-                            onSelect()
-                        },
-                        label = label,
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                    )
+        AppOptionPickerSheet(
+            title = AppStrings.pickRecordType,
+            options = listOf(
+                "feeding" to AppStrings.pickerOptionFeeding,
+                "sleep" to AppStrings.pickerOptionSleep,
+                "diaper" to AppStrings.pickerOptionDiaper,
+                "growth" to AppStrings.pickerOptionGrowth,
+                "vaccine" to AppStrings.pickerOptionVaccine,
+                "health" to AppStrings.pickerOptionHealth,
+            ),
+            selectedKey = null,
+            onSelect = { key ->
+                when (key) {
+                    "feeding" -> showAddFeeding = true
+                    "sleep" -> showAddSleep = true
+                    "diaper" -> showAddDiaper = true
+                    "growth" -> onOpenGrowth()
+                    "vaccine" -> onOpenVaccination()
+                    "health" -> onOpenHealth()
                 }
-                Spacer(Modifier.height(spacing.lg))
-            }
-        }
+            },
+            onDismiss = { showTypePicker = false },
+        )
     }
 
     // 单击卡片 = 详情弹层（编辑按类型分发到各表单）

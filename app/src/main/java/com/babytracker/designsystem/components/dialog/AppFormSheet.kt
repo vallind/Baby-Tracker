@@ -2,14 +2,15 @@ package com.babytracker.designsystem.components.dialog
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.components.button.AppButton
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.components.sheet.SheetDefaults as AppSheetDefaults
 import com.babytracker.designsystem.theme.LocalAppColors
 
@@ -21,10 +22,10 @@ import com.babytracker.designsystem.theme.LocalAppColors
  *
  * 用法：
  *   AppFormSheet(
- *       title = if (isEdit) "编辑喂养" else "记录喂养",
+ *       title = if (isEdit) AppStrings.editFeeding else AppStrings.recordFeeding,
  *       onDismiss = onDismiss,
  *       onSave = { onSave(buildEntity()) },
- *       saveText = if (isEdit) "更新" else "保存",
+ *       saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
  *   ) {
  *       // 业务表单字段...
  *   }
@@ -36,7 +37,7 @@ fun AppFormSheet(
     onDismiss: () -> Unit,
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
-    saveText: String = "保存",
+    saveText: String = AppStrings.save,
     saveEnabled: Boolean = true,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor: Color = AppSheetDefaults.containerColor(),
@@ -44,6 +45,7 @@ fun AppFormSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val c = LocalAppColors.current
+    val spacing = LocalAppSpacing.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -53,8 +55,8 @@ fun AppFormSheet(
     ) {
         Column(
             modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 32.dp)
+                .padding(horizontal = spacing.md)
+                .padding(bottom = spacing.xl)
                 .verticalScroll(rememberScrollState()),
         ) {
             // 标题
@@ -63,25 +65,19 @@ fun AppFormSheet(
                 style = LocalAppTypography.current.headlineSmall,
                 color = c.textPrimary,
             )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(spacing.md))
 
             // 业务表单字段
             content()
 
-            // 保存按钮
-            Spacer(Modifier.height(24.dp))
-            Button(
+            // 保存按钮（几何/配色全部由 AppButton 令牌派生）
+            Spacer(Modifier.height(spacing.lg))
+            AppButton(
+                label = saveText,
                 onClick = onSave,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = RoundedCornerShape(12.dp),
                 enabled = saveEnabled,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = c.primary,
-                    contentColor = c.onPrimary,
-                ),
-            ) {
-                Text(saveText)
-            }
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -13,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,22 +21,22 @@ import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.core.util.DateUtils
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.SegmentedControl
-import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.chip.AppFilterChip
-import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.chip.AppOptionChipRow
+import com.babytracker.designsystem.components.datetimecascade.AppDateTimeField
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
+import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.recordcard.RecordCard
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
+import com.babytracker.designsystem.components.tag.AppTag
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
-import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.tintContainer
@@ -224,7 +222,6 @@ fun VaccinationListScreen(
                 ) {
                     items(items = filtered, key = { it.id }) { v ->
                         // 接种记录行：滑动删除 + 名称/剂次 + 状态胶囊 + 月龄/建议日期（G3 收编为调用点内联组合）
-                        val shapes = LocalAppShapes.current
                         val ageText = remember(v.scheduledDate, baby.birthDate) {
                             suggestedAgeText(v.scheduledDate, baby.birthDate)
                         }
@@ -279,19 +276,12 @@ fun VaccinationListScreen(
                                         )
                                     }
                                     Spacer(Modifier.weight(1f))
-                                    Box(
-                                        Modifier
-                                            .clip(RoundedCornerShape(shapes.full))
-                                            .background(AppColorScale.fromSeed(tagColor).tintContainer(c))
-                                            .padding(horizontal = 10.dp, vertical = 4.dp),
-                                    ) {
-                                        Text(
-                                            tagLabel,
-                                            style = LocalAppTypography.current.labelMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = tagColor,
-                                        )
-                                    }
+                                    // 状态胶囊：G4 收编为 AppTag（分档浅底 + 语义前景色覆盖）
+                                    AppTag(
+                                        label = tagLabel,
+                                        backgroundColor = AppColorScale.fromSeed(tagColor).tintContainer(c),
+                                        textColor = tagColor,
+                                    )
                                 }
                                 if (ageText.isNotBlank() || dateText.isNotBlank()) {
                                     Spacer(Modifier.height(6.dp))
@@ -381,92 +371,69 @@ fun VaccinationFormDialog(
         )
     }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
-    var showScheduledDatePicker by remember { mutableStateOf(false) }
-    var showAdministeredDatePicker by remember { mutableStateOf(false) }
 
-    AppBottomSheet(
-        show = true,
-        onDismiss = onDismiss,
-    ) {
-        Column(Modifier.padding(horizontal = spacing.md, vertical = 0.dp).padding(bottom = spacing.xl).verticalScroll(rememberScrollState())) {
-            Text(if (isEdit) "编辑疫苗" else "添加疫苗", style = LocalAppTypography.current.titleMedium, modifier = Modifier.padding(bottom = spacing.md))
-
-            AppInput(value = name, onValueChange = { name = it }, label = "疫苗名称", isError = name.isBlank(), errorMessage = "名称不能为空", modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
-
-            AppInput(value = dose, onValueChange = { dose = it }, label = "剂次 (可选)", placeholder = "第1剂", modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
-
-            Text("状态", style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
-            Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                listOf("pending" to "未接种", "done" to "已接种", "skipped" to "已跳过").forEach { (s, l) ->
-                    AppFilterChip(
-                        selected = status == s,
-                        onClick = { status = s },
-                        label = l,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-
-            AppInput(value = scheduledDate, onValueChange = {}, label = "计划接种日期 (可选)", enabled = false, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showScheduledDatePicker = true })
-
-            if (status == "done") {
-                AppInput(value = administeredDate, onValueChange = {}, label = "实际接种日期 (可选)", enabled = false, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp).clickable { showAdministeredDatePicker = true })
-            }
-
-            AppInput(value = note, onValueChange = { note = it }, label = "备注 (可选)", modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp))
-
-            AppButton(
-                onClick = {
-                    val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
-                    val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
-                    val vac = if (isEdit) {
-                        editEntity.copy(
-                            name = name,
-                            dose = dose.ifBlank { null },
-                            scheduledDate = scheduledDateTime,
-                            administeredDate = administeredDateTime,
-                            status = VaccinationStatus.fromRaw(status),
-                            note = note.ifBlank { null }
-                        )
-                    } else {
-                        Vaccination(
-                            babyId = babyId,
-                            name = name,
-                            dose = dose.ifBlank { null },
-                            scheduledDate = scheduledDateTime,
-                            administeredDate = administeredDateTime,
-                            status = VaccinationStatus.fromRaw(status),
-                            note = note.ifBlank { null }
-                        )
-                    }
-                    onSave(vac)
-                },
-                label = if (isEdit) "更新" else "保存",
-                enabled = name.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
+    val buildVac = {
+        val scheduledDateTime = if (scheduledDate.isNotBlank()) "${scheduledDate}T00:00:00" else null
+        val administeredDateTime = if (administeredDate.isNotBlank()) "${administeredDate}T00:00:00" else null
+        if (isEdit) {
+            editEntity.copy(
+                name = name,
+                dose = dose.ifBlank { null },
+                scheduledDate = scheduledDateTime,
+                administeredDate = administeredDateTime,
+                status = VaccinationStatus.fromRaw(status),
+                note = note.ifBlank { null }
+            )
+        } else {
+            Vaccination(
+                babyId = babyId,
+                name = name,
+                dose = dose.ifBlank { null },
+                scheduledDate = scheduledDateTime,
+                administeredDate = administeredDateTime,
+                status = VaccinationStatus.fromRaw(status),
+                note = note.ifBlank { null }
             )
         }
     }
 
-    DateTimeCascadeDialog(
-        show = showScheduledDatePicker,
-        initialDateTime = scheduledDate.ifBlank { LocalDate.now().toString() } + " 00:00",
-        dateOnly = true,
-        onConfirm = { dt ->
-            scheduledDate = dt.take(10)
-            showScheduledDatePicker = false
-        },
-        onDismiss = { showScheduledDatePicker = false },
-    )
+    AppFormSheet(
+        title = if (isEdit) AppStrings.vaccinationEditTitle else AppStrings.vaccinationAddTitle,
+        onDismiss = onDismiss,
+        onSave = { onSave(buildVac()) },
+        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
+        saveEnabled = name.isNotBlank(),
+    ) {
+        AppInput(value = name, onValueChange = { name = it }, label = AppStrings.vaccineNameLabel, isError = name.isBlank(), errorMessage = AppStrings.vaccineNameRequiredError, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
-    DateTimeCascadeDialog(
-        show = showAdministeredDatePicker,
-        initialDateTime = administeredDate.ifBlank { LocalDate.now().toString() } + " 00:00",
-        dateOnly = true,
-        onConfirm = { dt ->
-            administeredDate = dt.take(10)
-            showAdministeredDatePicker = false
-        },
-        onDismiss = { showAdministeredDatePicker = false },
-    )
+        AppInput(value = dose, onValueChange = { dose = it }, label = AppStrings.vaccineDoseLabel, placeholder = AppStrings.vaccineDosePlaceholder, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
+
+        Text(AppStrings.vaccineStatusLabel, style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
+        AppOptionChipRow(
+            options = listOf("pending" to AppStrings.vaccineStatusPending, "done" to AppStrings.vaccineStatusDone, "skipped" to AppStrings.vaccineStatusSkipped),
+            selectedKey = status,
+            onSelect = { status = it },
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
+
+        AppDateTimeField(
+            label = AppStrings.vaccineScheduledDateLabel,
+            value = scheduledDate,
+            onPick = { scheduledDate = it },
+            dateOnly = true,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+        )
+
+        if (status == "done") {
+            AppDateTimeField(
+                label = AppStrings.vaccineAdministeredDateLabel,
+                value = administeredDate,
+                onPick = { administeredDate = it },
+                dateOnly = true,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+            )
+        }
+
+        AppInput(value = note, onValueChange = { note = it }, label = AppStrings.noteOptional, modifier = Modifier.fillMaxWidth())
+    }
 }

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.chip.AppOptionChipRow
 import com.babytracker.designsystem.components.datenav.DateNavCapsule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,13 +31,13 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
-import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.core.util.DateUtils
 import kotlinx.coroutines.launch
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.components.quickstat.QuickStatPill
+import com.babytracker.designsystem.components.datetimecascade.AppDateTimeField
 import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
 import com.babytracker.designsystem.components.datetimecascade.QuickTimeChipRow
 import com.babytracker.designsystem.components.dialog.AppFormSheet
@@ -377,7 +377,6 @@ fun DiaperFormDialog(
             } ?: now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
         )
     }
-    var showCascadePicker by remember { mutableStateOf(false) }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
 
     val buildEntity = {
@@ -403,26 +402,21 @@ fun DiaperFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
     ) {
-        Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("wet" to AppStrings.diaperOptionWet, "poop" to AppStrings.diaperOptionPoop, "both" to AppStrings.diaperOptionBoth).forEach { (t, label) ->
-                AppFilterChip(
-                    selected = selectedType == t,
-                    onClick = { selectedType = t },
-                    label = label,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
+        AppOptionChipRow(
+            options = listOf("wet" to AppStrings.diaperOptionWet, "poop" to AppStrings.diaperOptionPoop, "both" to AppStrings.diaperOptionBoth),
+            selectedKey = selectedType,
+            onSelect = { selectedType = it },
+            modifier = Modifier.padding(bottom = spacing.md),
+        )
 
         Spacer(Modifier.height(12.dp))
         QuickTimeChipRow(onPick = { diaperDateTime = it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) })
         Spacer(Modifier.height(12.dp))
-        AppInput(
-            value = diaperDateTime,
-            onValueChange = {},
+        AppDateTimeField(
             label = AppStrings.detailTime,
-            enabled = false,
-            modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
+            value = diaperDateTime,
+            onPick = { diaperDateTime = it },
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(12.dp))
         AppInput(
@@ -432,13 +426,6 @@ fun DiaperFormDialog(
             modifier = Modifier.fillMaxWidth(),
         )
     }
-
-    DateTimeCascadeDialog(
-        show = showCascadePicker,
-        initialDateTime = diaperDateTime,
-        onConfirm = { diaperDateTime = it },
-        onDismiss = { showCascadePicker = false },
-    )
 }
 
 

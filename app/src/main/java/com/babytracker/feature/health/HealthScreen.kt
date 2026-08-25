@@ -5,7 +5,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
-import com.babytracker.designsystem.components.chip.AppFilterChip
+import com.babytracker.designsystem.components.chip.AppOptionChipRow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
@@ -37,7 +37,7 @@ import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
-import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.datetimecascade.AppDateTimeField
 import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
 import com.babytracker.designsystem.i18n.AppStrings
 import java.time.LocalDateTime
@@ -352,7 +352,6 @@ fun HealthFormDialog(
         )
     }
     var note by remember { mutableStateOf(editEntity?.note ?: "") }
-    var showDatePicker by remember { mutableStateOf(false) }
 
     val categories = listOf(
         "birth_info" to "🍼 出生信息",
@@ -391,16 +390,11 @@ fun HealthFormDialog(
         saveText = if (isEdit) "更新" else "保存",
         saveEnabled = description.isNotBlank(),
     ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            categories.forEach { (key, label) ->
-                AppFilterChip(
-                    selected = category == key,
-                    onClick = { category = key },
-                    label = label,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
+        AppOptionChipRow(
+            options = categories,
+            selectedKey = category,
+            onSelect = { category = it },
+        )
         Spacer(Modifier.height(spacing.md))
         AppInput(
             value = description,
@@ -418,12 +412,12 @@ fun HealthFormDialog(
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(12.dp))
-        AppInput(
-            value = recordDate,
-            onValueChange = {},
+        AppDateTimeField(
             label = "记录日期",
-            enabled = false,
-            modifier = Modifier.fillMaxWidth().clickable { showDatePicker = true },
+            value = recordDate,
+            onPick = { recordDate = it },
+            dateOnly = true,
+            modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(12.dp))
         AppInput(
@@ -433,17 +427,6 @@ fun HealthFormDialog(
             modifier = Modifier.fillMaxWidth(),
         )
     }
-
-    DateTimeCascadeDialog(
-        show = showDatePicker,
-        initialDateTime = "$recordDate 00:00",
-        dateOnly = true,
-        onConfirm = { dt ->
-            recordDate = dt.take(10)
-            showDatePicker = false
-        },
-        onDismiss = { showDatePicker = false },
-    )
 }
 
 

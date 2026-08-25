@@ -1,50 +1,41 @@
 package com.babytracker.feature.feeding
 
 import android.content.SharedPreferences
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.babytracker.core.domain.model.BreastSide
 import com.babytracker.core.domain.model.Feeding
 import com.babytracker.core.domain.model.FeedingType
-import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.chip.AppFilterChip
-import com.babytracker.designsystem.components.datetimecascade.DateTimeCascadeDialog
+import com.babytracker.designsystem.components.chip.AppOptionChipRow
+import com.babytracker.designsystem.components.datetimecascade.AppDateTimeField
 import com.babytracker.designsystem.components.datetimecascade.QuickTimeChipRow
 import com.babytracker.designsystem.components.dialog.AppFormSheet
 import com.babytracker.designsystem.components.input.AppInput
+import com.babytracker.designsystem.components.timer.AppTimerRow
+import com.babytracker.designsystem.hooks.TimerTickEffect
+import com.babytracker.designsystem.hooks.rememberTimerState
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
-import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
  * 喂养记录表单（共享组件，TimelineScreen 也在使用）。
@@ -61,7 +52,6 @@ fun FeedingFormDialog(
     onDismiss: () -> Unit,
     onSave: (Feeding) -> Unit,
 ) {
-    val c = LocalAppColors.current
     val spacing = LocalAppSpacing.current
     val isEdit = editEntity != null
     var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
@@ -87,41 +77,24 @@ fun FeedingFormDialog(
             }
         )
     }
-    var showCascadePicker by remember { mutableStateOf(false) }
 
-    // 计时器（持久化：关闭表单再打开继续计时）
-    var timerRunning by remember {
-        mutableStateOf(prefs.getBoolean("feeding_timer_running", false))
-    }
-    var timerStartMs by remember {
-        mutableLongStateOf(prefs.getLong("feeding_timer_start_millis", 0L))
-    }
-    var elapsed by remember {
-        mutableIntStateOf(
-            if (editEntity != null && !prefs.getBoolean("feeding_timer_running", false)) {
-                (editEntity.durationMin ?: 0) * 60
-            } else {
-                0
-            }
-        )
-    }
-
-    LaunchedEffect(timerRunning) {
-        if (timerRunning) {
-            while (true) {
-                elapsed = ((System.currentTimeMillis() - timerStartMs) / 1000).toInt()
-                delay(1000L)
-            }
-        }
-    }
-
-    val timerDisplay = String.format(Locale.US, "%02d:%02d", elapsed / 60, elapsed % 60)
+    // 计时器（持久化：关闭表单再打开继续计时；prefs 约定留在 feature 层，DS 只管 UI 计时）
+    val timer = rememberTimerState(
+        initialRunning = prefs.getBoolean("feeding_timer_running", false),
+        initialStartMs = prefs.getLong("feeding_timer_start_millis", 0L),
+        initialElapsedSec = if (editEntity != null && !prefs.getBoolean("feeding_timer_running", false)) {
+            (editEntity.durationMin ?: 0) * 60
+        } else {
+            0
+        },
+    )
+    TimerTickEffect(timer)
 
     val buildEntity = {
-        if (timerRunning) {
-            timerRunning = false
-            durationMin = (elapsed / 60).toString()
-            feedingDateTime = java.time.Instant.ofEpochMilli(timerStartMs)
+        if (timer.running) {
+            val elapsedSec = timer.stop()
+            durationMin = (elapsedSec / 60).toString()
+            feedingDateTime = java.time.Instant.ofEpochMilli(timer.startMs)
                 .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
             prefs.edit()
@@ -160,16 +133,12 @@ fun FeedingFormDialog(
         onSave = { onSave(buildEntity()) },
         saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
     ) {
-        Row(Modifier.fillMaxWidth().padding(bottom = spacing.md), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-            listOf("breast" to AppStrings.feedingOptionBreast, "formula" to AppStrings.feedingOptionFormula, "food" to AppStrings.feedingOptionFood, "water" to AppStrings.feedingOptionWater).forEach { (t, label) ->
-                AppFilterChip(
-                    selected = type == t,
-                    onClick = { type = t },
-                    label = label,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
+        AppOptionChipRow(
+            options = listOf("breast" to AppStrings.feedingOptionBreast, "formula" to AppStrings.feedingOptionFormula, "food" to AppStrings.feedingOptionFood, "water" to AppStrings.feedingOptionWater),
+            selectedKey = type,
+            onSelect = { type = it },
+            modifier = Modifier.padding(bottom = spacing.md),
+        )
 
         when (type) {
             "breast" -> {
@@ -179,25 +148,21 @@ fun FeedingFormDialog(
                     }
                 }
                 // 计时器
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                ) {
-                    Text(
-                        text = timerDisplay,
-                        style = LocalAppTypography.current.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (timerRunning) c.primary else c.textSecondary,
-                        modifier = Modifier.weight(1f).widthIn(min = 100.dp),
-                        textAlign = TextAlign.Start,
-                    )
-                    if (timerRunning) {
-                        AppButton(
-                    onClick = {
-                        timerRunning = false
-                        durationMin = (elapsed / 60).toString()
-                        feedingDateTime = java.time.Instant.ofEpochMilli(timerStartMs)
+                AppTimerRow(
+                    display = timer.formatDisplay(),
+                    running = timer.running,
+                    onStart = {
+                        timer.start(System.currentTimeMillis())
+                        prefs.edit()
+                            .putBoolean("feeding_timer_running", true)
+                            .putLong("feeding_timer_start_millis", timer.startMs)
+                            .putString("feeding_timer_form_start_time", feedingDateTime)
+                            .apply()
+                    },
+                    onStop = {
+                        val elapsedSec = timer.stop()
+                        durationMin = (elapsedSec / 60).toString()
+                        feedingDateTime = java.time.Instant.ofEpochMilli(timer.startMs)
                             .atZone(java.time.ZoneId.systemDefault())
                             .toLocalDateTime()
                             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
@@ -206,24 +171,7 @@ fun FeedingFormDialog(
                             .remove("feeding_timer_form_start_time")
                             .apply()
                     },
-                            label = AppStrings.timerStop,
-                        )
-                    } else {
-                        AppButton(
-                            onClick = {
-                        timerStartMs = System.currentTimeMillis()
-                        elapsed = 0
-                        timerRunning = true
-                        prefs.edit()
-                            .putBoolean("feeding_timer_running", true)
-                            .putLong("feeding_timer_start_millis", timerStartMs)
-                            .putString("feeding_timer_form_start_time", feedingDateTime)
-                            .apply()
-                            },
-                            label = AppStrings.timerStart,
-                        )
-                    }
-                }
+                )
                 AppInput(
                     value = durationMin,
                     onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
@@ -299,22 +247,14 @@ fun FeedingFormDialog(
         }
 
         Spacer(Modifier.height(12.dp))
-        // 高频场景免开滚轮：一键回填时间（精确调整仍点输入框开级联选择器）
+        // 高频场景免开滚轮：一键回填时间（精确调整仍点字段开级联选择器）
         QuickTimeChipRow(onPick = { feedingDateTime = it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) })
         Spacer(Modifier.height(12.dp))
-        AppInput(
-            value = feedingDateTime,
-            onValueChange = {},
+        AppDateTimeField(
             label = AppStrings.feedingTimeLabel,
-            enabled = false,
-            modifier = Modifier.fillMaxWidth().clickable { showCascadePicker = true },
+            value = feedingDateTime,
+            onPick = { feedingDateTime = it },
+            modifier = Modifier.fillMaxWidth(),
         )
     }
-
-    DateTimeCascadeDialog(
-        show = showCascadePicker,
-        initialDateTime = feedingDateTime,
-        onConfirm = { feedingDateTime = it },
-        onDismiss = { showCascadePicker = false },
-    )
 }

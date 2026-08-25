@@ -51,6 +51,15 @@ package com.babytracker.designsystem.components
 // SettingItemDefaults     设置行令牌读取
 // AppColorDots       颜色圆点组（选中描边环）(colordots/)
 
+// —— G4 收编批次 ——
+// MiniBarChart          迷你柱状图（指标卡内嵌）      (chart/)
+// MiniLineChart         迷你折线图                    (chart/)
+// AppKeyValueRow        键值行（label/value/caption）  (keyvaluerow/)
+// AppOptionChipRow      key→label 单选胶囊行          (chip/)
+// AppDateTimeField      只读时间字段+级联弹窗          (datetimecascade/)
+// AppOptionPickerSheet  单选底部弹层                  (dialog/)
+// AppTimerRow           计时器行                       (timer/)
+
 // —— 专用组件 ——
 // BabyIllustration   宝宝头像
 // BadgeIcon          角标
