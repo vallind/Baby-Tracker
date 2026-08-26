@@ -109,6 +109,7 @@ package com.babytracker.designsystem.components
 // AppInput(suggestions)      自动补全槽位（锚定 AppMenu）           (input/)
 // AppPinInput         验证码输入（吸收 Pin/OTP/Code）              (pininput/)
 // AppTimeline         时间线（记录流形态，高亮节点放大档）          (timeline/)
+// AppPullToRefresh    下拉刷新容器（M3 物理封装，指示器走主题桥接） (pulltorefresh/)
 
 // —— 工具 ——
 // AppDefaults        非 Composable Token 快照
