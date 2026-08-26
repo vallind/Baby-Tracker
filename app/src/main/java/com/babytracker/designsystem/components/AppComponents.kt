@@ -97,6 +97,13 @@ package com.babytracker.designsystem.components
 // AppStepper          步骤条（水平/垂直方向轴，三态圆点）(stepper/)
 // AppStep             步骤数据模型
 
+// —— 下拉选择（P0 五件套）——
+// AppSelect           下拉选择器（锚定形态；底部弹层形态走 AppOptionPickerSheet）(select/)
+
+// —— 数据表格（P0 五件套）——
+// AppDataTable        数据表格（列声明式 + 表头排序直连 TableLogic）(table/)
+// AppTableColumn      列定义（weight/width/sortKey/cell 槽位）
+
 // —— 工具 ——
 // AppDefaults        非 Composable Token 快照
 // AppStrings         国际化文案
