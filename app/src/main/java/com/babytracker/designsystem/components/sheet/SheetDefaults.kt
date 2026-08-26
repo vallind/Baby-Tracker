@@ -19,4 +19,7 @@ object SheetDefaults {
     @Composable fun dragHandleColor(): Color = LocalAppComponentTokens.current.sheet.dragHandleColor
     @Composable fun dragHandleWidth(): Dp = LocalAppComponentTokens.current.sheet.dragHandleWidth
     @Composable fun dragHandleHeight(): Dp = LocalAppComponentTokens.current.sheet.dragHandleHeight
+
+    /** 弹层内容 tonal 层次（默认 level0，与历史观感一致） */
+    @Composable fun elevation(): Dp = LocalAppComponentTokens.current.sheet.elevation
 }

@@ -956,12 +956,10 @@ data class SheetTokens(
     val dragHandleColor: Color,
     val dragHandleWidth: Dp,
     val dragHandleHeight: Dp,
+    val elevation: Dp,              // 弹层内容 tonal 层次（Gesture/Physics/Motion 参照）
 ) {
     companion object {
-        fun default(
-            colors: AppColors,
-            shapes: AppShapes,
-        ): SheetTokens = SheetTokens(
+        fun default(colors: AppColors, shapes: AppShapes, elevation: AppElevation): SheetTokens = SheetTokens(
             containerColor = colors.surface,
             contentColor = colors.onSurface,
             scrimColor = colors.scrim,
@@ -969,6 +967,7 @@ data class SheetTokens(
             dragHandleColor = colors.divider,
             dragHandleWidth = 32.dp,
             dragHandleHeight = 4.dp,
+            elevation = elevation.level0,
         )
     }
 }
@@ -1706,7 +1705,7 @@ data class AppComponentTokens(
             timePicker = TimePickerTokens.default(colors, shapes),
             datePicker = DatePickerTokens.default(colors, shapes),
             dateTimeCascade = DateTimeCascadeTokens.default(colors, shapes),
-            sheet = SheetTokens.default(colors, shapes),
+            sheet = SheetTokens.default(colors, shapes, elevation),
             segmentedControl = SegmentedControlTokens.default(colors, shapes, typography),
             summaryCard = SummaryCardTokens.default(colors, shapes, spacing),
             emptyState = EmptyStateTokens.default(colors, spacing),
