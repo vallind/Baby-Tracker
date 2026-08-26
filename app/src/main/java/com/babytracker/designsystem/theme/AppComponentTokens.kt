@@ -40,6 +40,8 @@ data class ButtonTokens(
     val textContentColor: Color,        // Ghost 变体内容色
     val dangerContainerColor: Color,    // Danger 变体容器色（破坏性操作，如删除）
     val dangerContentColor: Color,      // Danger 变体内容色
+    val loadingStrokeWidth: Dp,         // loading 态转圈描边宽（Motion/State 轴参照值）
+    val outlineBorderWidth: Dp,         // Outline 变体默认描边宽
 ) {
     companion object {
         fun default(
@@ -65,6 +67,8 @@ data class ButtonTokens(
             textContentColor = colors.primary,
             dangerContainerColor = colors.danger,
             dangerContentColor = colors.onError,
+            loadingStrokeWidth = 2.dp,
+            outlineBorderWidth = 1.dp,
         )
     }
 }

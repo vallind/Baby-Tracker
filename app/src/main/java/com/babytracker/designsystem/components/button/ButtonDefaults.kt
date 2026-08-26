@@ -43,4 +43,10 @@ object ButtonDefaults {
     @Composable fun textContentColor(): Color = LocalAppComponentTokens.current.button.textContentColor
     @Composable fun dangerContainerColor(): Color = LocalAppComponentTokens.current.button.dangerContainerColor
     @Composable fun dangerContentColor(): Color = LocalAppComponentTokens.current.button.dangerContentColor
+
+    /** loading 转圈描边宽（State/Motion 轴参照） */
+    @Composable fun loadingStrokeWidth(): Dp = LocalAppComponentTokens.current.button.loadingStrokeWidth
+
+    /** Outline 变体默认描边宽 */
+    @Composable fun outlineBorderWidth(): Dp = LocalAppComponentTokens.current.button.outlineBorderWidth
 }

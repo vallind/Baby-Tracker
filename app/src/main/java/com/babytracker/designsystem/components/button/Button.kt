@@ -1,6 +1,10 @@
 package com.babytracker.designsystem.components.button
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -13,13 +17,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.ButtonDefaults as AppButtonDefaults
+import com.babytracker.designsystem.theme.LocalAppMotion
 
 /**
  * 按钮变体（完整 type 轴，对标 M3 + Ant 语义）：
@@ -41,6 +48,7 @@ enum class ButtonSize { Small, Medium, Large }
  *   视觉轴：variant × size
  *   交互轴：onClick / enabled / loading（加载中锁交互并显示转圈）/ selected（选中高亮：
  *           Outline/Ghost 内容与描边转主色，Tonal 升为主色填充；Primary/Danger 已是强色不叠加）
+ *   动效轴：按压 0.97 缩放反馈；时长/缓动一律走 LocalAppMotion（Motion 参照样板）
  *
  * variant + size 决定全部视觉（颜色/圆角/字号/图标尺寸），细节由 ButtonTokens 派生，
  * 组件参数不暴露 token 覆盖项：业务代码禁止绕过 Design Token（审计测试守门）。
@@ -71,6 +79,22 @@ fun AppButton(
     val iconSize = AppButtonDefaults.iconSize(size)
     // 加载态：锁交互（复用 M3 disabled 通道），转圈替代前导图标
     val interactive = enabled && !loading
+
+    // Motion 轴（参照实现）：按压缩放反馈；时长/缓动一律走 LocalAppMotion，禁止字面量毫秒（审计守门）
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val motion = LocalAppMotion.current
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.97f else 1f,
+        animationSpec = tween(durationMillis = motion.duration.fast, easing = motion.easing.standard),
+        label = "appButtonPressScale",
+    )
+    val sizedModifier = modifier
+        .height(height)
+        .graphicsLayer {
+            scaleX = pressScale
+            scaleY = pressScale
+        }
     // 各变体前景色：加载圈取色与 selected 高亮共用一套语义
     val foregroundColor = when (variant) {
         ButtonVariant.Primary -> AppButtonDefaults.contentColor()
@@ -84,7 +108,7 @@ fun AppButton(
         if (loading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(iconSize * 0.8f),
-                strokeWidth = 2.dp,
+                strokeWidth = AppButtonDefaults.loadingStrokeWidth(),
                 color = foregroundColor,
             )
         } else if (icon != null) {
@@ -98,7 +122,8 @@ fun AppButton(
             onClick = onClick,
             enabled = interactive,
             shape = RoundedCornerShape(cornerRadius),
-            modifier = modifier.height(height),
+            modifier = sizedModifier,
+            interactionSource = interactionSource,
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppButtonDefaults.containerColor(),
                 contentColor = AppButtonDefaults.contentColor(),
@@ -111,7 +136,8 @@ fun AppButton(
             onClick = onClick,
             enabled = interactive,
             shape = RoundedCornerShape(cornerRadius),
-            modifier = modifier.height(height),
+            modifier = sizedModifier,
+            interactionSource = interactionSource,
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (selected) AppButtonDefaults.containerColor() else AppButtonDefaults.tonalContainerColor(),
                 contentColor = if (selected) AppButtonDefaults.contentColor() else AppButtonDefaults.tonalContentColor(),
@@ -124,7 +150,8 @@ fun AppButton(
             onClick = onClick,
             enabled = interactive,
             shape = RoundedCornerShape(cornerRadius),
-            modifier = modifier.height(height),
+            modifier = sizedModifier,
+            interactionSource = interactionSource,
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppButtonDefaults.dangerContainerColor(),
                 contentColor = AppButtonDefaults.dangerContentColor(),
@@ -137,14 +164,15 @@ fun AppButton(
             onClick = onClick,
             enabled = interactive,
             shape = RoundedCornerShape(cornerRadius),
-            modifier = modifier.height(height),
+            modifier = sizedModifier,
+            interactionSource = interactionSource,
             colors = ButtonDefaults.outlinedButtonColors(
                 containerColor = Color.Transparent,
                 contentColor = if (selected) AppButtonDefaults.containerColor() else AppButtonDefaults.secondaryContentColor(),
                 disabledContentColor = AppButtonDefaults.disabledContentColor(),
             ),
             border = if (selected) {
-                BorderStroke(1.dp, AppButtonDefaults.containerColor())
+                BorderStroke(AppButtonDefaults.outlineBorderWidth(), AppButtonDefaults.containerColor())
             } else {
                 ButtonDefaults.outlinedButtonBorder(enabled = interactive)
             },
@@ -153,7 +181,8 @@ fun AppButton(
         ButtonVariant.Ghost -> TextButton(
             onClick = onClick,
             enabled = interactive,
-            modifier = modifier,
+            modifier = sizedModifier,
+            interactionSource = interactionSource,
             colors = ButtonDefaults.textButtonColors(
                 contentColor = if (selected) AppButtonDefaults.containerColor() else AppButtonDefaults.textContentColor(),
                 disabledContentColor = AppButtonDefaults.disabledContentColor(),
