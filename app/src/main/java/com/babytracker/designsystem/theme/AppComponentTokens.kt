@@ -403,16 +403,26 @@ data class DividerTokens(
     }
 }
 
-// —— TT-034 表面容器 ——
+// —— TT-034 表面容器（超级参照组件：Theme/Material/Shape/Elevation 四要素基准）——
 @Immutable
 data class SurfaceTokens(
     val color: Color,
+    val contentColor: Color,
     val shape: Shape,
+    val tonalElevation: Dp,
+    val shadowElevation: Dp,
+    val borderColor: Color,
+    val borderWidth: Dp,
 ) {
     companion object {
-        fun default(colors: AppColors, shapes: AppShapes): SurfaceTokens = SurfaceTokens(
+        fun default(colors: AppColors, shapes: AppShapes, elevation: AppElevation): SurfaceTokens = SurfaceTokens(
             color = colors.surface,
+            contentColor = colors.onSurface,
             shape = RoundedCornerShape(shapes.scaled(shapes.medium)),   // 卡片级圆角
+            tonalElevation = elevation.level0,      // 默认平面；叠色层次走 tonal
+            shadowElevation = elevation.level0,     // 默认无投影；悬浮层走 shadow
+            borderColor = colors.outline,
+            borderWidth = 1.dp,
         )
     }
 }
@@ -1664,7 +1674,7 @@ data class AppComponentTokens(
             menu = MenuTokens.default(colors, shapes, spacing, elevation),
             tag = TagTokens.default(colors, shapes, typography, spacing, opacity),
             divider = DividerTokens.default(colors),
-            surface = SurfaceTokens.default(colors, shapes),
+            surface = SurfaceTokens.default(colors, shapes, elevation),
             snackbarHost = SnackbarHostTokens.default(colors, shapes, elevation),
             progress = ProgressTokens.default(colors),
             skeleton = SkeletonTokens.default(shapes, darkTheme),
