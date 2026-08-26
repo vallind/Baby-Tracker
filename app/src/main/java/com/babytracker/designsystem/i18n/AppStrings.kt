@@ -39,6 +39,10 @@ object AppStrings {
     const val stepCurrent = "进行中"
     const val stepUpcoming = "未开始"
 
+    // —— 表格排序（AppDataTable 表头箭头语义）——
+    const val sortAscending = "升序"
+    const val sortDescending = "降序"
+
     // —— 错误状态（E 批：AppErrorState 默认文案）——
     const val retry = "重试"
     const val reload = "重新加载"
