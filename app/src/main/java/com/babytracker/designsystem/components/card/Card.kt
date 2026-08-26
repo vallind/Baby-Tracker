@@ -39,7 +39,8 @@ enum class CardVariant { Filled, Elevated, Outlined, Transparent }
 enum class CardSize { Compact, Medium, Large }
 
 /**
- * 统一卡片基座 —— 消费 AppComponentTokens.card
+ * 统一卡片基座 —— 超级参照组件：Composition / Surface（三轴样板，新组件以此为模板）。
+ * 消费 AppComponentTokens.card
  *
  * 三轴模型：
  *   视觉轴：variant × size

@@ -1,7 +1,7 @@
-# 超级参照组件 · 能力轴审计与升级计划
+# 超级参照组件 · 能力轴审计与升级计划（已完成 ✅）
 
 > 目标：8 个参照组件覆盖设计系统的全部难点能力，后续所有组件以它们为模板。
-> 方法：逐件对照能力轴审计存量实现 → 只补真实缺口，不做无谓重写 → 测试全绿后逐件提交。
+> 结果：8/8 完成升级或标注，每件独立提交，testDebugUnitTest + themeTokenAudit 全绿。
 > 关联：《component-taxonomy.md》（收敛蓝图）·《component-gap-analysis.md》（现状盘点）
 
 ## 一、能力矩阵与现状评级
@@ -60,7 +60,24 @@
 - ❌ Selection 语义：选中项无 `stateDescription` 补充朗读
 - 动作：`BottomBarTokens` 扩几何字段（组已注册）；溢出格式进 `AppStrings`；补选中语义
 
-## 三、执行顺序与验收
+## 三、执行结果记录
+
+| 提交 | 内容 | 备注 |
+|------|------|------|
+| 参照组件① | AppSurface 材质四要素令牌化 | SurfaceTokens 扩 contentColor/border/shadowElevation/tonalElevation；暖阴影与卡片同语义 |
+| 参照组件② | AppDialog/AppActionSheet i18n 修复 | 硬编码"确认/取消"入 AppStrings；取消按钮可空 |
+| 参照组件③ | AppButton Motion 轴 | 按压 0.97 缩放走 LocalAppMotion；修复 Ghost 未应用尺寸高度；描边宽入令牌 |
+| 参照组件④ | AppListItem Density 轴 | Compact/Regular 两档；几何硬编码入 ListItemTokens；Button 角色+选中朗读 |
+| 参照组件⑤ | AppInput Complex State 轴 | helperText、字数计数器、imeAction、keyboardActions |
+| 参照组件⑥ | AppBottomSheet Gesture/Physics/Motion | scrim/拖拽把手/tonal 全令牌化。**决策**：不把实验型 SheetState 暴露进公开签名（会向全部调用方传染 @OptIn），高级手势策略待真实需求以独立重载提供 |
+| 参照组件⑦ | AppNavigationBar Selection/Navigation | 胶囊几何入 BottomBarTokens；99+ 溢出格式入 AppStrings |
+| 参照组件⑧ | AppCard 三轴样板标注 | 代码零改动，KDoc 标注为 Composition/Surface 参照 |
+
+遗留观察（存量，非本次新增）：AppComponentTokens 中 SkeletonTokens 的 shimmer 双色仍为 `Color(0xFF…)` 字面量（detekt `DefaultsHardcodedColor` 类规则命中），属历史决策的深浅色适配值，建议后续波次迁入核心色令牌后由 default() 引用。
+
+feature 层另发现多处 confirmText/cancelText 硬编码中文（FamilyScreen/VaccinationListScreen/BackupScreen 等 9 处），属 Screen 层清理项，不在参照组件范围，记入待办。
+
+## 四、原执行顺序与验收闸门（存档）
 
 顺序（低风险 → 高风险）：Surface → Dialog → Button → ListItem → Input → BottomSheet → NavigationBar → Card 标注收尾。
 
@@ -70,5 +87,3 @@
 3. `gradlew themeTokenAudit` 通过；
 4. detekt 报告无新增违规（report-only，人工核查）;
 5. 中文规范提交：`设计系统：参照组件之 <Name> <摘要>`。
-
-提交节奏：一件一提交；三份规划文档先行单独提交（`docs：…`）。
