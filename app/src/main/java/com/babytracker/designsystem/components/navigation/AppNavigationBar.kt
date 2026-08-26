@@ -20,14 +20,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 
 /**
- * 通用底部导航栏（纯 UI 组件，零业务依赖）。
+ * 通用底部导航栏（纯 UI 组件，零业务依赖）—— 超级参照组件：Selection / Navigation。
  *
- * 只负责视觉与交互：悬浮胶囊形态（左右留白 + 大圆角 + 柔和暖阴影）、
- * 选中项粉彩药丸指示器、徽章展示与无障碍语义（选中态/goBack 可聚焦）。
+ * Selection 选择轴：选中判定与药丸指示器颜色全部令牌化；M3 NavigationBarItem 自带
+ *   "已选中"选中态语义，配合指示器即完整选择表达；
+ * Navigation 导航轴：徽章计数（含 99+ 溢出格式走 AppStrings）承载消息等导航提示。
  *
  * 业务不进入本组件：Tab 数量、图标、标签、徽章数据、选中判定与点击后的
  * 导航行为全部由调用方（App 层 AppBottomBar）提供。
@@ -52,22 +54,25 @@ fun AppNavigationBar(
     onItemClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // 悬浮胶囊容器：圆角 + 暖阴影，页面底从胶囊四周透出
-    val pillShape = RoundedCornerShape(28.dp)
+    // 悬浮胶囊容器：圆角 + 暖阴影，页面底从胶囊四周透出（几何全部读 BottomBarTokens）
+    val pillShape = RoundedCornerShape(BottomBarDefaults.pillRadius())
     val shadowColor = LocalAppColors.current.shadow
 
     Box(
         Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 14.dp, vertical = 8.dp),
+            .padding(
+                horizontal = BottomBarDefaults.outerPaddingHorizontal(),
+                vertical = BottomBarDefaults.outerPaddingVertical(),
+            ),
     ) {
         // 外层容器负责胶囊裁切 + 暖阴影；内部为 M3 NavigationBar（无 shape 参数，lessons #21）
         Box(
             Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = 16.dp,
+                    elevation = BottomBarDefaults.shadowElevation(),
                     shape = pillShape,
                     ambientColor = shadowColor,
                     spotColor = shadowColor,
@@ -85,7 +90,17 @@ fun AppNavigationBar(
                     NavigationBarItem(
                         icon = {
                             if (item.badgeCount > 0) {
-                                BadgedBox(badge = { Badge { Text(if (item.badgeCount > 99) "99+" else item.badgeCount.toString()) } }) {
+                                BadgedBox(badge = {
+                                    Badge {
+                                        Text(
+                                            if (item.badgeCount > 99) {
+                                                AppStrings.badgeOverflowMax
+                                            } else {
+                                                item.badgeCount.toString()
+                                            }
+                                        )
+                                    }
+                                }) {
                                     Icon(item.icon, contentDescription = null, modifier = Modifier.size(BottomBarDefaults.iconSize()))
                                 }
                             } else {

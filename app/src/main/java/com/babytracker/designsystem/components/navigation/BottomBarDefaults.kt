@@ -18,4 +18,10 @@ object BottomBarDefaults {
     @Composable fun selectedColor(): Color = LocalAppComponentTokens.current.bottomBar.selectedColor
     @Composable fun unselectedColor(): Color = LocalAppComponentTokens.current.bottomBar.unselectedColor
     @Composable fun indicatorColor(): Color = LocalAppComponentTokens.current.bottomBar.indicatorColor
+
+    // 悬浮胶囊几何（参照组件令牌化）
+    @Composable fun pillRadius(): Dp = LocalAppComponentTokens.current.bottomBar.pillRadius
+    @Composable fun outerPaddingHorizontal(): Dp = LocalAppComponentTokens.current.bottomBar.outerPaddingHorizontal
+    @Composable fun outerPaddingVertical(): Dp = LocalAppComponentTokens.current.bottomBar.outerPaddingVertical
+    @Composable fun shadowElevation(): Dp = LocalAppComponentTokens.current.bottomBar.shadowElevation
 }

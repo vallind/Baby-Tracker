@@ -696,6 +696,11 @@ data class BottomBarTokens(
     val selectedColor: Color,
     val unselectedColor: Color,
     val indicatorColor: Color,
+    // 悬浮胶囊几何（Selection/Navigation 参照组件）
+    val pillRadius: Dp,
+    val outerPaddingHorizontal: Dp,
+    val outerPaddingVertical: Dp,
+    val shadowElevation: Dp,
 ) {
     companion object {
         fun default(
@@ -711,6 +716,10 @@ data class BottomBarTokens(
             selectedColor = colors.primary,
             unselectedColor = colors.textSecondary,
             indicatorColor = colors.primaryContainer,
+            pillRadius = 28.dp,
+            outerPaddingHorizontal = 14.dp,
+            outerPaddingVertical = 8.dp,
+            shadowElevation = 16.dp,
         )
     }
 }
