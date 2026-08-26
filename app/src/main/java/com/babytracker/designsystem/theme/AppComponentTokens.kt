@@ -731,6 +731,11 @@ data class ListItemTokens(
     // D 批状态轴：选中底 / 禁用透明
     val selectedContainerColor: Color,
     val disabledAlpha: Float,
+    // 密度/几何轴（超级参照组件：Slot/Density/Composition）
+    val verticalPadding: Dp,
+    val itemGap: Dp,
+    val dividerThickness: Dp,
+    val compactMinHeight: Dp,
 ) {
     companion object {
         fun default(
@@ -751,6 +756,10 @@ data class ListItemTokens(
             actionColor = colors.primary,
             selectedContainerColor = colors.bgSelected,
             disabledAlpha = opacity.disabled,
+            verticalPadding = 12.dp,
+            itemGap = 12.dp,
+            dividerThickness = 0.5.dp,
+            compactMinHeight = 48.dp,
         )
     }
 }

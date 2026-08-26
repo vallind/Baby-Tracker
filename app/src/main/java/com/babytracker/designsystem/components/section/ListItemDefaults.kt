@@ -8,8 +8,24 @@ import androidx.compose.ui.unit.TextUnit
 import com.babytracker.designsystem.theme.LocalAppComponentTokens
 
 object ListItemDefaults {
-    @Composable fun minHeight(): Dp = LocalAppComponentTokens.current.listItem.minHeight
+    /** 行高随密度档位：Compact 紧凑行 / Regular 常规行（密度轴参照实现，映射组件令牌） */
+    @Composable fun minHeight(density: ListItemDensity): Dp = when (density) {
+        ListItemDensity.Compact -> LocalAppComponentTokens.current.listItem.compactMinHeight
+        ListItemDensity.Regular -> LocalAppComponentTokens.current.listItem.minHeight
+    }
+
+    /** 原单参重载保留：等价 Regular 档，存量调用不受影响 */
+    @Composable fun minHeight(): Dp = minHeight(ListItemDensity.Regular)
+
     @Composable fun horizontalPadding(): Dp = LocalAppComponentTokens.current.listItem.horizontalPadding
+
+    @Composable fun verticalPadding(): Dp = LocalAppComponentTokens.current.listItem.verticalPadding
+
+    /** leading 槽与文本列间距 */
+    @Composable fun itemGap(): Dp = LocalAppComponentTokens.current.listItem.itemGap
+
+    @Composable fun dividerThickness(): Dp = LocalAppComponentTokens.current.listItem.dividerThickness
+
     @Composable fun iconSize(): Dp = LocalAppComponentTokens.current.listItem.iconSize
     @Composable fun titleSize(): TextUnit = LocalAppComponentTokens.current.listItem.titleSize
     @Composable fun subtitleSize(): TextUnit = LocalAppComponentTokens.current.listItem.subtitleSize
