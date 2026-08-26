@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.babytracker.designsystem.i18n.AppStrings
 
 /**
  * 通用对话框组件 — 对标 Palette Dialog，消费 AppComponentTokens.dialog。
@@ -38,8 +39,8 @@ fun AppDialog(
     title: String,
     text: String? = null,
     content: (@Composable () -> Unit)? = null,
-    confirmText: String = "确认",
-    cancelText: String = "取消",
+    confirmText: String = AppStrings.confirm,
+    cancelText: String? = AppStrings.cancel,
     confirmEnabled: Boolean = true,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -65,11 +66,14 @@ fun AppDialog(
                 Text(confirmText)
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(cancelText)
+        // 取消按钮可空：传 null 即单按钮确认态（Overlay/Layer 参照能力）
+        dismissButton = if (cancelText != null) {
+            {
+                TextButton(onClick = onDismiss) {
+                    Text(cancelText)
+                }
             }
-        },
+        } else null,
     )
 }
 
@@ -89,7 +93,7 @@ fun AppActionSheet(
     show: Boolean,
     title: String? = null,
     actions: List<Pair<String, () -> Unit>>,
-    cancelText: String = "取消",
+    cancelText: String? = AppStrings.cancel,
     onDismiss: () -> Unit,
     cornerRadius: Dp = DialogDefaults.cornerRadius(),
     containerColor: Color = DialogDefaults.containerColor(),
@@ -126,10 +130,12 @@ fun AppActionSheet(
                 }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(cancelText)
+        dismissButton = if (cancelText != null) {
+            {
+                TextButton(onClick = onDismiss) {
+                    Text(cancelText)
+                }
             }
-        },
+        } else null,
     )
 }
