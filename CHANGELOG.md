@@ -116,6 +116,14 @@
 - **纯逻辑单测**：PageSequenceTest（6 例）、StepStatesTest（5 例）
 - AppComponentTokens 五组此前注册未消费的令牌（menu/table/steps/pagination/select）全部有消费者；新组件 detekt 零违规；每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
 
+**P1 波次：业务受益组件五项落地**
+
+- **`AppInput` 扩轴（SearchField/Autocomplete 收敛归宿）**：新增 `style = AppInputStyle.Search` 样式轴（shapes.full 胶囊外形、默认前置搜索图标、内容清空钮走 AppStrings.clear、IME 默认 Search）；新增 `suggestions + onSuggestionSelected` 自动补全槽位——过滤纯函数 `filterSuggestions`（包含匹配忽略大小写/截断 5 条）锚定 `AppMenu` 展示，附 6 例单测
+- **`AppPinInput`**：单组件吸收 PinInput/OTPInput/CodeInput（`length + obscure` 参数化）；透明承载字段承接焦点键盘、格子层绘制，待输入格高亮 focused 边框、填满一次性回调 onComplete；颜色复用 InputTokens 同族取色；净化纯函数 `sanitizePin` 附 4 例单测；读屏描述走 AppStrings.pinCodeField
+- **`AppTimeline`**：记录流形态时间线（首行无上段线/末行无下段线）；高亮节点（当前/最新）放大转主色走新注册 `TimelineTokens`（lineWidth/dotSize/activeDotSize/三色）；AppComponentTokens 增至 53 组组件令牌并聚合装配
+- **`AppPullToRefresh`**：material3 1.4 `PullToRefreshBox` 封装，物理与动效走 M3 内置，指示器色经主题桥接不二次暴露（避免 Token 泄漏）
+- 新组件目录 detekt 零违规；P1 波次每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

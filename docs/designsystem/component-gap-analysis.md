@@ -201,12 +201,12 @@ RecordCard / AppRecordRow / RecordDetailSheet / CountdownChip / AppTimerRow / Ap
 4. ✅ AppPagination（PaginationTokens）—— components/pagination/
 5. ✅ AppSelect 下拉形态（SelectTokens；底部弹层单选沿用 AppOptionPickerSheet）—— components/select/
 
-**P1 —— 业务直接受益的新组件（待需求触发）**
-6. SearchField → 已裁决并入 `AppInput(type=search)` 扩轴
-7. AppTimeline（timeline/home 记录流）
-8. PullToRefresh 令牌化封装（timeline 刷新）
-9. AppPinInput/AppOTPInput（auth/family 邀请码）
-10. Autocomplete/SearchableDropdown → `AppInput(suggestions)` + AppMenu
+**P1 —— 业务直接受益的新组件（✅ 全部落地，2026-08-26）**
+6. ✅ SearchField → `AppInput(style = Search)` 样式轴（胶囊+搜索图标+清空钮+IME Search）
+7. ✅ AppTimeline（timeline/home 记录流）—— components/timeline/，新增 TimelineTokens 令牌组
+8. ✅ PullToRefresh 令牌化封装 —— components/pulltorefresh/AppPullToRefresh（material3 1.4 PullToRefreshBox）
+9. ✅ AppPinInput/AppOTPInput → 单组件 AppPinInput(length, obscure) —— components/pininput/
+10. ✅ Autocomplete/SearchableDropdown → `AppInput(suggestions + onSuggestionSelected)` 槽位（锚定 AppMenu，过滤纯函数 filterSuggestions 附 6 例单测）
 
 **P2 —— 出现场景再做**
 11. AppTooltip/Popover、AppMultiSelect、AppToggleGroup
