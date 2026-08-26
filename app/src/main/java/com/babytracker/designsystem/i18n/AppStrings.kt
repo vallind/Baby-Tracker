@@ -34,6 +34,11 @@ object AppStrings {
     /** 导航徽章溢出计数，超过上限时显示 */
     const val badgeOverflowMax = "99+"
 
+    // —— 步骤条三态（AppStepper 语义）——
+    const val stepCompleted = "已完成"
+    const val stepCurrent = "进行中"
+    const val stepUpcoming = "未开始"
+
     // —— 错误状态（E 批：AppErrorState 默认文案）——
     const val retry = "重试"
     const val reload = "重新加载"

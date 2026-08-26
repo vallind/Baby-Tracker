@@ -93,6 +93,10 @@ package com.babytracker.designsystem.components
 // —— 分页（P0 五件套）——
 // AppPagination       数字分页器（首末常驻+省略号折叠） (pagination/)
 
+// —— 步骤条（P0 五件套）——
+// AppStepper          步骤条（水平/垂直方向轴，三态圆点）(stepper/)
+// AppStep             步骤数据模型
+
 // —— 工具 ——
 // AppDefaults        非 Composable Token 快照
 // AppStrings         国际化文案
