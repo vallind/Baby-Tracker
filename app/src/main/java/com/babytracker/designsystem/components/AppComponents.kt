@@ -108,6 +108,7 @@ package com.babytracker.designsystem.components
 // AppInput(style = Search)   搜索样式轴（SearchField 收敛归宿）      (input/)
 // AppInput(suggestions)      自动补全槽位（锚定 AppMenu）           (input/)
 // AppPinInput         验证码输入（吸收 Pin/OTP/Code）              (pininput/)
+// AppTimeline         时间线（记录流形态，高亮节点放大档）          (timeline/)
 
 // —— 工具 ——
 // AppDefaults        非 Composable Token 快照

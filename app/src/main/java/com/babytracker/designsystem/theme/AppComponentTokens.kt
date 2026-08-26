@@ -558,8 +558,29 @@ data class PaginationTokens(
     }
 }
 
-// —— TT-029 滑块/评分 ——
+// —— P1 时间线 ——
 @Immutable
+data class TimelineTokens(
+    val lineWidth: Dp,
+    val dotSize: Dp,
+    val activeDotSize: Dp,
+    val lineColor: Color,
+    val dotColor: Color,
+    val activeDotColor: Color,
+) {
+    companion object {
+        fun default(colors: AppColors): TimelineTokens = TimelineTokens(
+            lineWidth = 2.dp,
+            dotSize = 12.dp,
+            activeDotSize = 16.dp,          // 高亮节点（当前/最新）放大档
+            lineColor = colors.divider,
+            dotColor = colors.textDisabled,
+            activeDotColor = colors.primary,
+        )
+    }
+}
+
+// —— TT-029 滑块/评分 ——@Immutable
 data class SliderTokens(
     val trackHeight: Dp,
     val thumbSize: Dp,
@@ -1637,6 +1658,7 @@ data class AppComponentTokens(
     val skeleton: SkeletonTokens,
     val steps: StepsTokens,
     val pagination: PaginationTokens,
+    val timeline: TimelineTokens,
     val slider: SliderTokens,
     val rate: RateTokens,
     val appBar: AppBarTokens,
@@ -1701,6 +1723,7 @@ data class AppComponentTokens(
             skeleton = SkeletonTokens.default(shapes, darkTheme),
             steps = StepsTokens.default(colors),
             pagination = PaginationTokens.default(colors, shapes),
+            timeline = TimelineTokens.default(colors),
             slider = SliderTokens.default(colors),
             rate = RateTokens.default(colors),
             appBar = AppBarTokens.default(colors, typography, control, darkTheme),
