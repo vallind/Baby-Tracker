@@ -28,6 +28,12 @@ object AppStrings {
     const val selected = "已选中"
     const val noData = "暂无数据"
 
+    /** 输入框字数计数器（Complex State 参照），如 12/140 */
+    fun charCounter(count: Int, max: Int): String = "$count/$max"
+
+    /** 导航徽章溢出计数，超过上限时显示 */
+    const val badgeOverflowMax = "99+"
+
     // —— 错误状态（E 批：AppErrorState 默认文案）——
     const val retry = "重试"
     const val reload = "重新加载"
