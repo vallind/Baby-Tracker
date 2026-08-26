@@ -192,28 +192,28 @@ RecordCard / AppRecordRow / RecordDetailSheet / CountdownChip / AppTimerRow / Ap
 
 ---
 
-## 七、建设优先级路线图
+## 七、建设优先级路线图（✅ P0 已完成，2026-08-26）
 
-**P0 —— 令牌已就位，补 UI 即可（约 +6~8 个 Composable）**
-1. AppMenu / AppDropdownMenu（MenuTokens）
-2. AppDataTable（TableLogic + TableTokens，含 SortBar 最小集）
-3. AppStepper（StepsTokens）
-4. AppPagination（PaginationTokens）
-5. AppDropdownMenu 增强版 AppSelect（SelectTokens）
+**P0 —— 令牌已就位，补 UI 即可（✅ 全部落地）**
+1. ✅ AppMenu（MenuTokens）—— components/menu/
+2. ✅ AppDataTable（TableLogic + TableTokens，排序即表头轴）—— components/table/
+3. ✅ AppStepper（StepsTokens，水平/垂直方向轴）—— components/stepper/
+4. ✅ AppPagination（PaginationTokens）—— components/pagination/
+5. ✅ AppSelect 下拉形态（SelectTokens；底部弹层单选沿用 AppOptionPickerSheet）—— components/select/
 
-**P1 —— 业务直接受益的新组件（约 +8~10 个）**
-6. AppSearchField（home/timeline）
+**P1 —— 业务直接受益的新组件（待需求触发）**
+6. SearchField → 已裁决并入 `AppInput(type=search)` 扩轴
 7. AppTimeline（timeline/home 记录流）
 8. PullToRefresh 令牌化封装（timeline 刷新）
 9. AppPinInput/AppOTPInput（auth/family 邀请码）
-10. AppSearchableDropdown / Autocomplete（依赖 P0-1）
+10. Autocomplete/SearchableDropdown → `AppInput(suggestions)` + AppMenu
 
 **P2 —— 出现场景再做**
 11. AppTooltip/Popover、AppMultiSelect、AppToggleGroup
 12. AppImageViewer、AppMediaPicker、AppQRCode（先做依赖评估）
 13. AppIcons 图标注册表、AppSharedTransition、Reorderable
 
-**完成后体量（仅陈述结果，不作指标）：** 核心 Composable 约 100~115 个 + 既有 Variant/State/Slot 能力；52 组组件令牌全部有消费者，无悬空注册。按收敛蓝图裁定，不再设任何数量目标，验收以能力核对单为准。
+**结果记录：** 五组悬空令牌全部有消费者；新增纯逻辑单测 PageSequenceTest(6 例)、StepStatesTest(5 例)；detekt 新组件目录零违规；参照范式贯彻（Token 驱动 Defaults / Motion 走 LocalAppMotion / 朗读走 AppStrings / 空表走 EmptyState 四态）。体量仅陈述：核心 Composable 约 105~110 个，52 组组件令牌无悬空注册，不设数量指标。
 
 ---
 

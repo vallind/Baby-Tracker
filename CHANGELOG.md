@@ -107,6 +107,15 @@
 - **令牌体系增量**：AppComponentTokens 新增 11 组组件令牌并全部聚合装配（miniChart/settingItem/keyValueRow/heroStatCard/tileGrid/inlineBanner/chatBubble/chatInputBar/collapsedHeader/scoreSelector/categoryStrip），取色全部由 colors/shapes/typography 推导、零字面量色值
 - **有意视觉归一（逐项记录）**：今日概览卡竖直分隔线移除（与尿布/睡眠卡统一）、记录行徽章 44→40dp 走全站 Badge 规格、AppFormSheet 保存钮几何就近令牌化、家庭选择 chip 向全站胶囊体系收敛、Warning/Error 横幅内容色由 seed 现场推导改为官方 warningScale/dangerScale 档位；其余落点均像素级保真
 
+**P0 参照组件与五件套波次：8 个超级参照打磨 + 悬空令牌全部清零**
+
+> 配套设计文档：docs/designsystem/{component-taxonomy 收敛蓝图, component-gap-analysis 差距分析, reference-components 参照审计}。收敛裁定：组件多变体（禁变体即组件）、不设数量指标、分类仅作逻辑标签。
+
+- **超级参照组件（8/8）**：AppSurface 材质四要素令牌化（contentColor/border/shadowElevation，暖阴影与卡片同语义）；AppDialog/AppActionSheet 文案入 AppStrings 并支持单按钮确认态；AppButton 补 Motion 轴（按压缩放走 LocalAppMotion）并修复 Ghost 变体未应用尺寸高度；AppListItem 补 Density 两档 + Button 角色/选中朗读；AppInput 补 helperText/字数计数器/IME 动作；AppBottomSheet scrim 与拖拽把手令牌化（SheetTokens 增 elevation）；AppNavigationBar 几何入 BottomBarTokens、"99+"溢出徽章入 AppStrings；AppCard 标注三轴样板
+- **P0 五件套（悬空令牌清零）**：新增 `components/menu/AppMenu`（MenuTokens，key 泛型菜单项+destructive 危险语义）、`components/pagination/AppPagination`（PaginationTokens，首末常驻+窗口折叠省略号）、`components/stepper/AppStepper`（StepsTokens，水平/垂直方向轴+当前步缩放动效）、`components/select/AppSelect`（SelectTokens，展开聚焦边框+箭头旋转动效+选中朗读）、`components/table/AppDataTable`（TableTokens，声明式列+表头排序直连 TableLogic/SortConfig，空表走 EmptyState 四态规范）
+- **纯逻辑单测**：PageSequenceTest（6 例）、StepStatesTest（5 例）
+- AppComponentTokens 五组此前注册未消费的令牌（menu/table/steps/pagination/select）全部有消费者；新组件 detekt 零违规；每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**
