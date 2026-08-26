@@ -90,6 +90,9 @@ package com.babytracker.designsystem.components
 // AppMenu             通用菜单（下拉/长按上下文共用）   (menu/)
 // AppMenuItem         菜单项数据模型（key 泛型）
 
+// —— 分页（P0 五件套）——
+// AppPagination       数字分页器（首末常驻+省略号折叠） (pagination/)
+
 // —— 工具 ——
 // AppDefaults        非 Composable Token 快照
 // AppStrings         国际化文案
