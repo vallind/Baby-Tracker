@@ -43,6 +43,9 @@ object AppStrings {
     const val sortAscending = "升序"
     const val sortDescending = "降序"
 
+    // —— 验证码输入（AppPinInput 无障碍）——
+    const val pinCodeField = "验证码输入框，请输入数字"
+
     // —— 错误状态（E 批：AppErrorState 默认文案）——
     const val retry = "重试"
     const val reload = "重新加载"

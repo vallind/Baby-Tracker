@@ -104,6 +104,11 @@ package com.babytracker.designsystem.components
 // AppDataTable        数据表格（列声明式 + 表头排序直连 TableLogic）(table/)
 // AppTableColumn      列定义（weight/width/sortKey/cell 槽位）
 
+// —— P1 增量 ——
+// AppInput(style = Search)   搜索样式轴（SearchField 收敛归宿）      (input/)
+// AppInput(suggestions)      自动补全槽位（锚定 AppMenu）           (input/)
+// AppPinInput         验证码输入（吸收 Pin/OTP/Code）              (pininput/)
+
 // —— 工具 ——
 // AppDefaults        非 Composable Token 快照
 // AppStrings         国际化文案
