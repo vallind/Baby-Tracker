@@ -86,6 +86,10 @@ package com.babytracker.designsystem.components
 // useState           受控状态
 // useLatestState     最新值引用
 
+// —— 菜单（P0 五件套）——
+// AppMenu             通用菜单（下拉/长按上下文共用）   (menu/)
+// AppMenuItem         菜单项数据模型（key 泛型）
+
 // —— 工具 ——
 // AppDefaults        非 Composable Token 快照
 // AppStrings         国际化文案
