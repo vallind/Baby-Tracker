@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.badge
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

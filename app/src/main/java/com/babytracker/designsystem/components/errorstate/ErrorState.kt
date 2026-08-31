@@ -2,7 +2,7 @@ package com.babytracker.designsystem.components.errorstate
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
 
 /**

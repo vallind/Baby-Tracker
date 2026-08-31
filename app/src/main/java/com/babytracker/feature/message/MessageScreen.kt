@@ -37,7 +37,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.core.domain.model.AppMessage
 import com.babytracker.core.domain.model.MessageType
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
 import java.time.LocalDateTime

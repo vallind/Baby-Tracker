@@ -32,7 +32,7 @@ import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.ui.patterns.records.RecordCard
 import com.babytracker.designsystem.components.dialog.AppFormSheet
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.fab.AppFAB
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar

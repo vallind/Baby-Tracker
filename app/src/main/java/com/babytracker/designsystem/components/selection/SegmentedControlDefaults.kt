@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.selection
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color

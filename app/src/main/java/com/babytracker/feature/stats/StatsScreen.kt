@@ -10,8 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.SegmentedControl
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.selection.SegmentedControl
+import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.chart.MiniBarChart
 import com.babytracker.designsystem.components.chart.MiniLineChart
 import com.babytracker.ui.patterns.records.DateNavCapsule

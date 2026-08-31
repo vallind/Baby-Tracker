@@ -45,7 +45,7 @@ import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.ui.patterns.records.DateTimeCascadeDialog
 import com.babytracker.ui.patterns.records.QuickTimeChipRow
 import com.babytracker.designsystem.components.dialog.AppFormSheet
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost

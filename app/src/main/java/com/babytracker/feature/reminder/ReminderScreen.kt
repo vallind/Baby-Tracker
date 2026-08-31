@@ -37,8 +37,8 @@ import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.Reminder
 import com.babytracker.core.domain.model.ReminderType
-import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.SegmentedControl
+import com.babytracker.designsystem.components.feedback.EmptyState
+import com.babytracker.designsystem.components.selection.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
 import kotlinx.coroutines.launch

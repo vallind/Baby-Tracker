@@ -39,7 +39,7 @@ import com.babytracker.core.domain.model.FeedingType
 import com.babytracker.core.domain.model.Sleep
 import com.babytracker.core.domain.model.SleepType
 import com.babytracker.core.util.DateUtils
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard

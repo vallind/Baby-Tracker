@@ -45,7 +45,7 @@ import com.babytracker.ui.patterns.records.RecordCard
 import com.babytracker.designsystem.components.actionbar.AppActionBar
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.statcell.StatCell
-import com.babytracker.designsystem.components.EmptyState
+import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost

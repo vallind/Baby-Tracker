@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.selection
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.babytracker.designsystem.components.SegmentedControlDefaults as AppSegmentedControlDefaults
+import com.babytracker.designsystem.components.selection.SegmentedControlDefaults as AppSegmentedControlDefaults
 
 /**
  * 分段选择器 —— 用于标签切换（全部/喂养/睡眠/...）。

@@ -19,8 +19,8 @@ import com.babytracker.core.domain.model.Baby
 import com.babytracker.core.domain.model.Vaccination
 import com.babytracker.core.domain.model.VaccinationStatus
 import com.babytracker.core.util.DateUtils
-import com.babytracker.designsystem.components.EmptyState
-import com.babytracker.designsystem.components.SegmentedControl
+import com.babytracker.designsystem.components.feedback.EmptyState
+import com.babytracker.designsystem.components.selection.SegmentedControl
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.chip.AppOptionChipRow
 import com.babytracker.ui.patterns.records.AppDateTimeField

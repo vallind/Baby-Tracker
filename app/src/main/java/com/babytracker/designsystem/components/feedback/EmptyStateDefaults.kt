@@ -1,4 +1,4 @@
-package com.babytracker.designsystem.components
+package com.babytracker.designsystem.components.feedback
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
