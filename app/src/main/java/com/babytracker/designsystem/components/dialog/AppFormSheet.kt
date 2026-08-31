@@ -9,7 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.i18n.AppStrings
-import com.babytracker.ui.i18n.AppStringsProduct
+
+
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.components.sheet.SheetDefaults as AppSheetDefaults
@@ -23,10 +24,10 @@ import com.babytracker.designsystem.theme.LocalAppColors
  *
  * 用法：
  *   AppFormSheet(
- *       title = if (isEdit) AppStringsProduct.editFeeding else AppStringsProduct.recordFeeding,
+ *       title = AppStrings.edit,
  *       onDismiss = onDismiss,
  *       onSave = { onSave(buildEntity()) },
- *       saveText = if (isEdit) AppStringsProduct.updateLabel else AppStrings.save,
+ *       saveText = AppStrings.save,
  *   ) {
  *       // 业务表单字段...
  *   }

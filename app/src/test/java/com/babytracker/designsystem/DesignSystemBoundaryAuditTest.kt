@@ -23,6 +23,7 @@ class DesignSystemBoundaryAuditTest {
         "com.babytracker.core",
         "com.babytracker.feature",
         "com.babytracker.navigation",
+        "com.babytracker.ui",
         "androidx.navigation",
         "org.koin",
     )

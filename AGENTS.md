@@ -52,7 +52,8 @@ app/src/main/java/com/babytracker/
 3. **feature 层禁止新定义通用卡片容器**（`*Card` 命名的 Composable，审计规则 `FeatureLayerGenericCard`）：一律消费设计系统的 `AppCard` 三轴模型。
 4. **动画时长必须走令牌**：禁止 `tween(<字面量毫秒>)`，时长一律读 `LocalAppMotion`（审计规则 `MotionHardcodedDuration`）。
 5. **业务代码禁止直用原生 M3 组件与令牌**：不直接 import material3 控件、不读 `MaterialTheme.colorScheme/typography/shapes`；使用 `App*` 组件与 AppTokens 体系。theme 桥接层豁免。
-6. **`app/ui` 与 DesignSystem 同边界**（四层架构 Patterns 层，见 `docs/designsystem/component-taxonomy.md` §〇.4）：`ui/patterns/` 与 `ui/framework/` 禁止 import `core` / `feature` / `navigation` / `androidx.navigation` / `org.koin`，且**禁止回流 designsystem**（只消费公开组件与 `*Defaults` 工厂，不直读 `LocalAppComponentTokens` 等 L3 令牌——Patterns 层新增代码按此守门）。
+6. **`app/ui` 与 DesignSystem 同边界**（四层架构 Patterns 层，见 `docs/designsystem/component-taxonomy.md` §〇.4）：`ui/patterns/` 与 `ui/framework/` 禁止 import `core` / `feature` / `navigation` / `androidx.navigation` / `org.koin`（`UiLayerBoundaryAuditTest` 自动守门），且**禁止回流 designsystem**（只消费公开组件与 `*Defaults` 工厂，不直读 `LocalAppComponentTokens` 等 L3 令牌——Patterns 层新增代码按此守门）。designsystem 亦禁止 import `com.babytracker.ui`（`DesignSystemBoundaryAuditTest` 已纳入禁列表）。
+7. **core 禁止反向依赖 feature/navigation**：依赖方向单向 `feature → core`（`CoreLayerBoundaryAuditTest` 自动守门）。唯一豁免：`core/di/Modules.kt`（Koin 组合根，装配全部 feature ViewModel 的依赖汇聚点）。
 
 ## 4. 设计系统约定
 

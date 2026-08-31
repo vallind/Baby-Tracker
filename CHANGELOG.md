@@ -154,6 +154,14 @@
 - 通用组件业务默认文案债复核结论：4 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow）+ ErrorState 的 KDoc 示例引用产品键，非真实代码默认值，无去债动作
 - 验证：`testDebugUnitTest` + `themeTokenAudit` 全绿
 
+**依赖架构守门补强（五阶段收敛后审计）**
+
+- **实证扫描修复**：Phase 5b 替换脚本把 KDoc 示例中的产品文案引用一并替换并误注入 `import ui.i18n.AppStringsProduct`，造成 4 个 designsystem 文件出现 `designsystem → ui` 反向依赖——已删除注入 import、KDoc 示例改通用常量，designsystem → ui 归零
+- **新增守门 `UiLayerBoundaryAuditTest`**：`app/ui` 禁止 import core/feature/navigation/koin（红线 ⑥ 首次自动化）
+- **新增守门 `CoreLayerBoundaryAuditTest`**：core 禁止 import feature/navigation（红线 ⑦），唯一豁免 `core/di/Modules.kt`（Koin 组合根装配 feature ViewModel，依赖汇聚点）
+- `DesignSystemBoundaryAuditTest` 禁列表纳入 `com.babytracker.ui`（designsystem 亦禁回流 ui 层）
+- AGENTS.md §3 红线 ⑥⑦ 同步（含豁免说明）
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**
