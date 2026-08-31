@@ -2,59 +2,122 @@
 遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 改版规范，无 Unreleased 部分。
 版本号遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
-### [2.4.0] — 2026-08-24
+**版本策略（2026-08-31 起）**：**每个提交对应一个 CHANGELOG 版本块（置于顶部），`versionName` 逐提交 +1**；
+新功能走 minor、破坏性变更走 major（SemVer）；`versionCode` 保持发布构建时递增。
+历史：[2.4.0] 全量建设波次曾按"波次共用版本号"聚合，2026-08-31 已按提交粒度回溯拆分为 [2.4.0]~[2.4.16]（拆分块日期统一标注为拆分日）。
 
-**Baby Design System 全量建设波次 · A 批：AppCard 全功能基座 + 守门规则①**
+### [2.4.17] — 2026-08-31
 
-> 本波次（A~H 八批）共用版本号起点 2.4.0，后续批次不另升版本；versionCode 在发布构建时递增。
+**版本策略切换：每个提交递增版本号**
 
-**A 批内容：**
+- 策略（2026-08-31 起）：每次提交必须附带 CHANGELOG 新版本块（置于顶部），`versionName` 逐提交 +1；语义升级（新功能/破坏性）按 SemVer 升 minor/major；`versionCode` 仍按发布构建递增
+- 历史回溯拆分：原 [2.4.0] 全量建设波次（A~H 批 + docs/G4/P0/P1 + 五阶段收敛 + 依赖架构守门）按提交粒度拆分为 [2.4.0]~[2.4.16] 共 17 个版本块，拆分块日期统一标注为拆分日 2026-08-31
+- AGENTS.md §7 同步：提交-版本号强绑定，`versionName` 以 CHANGELOG 顶部版本块为准
+- 版本号 2.4.0 → 2.4.17（versionCode 48 不变，发布构建时递增）
 
-- **`AppCard` 升级为全功能卡片基座**（三轴模型）：
-  - 视觉轴：`variant`（Filled/Elevated/Outlined/Transparent，默认 Elevated 保持历史全站观感）× `size`（Compact/Medium/Large → spacing 边距三档，密度体系自动缩放）
-  - 交互轴：`onClick`/`onLongClick`/`enabled`/`selected`/`loading`；选中态主色描边高亮 + `stateDescription` 读屏补充（AppStrings 新增 `selected` 键），禁用态令牌化降透明
-  - 结构轴：`header`/`content`/`footer` 可选槽位（纵向排布，槽间距 spacing.sm）
-- `CardTokens` 重构为 per-variant 颜色组字段（参照 Palette 模式：filled/elevated/outlined/transparent 各自 container/content 色 + outlined 描边档），共享几何字段 cornerRadius/innerPadding/elevation 保持原供 `RecordCardDefaults` 等消费
-- 新增 `CardColors` 整体覆盖逃生口（未指定字段回落变体解析值）与 `SkeletonBar` 骨架条原语（从 SkeletonLoader 抽取 shimmer 画刷复用）；卡片 loading 态内置标准骨架占位
-- **全站 38 处调用点迁移至新 API**：裸 `containerColor`/`elevation`/`borderColor`/`borderWidth` 参数全部改为 variant/colors/onClick 表达（如 `elevation=level2+surface` 即默认 Elevated 直接删参）；主题选择、密度选择、宝宝管理三处手工 `.border` 选中态统一改用 `selected` 参数；AI 会话卡/快捷分析卡改用 onClick 轴替代 modifier.clickable
-- **守门规则① `FeatureLayerGenericCard`**（TokenAuditChecker 规则 6）：feature 层禁止新定义通用卡片容器（`*Card` 命名 Composable），新增即红；存量债 12 文件入白名单、G 批收编后逐条移除。`themeTokenAudit` Gradle 任务与 JVM 单测双路生效，新增规则测试（拦截 + 白名单豁免）
-- docs/design-system.md 同步（组件速查、门禁表规则 6）
-- 版本号 2.3.1 → 2.4.0（波次起点；versionCode 48 不变，发布构建时递增）
+### [2.4.16] — 2026-08-31
 
-**B 批内容：按钮系三轴补全**
+**依赖架构守门补强（五阶段收敛后审计）**
 
-- **`AppButton`**：type 轴补全 `Tonal`；`Secondary→Outline`、`Text→Ghost` 改名对齐完整语义（全站 20 处枚举调用点同步迁移）；新增 `loading`（转圈替代前导图标、锁交互）与 `selected`（Outline/Ghost/Tonal 主色高亮）交互轴；`ButtonTokens` 增 tonal 颜色组
-- **`AppIconButton`**：新增 `variant` 轴 Standard/Filled/Tonal/Outlined（M3 实名 `FilledTonalIconButton`）+ `enabled`；`IconButtonTokens` 增四组颜色字段，带底形态容器尺寸随图标令牌派生
-- **Chip 家族职责切分**：`AppTag`=静态语义标签（5 色变体不变）；`AppChip`=交互胶囊，新增 `onClick/enabled/selected` 轴，选中实心高亮走令牌颜色组——4 处「clickable-modifier + 手写条件色」样板收敛至新轴
-- **`AppFAB`**：核对 material3 1.4 公开 API 后确认 FAB 无 `enabled` 参数（lessons #13 同源原则），Extended 形态由 `label` 参数承担、不另设 variant 轴（KDoc 说明理由）
-- Tonal 语义统一取色 `secondaryScale.shade100/shade600`（AppColors 为自建分档体系，无 M3 secondaryContainer 字段可直引）
-- AGENTS.md / docs/design-system.md 枚举描述同步；lessons 新增 #28（审计注释自命中）、#29（提交门禁看退出码）
+- **实证扫描修复**：Phase 5b 替换脚本把 KDoc 示例中的产品文案引用一并替换并误注入 `import ui.i18n.AppStringsProduct`，造成 4 个 designsystem 文件出现 `designsystem → ui` 反向依赖——已删除注入 import、KDoc 示例改通用常量，designsystem → ui 归零
+- **新增守门 `UiLayerBoundaryAuditTest`**：`app/ui` 禁止 import core/feature/navigation/koin（红线 ⑥ 首次自动化）
+- **新增守门 `CoreLayerBoundaryAuditTest`**：core 禁止 import feature/navigation（红线 ⑦），唯一豁免 `core/di/Modules.kt`（Koin 组合根装配 feature ViewModel，依赖汇聚点）
+- `DesignSystemBoundaryAuditTest` 禁列表纳入 `com.babytracker.ui`（designsystem 亦禁回流 ui 层）
+- AGENTS.md §3 红线 ⑥⑦ 同步（含豁免说明）
 
-**E 批内容：内容状态编排**
+### [2.4.15] — 2026-08-31
 
-- 新增 `AppErrorState(status = Generic/Network/NotFound, message?, onRetry?, retryLabel?, title?)`：Error 态唯一入口；status 驱动默认文案与图标（对标 Palette PResult 形态），内部组合 `EmptyState` 复用其令牌体系，不新增令牌族
-- AppStrings 新增错误文案键组（retry/reload/errorGeneric*/errorNetwork*/errorNotFound*/errorStatsTitle）
-- `StatsScreen` 错误分支迁移至 AppErrorState（顺带消除「统计数据加载失败」「重新加载」两处硬编码中文 i18n 债）
-- docs/design-system.md 新增「内容状态四态书写约定」章节：Loading→SkeletonLoader/AppCard(loading)/AppCircularProgress、Empty→EmptyState、Error→AppErrorState、Success 不包装；轻提示（表单校验/snackbar）明确不使用该组件；禁止新增私有 *LoadingState/*ErrorState
+**五阶段收敛波次 · Phase 5（Hooks 归属 + AppStrings 分区）**
 
-**C 批内容：输入系基座**
+- **Hooks 归属**：`FormLogic`/`TableLogic`（含 `rememberFormLogic`/`rememberTableLogic` 桥接）外移至 `app/ui/framework/`；`SortConfig` 归位 designsystem `components/table`（AppDataTable 公开类型，避免 DS→UI 反向依赖）；`designsystem/hooks` 只留 UI behavior（useDebounce/useState/useLatestState/ButtonLogic/触觉）；`consoleWarn` 以同 module internal 跨层复用
+- **AppStrings 分区**：拆分为 `AppStrings`（通用区 53 键：操作/四态/组件语义/日期导航）+ `AppStringsProduct`（产品域 381 键：AI/记录/消息/提醒/账户/家庭…，新址 `app/ui/i18n/`）；37 个引用文件同步替换引用并注入 import；全仓验证零残留（designsystem 内仅 KDoc 示例引用产品键，非代码依赖）
+- 通用组件业务默认文案债复核结论：4 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow）+ ErrorState 的 KDoc 示例引用产品键，非真实代码默认值，无去债动作
+- 验证：`testDebugUnitTest` + `themeTokenAudit` 全绿
 
-- **`AppInput`**：新增通用 `trailingIcon` 槽（密码开关保持历史优先契约）与 `suffix` 单位后缀槽（替代喂养/生长表单手拼 Row 的旧模式）；内部密码开关由裸 M3 `IconButton`+`Icon` 换为自家 `AppIconButton`，消除组件层直用原生控件的孤例
-- **`SegmentedControl`**：补 `enabled` 轴——禁用时整体降透明（disabledAlpha 同语义）且段点击失效；选中态读屏语义维持 lessons #15 的 mergeDescendants 契约不变
-- 选择控件盘点结论：`AppCheckbox`/`AppRadioButton` 已有 `enabled` + size 令牌参数；`AppSwitch` 因 material3 1.4 的 Switch 公开参数不含尺寸项而不设 size 轴（与 AppFAB 同原则），三件套 disabled 视觉由 M3 内建
-- 输入框 variant 轴判定为取值集合为空不设轴（填充式是唯一产品形态，令牌已收敛）
+### [2.4.14] — 2026-08-31
 
-**D 批内容：列表基座**
+**五阶段收敛波次 · Phase 4（Patterns 外移 + 子目录化）**
 
-- **`AppListItem`** 补状态轴：`selected`（bgSelected 令牌底色高亮）与 `enabled`（disabledAlpha 降透明 + 点击失效）；`ListItemTokens` 增 selectedContainerColor/disabledAlpha 字段
-- **`SectionHeader`** 新增 `trailingContent` 尾槽（放计数/Switch 等自定义尾部，位于 action 链接之后）
-- 收编 `BabyProfileScreen` 私有 `SectionHeader`（影子组件）：删除私有实现改用 DS 版，分组标题全站归一；顺带清理重复 @Composable 注解
+- **43 个业务形态组件外移至 `app/ui/patterns/`**（git mv 保历史）：`settings/`（AppSettingItem 家族 5 件）、`records/`（RecordCard/AppRecordRow/RecordDetailSheet/DateNavCapsule/AppDateTimeField/DateTimeCascade/QuickTimeChipRow/AppTimerRow/CountdownChip + TimerState 随迁）、`dashboard/`（AppMetricCard/AppHeroStatCard/AppInsightCard/AppSummaryCard/MetricTrendLabel）、`chat/`（AppChatBubble/AppChatInputBar/AppTypingIndicator/AppCollapsedHeader/AppMarkdownText+MarkdownParser）、`assessment/`（AppScoreSelector）、`message/`（AppCategoryStrip）、`avatar/`（BabyIllustration）；composites/ 目录实体清零；AppComponents.kt 索引同步
+- **修复存量不规范**：5 处"App*Defaults"别名引用改为实际 object 名（原靠同包 alias import 支撑）；`MetricCardDefaults` 纯文案回落内联删除（无令牌可读的 Defaults 不设文件）
+- **守门随行**：`TokenAuditChecker` 增 `extraDefaultsRelDirs` 参数扫描 `ui/patterns`（Defaults 三规则扩展覆盖，gradle 任务 + JVM 双路）；`A11ySemanticsAuditTest` 增 patterns 扫描根；`MarkdownParserTest` 随迁
+- **components 渐进子目录化**：`EmptyState(+Defaults)` → `feedback/`、`SegmentedControl(+Defaults)` → `selection/`、`BadgeIcon` → `badge/`；根目录仅余横切工具（Animations/HapticExtensions/AppComponents 索引）
+- 全量迁移后 `testDebugUnitTest` + `themeTokenAudit` 双绿独立提交
 
-**F 批内容：Motion 收敛**
+### [2.4.13] — 2026-08-31
 
-- 存量硬编码动画时长全部迁移至 `LocalAppMotion`（duration + easing）：`Animations.kt`（tween(300)×2 / tween(600)）、`AppProgress.kt`（tween(300)×2）、`GrowthScreen.kt`（tween(800)）、HomeScreen 三处数字滚动；全库字面量毫秒 tween 归零
-- **影子组件收编**：`HomeScreen` 自写的三个 `animateIntAsState` 数字滚动改为消费 DS `animateNumber`
-- **守门规则⑦ `MotionHardcodedDuration`**（TokenAuditChecker 规则 7）：全树禁止 `tween(<字面量毫秒>)`，时长一律走 AppMotion 令牌；theme 桥接层豁免不变
+**五阶段收敛波次 · Phase 2/3（API 收敛样板 + Token 三层化）**
+
+- **`AppInput` 签名收敛**（四层 API 契约首批落地）：删除 6 个裸 token 几何参数（`height`/`cornerRadius`/`fontSize`/`borderWidth`/`borderWidthFocus`/`iconSize`），新增语义轴 `size: AppInputSize`（Small 48dp / Medium 56dp 历史默认 / Large 64dp）；`InputTokens` 增三档分档字段（height/fontSize/iconSize × Small/Large，Medium 复用历史字段，全站观感不变）；`InputDefaults` 增分档工厂（L3 唯一消费点）；顺带清理 Input.kt 两处存量 unused import
+- **守门规则⑧ `AppInputApiAuditTest`**（新）：库自身签名禁裸 token 参数 + feature/navigation/core 禁给 `AppInput(` 传裸 token 参数（AppButtonApiAuditTest 同模式）
+- **Token 三层架构文档**：新增 `docs/designsystem/token-architecture.md`——Primitive（AppColorScale/SoftPalettes 十档色阶 + Spacing 8 级/Elevation 6 级/Opacity 7 级/Motion/Shapes 10 级/Typography 12 级/Control 三档）→ Semantic（AppColors/ApASemanticScales/AppDensity）→ Component（AppComponentTokens 52 组）三张映射表 + 换主题操作清单 + 守门验收口径
+- 验证：`testDebugUnitTest` 全绿（含新增审计测试）
+
+### [2.4.12] — 2026-08-31
+
+**五阶段收敛波次 · Phase 1（蓝图修订 v2）**
+
+- **蓝图 v2 修订**（`docs/designsystem/component-taxonomy.md`，取代"物理结构维持现状"裁定）：新增第四级 **Patterns 层**——业务形态组件（settings/records/dashboard/chat/avatar）外移至 `app/ui/patterns/`，与 DesignSystem 同边界（禁 core/feature/navigation/koin）、禁回流 designsystem；`composites/` 随收编废弃；components **渐进子目录化**（feedback/、selection/ 等域目录，横切工具保留根目录）；Foundation 维持薄层裁定（AppBox/AppSpacer/AppOverlay 明确不设）
+- **四层 API 契约**（§六）：Design（全默认即好看）/ Customization（variant·size·style·预设工厂·colors 逃生口）/ Token（仅库内）三层；组件签名禁止字面量几何参数；`AppInput` 外露 height/cornerRadius/fontSize/borderWidth 列存量债待 Phase 2 收编为 size 轴
+- **Hooks 归属边界**（§七）：`designsystem/hooks` 只留 UI behavior（useDebounce/useState/useLatestState/ButtonLogic/触觉）；`FormLogic`/`TableLogic` → `app/ui/framework/`（Phase 5）；`TimerState` 随 records patterns 外移（Phase 4）
+- **AppStrings 分区规则**（§八）：designsystem 仅保留通用文案（58 常量集合）；产品域文案 → `app/ui/i18n/AppStringsProduct`（Phase 5）；**通用组件业务默认文案债清单**登记 6 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow/AppHeroStatCard/AppDateTimeField），Phase 5 修复
+- AGENTS.md §3/§4 同步：依赖红线 `feature → ui → designsystem`、红线 ⑥ `app/ui` 与 DS 同边界、组件准入三问、文案分区纪律
+
+### [2.4.11] — 2026-08-31
+
+**P1 波次：业务受益组件五项落地**
+
+- **`AppInput` 扩轴（SearchField/Autocomplete 收敛归宿）**：新增 `style = AppInputStyle.Search` 样式轴（shapes.full 胶囊外形、默认前置搜索图标、内容清空钮走 AppStrings.clear、IME 默认 Search）；新增 `suggestions + onSuggestionSelected` 自动补全槽位——过滤纯函数 `filterSuggestions`（包含匹配忽略大小写/截断 5 条）锚定 `AppMenu` 展示，附 6 例单测
+- **`AppPinInput`**：单组件吸收 PinInput/OTPInput/CodeInput（`length + obscure` 参数化）；透明承载字段承接焦点键盘、格子层绘制，待输入格高亮 focused 边框、填满一次性回调 onComplete；颜色复用 InputTokens 同族取色；净化纯函数 `sanitizePin` 附 4 例单测；读屏描述走 AppStrings.pinCodeField
+- **`AppTimeline`**：记录流形态时间线（首行无上段线/末行无下段线）；高亮节点（当前/最新）放大转主色走新注册 `TimelineTokens`（lineWidth/dotSize/activeDotSize/三色）；AppComponentTokens 增至 53 组组件令牌并聚合装配
+- **`AppPullToRefresh`**：material3 1.4 `PullToRefreshBox` 封装，物理与动效走 M3 内置，指示器色经主题桥接不二次暴露（避免 Token 泄漏）
+- 新组件目录 detekt 零违规；P1 波次每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
+
+### [2.4.10] — 2026-08-31
+
+**P0 参照组件与五件套波次：8 个超级参照打磨 + 悬空令牌全部清零**
+
+> 配套设计文档：docs/designsystem/{component-taxonomy 收敛蓝图, component-gap-analysis 差距分析, reference-components 参照审计}。收敛裁定：组件多变体（禁变体即组件）、不设数量指标、分类仅作逻辑标签。
+
+- **超级参照组件（8/8）**：AppSurface 材质四要素令牌化（contentColor/border/shadowElevation，暖阴影与卡片同语义）；AppDialog/AppActionSheet 文案入 AppStrings 并支持单按钮确认态；AppButton 补 Motion 轴（按压缩放走 LocalAppMotion）并修复 Ghost 变体未应用尺寸高度；AppListItem 补 Density 两档 + Button 角色/选中朗读；AppInput 补 helperText/字数计数器/IME 动作；AppBottomSheet scrim 与拖拽把手令牌化（SheetTokens 增 elevation）；AppNavigationBar 几何入 BottomBarTokens、"99+"溢出徽章入 AppStrings；AppCard 标注三轴样板
+- **P0 五件套（悬空令牌清零）**：新增 `components/menu/AppMenu`（MenuTokens，key 泛型菜单项+destructive 危险语义）、`components/pagination/AppPagination`（PaginationTokens，首末常驻+窗口折叠省略号）、`components/stepper/AppStepper`（StepsTokens，水平/垂直方向轴+当前步缩放动效）、`components/select/AppSelect`（SelectTokens，展开聚焦边框+箭头旋转动效+选中朗读）、`components/table/AppDataTable`（TableTokens，声明式列+表头排序直连 TableLogic/SortConfig，空表走 EmptyState 四态规范）
+- **纯逻辑单测**：PageSequenceTest（6 例）、StepStatesTest（5 例）
+- AppComponentTokens 五组此前注册未消费的令牌（menu/table/steps/pagination/select）全部有消费者；新组件 detekt 零违规；每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
+
+### [2.4.9] — 2026-08-31
+
+**G4 收编波次：feature 层自建组件全量收归设计系统**
+
+> 盘点口径：feature 层约 60 个非页面入口的自建 @Composable，按「纯 UI 直接收编 / 去领域化后收编 / 页面私有片段保留」三分类处置；DS 红线（禁 core/feature/navigation/koin、文案走 AppStrings、颜色字段注册 AppComponentTokens）全程守门，每批 `testDebugUnitTest` + `themeTokenAudit` 全绿后独立提交。约 20 个业务映射/编排类片段（各 `xxxDetailFields`、Timeline 表单分发、MessageLeadingIcon 等）按规范留在 feature 层。
+
+- **图表**：`MiniBarChart`/`MiniLineChart` 收编 `components/chart/`（`MiniChartTokens`），指标卡趋势标签 `StatCompareLabel`→`MetricTrendLabel` 并入 metriccard 族；StatsScreen 本地 Canvas 实现删除
+- **设置行家族**：新建 `components/settingitem/`（`AppSettingItem`/`AppSettingSwitchItem`/`AppSettingChoiceItem`/`AppSettingGroupTitle`，`SettingItemTokens`）；`SettingsMenuScaffold`→`components/scaffold/SubPageScaffold`；`ThemeDots` 死代码删除、主题显示名收敛 `ThemeNames.kt` 单一来源；**斩断 feature.ai→feature.settings 横向 import**
+- **键值行与分隔线**：`components/keyvaluerow/AppKeyValueRow`（`KeyValueRowTokens`）；`AppDivider` 增 `horizontalInset` 参数；`SettingsDivider`/`BirthInfoDivider` 私有包装清零（SettingsComponents.kt 整文件删除）
+- **表单族通用件**：`AppOptionChipRow`（六个 FormDialog 类型行）、`AppDateTimeField`（七处只读时间字段+级联弹窗）、`AppOptionPickerSheet`（时间轴类型选择）、`AppTimerRow`+`hooks/TimerState`（喂养/睡眠计时器，SharedPreferences/koin 留在 feature 层不越 DS 边界）；`AppFormSheet` 合规整改（saveText 默认走 AppStrings.save、material3.Button→AppButton、间距令牌化）；VaccinationFormDialog 由自拼弹层迁入 AppFormSheet、状态胶囊改 `AppTag`
+- **横幅家族**：`components/inlinebanner/AppInlineBanner`（Info/Warning/Error 三档语义色对，`InlineBannerTokens`）；AI 聊天两横幅薄封装化、日志页多选提示条接入；`AiAnalysisContextBar`（24dp 双行卡片）与 `AiHistorySaveStatusBanner`（裸文本）实测非横幅形态，按视觉保真原则保留 feature 私有壳
+- **首页收编**：`composites/herostat/AppHeroStatCard`（`HeroStatCardTokens`）统一今日概览/尿布/睡眠三张渐变统计大卡（TodayOverview 私有 StatItem/StatDivider 删除、统计格改用既有 QuickStatPill）；`components/tilegrid/AppTileGrid`（`TileGridTokens`）替换 FeatureGrid 功能宫格；`components/recordcard/AppRecordRow` 替换 TimelineRecordRow 记录行
+- **聊天复合件**：`composites/chatbubble/AppChatBubble`（角色对齐+双色气泡壳+内容槽）、`components/chatinput/AppChatInputBar`、`components/chatheader/AppCollapsedHeader`、`components/chip/AppChipCarouselRow`（`ChatBubbleTokens`/`ChatInputBarTokens`/`CollapsedHeaderTokens`）；AiChat 气泡/输入条/折叠头/模型条四处薄封装化，AiBabySummary 结构不可无损共享保留私有壳
+- **评分器与分类条**：`components/scoreselector/AppScoreSelector`（`ScoreSelectorTokens`，选项 options 参数化去除硬编码四档文案）、`components/categorystrip/AppCategoryStrip`（`CategoryStripTabs` 未读角标+选中强调轴，`CategoryStripTokens`）；发育评估打分条、消息分类条收编，家庭模式选择与 AI 快捷分析周期 chips 复用 AppChipCarouselRow
+- **零令牌杂项**：`appDateNavLabel` 纯函数收敛四页「今天 · M月d日」标签复制粘贴（逐字符等价）；`components/typingindicator/AppTypingIndicator` 打字指示器；`components/avatar/AppInitialAvatar` 首字头像
+- **令牌体系增量**：AppComponentTokens 新增 11 组组件令牌并全部聚合装配（miniChart/settingItem/keyValueRow/heroStatCard/tileGrid/inlineBanner/chatBubble/chatInputBar/collapsedHeader/scoreSelector/categoryStrip），取色全部由 colors/shapes/typography 推导、零字面量色值
+- **有意视觉归一（逐项记录）**：今日概览卡竖直分隔线移除（与尿布/睡眠卡统一）、记录行徽章 44→40dp 走全站 Badge 规格、AppFormSheet 保存钮几何就近令牌化、家庭选择 chip 向全站胶囊体系收敛、Warning/Error 横幅内容色由 seed 现场推导改为官方 warningScale/dangerScale 档位；其余落点均像素级保真
+
+### [2.4.8] — 2026-08-31
+
+**docs 批内容：文档收敛**
+
+- 删除 `docs/` 全部 9 篇文档（architecture / data-architecture / sync-architecture / room-supabase-architecture / design-system / a11y-baseline / project-structure / refactor-p0-p1-plan / lessons），不再维护与代码平行的派生文档，消除漂移源
+- `AGENTS.md` 重写为唯一 agent 规范入口：分层依赖红线（静态审计守门规则）、设计系统 / 数据库与同步 / AI 模块约定、测试与提交纪律由单文件承载，内容以当前代码为准
+- README 与代码注释中指向已删文档的活引用改为指向 AGENTS.md 或就地删除；CHANGELOG 历史条目保留原貌不改写
+
+### [2.4.7] — 2026-08-31
+
+**H 批内容：Layout 原语 + 页面组件盘点**
+
+- `foundation/layout` 新增 **`AppRow` / `AppColumn`**：子项间距默认走 spacing.md 令牌，替代各页 `Arrangement.spacedBy(…)` 手写样板；AppRow 支持 `wrap = true` 自动换行（FlowRow，标签组/筛选组场景）
+- 页面组件盘点结论：**`AppScaffold` 已是页面骨架本体**（M3 Scaffold + pageBackground 令牌 + topBar/bottomBar/fab/snackbarHost 四槽），Palette 的 Screen 形态已由它覆盖，不重复造 AppPage；分区标题 SectionHeader 槽位已在 D 批补齐
+
+### [2.4.6] — 2026-08-31
 
 **G 批内容：composites 复合组件层（新建）**
 
@@ -80,87 +143,68 @@
   - **VaccinationListScreen**：接种记录行内联进 items 循环（remember 键不变）
 - **门禁收口**：StatsScreen 四胞胎补改名 `FeedingMetric`/`SleepMetric`/`HeightMetric`/`WeightMetric`（G 批（一）移除白名单时遗漏，此前 themeTokenAudit 实为红）；`featureCardBaselineRelPaths` 白名单删除 11 条后为空集（声明保留）；`TokenAuditCheckerTest` 规则⑥用例语义同步更新为「白名单已清零、历史文件不再豁免」
 
-**H 批内容：Layout 原语 + 页面组件盘点**
+### [2.4.5] — 2026-08-31
 
-- `foundation/layout` 新增 **`AppRow` / `AppColumn`**：子项间距默认走 spacing.md 令牌，替代各页 `Arrangement.spacedBy(…)` 手写样板；AppRow 支持 `wrap = true` 自动换行（FlowRow，标签组/筛选组场景）
-- 页面组件盘点结论：**`AppScaffold` 已是页面骨架本体**（M3 Scaffold + pageBackground 令牌 + topBar/bottomBar/fab/snackbarHost 四槽），Palette 的 Screen 形态已由它覆盖，不重复造 AppPage；分区标题 SectionHeader 槽位已在 D 批补齐
+**F 批内容：Motion 收敛**
 
-**docs 批内容：文档收敛**
+- 存量硬编码动画时长全部迁移至 `LocalAppMotion`（duration + easing）：`Animations.kt`（tween(300)×2 / tween(600)）、`AppProgress.kt`（tween(300)×2）、`GrowthScreen.kt`（tween(800)）、HomeScreen 三处数字滚动；全库字面量毫秒 tween 归零
+- **影子组件收编**：`HomeScreen` 自写的三个 `animateIntAsState` 数字滚动改为消费 DS `animateNumber`
+- **守门规则⑦ `MotionHardcodedDuration`**（TokenAuditChecker 规则 7）：全树禁止 `tween(<字面量毫秒>)`，时长一律走 AppMotion 令牌；theme 桥接层豁免不变
 
-- 删除 `docs/` 全部 9 篇文档（architecture / data-architecture / sync-architecture / room-supabase-architecture / design-system / a11y-baseline / project-structure / refactor-p0-p1-plan / lessons），不再维护与代码平行的派生文档，消除漂移源
-- `AGENTS.md` 重写为唯一 agent 规范入口：分层依赖红线（静态审计守门规则）、设计系统 / 数据库与同步 / AI 模块约定、测试与提交纪律由单文件承载，内容以当前代码为准
-- README 与代码注释中指向已删文档的活引用改为指向 AGENTS.md 或就地删除；CHANGELOG 历史条目保留原貌不改写
+### [2.4.4] — 2026-08-31
 
-**G4 收编波次：feature 层自建组件全量收归设计系统**
+**D 批内容：列表基座**
 
-> 盘点口径：feature 层约 60 个非页面入口的自建 @Composable，按「纯 UI 直接收编 / 去领域化后收编 / 页面私有片段保留」三分类处置；DS 红线（禁 core/feature/navigation/koin、文案走 AppStrings、颜色字段注册 AppComponentTokens）全程守门，每批 `testDebugUnitTest` + `themeTokenAudit` 全绿后独立提交。约 20 个业务映射/编排类片段（各 `xxxDetailFields`、Timeline 表单分发、MessageLeadingIcon 等）按规范留在 feature 层。
+- **`AppListItem`** 补状态轴：`selected`（bgSelected 令牌底色高亮）与 `enabled`（disabledAlpha 降透明 + 点击失效）；`ListItemTokens` 增 selectedContainerColor/disabledAlpha 字段
+- **`SectionHeader`** 新增 `trailingContent` 尾槽（放计数/Switch 等自定义尾部，位于 action 链接之后）
+- 收编 `BabyProfileScreen` 私有 `SectionHeader`（影子组件）：删除私有实现改用 DS 版，分组标题全站归一；顺带清理重复 @Composable 注解
 
-- **图表**：`MiniBarChart`/`MiniLineChart` 收编 `components/chart/`（`MiniChartTokens`），指标卡趋势标签 `StatCompareLabel`→`MetricTrendLabel` 并入 metriccard 族；StatsScreen 本地 Canvas 实现删除
-- **设置行家族**：新建 `components/settingitem/`（`AppSettingItem`/`AppSettingSwitchItem`/`AppSettingChoiceItem`/`AppSettingGroupTitle`，`SettingItemTokens`）；`SettingsMenuScaffold`→`components/scaffold/SubPageScaffold`；`ThemeDots` 死代码删除、主题显示名收敛 `ThemeNames.kt` 单一来源；**斩断 feature.ai→feature.settings 横向 import**
-- **键值行与分隔线**：`components/keyvaluerow/AppKeyValueRow`（`KeyValueRowTokens`）；`AppDivider` 增 `horizontalInset` 参数；`SettingsDivider`/`BirthInfoDivider` 私有包装清零（SettingsComponents.kt 整文件删除）
-- **表单族通用件**：`AppOptionChipRow`（六个 FormDialog 类型行）、`AppDateTimeField`（七处只读时间字段+级联弹窗）、`AppOptionPickerSheet`（时间轴类型选择）、`AppTimerRow`+`hooks/TimerState`（喂养/睡眠计时器，SharedPreferences/koin 留在 feature 层不越 DS 边界）；`AppFormSheet` 合规整改（saveText 默认走 AppStrings.save、material3.Button→AppButton、间距令牌化）；VaccinationFormDialog 由自拼弹层迁入 AppFormSheet、状态胶囊改 `AppTag`
-- **横幅家族**：`components/inlinebanner/AppInlineBanner`（Info/Warning/Error 三档语义色对，`InlineBannerTokens`）；AI 聊天两横幅薄封装化、日志页多选提示条接入；`AiAnalysisContextBar`（24dp 双行卡片）与 `AiHistorySaveStatusBanner`（裸文本）实测非横幅形态，按视觉保真原则保留 feature 私有壳
-- **首页收编**：`composites/herostat/AppHeroStatCard`（`HeroStatCardTokens`）统一今日概览/尿布/睡眠三张渐变统计大卡（TodayOverview 私有 StatItem/StatDivider 删除、统计格改用既有 QuickStatPill）；`components/tilegrid/AppTileGrid`（`TileGridTokens`）替换 FeatureGrid 功能宫格；`components/recordcard/AppRecordRow` 替换 TimelineRecordRow 记录行
-- **聊天复合件**：`composites/chatbubble/AppChatBubble`（角色对齐+双色气泡壳+内容槽）、`components/chatinput/AppChatInputBar`、`components/chatheader/AppCollapsedHeader`、`components/chip/AppChipCarouselRow`（`ChatBubbleTokens`/`ChatInputBarTokens`/`CollapsedHeaderTokens`）；AiChat 气泡/输入条/折叠头/模型条四处薄封装化，AiBabySummary 结构不可无损共享保留私有壳
-- **评分器与分类条**：`components/scoreselector/AppScoreSelector`（`ScoreSelectorTokens`，选项 options 参数化去除硬编码四档文案）、`components/categorystrip/AppCategoryStrip`（`CategoryStripTabs` 未读角标+选中强调轴，`CategoryStripTokens`）；发育评估打分条、消息分类条收编，家庭模式选择与 AI 快捷分析周期 chips 复用 AppChipCarouselRow
-- **零令牌杂项**：`appDateNavLabel` 纯函数收敛四页「今天 · M月d日」标签复制粘贴（逐字符等价）；`components/typingindicator/AppTypingIndicator` 打字指示器；`components/avatar/AppInitialAvatar` 首字头像
-- **令牌体系增量**：AppComponentTokens 新增 11 组组件令牌并全部聚合装配（miniChart/settingItem/keyValueRow/heroStatCard/tileGrid/inlineBanner/chatBubble/chatInputBar/collapsedHeader/scoreSelector/categoryStrip），取色全部由 colors/shapes/typography 推导、零字面量色值
-- **有意视觉归一（逐项记录）**：今日概览卡竖直分隔线移除（与尿布/睡眠卡统一）、记录行徽章 44→40dp 走全站 Badge 规格、AppFormSheet 保存钮几何就近令牌化、家庭选择 chip 向全站胶囊体系收敛、Warning/Error 横幅内容色由 seed 现场推导改为官方 warningScale/dangerScale 档位；其余落点均像素级保真
+### [2.4.3] — 2026-08-31
 
-**P0 参照组件与五件套波次：8 个超级参照打磨 + 悬空令牌全部清零**
+**C 批内容：输入系基座**
 
-> 配套设计文档：docs/designsystem/{component-taxonomy 收敛蓝图, component-gap-analysis 差距分析, reference-components 参照审计}。收敛裁定：组件多变体（禁变体即组件）、不设数量指标、分类仅作逻辑标签。
+- **`AppInput`**：新增通用 `trailingIcon` 槽（密码开关保持历史优先契约）与 `suffix` 单位后缀槽（替代喂养/生长表单手拼 Row 的旧模式）；内部密码开关由裸 M3 `IconButton`+`Icon` 换为自家 `AppIconButton`，消除组件层直用原生控件的孤例
+- **`SegmentedControl`**：补 `enabled` 轴——禁用时整体降透明（disabledAlpha 同语义）且段点击失效；选中态读屏语义维持 lessons #15 的 mergeDescendants 契约不变
+- 选择控件盘点结论：`AppCheckbox`/`AppRadioButton` 已有 `enabled` + size 令牌参数；`AppSwitch` 因 material3 1.4 的 Switch 公开参数不含尺寸项而不设 size 轴（与 AppFAB 同原则），三件套 disabled 视觉由 M3 内建
+- 输入框 variant 轴判定为取值集合为空不设轴（填充式是唯一产品形态，令牌已收敛）
 
-- **超级参照组件（8/8）**：AppSurface 材质四要素令牌化（contentColor/border/shadowElevation，暖阴影与卡片同语义）；AppDialog/AppActionSheet 文案入 AppStrings 并支持单按钮确认态；AppButton 补 Motion 轴（按压缩放走 LocalAppMotion）并修复 Ghost 变体未应用尺寸高度；AppListItem 补 Density 两档 + Button 角色/选中朗读；AppInput 补 helperText/字数计数器/IME 动作；AppBottomSheet scrim 与拖拽把手令牌化（SheetTokens 增 elevation）；AppNavigationBar 几何入 BottomBarTokens、"99+"溢出徽章入 AppStrings；AppCard 标注三轴样板
-- **P0 五件套（悬空令牌清零）**：新增 `components/menu/AppMenu`（MenuTokens，key 泛型菜单项+destructive 危险语义）、`components/pagination/AppPagination`（PaginationTokens，首末常驻+窗口折叠省略号）、`components/stepper/AppStepper`（StepsTokens，水平/垂直方向轴+当前步缩放动效）、`components/select/AppSelect`（SelectTokens，展开聚焦边框+箭头旋转动效+选中朗读）、`components/table/AppDataTable`（TableTokens，声明式列+表头排序直连 TableLogic/SortConfig，空表走 EmptyState 四态规范）
-- **纯逻辑单测**：PageSequenceTest（6 例）、StepStatesTest（5 例）
-- AppComponentTokens 五组此前注册未消费的令牌（menu/table/steps/pagination/select）全部有消费者；新组件 detekt 零违规；每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
+### [2.4.2] — 2026-08-31
 
-**P1 波次：业务受益组件五项落地**
+**E 批内容：内容状态编排**
 
-- **`AppInput` 扩轴（SearchField/Autocomplete 收敛归宿）**：新增 `style = AppInputStyle.Search` 样式轴（shapes.full 胶囊外形、默认前置搜索图标、内容清空钮走 AppStrings.clear、IME 默认 Search）；新增 `suggestions + onSuggestionSelected` 自动补全槽位——过滤纯函数 `filterSuggestions`（包含匹配忽略大小写/截断 5 条）锚定 `AppMenu` 展示，附 6 例单测
-- **`AppPinInput`**：单组件吸收 PinInput/OTPInput/CodeInput（`length + obscure` 参数化）；透明承载字段承接焦点键盘、格子层绘制，待输入格高亮 focused 边框、填满一次性回调 onComplete；颜色复用 InputTokens 同族取色；净化纯函数 `sanitizePin` 附 4 例单测；读屏描述走 AppStrings.pinCodeField
-- **`AppTimeline`**：记录流形态时间线（首行无上段线/末行无下段线）；高亮节点（当前/最新）放大转主色走新注册 `TimelineTokens`（lineWidth/dotSize/activeDotSize/三色）；AppComponentTokens 增至 53 组组件令牌并聚合装配
-- **`AppPullToRefresh`**：material3 1.4 `PullToRefreshBox` 封装，物理与动效走 M3 内置，指示器色经主题桥接不二次暴露（避免 Token 泄漏）
-- 新组件目录 detekt 零违规；P1 波次每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
+- 新增 `AppErrorState(status = Generic/Network/NotFound, message?, onRetry?, retryLabel?, title?)`：Error 态唯一入口；status 驱动默认文案与图标（对标 Palette PResult 形态），内部组合 `EmptyState` 复用其令牌体系，不新增令牌族
+- AppStrings 新增错误文案键组（retry/reload/errorGeneric*/errorNetwork*/errorNotFound*/errorStatsTitle）
+- `StatsScreen` 错误分支迁移至 AppErrorState（顺带消除「统计数据加载失败」「重新加载」两处硬编码中文 i18n 债）
+- docs/design-system.md 新增「内容状态四态书写约定」章节：Loading→SkeletonLoader/AppCard(loading)/AppCircularProgress、Empty→EmptyState、Error→AppErrorState、Success 不包装；轻提示（表单校验/snackbar）明确不使用该组件；禁止新增私有 *LoadingState/*ErrorState
 
-**五阶段收敛波次 · Phase 1（蓝图修订 v2）**
+### [2.4.1] — 2026-08-31
 
-- **蓝图 v2 修订**（`docs/designsystem/component-taxonomy.md`，取代"物理结构维持现状"裁定）：新增第四级 **Patterns 层**——业务形态组件（settings/records/dashboard/chat/avatar）外移至 `app/ui/patterns/`，与 DesignSystem 同边界（禁 core/feature/navigation/koin）、禁回流 designsystem；`composites/` 随收编废弃；components **渐进子目录化**（feedback/、selection/ 等域目录，横切工具保留根目录）；Foundation 维持薄层裁定（AppBox/AppSpacer/AppOverlay 明确不设）
-- **四层 API 契约**（§六）：Design（全默认即好看）/ Customization（variant·size·style·预设工厂·colors 逃生口）/ Token（仅库内）三层；组件签名禁止字面量几何参数；`AppInput` 外露 height/cornerRadius/fontSize/borderWidth 列存量债待 Phase 2 收编为 size 轴
-- **Hooks 归属边界**（§七）：`designsystem/hooks` 只留 UI behavior（useDebounce/useState/useLatestState/ButtonLogic/触觉）；`FormLogic`/`TableLogic` → `app/ui/framework/`（Phase 5）；`TimerState` 随 records patterns 外移（Phase 4）
-- **AppStrings 分区规则**（§八）：designsystem 仅保留通用文案（58 常量集合）；产品域文案 → `app/ui/i18n/AppStringsProduct`（Phase 5）；**通用组件业务默认文案债清单**登记 6 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow/AppHeroStatCard/AppDateTimeField），Phase 5 修复
-- AGENTS.md §3/§4 同步：依赖红线 `feature → ui → designsystem`、红线 ⑥ `app/ui` 与 DS 同边界、组件准入三问、文案分区纪律
+**B 批内容：按钮系三轴补全**
 
-**五阶段收敛波次 · Phase 2/3（API 收敛样板 + Token 三层化）**
+- **`AppButton`**：type 轴补全 `Tonal`；`Secondary→Outline`、`Text→Ghost` 改名对齐完整语义（全站 20 处枚举调用点同步迁移）；新增 `loading`（转圈替代前导图标、锁交互）与 `selected`（Outline/Ghost/Tonal 主色高亮）交互轴；`ButtonTokens` 增 tonal 颜色组
+- **`AppIconButton`**：新增 `variant` 轴 Standard/Filled/Tonal/Outlined（M3 实名 `FilledTonalIconButton`）+ `enabled`；`IconButtonTokens` 增四组颜色字段，带底形态容器尺寸随图标令牌派生
+- **Chip 家族职责切分**：`AppTag`=静态语义标签（5 色变体不变）；`AppChip`=交互胶囊，新增 `onClick/enabled/selected` 轴，选中实心高亮走令牌颜色组——4 处「clickable-modifier + 手写条件色」样板收敛至新轴
+- **`AppFAB`**：核对 material3 1.4 公开 API 后确认 FAB 无 `enabled` 参数（lessons #13 同源原则），Extended 形态由 `label` 参数承担、不另设 variant 轴（KDoc 说明理由）
+- Tonal 语义统一取色 `secondaryScale.shade100/shade600`（AppColors 为自建分档体系，无 M3 secondaryContainer 字段可直引）
+- AGENTS.md / docs/design-system.md 枚举描述同步；lessons 新增 #28（审计注释自命中）、#29（提交门禁看退出码）
 
-- **`AppInput` 签名收敛**（四层 API 契约首批落地）：删除 6 个裸 token 几何参数（`height`/`cornerRadius`/`fontSize`/`borderWidth`/`borderWidthFocus`/`iconSize`），新增语义轴 `size: AppInputSize`（Small 48dp / Medium 56dp 历史默认 / Large 64dp）；`InputTokens` 增三档分档字段（height/fontSize/iconSize × Small/Large，Medium 复用历史字段，全站观感不变）；`InputDefaults` 增分档工厂（L3 唯一消费点）；顺带清理 Input.kt 两处存量 unused import
-- **守门规则⑧ `AppInputApiAuditTest`**（新）：库自身签名禁裸 token 参数 + feature/navigation/core 禁给 `AppInput(` 传裸 token 参数（AppButtonApiAuditTest 同模式）
-- **Token 三层架构文档**：新增 `docs/designsystem/token-architecture.md`——Primitive（AppColorScale/SoftPalettes 十档色阶 + Spacing 8 级/Elevation 6 级/Opacity 7 级/Motion/Shapes 10 级/Typography 12 级/Control 三档）→ Semantic（AppColors/ApASemanticScales/AppDensity）→ Component（AppComponentTokens 52 组）三张映射表 + 换主题操作清单 + 守门验收口径
-- 验证：`testDebugUnitTest` 全绿（含新增审计测试）
+### [2.4.0] — 2026-08-31
 
-**五阶段收敛波次 · Phase 4（Patterns 外移 + 子目录化）**
+**Baby Design System 全量建设波次 · A 批：AppCard 全功能基座 + 守门规则①**
 
-- **43 个业务形态组件外移至 `app/ui/patterns/`**（git mv 保历史）：`settings/`（AppSettingItem 家族 5 件）、`records/`（RecordCard/AppRecordRow/RecordDetailSheet/DateNavCapsule/AppDateTimeField/DateTimeCascade/QuickTimeChipRow/AppTimerRow/CountdownChip + TimerState 随迁）、`dashboard/`（AppMetricCard/AppHeroStatCard/AppInsightCard/AppSummaryCard/MetricTrendLabel）、`chat/`（AppChatBubble/AppChatInputBar/AppTypingIndicator/AppCollapsedHeader/AppMarkdownText+MarkdownParser）、`assessment/`（AppScoreSelector）、`message/`（AppCategoryStrip）、`avatar/`（BabyIllustration）；composites/ 目录实体清零；AppComponents.kt 索引同步
-- **修复存量不规范**：5 处"App*Defaults"别名引用改为实际 object 名（原靠同包 alias import 支撑）；`MetricCardDefaults` 纯文案回落内联删除（无令牌可读的 Defaults 不设文件）
-- **守门随行**：`TokenAuditChecker` 增 `extraDefaultsRelDirs` 参数扫描 `ui/patterns`（Defaults 三规则扩展覆盖，gradle 任务 + JVM 双路）；`A11ySemanticsAuditTest` 增 patterns 扫描根；`MarkdownParserTest` 随迁
-- **components 渐进子目录化**：`EmptyState(+Defaults)` → `feedback/`、`SegmentedControl(+Defaults)` → `selection/`、`BadgeIcon` → `badge/`；根目录仅余横切工具（Animations/HapticExtensions/AppComponents 索引）
-- 全量迁移后 `testDebugUnitTest` + `themeTokenAudit` 双绿独立提交
 
-**五阶段收敛波次 · Phase 5（Hooks 归属 + AppStrings 分区）**
+**A 批内容：**
 
-- **Hooks 归属**：`FormLogic`/`TableLogic`（含 `rememberFormLogic`/`rememberTableLogic` 桥接）外移至 `app/ui/framework/`；`SortConfig` 归位 designsystem `components/table`（AppDataTable 公开类型，避免 DS→UI 反向依赖）；`designsystem/hooks` 只留 UI behavior（useDebounce/useState/useLatestState/ButtonLogic/触觉）；`consoleWarn` 以同 module internal 跨层复用
-- **AppStrings 分区**：拆分为 `AppStrings`（通用区 53 键：操作/四态/组件语义/日期导航）+ `AppStringsProduct`（产品域 381 键：AI/记录/消息/提醒/账户/家庭…，新址 `app/ui/i18n/`）；37 个引用文件同步替换引用并注入 import；全仓验证零残留（designsystem 内仅 KDoc 示例引用产品键，非代码依赖）
-- 通用组件业务默认文案债复核结论：4 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow）+ ErrorState 的 KDoc 示例引用产品键，非真实代码默认值，无去债动作
-- 验证：`testDebugUnitTest` + `themeTokenAudit` 全绿
-
-**依赖架构守门补强（五阶段收敛后审计）**
-
-- **实证扫描修复**：Phase 5b 替换脚本把 KDoc 示例中的产品文案引用一并替换并误注入 `import ui.i18n.AppStringsProduct`，造成 4 个 designsystem 文件出现 `designsystem → ui` 反向依赖——已删除注入 import、KDoc 示例改通用常量，designsystem → ui 归零
-- **新增守门 `UiLayerBoundaryAuditTest`**：`app/ui` 禁止 import core/feature/navigation/koin（红线 ⑥ 首次自动化）
-- **新增守门 `CoreLayerBoundaryAuditTest`**：core 禁止 import feature/navigation（红线 ⑦），唯一豁免 `core/di/Modules.kt`（Koin 组合根装配 feature ViewModel，依赖汇聚点）
-- `DesignSystemBoundaryAuditTest` 禁列表纳入 `com.babytracker.ui`（designsystem 亦禁回流 ui 层）
-- AGENTS.md §3 红线 ⑥⑦ 同步（含豁免说明）
+- **`AppCard` 升级为全功能卡片基座**（三轴模型）：
+  - 视觉轴：`variant`（Filled/Elevated/Outlined/Transparent，默认 Elevated 保持历史全站观感）× `size`（Compact/Medium/Large → spacing 边距三档，密度体系自动缩放）
+  - 交互轴：`onClick`/`onLongClick`/`enabled`/`selected`/`loading`；选中态主色描边高亮 + `stateDescription` 读屏补充（AppStrings 新增 `selected` 键），禁用态令牌化降透明
+  - 结构轴：`header`/`content`/`footer` 可选槽位（纵向排布，槽间距 spacing.sm）
+- `CardTokens` 重构为 per-variant 颜色组字段（参照 Palette 模式：filled/elevated/outlined/transparent 各自 container/content 色 + outlined 描边档），共享几何字段 cornerRadius/innerPadding/elevation 保持原供 `RecordCardDefaults` 等消费
+- 新增 `CardColors` 整体覆盖逃生口（未指定字段回落变体解析值）与 `SkeletonBar` 骨架条原语（从 SkeletonLoader 抽取 shimmer 画刷复用）；卡片 loading 态内置标准骨架占位
+- **全站 38 处调用点迁移至新 API**：裸 `containerColor`/`elevation`/`borderColor`/`borderWidth` 参数全部改为 variant/colors/onClick 表达（如 `elevation=level2+surface` 即默认 Elevated 直接删参）；主题选择、密度选择、宝宝管理三处手工 `.border` 选中态统一改用 `selected` 参数；AI 会话卡/快捷分析卡改用 onClick 轴替代 modifier.clickable
+- **守门规则① `FeatureLayerGenericCard`**（TokenAuditChecker 规则 6）：feature 层禁止新定义通用卡片容器（`*Card` 命名 Composable），新增即红；存量债 12 文件入白名单、G 批收编后逐条移除。`themeTokenAudit` Gradle 任务与 JVM 单测双路生效，新增规则测试（拦截 + 白名单豁免）
+- docs/design-system.md 同步（组件速查、门禁表规则 6）
+- 版本号 2.3.1 → 2.4.0（波次起点；versionCode 48 不变，发布构建时递增）
 
 ### [2.3.1] — 2026-08-24
 

@@ -9,7 +9,7 @@ Android 原生宝宝护理记录 App。单 module（`:app`）+ 自定义 detekt 
 | 维度 | 选型（版本见 `gradle/libs.versions.toml`） |
 |---|---|
 | 构建 | Gradle 9.7.1 · AGP 9.3.1 · Kotlin 2.4.10 · KSP 2.3.11 · Java 17 |
-| 目标 | compileSdk/targetSdk 36 · minSdk 24 · versionName 2.4.0 · versionCode 48 |
+| 目标 | compileSdk/targetSdk 36 · minSdk 24 · versionName 以 CHANGELOG 顶部版本块为准 · versionCode 48（发布构建时递增） |
 | UI | Compose BOM + Material 3 · Navigation Compose 2.9.1（类型安全 @Serializable 路由） |
 | DI / 异步 | Koin 4.2.1 · Coroutines + Flow · WorkManager |
 | 数据 | Room 2.8.4（exportSchema 开启）· DataStore · kotlinx-serialization |
@@ -79,6 +79,7 @@ app/src/main/java/com/babytracker/
 
 ## 7. 版本 · 提交 · 文档
 
+- **提交与版本号强绑定**（2026-08-31 起）：每次提交必须附带 CHANGELOG 新版本块（`### [x.y.z]` 置于顶部，Keep a Changelog 最新在上）+ `versionName` 逐提交 +1（在 `app/build.gradle.kts` 同步）。语义边界：新功能走 minor、破坏性变更走 major；`versionCode` 保持发布构建时递增（同一次发布内 versionName 逐提交递增不影响 versionCode）。
 - 每次构建成功后新提交。
 - CHANGELOG 遵循 Keep a Changelog（中文版）+ SemVer。
 - 提交信息用中文，格式 `<范围>：<摘要>`（如 `设计系统 G3：剩余 11 文件私有卡收编`、`docs：补记 composites 目录`）。
