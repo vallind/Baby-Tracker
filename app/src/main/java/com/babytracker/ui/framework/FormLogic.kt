@@ -1,5 +1,9 @@
-package com.babytracker.designsystem.hooks
+package com.babytracker.ui.framework
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import com.babytracker.designsystem.hooks.consoleWarn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +15,7 @@ import kotlinx.coroutines.launch
  * 表单逻辑 — 纯 Kotlin，可 JVM 单测
  *
  * 管理 fields/errors/touched/submitting 状态，无 Compose 依赖。
+ * 四层架构归属：`app/ui/framework`（app 层 UI 框架，非 Design System 职责）。
  *
  * 用法：
  *   data class LoginForm(val email: String = "", val password: String = "")
@@ -74,4 +79,21 @@ class FormLogic<F : Any>(
         _isSubmitting.value = false
         _isValid.value = true
     }
+}
+
+/**
+ * 桥接：创建 FormLogic，绑定到可注入的 CoroutineScope。
+ * （四层架构 Phase 5：从 designsystem/hooks 外移至 app/ui/framework）
+ */
+@Composable
+fun <F : Any> rememberFormLogic(
+    scope: CoroutineScope? = null,
+    initial: F,
+    validator: (suspend (F) -> List<String>)? = null,
+): FormLogic<F> {
+    val s = scope ?: run {
+        consoleWarn("rememberFormLogic: scope is null, using rememberCoroutineScope.")
+        rememberCoroutineScope()
+    }
+    return remember(s, initial) { FormLogic(s, initial, validator) }
 }

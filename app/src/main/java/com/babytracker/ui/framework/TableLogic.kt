@@ -1,16 +1,19 @@
-package com.babytracker.designsystem.hooks
+package com.babytracker.ui.framework
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import com.babytracker.designsystem.components.table.SortConfig
+import com.babytracker.designsystem.hooks.consoleWarn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-data class SortConfig(
-    val column: String = "",
-    val ascending: Boolean = true,
-)
-
+/**
+ * 表格分页配置（app 层 UI 框架，四层架构 Phase 5：与 TableLogic 同归属）。
+ */
 data class PageConfig(
     val page: Int = 0,
     val pageSize: Int = 20,
@@ -20,6 +23,8 @@ data class PageConfig(
  * 表格逻辑 — 纯 Kotlin，可 JVM 单测
  *
  * 管理 sorting/selection/pagination，无 Compose 依赖。
+ * 四层架构归属：`app/ui/framework`（app 层 UI 框架，非 Design System 职责）；
+ * sorting 配置 [SortConfig] 定义在 designsystem/components/table（AppDataTable 公开类型）。
  */
 class TableLogic<T : Any>(
     private val scope: CoroutineScope,
@@ -119,4 +124,21 @@ class TableLogic<T : Any>(
             if (start >= _data.value.size) return emptyList()
             return sortedData.subList(start, end)
         }
+}
+
+/**
+ * 桥接：创建 TableLogic，绑定到可注入的 CoroutineScope。
+ * （四层架构 Phase 5：从 designsystem/hooks 外移至 app/ui/framework）
+ */
+@Composable
+fun <T : Any> rememberTableLogic(
+    scope: CoroutineScope? = null,
+    initialData: List<T> = emptyList(),
+    idExtractor: ((T) -> String)? = null,
+): TableLogic<T> {
+    val s = scope ?: run {
+        consoleWarn("rememberTableLogic: scope is null, using rememberCoroutineScope.")
+        rememberCoroutineScope()
+    }
+    return remember(s, initialData, idExtractor) { TableLogic(s, initialData, idExtractor) }
 }

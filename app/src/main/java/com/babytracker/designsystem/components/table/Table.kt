@@ -32,10 +32,20 @@ import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.divider.DividerDefaults
 import com.babytracker.designsystem.components.table.TableDefaults as AppTableDefaults
-import com.babytracker.designsystem.hooks.SortConfig
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
+
+/**
+ * 表格排序配置（hooks/TableLogic 外移后归位 table 域 —— 四层架构 Phase 5）。
+ * AppDataTable 为受控组件：排序状态由调用方持有（SortConfig + sortBy），
+ * 表格 UI 自身不管理数据。
+ */
+@Immutable
+data class SortConfig(
+    val column: String = "",
+    val ascending: Boolean = true,
+)
 
 /**
  * 表格列定义 —— cell 槽位拿到 RowScope，可自行控制对齐与省略策略。

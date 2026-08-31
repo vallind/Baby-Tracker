@@ -33,37 +33,8 @@ fun rememberButtonLogic(
     return remember(s) { ButtonLogic(s, debounceMs) }
 }
 
-/**
- * 桥接：创建 FormLogic，绑定到可注入的 CoroutineScope。
- */
-@Composable
-fun <F : Any> rememberFormLogic(
-    scope: CoroutineScope? = null,
-    initial: F,
-    validator: (suspend (F) -> List<String>)? = null,
-): FormLogic<F> {
-    val s = scope ?: run {
-        consoleWarn("rememberFormLogic: scope is null, using rememberCoroutineScope.")
-        rememberCoroutineScope()
-    }
-    return remember(s, initial) { FormLogic(s, initial, validator) }
-}
-
-/**
- * 桥接：创建 TableLogic，绑定到可注入的 CoroutineScope。
- */
-@Composable
-fun <T : Any> rememberTableLogic(
-    scope: CoroutineScope? = null,
-    initialData: List<T> = emptyList(),
-    idExtractor: ((T) -> String)? = null,
-): TableLogic<T> {
-    val s = scope ?: run {
-        consoleWarn("rememberTableLogic: scope is null, using rememberCoroutineScope.")
-        rememberCoroutineScope()
-    }
-    return remember(s, initialData, idExtractor) { TableLogic(s, initialData, idExtractor) }
-}
+// 四层架构 Phase 5：FormLogic/TableLogic（含 remember 桥接）已外移至
+// app/ui/framework（FormLogic.kt / TableLogic.kt），designsystem/hooks 只保留 UI behavior。
 
 /**
  * 防抖值 — 对标 Palette useDebounce。
