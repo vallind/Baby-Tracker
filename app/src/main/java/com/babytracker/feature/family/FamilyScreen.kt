@@ -25,6 +25,7 @@ import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppShapes
@@ -253,15 +254,15 @@ private fun EmptyFamilyView(onCreateClick: () -> Unit, onJoinClick: () -> Unit) 
             Text("👨‍👩‍👧", style = typography.displayLarge)
             Spacer(Modifier.height(spacing.md))
             Text(
-                AppStrings.familyEmptyTitle,
+                AppStringsProduct.familyEmptyTitle,
                 style = typography.bodyLarge,
                 color = c.textSecondary,
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(spacing.lg))
             Row(horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
-                AppButton(variant = ButtonVariant.Outline, onClick = onJoinClick, label = AppStrings.familyJoin, icon = Icons.Default.GroupAdd)
-                AppButton(onClick = onCreateClick, label = AppStrings.familyCreate, icon = Icons.Default.Add)
+                AppButton(variant = ButtonVariant.Outline, onClick = onJoinClick, label = AppStringsProduct.familyJoin, icon = Icons.Default.GroupAdd)
+                AppButton(onClick = onCreateClick, label = AppStringsProduct.familyCreate, icon = Icons.Default.Add)
             }
         }
     }

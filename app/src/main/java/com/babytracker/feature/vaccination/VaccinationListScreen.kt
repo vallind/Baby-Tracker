@@ -35,6 +35,7 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.components.tag.AppTag
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
@@ -48,10 +49,10 @@ import kotlinx.coroutines.launch
 private data class FilterPill(val key: String, val label: String)
 
 private val FILTER_PILLS = listOf(
-    FilterPill("all", AppStrings.filterAll),
-    FilterPill("pending", AppStrings.vaccineUpcoming),
-    FilterPill("done", AppStrings.vaccineDoneTab),
-    FilterPill("expired", AppStrings.expired),
+    FilterPill("all", AppStringsProduct.filterAll),
+    FilterPill("pending", AppStringsProduct.vaccineUpcoming),
+    FilterPill("done", AppStringsProduct.vaccineDoneTab),
+    FilterPill("expired", AppStringsProduct.expired),
 )
 
 private fun suggestedAgeText(scheduledDate: String?, birthDate: String): String {
@@ -138,8 +139,8 @@ fun VaccinationListScreen(
         if (baby == null) {
             EmptyState(
                 emoji = "\uD83D\uDC89",
-                title = AppStrings.noBabyTitle,
-                subtitle = AppStrings.noBabySubtitle,
+                title = AppStringsProduct.noBabyTitle,
+                subtitle = AppStringsProduct.noBabySubtitle,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -157,7 +158,7 @@ fun VaccinationListScreen(
                     .padding(horizontal = spacing.md, vertical = spacing.sm),
             ) {
                 SegmentedControl(
-                    labels = listOf(AppStrings.vaccinePlan, AppStrings.vaccineRecordsTab),
+                    labels = listOf(AppStringsProduct.vaccinePlan, AppStringsProduct.vaccineRecordsTab),
                     selectedIndex = if (tab == "plan") 0 else 1,
                     onSelect = { idx ->
                         tab = if (idx == 0) "plan" else "done"
@@ -398,26 +399,26 @@ fun VaccinationFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) AppStrings.vaccinationEditTitle else AppStrings.vaccinationAddTitle,
+        title = if (isEdit) AppStringsProduct.vaccinationEditTitle else AppStringsProduct.vaccinationAddTitle,
         onDismiss = onDismiss,
         onSave = { onSave(buildVac()) },
-        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
+        saveText = if (isEdit) AppStringsProduct.updateLabel else AppStrings.save,
         saveEnabled = name.isNotBlank(),
     ) {
-        AppInput(value = name, onValueChange = { name = it }, label = AppStrings.vaccineNameLabel, isError = name.isBlank(), errorMessage = AppStrings.vaccineNameRequiredError, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
+        AppInput(value = name, onValueChange = { name = it }, label = AppStringsProduct.vaccineNameLabel, isError = name.isBlank(), errorMessage = AppStringsProduct.vaccineNameRequiredError, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
-        AppInput(value = dose, onValueChange = { dose = it }, label = AppStrings.vaccineDoseLabel, placeholder = AppStrings.vaccineDosePlaceholder, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
+        AppInput(value = dose, onValueChange = { dose = it }, label = AppStringsProduct.vaccineDoseLabel, placeholder = AppStringsProduct.vaccineDosePlaceholder, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
 
-        Text(AppStrings.vaccineStatusLabel, style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
+        Text(AppStringsProduct.vaccineStatusLabel, style = LocalAppTypography.current.bodySmall, color = c.textSecondary, modifier = Modifier.padding(bottom = spacing.sm))
         AppOptionChipRow(
-            options = listOf("pending" to AppStrings.vaccineStatusPending, "done" to AppStrings.vaccineStatusDone, "skipped" to AppStrings.vaccineStatusSkipped),
+            options = listOf("pending" to AppStringsProduct.vaccineStatusPending, "done" to AppStringsProduct.vaccineStatusDone, "skipped" to AppStringsProduct.vaccineStatusSkipped),
             selectedKey = status,
             onSelect = { status = it },
             modifier = Modifier.padding(bottom = 12.dp),
         )
 
         AppDateTimeField(
-            label = AppStrings.vaccineScheduledDateLabel,
+            label = AppStringsProduct.vaccineScheduledDateLabel,
             value = scheduledDate,
             onPick = { scheduledDate = it },
             dateOnly = true,
@@ -426,7 +427,7 @@ fun VaccinationFormDialog(
 
         if (status == "done") {
             AppDateTimeField(
-                label = AppStrings.vaccineAdministeredDateLabel,
+                label = AppStringsProduct.vaccineAdministeredDateLabel,
                 value = administeredDate,
                 onPick = { administeredDate = it },
                 dateOnly = true,
@@ -434,6 +435,6 @@ fun VaccinationFormDialog(
             )
         }
 
-        AppInput(value = note, onValueChange = { note = it }, label = AppStrings.noteOptional, modifier = Modifier.fillMaxWidth())
+        AppInput(value = note, onValueChange = { note = it }, label = AppStringsProduct.noteOptional, modifier = Modifier.fillMaxWidth())
     }
 }

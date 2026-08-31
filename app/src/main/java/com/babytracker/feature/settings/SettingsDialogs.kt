@@ -18,6 +18,7 @@ import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.dialog.AppDialog
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppSpacing
 
 // ═══════════════════════════════════════════════════════════
@@ -111,12 +112,12 @@ fun NicknameEditDialog(
 
     AppDialog(
         show = true,
-        title = AppStrings.editNickname,
+        title = AppStringsProduct.editNickname,
         content = {
             AppInput(
                 value = input,
                 onValueChange = { input = it },
-                label = AppStrings.nicknameHint,
+                label = AppStringsProduct.nicknameHint,
                 placeholder = "输入你喜欢的昵称",
                 modifier = Modifier.fillMaxWidth(),
             )

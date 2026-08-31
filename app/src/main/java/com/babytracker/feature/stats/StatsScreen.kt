@@ -17,6 +17,7 @@ import com.babytracker.designsystem.components.chart.MiniLineChart
 import com.babytracker.ui.patterns.records.DateNavCapsule
 import com.babytracker.designsystem.components.errorstate.AppErrorState
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.ui.patterns.dashboard.AppMetricCard
@@ -98,7 +99,7 @@ fun StatsScreen(
                 state.isLoading -> StatsLoadingState()
                 state.errorMessage != null -> {
                     AppErrorState(
-                        title = AppStrings.errorStatsTitle,
+                        title = AppStringsProduct.errorStatsTitle,
                         message = state.errorMessage,
                         retryLabel = AppStrings.reload,
                         onRetry = onRetry,

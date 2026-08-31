@@ -35,6 +35,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.core.util.DateUtils
 import com.babytracker.core.domain.model.*
 import com.babytracker.feature.diaper.DiaperFormDialog
@@ -144,12 +145,12 @@ fun TimelineScreen(
                         selected = selected,
                         onClick = { typeFilter = key },
                         label = when (key) {
-                            "" -> AppStrings.filterAll
-                            "feeding" -> AppStrings.feeding
-                            "sleep" -> AppStrings.sleep
-                            "diaper" -> AppStrings.diaper
-                            "growth" -> AppStrings.growth
-                            else -> AppStrings.health
+                            "" -> AppStringsProduct.filterAll
+                            "feeding" -> AppStringsProduct.feeding
+                            "sleep" -> AppStringsProduct.sleep
+                            "diaper" -> AppStringsProduct.diaper
+                            "growth" -> AppStringsProduct.growth
+                            else -> AppStringsProduct.health
                         },
                         selectedColor = when (key) {
                             "feeding" -> c.danger
@@ -172,9 +173,9 @@ fun TimelineScreen(
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "📝",
-                        title = AppStrings.noRecordsTitle,
-                        subtitle = AppStrings.noRecordsSubtitle,
-                        actionText = AppStrings.startRecording,
+                        title = AppStringsProduct.noRecordsTitle,
+                        subtitle = AppStringsProduct.noRecordsSubtitle,
+                        actionText = AppStringsProduct.startRecording,
                         onAction = { showTypePicker = true },
                     )
                 }
@@ -189,14 +190,14 @@ fun TimelineScreen(
                         EmptyState(
                             emoji = typeEmoji(typeFilter),
                             title = "没有${when (typeFilter) {
-                                "feeding" -> AppStrings.feeding
-                                "sleep" -> AppStrings.sleep
-                                "diaper" -> AppStrings.diaper
-                                "growth" -> AppStrings.growth
-                                "health" -> AppStrings.health
+                                "feeding" -> AppStringsProduct.feeding
+                                "sleep" -> AppStringsProduct.sleep
+                                "diaper" -> AppStringsProduct.diaper
+                                "growth" -> AppStringsProduct.growth
+                                "health" -> AppStringsProduct.health
                                 else -> ""
                             }}记录",
-                            subtitle = AppStrings.emptyFilteredSubtitle,
+                            subtitle = AppStringsProduct.emptyFilteredSubtitle,
                         )
                     }
                 } else {
@@ -235,7 +236,7 @@ fun TimelineScreen(
                                             .padding(horizontal = 6.dp, vertical = 1.dp),
                                     ) {
                                         Text(
-                                            "${String.format(Locale.US, AppStrings.countTimesCompact, records.size)}",
+                                            "${String.format(Locale.US, AppStringsProduct.countTimesCompact, records.size)}",
                                             style = typography.labelMedium,
                                             color = c.textTertiary,
                                         )
@@ -252,7 +253,7 @@ fun TimelineScreen(
                                     onDelete = {
                                         scope.launch {
                                             onDelete(record)
-                                            appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { onUndoDelete() }
+                                            appSnackbar.showUndo(message = "${String.format(Locale.US, AppStringsProduct.deletedWithTitle, record.title)}") { onUndoDelete() }
                                         }
                                     },
                                     onClick = { detailRecord = record },
@@ -292,14 +293,14 @@ fun TimelineScreen(
     // ── 类型选择底部弹窗 ──
     if (showTypePicker) {
         AppOptionPickerSheet(
-            title = AppStrings.pickRecordType,
+            title = AppStringsProduct.pickRecordType,
             options = listOf(
-                "feeding" to AppStrings.pickerOptionFeeding,
-                "sleep" to AppStrings.pickerOptionSleep,
-                "diaper" to AppStrings.pickerOptionDiaper,
-                "growth" to AppStrings.pickerOptionGrowth,
-                "vaccine" to AppStrings.pickerOptionVaccine,
-                "health" to AppStrings.pickerOptionHealth,
+                "feeding" to AppStringsProduct.pickerOptionFeeding,
+                "sleep" to AppStringsProduct.pickerOptionSleep,
+                "diaper" to AppStringsProduct.pickerOptionDiaper,
+                "growth" to AppStringsProduct.pickerOptionGrowth,
+                "vaccine" to AppStringsProduct.pickerOptionVaccine,
+                "health" to AppStringsProduct.pickerOptionHealth,
             ),
             selectedKey = null,
             onSelect = { key ->
@@ -324,9 +325,9 @@ fun TimelineScreen(
             emoji = record.emoji,
             tint = typeColor(record.recordType),
             fields = listOf(
-                AppStrings.detailDate to record.date,
-                AppStrings.detailTime to record.time,
-                AppStrings.detailContent to record.subtitle,
+                AppStringsProduct.detailDate to record.date,
+                AppStringsProduct.detailTime to record.time,
+                AppStringsProduct.detailContent to record.subtitle,
             ),
             onEdit = {
                 detailRecord = null
@@ -336,7 +337,7 @@ fun TimelineScreen(
                 detailRecord = null
                 scope.launch {
                     onDelete(record)
-                    appSnackbar.showUndo(message = "${String.format(Locale.US, AppStrings.deletedWithTitle, record.title)}") { onUndoDelete() }
+                    appSnackbar.showUndo(message = "${String.format(Locale.US, AppStringsProduct.deletedWithTitle, record.title)}") { onUndoDelete() }
                 }
             },
             onDismiss = { detailRecord = null },

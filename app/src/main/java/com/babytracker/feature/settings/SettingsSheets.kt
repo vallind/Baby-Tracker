@@ -36,6 +36,7 @@ import com.babytracker.designsystem.components.card.CardColors
 import com.babytracker.designsystem.components.card.CardVariant
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.AppDensity
 import com.babytracker.designsystem.theme.AppTheme
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -116,7 +117,7 @@ fun DensityPickerSheet(ctrl: DensityController, onDismiss: () -> Unit) {
         onDismiss = onDismiss,
     ) {
         Column(Modifier.padding(spacing.md)) {
-            Text(AppStrings.densityLabel, style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
+            Text(AppStringsProduct.densityLabel, style = LocalAppTypography.current.titleLarge, modifier = Modifier.padding(bottom = 20.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
                 AppDensity.entries.forEach { density ->
                     val selected = ctrl.currentDensity == density

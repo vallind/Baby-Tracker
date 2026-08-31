@@ -46,6 +46,7 @@ import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 
 /**
  * 我的（设置主页）— 纯 UI 渲染层（Batch 4）。
@@ -197,15 +198,15 @@ fun SettingsScreen(
             AppCardGroup {
                 AppSettingItem(
                     emoji = "📦",
-                    label = AppStrings.backupManage,
-                    subtitle = AppStrings.backupManageSubtitle,
+                    label = AppStringsProduct.backupManage,
+                    subtitle = AppStringsProduct.backupManageSubtitle,
                     onClick = onOpenBackup,
                 )
                 AppDivider(horizontalInset = spacing.md)
                 AppSettingItem(
                     emoji = "📋",
-                    label = AppStrings.logViewer,
-                    subtitle = AppStrings.logViewerSubtitle,
+                    label = AppStringsProduct.logViewer,
+                    subtitle = AppStringsProduct.logViewerSubtitle,
                     onClick = onOpenLogViewer,
                 )
             }

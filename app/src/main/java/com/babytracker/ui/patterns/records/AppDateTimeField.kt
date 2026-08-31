@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import com.babytracker.designsystem.components.input.AppInput
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.babytracker.ui.i18n.AppStringsProduct
 
 /**
  * 只读日期时间字段 — 表单族通用组件（G4 收敛）。
@@ -28,7 +29,7 @@ import java.time.format.DateTimeFormatter
  *
  * 用法：
  *   AppDateTimeField(
- *       label = AppStrings.detailTime,
+ *       label = AppStringsProduct.detailTime,
  *       value = diaperDateTime,
  *       onPick = { diaperDateTime = it },
  *   )

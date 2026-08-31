@@ -3,6 +3,7 @@ package com.babytracker.feature.timeline
 import androidx.lifecycle.ViewModel
 import androidx.compose.runtime.snapshotFlow
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.domain.model.*
 import com.babytracker.core.util.DateUtils
@@ -206,7 +207,7 @@ internal fun toTimelineItems(
                 emoji = when (f.type) { FeedingType.BREAST -> "🤱"; FeedingType.FORMULA -> "💧"; FeedingType.FOOD -> "🥣"; else -> "🥤" },
                 title = DateUtils.feedingTypeLabel(FeedingType.raw(f.type)),
                 subtitle = when (f.type) {
-                    FeedingType.BREAST -> "${f.breastSide?.let { BreastSide.raw(it) } ?: AppStrings.breastSideBoth} · ${f.durationMin}分钟"
+                    FeedingType.BREAST -> "${f.breastSide?.let { BreastSide.raw(it) } ?: AppStringsProduct.breastSideBoth} · ${f.durationMin}分钟"
                     FeedingType.FORMULA -> "${f.amountMl}ml${if (f.brand != null) " · ${f.brand}" else ""}"
                     FeedingType.FOOD -> "${f.foodName} ${f.amountG}g"
                     else -> "${f.amountMl}ml"
@@ -231,7 +232,7 @@ internal fun toTimelineItems(
                 id = s.id,
                 recordType = "sleep",
                 emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
-                title = if (s.type == SleepType.NIGHT) AppStrings.nightSleep else AppStrings.nap,
+                title = if (s.type == SleepType.NIGHT) AppStringsProduct.nightSleep else AppStringsProduct.nap,
                 subtitle = buildString {
                     append("${timePart(s.startTime)}-${timePart(s.endTime)}")
                     if (secs > 0) append(" · ${DateUtils.durationFullText(secs)}")
@@ -250,7 +251,7 @@ internal fun toTimelineItems(
                 id = d.id,
                 recordType = "diaper",
                 emoji = "🧷",
-                title = AppStrings.diaperChange,
+                title = AppStringsProduct.diaperChange,
                 subtitle = DateUtils.diaperTypeLabel(DiaperType.raw(d.type)),
                 time = timePart(d.timestamp),
                 date = d.timestamp.take(10),

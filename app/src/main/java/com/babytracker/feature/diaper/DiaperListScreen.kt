@@ -51,6 +51,7 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.ui.patterns.dashboard.AppSummaryCard
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
 import java.time.LocalDate
@@ -116,7 +117,7 @@ fun DiaperListScreen(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = AppStrings.diaperRecords,
+                title = AppStringsProduct.diaperRecords,
                 onBack = onBack,
                 actions = {
                     AppIconButton(
@@ -150,9 +151,9 @@ fun DiaperListScreen(
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "🧷",
-                        title = AppStrings.emptyDiaperTitle,
-                        subtitle = AppStrings.emptyDiaperSubtitle,
-                        actionText = AppStrings.recordDiaper,
+                        title = AppStringsProduct.emptyDiaperTitle,
+                        subtitle = AppStringsProduct.emptyDiaperSubtitle,
+                        actionText = AppStringsProduct.recordDiaper,
                         onAction = {
                             editingDiaper = null
                             showForm = true
@@ -172,19 +173,19 @@ fun DiaperListScreen(
                     gradient = Gradients.diaperSummary(c),
                     contentColor = contentColor,
                     emoji = "🧷",
-                    title = AppStrings.diaperToday,
+                    title = AppStringsProduct.diaperToday,
                 ) {
                     Text(
-                        "${String.format(Locale.US, AppStrings.countTimes, filtered.size)}",
+                        "${String.format(Locale.US, AppStringsProduct.countTimes, filtered.size)}",
                         style = summaryTypography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = contentColor,
                     )
                     Spacer(Modifier.height(spacing.lg))
                     Row(Modifier.fillMaxWidth()) {
-                        QuickStatPill(value = wetCount.toString(), label = AppStrings.diaperWet, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-                        QuickStatPill(value = poopCount.toString(), label = AppStrings.diaperPoop, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
-                        QuickStatPill(value = bothCount.toString(), label = AppStrings.diaperBoth, unit = AppStrings.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                        QuickStatPill(value = wetCount.toString(), label = AppStringsProduct.diaperWet, unit = AppStringsProduct.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                        QuickStatPill(value = poopCount.toString(), label = AppStringsProduct.diaperPoop, unit = AppStringsProduct.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
+                        QuickStatPill(value = bothCount.toString(), label = AppStringsProduct.diaperBoth, unit = AppStringsProduct.countsUnit, contentColor = contentColor, modifier = Modifier.weight(1f))
                     }
                 }
 
@@ -221,7 +222,7 @@ fun DiaperListScreen(
                         onDelete = {
                             onDelete(d)
                             scope.launch {
-                                appSnackbar.showUndo(message = AppStrings.deletedDiaper) { onUndoDelete() }
+                                appSnackbar.showUndo(message = AppStringsProduct.deletedDiaper) { onUndoDelete() }
                             }
                         },
                             onClick = { detailDiaper = d },
@@ -268,7 +269,7 @@ fun DiaperListScreen(
 
             // —— 底部主操作条（DS 统一件） ——
             AppActionBar(
-                label = AppStrings.recordDiaper,
+                label = AppStringsProduct.recordDiaper,
                 icon = Icons.Default.Add,
                 onClick = {
                     editingDiaper = null
@@ -294,7 +295,7 @@ fun DiaperListScreen(
             onDelete = {
                 onDelete(d)
                 scope.launch {
-                    appSnackbar.showUndo(message = AppStrings.deletedDiaper) { onUndoDelete() }
+                    appSnackbar.showUndo(message = AppStringsProduct.deletedDiaper) { onUndoDelete() }
                 }
             },
             onDismiss = { detailDiaper = null },
@@ -371,13 +372,13 @@ fun DiaperFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) AppStrings.editDiaper else AppStrings.recordDiaper,
+        title = if (isEdit) AppStringsProduct.editDiaper else AppStringsProduct.recordDiaper,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
+        saveText = if (isEdit) AppStringsProduct.updateLabel else AppStrings.save,
     ) {
         AppOptionChipRow(
-            options = listOf("wet" to AppStrings.diaperOptionWet, "poop" to AppStrings.diaperOptionPoop, "both" to AppStrings.diaperOptionBoth),
+            options = listOf("wet" to AppStringsProduct.diaperOptionWet, "poop" to AppStringsProduct.diaperOptionPoop, "both" to AppStringsProduct.diaperOptionBoth),
             selectedKey = selectedType,
             onSelect = { selectedType = it },
             modifier = Modifier.padding(bottom = spacing.md),
@@ -387,7 +388,7 @@ fun DiaperFormDialog(
         QuickTimeChipRow(onPick = { diaperDateTime = it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) })
         Spacer(Modifier.height(12.dp))
         AppDateTimeField(
-            label = AppStrings.detailTime,
+            label = AppStringsProduct.detailTime,
             value = diaperDateTime,
             onPick = { diaperDateTime = it },
             modifier = Modifier.fillMaxWidth(),
@@ -396,7 +397,7 @@ fun DiaperFormDialog(
         AppInput(
             value = note,
             onValueChange = { note = it },
-            label = AppStrings.noteOptional,
+            label = AppStringsProduct.noteOptional,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -411,8 +412,8 @@ private fun diaperDetailFields(d: Diaper): List<Pair<String, String>> {
         java.time.LocalDateTime.parse(d.timestamp, DateTimeFormatter.ISO_DATE_TIME)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { d.timestamp }
-    list += AppStrings.detailTime to time
-    list += AppStrings.detailType to DateUtils.diaperTypeLabel(DiaperType.raw(d.type))
-    d.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
+    list += AppStringsProduct.detailTime to time
+    list += AppStringsProduct.detailType to DateUtils.diaperTypeLabel(DiaperType.raw(d.type))
+    d.note?.takeIf { it.isNotBlank() }?.let { list += AppStringsProduct.detailNote to it }
     return list
 }

@@ -1,6 +1,7 @@
 package com.babytracker.feature.settings
 
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 
 // ═══════════════════════════════════════════════════════════
 //  主题显示名 — 单一来源
@@ -11,11 +12,11 @@ import com.babytracker.designsystem.i18n.AppStrings
 
 /** AppTheme seed 名 → 用户可见显示名（未知名回退"跟随系统"） */
 internal fun appThemeDisplayName(name: String): String = when (name) {
-    "pure" -> AppStrings.themeNamePure
-    "aurora" -> AppStrings.themeNameAurora
-    "warm" -> AppStrings.themeNameWarm
-    "sunny" -> AppStrings.themeNameSunny
-    "night" -> AppStrings.themeNameNight
-    "morandi" -> AppStrings.themeNameMorandi
-    else -> AppStrings.themeFollowSystem
+    "pure" -> AppStringsProduct.themeNamePure
+    "aurora" -> AppStringsProduct.themeNameAurora
+    "warm" -> AppStringsProduct.themeNameWarm
+    "sunny" -> AppStringsProduct.themeNameSunny
+    "night" -> AppStringsProduct.themeNameNight
+    "morandi" -> AppStringsProduct.themeNameMorandi
+    else -> AppStringsProduct.themeFollowSystem
 }

@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.babytracker.designsystem.components.chip.AppChip
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 
@@ -63,7 +64,7 @@ fun AppSettingChoiceItem(
         Spacer(Modifier.height(spacing.sm))
         if (options.isEmpty()) {
             Text(
-                text = AppStrings.aiConfigUnavailable,
+                text = AppStringsProduct.aiConfigUnavailable,
                 style = LocalAppTypography.current.bodyMedium.copy(
                     fontSize = SettingItemDefaults.choiceSubtitleFontSize(),
                 ),

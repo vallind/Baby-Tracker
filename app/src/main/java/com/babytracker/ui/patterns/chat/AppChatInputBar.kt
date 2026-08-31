@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 
 /**
  * 聊天输入条 — 「多行输入 + 发送/停止按钮切换」复合组件（G4 聊天族收编）。
@@ -40,10 +41,10 @@ fun AppChatInputBar(
     canSend: Boolean = false,
     isError: Boolean = false,
     errorMessage: String? = null,
-    inputLabel: String = AppStrings.aiInputLabel,
-    placeholder: String? = AppStrings.aiInputPlaceholder,
-    sendLabel: String = AppStrings.aiSend,
-    stopLabel: String = AppStrings.aiStop,
+    inputLabel: String = AppStringsProduct.aiInputLabel,
+    placeholder: String? = AppStringsProduct.aiInputPlaceholder,
+    sendLabel: String = AppStringsProduct.aiSend,
+    stopLabel: String = AppStringsProduct.aiStop,
 ) {
     Row(
         modifier

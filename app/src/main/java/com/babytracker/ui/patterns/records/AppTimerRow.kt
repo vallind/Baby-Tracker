@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppTypography
 
@@ -56,9 +57,9 @@ fun AppTimerRow(
             textAlign = TextAlign.Start,
         )
         if (running) {
-            AppButton(onClick = onStop, label = AppStrings.timerStop)
+            AppButton(onClick = onStop, label = AppStringsProduct.timerStop)
         } else {
-            AppButton(onClick = onStart, label = AppStrings.timerStart)
+            AppButton(onClick = onStart, label = AppStringsProduct.timerStart)
         }
     }
 }

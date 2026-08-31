@@ -31,6 +31,7 @@ import com.babytracker.ui.patterns.records.AppTimerRow
 import com.babytracker.ui.patterns.records.TimerTickEffect
 import com.babytracker.ui.patterns.records.rememberTimerState
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
 import org.koin.compose.koinInject
@@ -57,7 +58,7 @@ fun FeedingFormDialog(
     var type by remember { mutableStateOf(editEntity?.let { FeedingType.raw(it.type) } ?: "breast") }
     var amountMl by remember { mutableStateOf(editEntity?.amountMl?.toString() ?: "") }
     var durationMin by remember { mutableStateOf(editEntity?.durationMin?.toString() ?: "") }
-    var breastSide by remember { mutableStateOf(editEntity?.breastSide?.let { BreastSide.raw(it) } ?: AppStrings.breastSideBoth) }
+    var breastSide by remember { mutableStateOf(editEntity?.breastSide?.let { BreastSide.raw(it) } ?: AppStringsProduct.breastSideBoth) }
     var foodName by remember { mutableStateOf(editEntity?.foodName ?: "") }
     var amountG by remember { mutableStateOf(editEntity?.amountG?.toString() ?: "") }
     var brand by remember { mutableStateOf(editEntity?.brand ?: "") }
@@ -128,13 +129,13 @@ fun FeedingFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) AppStrings.editFeeding else AppStrings.recordFeeding,
+        title = if (isEdit) AppStringsProduct.editFeeding else AppStringsProduct.recordFeeding,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
+        saveText = if (isEdit) AppStringsProduct.updateLabel else AppStrings.save,
     ) {
         AppOptionChipRow(
-            options = listOf("breast" to AppStrings.feedingOptionBreast, "formula" to AppStrings.feedingOptionFormula, "food" to AppStrings.feedingOptionFood, "water" to AppStrings.feedingOptionWater),
+            options = listOf("breast" to AppStringsProduct.feedingOptionBreast, "formula" to AppStringsProduct.feedingOptionFormula, "food" to AppStringsProduct.feedingOptionFood, "water" to AppStringsProduct.feedingOptionWater),
             selectedKey = type,
             onSelect = { type = it },
             modifier = Modifier.padding(bottom = spacing.md),
@@ -143,7 +144,7 @@ fun FeedingFormDialog(
         when (type) {
             "breast" -> {
                 Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), horizontalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    listOf(AppStrings.breastSideLeft, AppStrings.breastSideRight, AppStrings.breastSideBoth).forEach { s ->
+                    listOf(AppStringsProduct.breastSideLeft, AppStringsProduct.breastSideRight, AppStringsProduct.breastSideBoth).forEach { s ->
                         AppFilterChip(selected = breastSide == s, onClick = { breastSide = s }, label = s, modifier = Modifier.weight(1f))
                     }
                 }
@@ -175,10 +176,10 @@ fun FeedingFormDialog(
                 AppInput(
                     value = durationMin,
                     onValueChange = { durationMin = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.feedingDurationLabel,
+                    label = AppStringsProduct.feedingDurationLabel,
                     leadingIcon = { Text("⏱", style = LocalAppTypography.current.titleLarge) },
                     isError = durationMin.toIntOrNull()?.let { it < 0 || it > 600 } ?: false,
-                    errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) AppStrings.durationRangeError else null,
+                    errorMessage = if (durationMin.toIntOrNull()?.let { it < 0 || it > 600 } == true) AppStringsProduct.durationRangeError else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -187,10 +188,10 @@ fun FeedingFormDialog(
                 AppInput(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.feedingAmountLabel,
+                    label = AppStringsProduct.feedingAmountLabel,
                     leadingIcon = { Text("💧", style = LocalAppTypography.current.titleLarge) },
                     isError = amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } ?: false,
-                    errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) AppStrings.amountRangeError500 else null,
+                    errorMessage = if (amountMl.toIntOrNull()?.let { it <= 0 || it > 500 } == true) AppStringsProduct.amountRangeError500 else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -203,7 +204,7 @@ fun FeedingFormDialog(
                 AppInput(
                     value = brand,
                     onValueChange = { brand = it },
-                    label = AppStrings.brandOptional,
+                    label = AppStringsProduct.brandOptional,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -211,16 +212,16 @@ fun FeedingFormDialog(
                 AppInput(
                     value = foodName,
                     onValueChange = { foodName = it },
-                    label = AppStrings.foodNameLabel,
+                    label = AppStringsProduct.foodNameLabel,
                     leadingIcon = { Text("🥣", style = LocalAppTypography.current.titleLarge) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 AppInput(
                     value = amountG,
                     onValueChange = { amountG = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.portionGramLabel,
+                    label = AppStringsProduct.portionGramLabel,
                     isError = amountG.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    errorMessage = if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStrings.amountRangeError1000 else null,
+                    errorMessage = if (amountG.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStringsProduct.amountRangeError1000 else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -229,11 +230,11 @@ fun FeedingFormDialog(
                 AppInput(
                     value = amountMl,
                     onValueChange = { amountMl = it.filter { c -> c.isDigit() } },
-                    label = AppStrings.waterAmountLabel,
+                    label = AppStringsProduct.waterAmountLabel,
                     // 饮水量预设由下方 chip 行提供
                     leadingIcon = { Text("🥤", style = LocalAppTypography.current.titleLarge) },
                     isError = amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } ?: false,
-                    errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStrings.amountRangeError1000 else null,
+                    errorMessage = if (amountMl.toIntOrNull()?.let { it < 0 || it > 1000 } == true) AppStringsProduct.amountRangeError1000 else null,
                     keyboardType = KeyboardType.Number,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -251,7 +252,7 @@ fun FeedingFormDialog(
         QuickTimeChipRow(onPick = { feedingDateTime = it.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) })
         Spacer(Modifier.height(12.dp))
         AppDateTimeField(
-            label = AppStrings.feedingTimeLabel,
+            label = AppStringsProduct.feedingTimeLabel,
             value = feedingDateTime,
             onPick = { feedingDateTime = it },
             modifier = Modifier.fillMaxWidth(),

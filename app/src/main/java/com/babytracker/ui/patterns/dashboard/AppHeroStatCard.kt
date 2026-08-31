@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.babytracker.ui.i18n.AppStringsProduct
 
 /**
  * 渐变统计大卡 — 「渐变底 + 可选 emoji 徽章标题头 + 自由内容槽」的 hero 形态复合组件。
@@ -33,7 +34,7 @@ import androidx.compose.ui.graphics.Color
  * 用法：
  *   AppHeroStatCard(
  *       gradient = Gradients.diaperSummary(c), contentColor = c.onTertiary,
- *       emoji = "🧷", title = AppStrings.diaperToday,
+ *       emoji = "🧷", title = AppStringsProduct.diaperToday,
  *   ) {
  *       Text("3 次", style = typography.headlineMedium, fontWeight = FontWeight.Bold, color = c.onTertiary)
  *       Row { QuickStatPill(...) }

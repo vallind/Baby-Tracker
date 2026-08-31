@@ -12,6 +12,7 @@ import com.babytracker.designsystem.components.scaffold.SubPageScaffold
 import com.babytracker.ui.patterns.settings.AppSettingItem
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppSpacing
 
 /**
@@ -38,7 +39,7 @@ fun SupportSettingsScreen(
                 emoji = "❓",
                 label = "帮助与反馈",
                 subtitle = "使用问题与意见反馈",
-                trailing = { AppChip(label = AppStrings.comingSoon) },
+                trailing = { AppChip(label = AppStringsProduct.comingSoon) },
             )
             AppDivider(horizontalInset = spacing.md)
             AppSettingItem(

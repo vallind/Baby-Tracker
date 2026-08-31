@@ -139,6 +139,21 @@
 - **Token 三层架构文档**：新增 `docs/designsystem/token-architecture.md`——Primitive（AppColorScale/SoftPalettes 十档色阶 + Spacing 8 级/Elevation 6 级/Opacity 7 级/Motion/Shapes 10 级/Typography 12 级/Control 三档）→ Semantic（AppColors/ApASemanticScales/AppDensity）→ Component（AppComponentTokens 52 组）三张映射表 + 换主题操作清单 + 守门验收口径
 - 验证：`testDebugUnitTest` 全绿（含新增审计测试）
 
+**五阶段收敛波次 · Phase 4（Patterns 外移 + 子目录化）**
+
+- **43 个业务形态组件外移至 `app/ui/patterns/`**（git mv 保历史）：`settings/`（AppSettingItem 家族 5 件）、`records/`（RecordCard/AppRecordRow/RecordDetailSheet/DateNavCapsule/AppDateTimeField/DateTimeCascade/QuickTimeChipRow/AppTimerRow/CountdownChip + TimerState 随迁）、`dashboard/`（AppMetricCard/AppHeroStatCard/AppInsightCard/AppSummaryCard/MetricTrendLabel）、`chat/`（AppChatBubble/AppChatInputBar/AppTypingIndicator/AppCollapsedHeader/AppMarkdownText+MarkdownParser）、`assessment/`（AppScoreSelector）、`message/`（AppCategoryStrip）、`avatar/`（BabyIllustration）；composites/ 目录实体清零；AppComponents.kt 索引同步
+- **修复存量不规范**：5 处"App*Defaults"别名引用改为实际 object 名（原靠同包 alias import 支撑）；`MetricCardDefaults` 纯文案回落内联删除（无令牌可读的 Defaults 不设文件）
+- **守门随行**：`TokenAuditChecker` 增 `extraDefaultsRelDirs` 参数扫描 `ui/patterns`（Defaults 三规则扩展覆盖，gradle 任务 + JVM 双路）；`A11ySemanticsAuditTest` 增 patterns 扫描根；`MarkdownParserTest` 随迁
+- **components 渐进子目录化**：`EmptyState(+Defaults)` → `feedback/`、`SegmentedControl(+Defaults)` → `selection/`、`BadgeIcon` → `badge/`；根目录仅余横切工具（Animations/HapticExtensions/AppComponents 索引）
+- 全量迁移后 `testDebugUnitTest` + `themeTokenAudit` 双绿独立提交
+
+**五阶段收敛波次 · Phase 5（Hooks 归属 + AppStrings 分区）**
+
+- **Hooks 归属**：`FormLogic`/`TableLogic`（含 `rememberFormLogic`/`rememberTableLogic` 桥接）外移至 `app/ui/framework/`；`SortConfig` 归位 designsystem `components/table`（AppDataTable 公开类型，避免 DS→UI 反向依赖）；`designsystem/hooks` 只留 UI behavior（useDebounce/useState/useLatestState/ButtonLogic/触觉）；`consoleWarn` 以同 module internal 跨层复用
+- **AppStrings 分区**：拆分为 `AppStrings`（通用区 53 键：操作/四态/组件语义/日期导航）+ `AppStringsProduct`（产品域 381 键：AI/记录/消息/提醒/账户/家庭…，新址 `app/ui/i18n/`）；37 个引用文件同步替换引用并注入 import；全仓验证零残留（designsystem 内仅 KDoc 示例引用产品键，非代码依赖）
+- 通用组件业务默认文案债复核结论：4 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow）+ ErrorState 的 KDoc 示例引用产品键，非真实代码默认值，无去债动作
+- 验证：`testDebugUnitTest` + `themeTokenAudit` 全绿
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

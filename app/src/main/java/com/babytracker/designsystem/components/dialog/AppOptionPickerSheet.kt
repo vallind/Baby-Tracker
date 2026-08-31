@@ -11,6 +11,7 @@ import com.babytracker.designsystem.components.section.AppListItem
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
+import com.babytracker.ui.i18n.AppStringsProduct
 
 /**
  * 单选选项底部弹层 — 表单族通用组件（G4 收敛）。
@@ -24,8 +25,8 @@ import com.babytracker.designsystem.theme.LocalAppTypography
  *
  * 用法：
  *   AppOptionPickerSheet(
- *       title = AppStrings.pickRecordType,
- *       options = listOf("feeding" to AppStrings.pickerOptionFeeding, ...),
+ *       title = AppStringsProduct.pickRecordType,
+ *       options = listOf("feeding" to AppStringsProduct.pickerOptionFeeding, ...),
  *       selectedKey = null,
  *       onSelect = { key -> when (key) { "feeding" -> showAddFeeding = true; ... } },
  *       onDismiss = { showTypePicker = false },

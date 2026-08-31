@@ -50,6 +50,7 @@ import com.babytracker.designsystem.components.tilegrid.AppTileGrid
 import com.babytracker.designsystem.components.tilegrid.AppTileSpec
 import com.babytracker.ui.patterns.dashboard.AppHeroStatCard
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors
@@ -86,9 +87,9 @@ fun HomeScreen(
         if (baby == null) {
             EmptyState(
                 emoji = "🍼",
-                title = AppStrings.noBabyTitle,
-                subtitle = AppStrings.noBabySubtitle,
-                actionText = AppStrings.addBaby,
+                title = AppStringsProduct.noBabyTitle,
+                subtitle = AppStringsProduct.noBabySubtitle,
+                actionText = AppStringsProduct.addBaby,
                 onAction = onOpenBabyManagement,
                 modifier = Modifier.padding(padding),
             )
@@ -142,9 +143,9 @@ fun HomeScreen(
 private fun greetingText(): String {
     val hour = LocalTime.now().hour
     return when (hour) {
-        in 5..10 -> AppStrings.homeGreetingMorning
-        in 11..17 -> AppStrings.homeGreetingAfternoon
-        else -> AppStrings.homeGreetingEvening
+        in 5..10 -> AppStringsProduct.homeGreetingMorning
+        in 11..17 -> AppStringsProduct.homeGreetingAfternoon
+        else -> AppStringsProduct.homeGreetingEvening
     }
 }
 
@@ -204,7 +205,7 @@ private fun HeroHeader(baby: Baby, onClickProfile: () -> Unit) {
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
                         Text(
-                            AppStrings.babyProfile,
+                            AppStringsProduct.babyProfile,
                             style = typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = c.textPrimary,
@@ -273,14 +274,14 @@ private fun AiAssistantEntry(onClick: () -> Unit) {
             Spacer(Modifier.width(spacing.md))
             Column(Modifier.weight(1f)) {
                 Text(
-                    AppStrings.aiAssistant,
+                    AppStringsProduct.aiAssistant,
                     style = typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = contentColor,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    AppStrings.aiAssistantSubtitle,
+                    AppStringsProduct.aiAssistantSubtitle,
                     style = typography.bodySmall,
                     color = contentColor.copy(alpha = 0.82f),
                 )
@@ -310,20 +311,20 @@ fun TodayOverview(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formu
         modifier = Modifier.padding(horizontal = spacing.md),
         gradient = Gradients.overviewCard(c),
         contentColor = c.onPrimary,
-        title = AppStrings.todayOverview,
+        title = AppStringsProduct.todayOverview,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (showBreast) {
-                QuickStatPill(value = animatedBreast.toString(), label = AppStrings.breastFeeding, unit = AppStrings.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
+                QuickStatPill(value = animatedBreast.toString(), label = AppStringsProduct.breastFeeding, unit = AppStringsProduct.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
             }
             if (showFormula) {
-                QuickStatPill(value = if (formulaTotalMl > 0) formulaTotalMl.toString() else "0", label = AppStrings.formulaFeeding, unit = "ml", contentColor = c.onPrimary, modifier = Modifier.weight(1f))
+                QuickStatPill(value = if (formulaTotalMl > 0) formulaTotalMl.toString() else "0", label = AppStringsProduct.formulaFeeding, unit = "ml", contentColor = c.onPrimary, modifier = Modifier.weight(1f))
             }
             if (showGeneric) {
-                QuickStatPill(value = animatedFeed.toString(), label = AppStrings.feedingCount, unit = AppStrings.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
+                QuickStatPill(value = animatedFeed.toString(), label = AppStringsProduct.feedingCount, unit = AppStringsProduct.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
             }
-            QuickStatPill(value = sleepHours, label = AppStrings.sleepHours, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
-            QuickStatPill(value = animatedDiaper.toString(), label = AppStrings.diaperChange, unit = AppStrings.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
+            QuickStatPill(value = sleepHours, label = AppStringsProduct.sleepHours, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
+            QuickStatPill(value = animatedDiaper.toString(), label = AppStringsProduct.diaperChange, unit = AppStringsProduct.countsUnit, contentColor = c.onPrimary, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -331,15 +332,15 @@ fun TodayOverview(feedCount: Int, breastFeedCount: Int, formulaCount: Int, formu
 /** 宫格功能分区（设计语言映射到五个语义色系）；语义枚举定义在 HomeRoute（路由映射留在 Route） */
 private fun homeFeatureTiles(c: AppColors): List<AppTileSpec> = listOf(
     // 记录类三格点击进入对应记录页（宫格直达表单已于 2.2.1 回滚）
-    AppTileSpec(HomeFeature.Feeding.name, "🍼", AppStrings.feedingRecords, c.danger),              // 喂养珊瑚红
-    AppTileSpec(HomeFeature.Sleep.name, "🌙", AppStrings.sleepRecords, c.secondary),               // 睡眠紫
-    AppTileSpec(HomeFeature.Diaper.name, "🧷", AppStrings.diaperRecords, c.tertiary),              // 尿布青
-    AppTileSpec(HomeFeature.Growth.name, "📏", AppStrings.growthRecords, c.success),               // 生长绿
-    AppTileSpec(HomeFeature.Development.name, "🧠", AppStrings.developmentAssessment, c.primary),  // 发育蓝
-    AppTileSpec(HomeFeature.Vaccination.name, "💉", AppStrings.vaccinationRecords, c.warning),     // 疫苗琥珀
-    AppTileSpec(HomeFeature.Health.name, "❤️", AppStrings.healthRecords, c.danger),                // 健康珊瑚（医疗红）
+    AppTileSpec(HomeFeature.Feeding.name, "🍼", AppStringsProduct.feedingRecords, c.danger),              // 喂养珊瑚红
+    AppTileSpec(HomeFeature.Sleep.name, "🌙", AppStringsProduct.sleepRecords, c.secondary),               // 睡眠紫
+    AppTileSpec(HomeFeature.Diaper.name, "🧷", AppStringsProduct.diaperRecords, c.tertiary),              // 尿布青
+    AppTileSpec(HomeFeature.Growth.name, "📏", AppStringsProduct.growthRecords, c.success),               // 生长绿
+    AppTileSpec(HomeFeature.Development.name, "🧠", AppStringsProduct.developmentAssessment, c.primary),  // 发育蓝
+    AppTileSpec(HomeFeature.Vaccination.name, "💉", AppStringsProduct.vaccinationRecords, c.warning),     // 疫苗琥珀
+    AppTileSpec(HomeFeature.Health.name, "❤️", AppStringsProduct.healthRecords, c.danger),                // 健康珊瑚（医疗红）
     // 提醒中心原只有设置页一个深入口，宫格补位后可达性提升
-    AppTileSpec(HomeFeature.Reminder.name, "⏰", AppStrings.reminderCenter, c.warning),             // 提醒琥珀
+    AppTileSpec(HomeFeature.Reminder.name, "⏰", AppStringsProduct.reminderCenter, c.warning),             // 提醒琥珀
 )
 
 @Composable
@@ -357,7 +358,7 @@ fun RecentRecordsSection(items: List<Any>, onSeeAll: () -> Unit = {}) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    AppStrings.recentRecords,
+                    AppStringsProduct.recentRecords,
                     style = typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = c.textPrimary,
@@ -415,10 +416,10 @@ private fun recordRowData(item: Any, c: AppColors): RecordRowData? = when (item)
         RecordRowData(
             emoji = if (night) "🌙" else "☀️",
             tint = if (night) c.secondary else c.tertiary,
-            title = if (night) AppStrings.nightSleep else AppStrings.nap,
+            title = if (night) AppStringsProduct.nightSleep else AppStringsProduct.nap,
         )
     }
-    is Diaper -> RecordRowData("🧷", c.tertiary, AppStrings.diaperChange)
+    is Diaper -> RecordRowData("🧷", c.tertiary, AppStringsProduct.diaperChange)
     else -> null
 }
 
@@ -431,9 +432,9 @@ private fun recordTimeText(item: Any): String = when (item) {
 
 private fun summaryText(item: Any): String = when (item) {
     is Feeding -> when (item.type) {
-        FeedingType.BREAST -> "${String.format(Locale.US, AppStrings.minutesCompactFormat, item.durationMin ?: 0)}"
+        FeedingType.BREAST -> "${String.format(Locale.US, AppStringsProduct.minutesCompactFormat, item.durationMin ?: 0)}"
         FeedingType.FORMULA -> "${item.amountMl ?: 0}ml"
-        FeedingType.FOOD -> item.foodName ?: AppStrings.solidFood
+        FeedingType.FOOD -> item.foodName ?: AppStringsProduct.solidFood
         else -> "${item.amountMl ?: 0}ml"
     }
     is Sleep -> DateUtils.durationFullText(

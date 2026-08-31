@@ -59,6 +59,7 @@ import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
 import kotlinx.coroutines.launch
@@ -103,7 +104,7 @@ fun GrowthScreen(
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
     var tab by remember { mutableIntStateOf(0) }
-    val tabs = listOf(AppStrings.growthHeight, AppStrings.growthWeight, AppStrings.growthHead)
+    val tabs = listOf(AppStringsProduct.growthHeight, AppStringsProduct.growthWeight, AppStringsProduct.growthHead)
     val types = listOf(GrowthType.HEIGHT, GrowthType.WEIGHT, GrowthType.HEAD)
     val units = listOf("cm", "kg", "cm")
     AppScaffold(
@@ -111,13 +112,13 @@ fun GrowthScreen(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = AppStrings.growthRecords,
+                title = AppStringsProduct.growthRecords,
                 onBack = onBack,
                 actions = {
                     AppIconButton(
                         icon = Icons.Default.DateRange,
                         onClick = { showDatePicker = true },
-                        contentDescription = AppStrings.growthCalendar,
+                        contentDescription = AppStringsProduct.growthCalendar,
                         tint = c.textPrimary,
                     )
                 },
@@ -172,9 +173,9 @@ fun GrowthScreen(
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = when (tab) { 0 -> "📏"; 1 -> "⚖️"; else -> "📐" },
-                        title = "${String.format(Locale.US, AppStrings.growthEmptyTitleTemplate, tabs[tab])}",
-                        subtitle = "${String.format(Locale.US, AppStrings.growthEmptySubtitleTemplate, tabs[tab])}",
-                        actionText = "${String.format(Locale.US, AppStrings.growthRecordTemplate, tabs[tab])}",
+                        title = "${String.format(Locale.US, AppStringsProduct.growthEmptyTitleTemplate, tabs[tab])}",
+                        subtitle = "${String.format(Locale.US, AppStringsProduct.growthEmptySubtitleTemplate, tabs[tab])}",
+                        actionText = "${String.format(Locale.US, AppStringsProduct.growthRecordTemplate, tabs[tab])}",
                         onAction = {
                             editingGrowth = null
                             showForm = true
@@ -224,7 +225,7 @@ fun GrowthScreen(
                             ) {
                                 Column(Modifier.fillMaxWidth().padding(spacing.lg), horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        "${String.format(Locale.US, AppStrings.growthCurrentTemplate, tabs[tab])}",
+                                        "${String.format(Locale.US, AppStringsProduct.growthCurrentTemplate, tabs[tab])}",
                                         style = LocalAppTypography.current.bodyMedium,
                                         color = c.textSecondary,
                                     )
@@ -249,7 +250,7 @@ fun GrowthScreen(
                                     }
                                     Spacer(Modifier.height(6.dp))
                                     Text(
-                                        "${String.format(Locale.US, AppStrings.growthMeasuredAtTemplate, measuredDate)}",
+                                        "${String.format(Locale.US, AppStringsProduct.growthMeasuredAtTemplate, measuredDate)}",
                                         style = LocalAppTypography.current.bodySmall,
                                         color = c.textTertiary,
                                     )
@@ -394,7 +395,7 @@ fun GrowthScreen(
                             onDelete = {
                                 onDelete(g)
                                 scope.launch {
-                                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { onUndoDelete() }
+                                    appSnackbar.showUndo(message = AppStringsProduct.deletedGrowth) { onUndoDelete() }
                                 }
                             },
                                 onClick = { detailGrowth = g },
@@ -452,7 +453,7 @@ fun GrowthScreen(
                         editingGrowth = null
                         showForm = true
                     },
-                    label = "${String.format(Locale.US, AppStrings.growthRecordTemplate, tabs[tab])}",
+                    label = "${String.format(Locale.US, AppStringsProduct.growthRecordTemplate, tabs[tab])}",
                     icon = Icons.Default.Add,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -476,7 +477,7 @@ fun GrowthScreen(
             onDelete = {
                 onDelete(g)
                 scope.launch {
-                    appSnackbar.showUndo(message = AppStrings.deletedGrowth) { onUndoDelete() }
+                    appSnackbar.showUndo(message = AppStringsProduct.deletedGrowth) { onUndoDelete() }
                 }
             },
             onDismiss = { detailGrowth = null },
@@ -564,13 +565,13 @@ fun GrowthFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) AppStrings.editGrowthLabel else AppStrings.recordGrowthLabel,
+        title = if (isEdit) AppStringsProduct.editGrowthLabel else AppStringsProduct.recordGrowthLabel,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
+        saveText = if (isEdit) AppStringsProduct.updateLabel else AppStrings.save,
     ) {
         AppOptionChipRow(
-            options = listOf("height" to AppStrings.growthOptionHeight, "weight" to AppStrings.growthOptionWeight, "head" to AppStrings.growthOptionHead),
+            options = listOf("height" to AppStringsProduct.growthOptionHeight, "weight" to AppStringsProduct.growthOptionWeight, "head" to AppStringsProduct.growthOptionHead),
             selectedKey = type,
             onSelect = { type = it },
             modifier = Modifier.padding(bottom = spacing.md),
@@ -579,13 +580,13 @@ fun GrowthFormDialog(
         AppInput(
             value = value,
             onValueChange = { value = it },
-            label = AppStrings.detailValue,
+            label = AppStringsProduct.detailValue,
             keyboardType = KeyboardType.Decimal,
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
         )
 
         AppDateTimeField(
-            label = AppStrings.detailMeasuredAt,
+            label = AppStringsProduct.detailMeasuredAt,
             value = measuredAt,
             onPick = { measuredAt = it },
             modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
@@ -594,7 +595,7 @@ fun GrowthFormDialog(
         AppInput(
             value = note,
             onValueChange = { note = it },
-            label = AppStrings.noteOptional,
+            label = AppStringsProduct.noteOptional,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -620,9 +621,9 @@ private fun growthDetailFields(g: Growth): List<Pair<String, String>> {
         java.time.LocalDateTime.parse(g.measuredAt, DateTimeFormatter.ISO_DATE_TIME)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { g.measuredAt }
-    list += AppStrings.detailMeasuredAt to measured
+    list += AppStringsProduct.detailMeasuredAt to measured
     val unit = when (g.type) { GrowthType.HEIGHT -> "cm"; GrowthType.WEIGHT -> "kg"; GrowthType.HEAD -> "cm" }
-    list += AppStrings.detailValue to String.format(java.util.Locale.US, "%.1f %s", g.value, unit)
-    g.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
+    list += AppStringsProduct.detailValue to String.format(java.util.Locale.US, "%.1f %s", g.value, unit)
+    g.note?.takeIf { it.isNotBlank() }?.let { list += AppStringsProduct.detailNote to it }
     return list
 }

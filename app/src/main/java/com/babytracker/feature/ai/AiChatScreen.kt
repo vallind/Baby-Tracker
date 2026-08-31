@@ -62,6 +62,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.ui.patterns.chat.AppTypingIndicator
 import com.babytracker.ui.patterns.chat.AppChatBubble
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.AppColorScale
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.tintContainer
@@ -108,9 +109,9 @@ fun AiChatScreen(
     var deletingConversationId by remember { mutableStateOf<Long?>(null) }
     val copyAnswer: (String) -> Unit = { answer ->
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText(AppStrings.aiAssistant, answer))
+        clipboard.setPrimaryClip(ClipData.newPlainText(AppStringsProduct.aiAssistant, answer))
         if (state.preferences.showCopyFeedback) {
-            scope.launch { appSnackbar.showMessage(AppStrings.aiCopied) }
+            scope.launch { appSnackbar.showMessage(AppStringsProduct.aiCopied) }
         }
     }
 
@@ -133,11 +134,11 @@ fun AiChatScreen(
     AppScaffold(
         topBar = {
             AppTopBar(
-                title = AppStrings.aiAssistant,
+                title = AppStringsProduct.aiAssistant,
                 onBack = onBack,
                 actions = {
-                    AppIconButton(icon = Icons.Default.History, onClick = { showHistory = true }, contentDescription = AppStrings.aiHistory)
-                    AppIconButton(icon = Icons.Default.Settings, onClick = onOpenAiSettings, contentDescription = AppStrings.aiSettings)
+                    AppIconButton(icon = Icons.Default.History, onClick = { showHistory = true }, contentDescription = AppStringsProduct.aiHistory)
+                    AppIconButton(icon = Icons.Default.Settings, onClick = onOpenAiSettings, contentDescription = AppStringsProduct.aiSettings)
                 },
             )
         },
@@ -188,12 +189,12 @@ fun AiChatScreen(
                             val itemTypography = LocalAppTypography.current
                             AppCard(modifier = Modifier.fillMaxWidth()) {
                                 Column(Modifier.padding(itemSpacing.md)) {
-                                    Text(AppStrings.aiWelcome, style = itemTypography.bodyLarge, color = itemColors.textPrimary)
+                                    Text(AppStringsProduct.aiWelcome, style = itemTypography.bodyLarge, color = itemColors.textPrimary)
                                     Spacer(Modifier.height(itemSpacing.md))
                                     listOf(
-                                        AppStrings.aiQuestionAge,
-                                        AppStrings.aiQuestionSleep,
-                                        AppStrings.aiQuestionFeeding,
+                                        AppStringsProduct.aiQuestionAge,
+                                        AppStringsProduct.aiQuestionSleep,
+                                        AppStringsProduct.aiQuestionFeeding,
                                     ).forEach { question ->
                                         AppChip(
                                             label = question,
@@ -281,8 +282,8 @@ fun AiChatScreen(
 
     AppConfirmDialog(
         show = deletingConversationId != null,
-        title = AppStrings.aiHistoryDeleteTitle,
-        message = AppStrings.aiHistoryDeleteMessage,
+        title = AppStringsProduct.aiHistoryDeleteTitle,
+        message = AppStringsProduct.aiHistoryDeleteMessage,
         onConfirm = {
             deletingConversationId?.let(onDeleteConversation)
             deletingConversationId = null
@@ -306,14 +307,14 @@ private fun AiHistorySheet(
     val typography = LocalAppTypography.current
     AppBottomSheet(show = show, onDismiss = onDismiss) {
         Text(
-            text = AppStrings.aiHistory,
+            text = AppStringsProduct.aiHistory,
             style = typography.titleLarge,
             color = colors.textPrimary,
             modifier = Modifier.padding(horizontal = spacing.md),
         )
         Spacer(Modifier.height(spacing.xs))
         Text(
-            text = AppStrings.aiHistoryLocalNotice,
+            text = AppStringsProduct.aiHistoryLocalNotice,
             style = typography.bodyMedium,
             color = colors.textSecondary,
             modifier = Modifier.padding(horizontal = spacing.md),
@@ -322,7 +323,7 @@ private fun AiHistorySheet(
         AppInput(
             value = state.historyQuery,
             onValueChange = onQueryChange,
-            label = AppStrings.aiHistorySearch,
+            label = AppStringsProduct.aiHistorySearch,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = spacing.md),
@@ -330,7 +331,7 @@ private fun AiHistorySheet(
         Spacer(Modifier.height(spacing.sm))
         AppButton(
             onClick = onNewConversation,
-            label = AppStrings.aiHistoryNewChat,
+            label = AppStringsProduct.aiHistoryNewChat,
             icon = Icons.Default.Add,
             modifier = Modifier
                 .fillMaxWidth()
@@ -340,7 +341,7 @@ private fun AiHistorySheet(
         val conversations = state.filteredConversations
         if (state.isHistoryLoading) {
             Text(
-                text = AppStrings.aiAnalysisLoading,
+                text = AppStringsProduct.aiAnalysisLoading,
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
                 modifier = Modifier
@@ -350,9 +351,9 @@ private fun AiHistorySheet(
         } else if (conversations.isEmpty()) {
             Text(
                 text = if (state.historyQuery.isBlank()) {
-                    AppStrings.aiHistoryEmpty
+                    AppStringsProduct.aiHistoryEmpty
                 } else {
-                    AppStrings.aiHistoryNoMatch
+                    AppStringsProduct.aiHistoryNoMatch
                 },
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
@@ -414,7 +415,7 @@ private fun AiHistorySheet(
                                     color = colors.textTertiary,
                                 )
                             }
-                            AppIconButton(icon = Icons.Default.Delete, onClick = { onDeleteConversation(conversation.id) }, contentDescription = AppStrings.aiHistoryDeleteTitle, tint = colors.danger)
+                            AppIconButton(icon = Icons.Default.Delete, onClick = { onDeleteConversation(conversation.id) }, contentDescription = AppStringsProduct.aiHistoryDeleteTitle, tint = colors.danger)
                         }
                     }
                 }
@@ -438,19 +439,19 @@ private fun AiQuickAnalysisSection(
     val typography = LocalAppTypography.current
     Column {
         Text(
-            text = AppStrings.aiQuickAnalysis,
+            text = AppStringsProduct.aiQuickAnalysis,
             style = typography.titleMedium,
             color = colors.textPrimary,
         )
         Spacer(Modifier.height(spacing.xs))
         Text(
-            text = AppStrings.aiQuickAnalysisSubtitle,
+            text = AppStringsProduct.aiQuickAnalysisSubtitle,
             style = typography.bodyMedium,
             color = colors.textSecondary,
         )
         Spacer(Modifier.height(spacing.sm))
         Text(
-            text = AppStrings.aiAnalysisPeriod,
+            text = AppStringsProduct.aiAnalysisPeriod,
             style = typography.labelMedium,
             color = colors.textSecondary,
         )
@@ -495,10 +496,10 @@ private fun AiAnalysisRow(
             if (index > 0) Spacer(Modifier.width(spacing.sm))
             val enabled = isAnalysisSourceEnabled(source, state.preferences)
             val status = when {
-                state.isAnalysisAvailabilityLoading -> AppStrings.aiAnalysisLoading
-                !enabled -> AppStrings.aiAnalysisDataDisabled
-                source in state.availableAnalyses -> AppStrings.aiAnalysisAvailable
-                else -> AppStrings.aiAnalysisNoRecords
+                state.isAnalysisAvailabilityLoading -> AppStringsProduct.aiAnalysisLoading
+                !enabled -> AppStringsProduct.aiAnalysisDataDisabled
+                source in state.availableAnalyses -> AppStringsProduct.aiAnalysisAvailable
+                else -> AppStringsProduct.aiAnalysisNoRecords
             }
             val selected = state.analysisContext == source
             AppCard(
@@ -566,7 +567,7 @@ private fun AiAnalysisContextBar(
                     .padding(vertical = spacing.sm),
             ) {
                 Text(
-                    text = AppStrings.aiAnalysisContext,
+                    text = AppStringsProduct.aiAnalysisContext,
                     style = typography.labelMedium,
                     color = colors.textSecondary,
                 )
@@ -579,7 +580,7 @@ private fun AiAnalysisContextBar(
             AppButton(
                 variant = ButtonVariant.Ghost,
                 onClick = onRemove,
-                label = AppStrings.aiAnalysisRemove,
+                label = AppStringsProduct.aiAnalysisRemove,
                 enabled = canRemove,
             )
         }
@@ -596,13 +597,13 @@ private fun AiAnalysisUnavailableBanner(
     reason: AiAnalysisUnavailableReason,
 ) {
     val message = if (reason == AiAnalysisUnavailableReason.DATA_DISABLED) {
-        AppStrings.aiAnalysisEnableRecords
+        AppStringsProduct.aiAnalysisEnableRecords
     } else {
         when (source) {
-            AiAnalysisSource.SLEEP -> AppStrings.aiAnalysisNoSleepRecords
-            AiAnalysisSource.FEEDING -> AppStrings.aiAnalysisNoFeedingRecords
-            AiAnalysisSource.HEALTH -> AppStrings.aiAnalysisNoHealthRecords
-            AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisNoOverviewRecords
+            AiAnalysisSource.SLEEP -> AppStringsProduct.aiAnalysisNoSleepRecords
+            AiAnalysisSource.FEEDING -> AppStringsProduct.aiAnalysisNoFeedingRecords
+            AiAnalysisSource.HEALTH -> AppStringsProduct.aiAnalysisNoHealthRecords
+            AiAnalysisSource.OVERVIEW -> AppStringsProduct.aiAnalysisNoOverviewRecords
         }
     }
     AppInlineBanner(
@@ -615,10 +616,10 @@ private fun AiAnalysisUnavailableBanner(
 }
 
 private fun analysisTitle(source: AiAnalysisSource): String = when (source) {
-    AiAnalysisSource.SLEEP -> AppStrings.aiAnalysisSleep
-    AiAnalysisSource.FEEDING -> AppStrings.aiAnalysisFeeding
-    AiAnalysisSource.HEALTH -> AppStrings.aiAnalysisHealth
-    AiAnalysisSource.OVERVIEW -> AppStrings.aiAnalysisOverview
+    AiAnalysisSource.SLEEP -> AppStringsProduct.aiAnalysisSleep
+    AiAnalysisSource.FEEDING -> AppStringsProduct.aiAnalysisFeeding
+    AiAnalysisSource.HEALTH -> AppStringsProduct.aiAnalysisHealth
+    AiAnalysisSource.OVERVIEW -> AppStringsProduct.aiAnalysisOverview
 }
 
 private fun analysisRange(period: AiAnalysisPeriod): String =
@@ -641,9 +642,9 @@ private fun AiBabySummary(state: AiChatUiState, onCollapse: () -> Unit = {}) {
                 Text(
                     text = baby?.let {
                         val age = DateUtils.safeParseDate(it.birthDate)?.let(DateUtils::monthAge)
-                            ?: AppStrings.aiMonthAgeUnknown
+                            ?: AppStringsProduct.aiMonthAgeUnknown
                         "${it.name} · $age"
-                    } ?: AppStrings.aiNoBaby,
+                    } ?: AppStringsProduct.aiNoBaby,
                     style = typography.titleMedium,
                     color = colors.textPrimary,
                     modifier = Modifier.weight(1f),
@@ -651,16 +652,16 @@ private fun AiBabySummary(state: AiChatUiState, onCollapse: () -> Unit = {}) {
                 AppIconButton(
                     icon = Icons.Default.KeyboardArrowUp,
                     onClick = onCollapse,
-                    contentDescription = AppStrings.aiSettings,
+                    contentDescription = AppStringsProduct.aiSettings,
                     tint = colors.textSecondary,
                 )
             }
             Spacer(Modifier.height(spacing.xs))
             Text(
                 text = if (state.preferences.useRecentRecords) {
-                    AppStrings.aiDataNotice
+                    AppStringsProduct.aiDataNotice
                 } else {
-                    AppStrings.aiDataNoticeDisabled
+                    AppStringsProduct.aiDataNoticeDisabled
                 },
                 style = typography.bodyMedium,
                 color = colors.textSecondary,
@@ -676,7 +677,7 @@ private fun CollapsedAiHeader(state: AiChatUiState, onExpand: () -> Unit) {
     val modelName = state.modelOptions.firstOrNull { it.id == state.selectedOptionId }?.name ?: ""
     AppCollapsedHeader(
         emoji = "👶",
-        title = state.baby?.name ?: AppStrings.aiNoBaby,
+        title = state.baby?.name ?: AppStringsProduct.aiNoBaby,
         subtitle = modelName,
         onClick = onExpand,
         modifier = Modifier
@@ -710,7 +711,7 @@ private fun AiModelSelector(
                     modifier = Modifier.weight(1f),
                 )
                 if (state.prerequisite == AiChatPrerequisite.CONFIG_UNAVAILABLE) {
-                    AppButton(variant = ButtonVariant.Ghost, onClick = onRefresh, label = AppStrings.aiRetry)
+                    AppButton(variant = ButtonVariant.Ghost, onClick = onRefresh, label = AppStringsProduct.aiRetry)
                 }
             }
             else -> AppChipCarouselRow(
@@ -727,14 +728,14 @@ private fun AiModelSelector(
 
 private fun prerequisiteMessage(prerequisite: AiChatPrerequisite): String = when (prerequisite) {
     AiChatPrerequisite.READY -> ""
-    AiChatPrerequisite.DISABLED -> AppStrings.aiDisabled
-    AiChatPrerequisite.NOT_LOGGED_IN -> AppStrings.aiNotLoggedIn
-    AiChatPrerequisite.NO_FAMILY -> AppStrings.aiNoFamily
-    AiChatPrerequisite.FAMILY_VERIFYING -> AppStrings.aiFamilyVerifying
-    AiChatPrerequisite.FAMILY_UNVERIFIED -> AppStrings.aiFamilyUnverified
-    AiChatPrerequisite.NO_BABY -> AppStrings.aiNoBaby
-    AiChatPrerequisite.CONFIG_LOADING -> AppStrings.aiConfigLoading
-    AiChatPrerequisite.CONFIG_UNAVAILABLE -> AppStrings.aiConfigUnavailable
+    AiChatPrerequisite.DISABLED -> AppStringsProduct.aiDisabled
+    AiChatPrerequisite.NOT_LOGGED_IN -> AppStringsProduct.aiNotLoggedIn
+    AiChatPrerequisite.NO_FAMILY -> AppStringsProduct.aiNoFamily
+    AiChatPrerequisite.FAMILY_VERIFYING -> AppStringsProduct.aiFamilyVerifying
+    AiChatPrerequisite.FAMILY_UNVERIFIED -> AppStringsProduct.aiFamilyUnverified
+    AiChatPrerequisite.NO_BABY -> AppStringsProduct.aiNoBaby
+    AiChatPrerequisite.CONFIG_LOADING -> AppStringsProduct.aiConfigLoading
+    AiChatPrerequisite.CONFIG_UNAVAILABLE -> AppStringsProduct.aiConfigUnavailable
 }
 
 @Composable
@@ -766,8 +767,8 @@ private fun AiMessageBubble(
             if (!isUser && message.safetyStatus != null) {
                 Text(
                     text = when (message.safetyStatus) {
-                        AiAnswerSafetyStatus.SUPPLEMENTED -> AppStrings.aiSafetySupplemented
-                        AiAnswerSafetyStatus.BLOCKED -> AppStrings.aiSafetyBlocked
+                        AiAnswerSafetyStatus.SUPPLEMENTED -> AppStringsProduct.aiSafetySupplemented
+                        AiAnswerSafetyStatus.BLOCKED -> AppStringsProduct.aiSafetyBlocked
                     },
                     style = typography.labelMedium,
                     color = if (message.safetyStatus == AiAnswerSafetyStatus.BLOCKED) {
@@ -799,9 +800,9 @@ private fun AiMessageBubble(
                     variant = ButtonVariant.Ghost,
                     onClick = { answerBasisExpanded = !answerBasisExpanded },
                     label = if (answerBasisExpanded) {
-                        AppStrings.aiHideAnswerBasis
+                        AppStringsProduct.aiHideAnswerBasis
                     } else {
-                        AppStrings.aiShowAnswerBasis
+                        AppStringsProduct.aiShowAnswerBasis
                     },
                 )
                 if (answerBasisExpanded) {
@@ -811,18 +812,18 @@ private fun AiMessageBubble(
                     AppButton(
                         variant = ButtonVariant.Ghost,
                         onClick = { onCopy(message.content) },
-                        label = AppStrings.aiCopy,
+                        label = AppStringsProduct.aiCopy,
                     )
                     if (canRevise) {
                         AppButton(
                             variant = ButtonVariant.Ghost,
                             onClick = onEditQuestion,
-                            label = AppStrings.aiEditQuestion,
+                            label = AppStringsProduct.aiEditQuestion,
                         )
                         AppButton(
                             variant = ButtonVariant.Ghost,
                             onClick = onRegenerate,
-                            label = AppStrings.aiRegenerate,
+                            label = AppStringsProduct.aiRegenerate,
                         )
                     }
                 }
@@ -833,14 +834,14 @@ private fun AiMessageBubble(
             // 风险警示卡：描边强调色随风险档位变化，G3 收编为调用点内联
             val accent = if (riskLevel == AiRiskLevel.ATTENTION) colors.warning else colors.error
             val riskTitle = when (riskLevel) {
-                AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyTitle
-                AiRiskLevel.HIGH -> AppStrings.aiRiskHighTitle
-                AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionTitle
+                AiRiskLevel.EMERGENCY -> AppStringsProduct.aiRiskEmergencyTitle
+                AiRiskLevel.HIGH -> AppStringsProduct.aiRiskHighTitle
+                AiRiskLevel.ATTENTION -> AppStringsProduct.aiRiskAttentionTitle
             }
             val riskMessage = when (riskLevel) {
-                AiRiskLevel.EMERGENCY -> AppStrings.aiRiskEmergencyMessage
-                AiRiskLevel.HIGH -> AppStrings.aiRiskHighMessage
-                AiRiskLevel.ATTENTION -> AppStrings.aiRiskAttentionMessage
+                AiRiskLevel.EMERGENCY -> AppStringsProduct.aiRiskEmergencyMessage
+                AiRiskLevel.HIGH -> AppStringsProduct.aiRiskHighMessage
+                AiRiskLevel.ATTENTION -> AppStringsProduct.aiRiskAttentionMessage
             }
             AppCard(
                 modifier = Modifier.fillMaxWidth(),
@@ -864,36 +865,36 @@ private fun AiAnswerBasis(references: List<String>) {
     val typography = LocalAppTypography.current
     Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
         Text(
-            text = AppStrings.aiRecordFacts,
+            text = AppStringsProduct.aiRecordFacts,
             style = typography.labelMedium,
             color = colors.textPrimary,
         )
         Text(
             text = if (references.isEmpty()) {
-                AppStrings.aiNoRecentRecordReference
+                AppStringsProduct.aiNoRecentRecordReference
             } else {
-                AppStrings.aiReferencePrefix + references.joinToString("、")
+                AppStringsProduct.aiReferencePrefix + references.joinToString("、")
             },
             style = typography.labelMedium,
             color = colors.textSecondary,
         )
         Text(
-            text = AppStrings.aiInference,
+            text = AppStringsProduct.aiInference,
             style = typography.labelMedium,
             color = colors.textPrimary,
         )
         Text(
-            text = AppStrings.aiInferenceNotice,
+            text = AppStringsProduct.aiInferenceNotice,
             style = typography.labelMedium,
             color = colors.textSecondary,
         )
         Text(
-            text = AppStrings.aiActionAdvice,
+            text = AppStringsProduct.aiActionAdvice,
             style = typography.labelMedium,
             color = colors.textPrimary,
         )
         Text(
-            text = AppStrings.aiDisclaimer,
+            text = AppStringsProduct.aiDisclaimer,
             style = typography.labelMedium,
             color = colors.textTertiary,
         )
@@ -914,9 +915,9 @@ private fun AiReasoningBlock(
         variant = ButtonVariant.Ghost,
         onClick = { expanded = !expanded },
         label = when {
-            isStreaming -> AppStrings.aiThinking
-            expanded -> AppStrings.aiHideReasoning
-            else -> AppStrings.aiShowReasoning
+            isStreaming -> AppStringsProduct.aiThinking
+            expanded -> AppStringsProduct.aiHideReasoning
+            else -> AppStringsProduct.aiShowReasoning
         },
     )
     if (expanded) {
@@ -944,20 +945,20 @@ private fun AiReasoningBlock(
 @Composable
 private fun AiErrorBanner(error: AiChatError, canRetry: Boolean, onRetry: () -> Unit) {
     val message = when (error) {
-        AiChatError.INPUT_TOO_LONG -> AppStrings.aiInputTooLong
-        AiChatError.CONFIG_UNAVAILABLE -> AppStrings.aiConfigUnavailable
-        AiChatError.AUTHENTICATION -> AppStrings.aiAuthError
-        AiChatError.INSUFFICIENT_BALANCE -> AppStrings.aiBalanceError
-        AiChatError.INVALID_REQUEST -> AppStrings.aiRequestError
-        AiChatError.RATE_LIMIT -> AppStrings.aiRateLimitError
-        AiChatError.SERVICE_UNAVAILABLE -> AppStrings.aiServiceError
-        AiChatError.NETWORK -> AppStrings.aiNetworkError
-        AiChatError.UNKNOWN -> AppStrings.aiUnknownError
+        AiChatError.INPUT_TOO_LONG -> AppStringsProduct.aiInputTooLong
+        AiChatError.CONFIG_UNAVAILABLE -> AppStringsProduct.aiConfigUnavailable
+        AiChatError.AUTHENTICATION -> AppStringsProduct.aiAuthError
+        AiChatError.INSUFFICIENT_BALANCE -> AppStringsProduct.aiBalanceError
+        AiChatError.INVALID_REQUEST -> AppStringsProduct.aiRequestError
+        AiChatError.RATE_LIMIT -> AppStringsProduct.aiRateLimitError
+        AiChatError.SERVICE_UNAVAILABLE -> AppStringsProduct.aiServiceError
+        AiChatError.NETWORK -> AppStringsProduct.aiNetworkError
+        AiChatError.UNKNOWN -> AppStringsProduct.aiUnknownError
     }
     AppInlineBanner(
         message = message,
         severity = AppBannerSeverity.Error,
-        actionLabel = if (canRetry) AppStrings.aiRetry else null,
+        actionLabel = if (canRetry) AppStringsProduct.aiRetry else null,
         onAction = if (canRetry) onRetry else null,
         modifier = Modifier
             .fillMaxWidth()
@@ -971,9 +972,9 @@ private fun AiHistorySaveStatusBanner(status: AiHistorySaveStatus) {
     val colors = LocalAppColors.current
     val text = when (status) {
         AiHistorySaveStatus.IDLE -> return
-        AiHistorySaveStatus.SAVING -> AppStrings.aiHistorySaving
-        AiHistorySaveStatus.SAVED -> AppStrings.aiHistorySaved
-        AiHistorySaveStatus.FAILED -> AppStrings.aiHistorySaveFailed
+        AiHistorySaveStatus.SAVING -> AppStringsProduct.aiHistorySaving
+        AiHistorySaveStatus.SAVED -> AppStringsProduct.aiHistorySaved
+        AiHistorySaveStatus.FAILED -> AppStringsProduct.aiHistorySaveFailed
     }
     Text(
         text = text,
@@ -1012,6 +1013,6 @@ private fun AiComposer(
         enabled = state.prerequisite == AiChatPrerequisite.READY && !state.isSending,
         canSend = state.canSend,
         isError = state.error == AiChatError.INPUT_TOO_LONG,
-        errorMessage = if (state.error == AiChatError.INPUT_TOO_LONG) AppStrings.aiInputTooLong else null,
+        errorMessage = if (state.error == AiChatError.INPUT_TOO_LONG) AppStringsProduct.aiInputTooLong else null,
     )
 }

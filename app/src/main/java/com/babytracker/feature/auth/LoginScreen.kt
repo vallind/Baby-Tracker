@@ -30,6 +30,7 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +55,7 @@ fun LoginScreen(
     AppScaffold(
         modifier = modifier,
         topBar = {
-            AppTopBar(title = AppStrings.accountPage, onBack = onBack)
+            AppTopBar(title = AppStringsProduct.accountPage, onBack = onBack)
         },
     ) { padding ->
         Column(
@@ -88,14 +89,14 @@ fun LoginScreen(
             Spacer(Modifier.height(spacing.lg))
 
             Text(
-                text = if (state.isRegisterMode) AppStrings.registerTitle else AppStrings.loginTitle,
+                text = if (state.isRegisterMode) AppStringsProduct.registerTitle else AppStringsProduct.loginTitle,
                 style = typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = c.textPrimary,
             )
             Spacer(Modifier.height(spacing.sm))
             Text(
-                text = if (state.isRegisterMode) AppStrings.registerSubtitle else AppStrings.loginSubtitle,
+                text = if (state.isRegisterMode) AppStringsProduct.registerSubtitle else AppStringsProduct.loginSubtitle,
                 style = typography.bodyLarge,
                 color = c.textSecondary,
                 textAlign = TextAlign.Center,
@@ -107,8 +108,8 @@ fun LoginScreen(
                 Column(Modifier.padding(spacing.lg)) {
                     AppInput(
                         value = state.account, onValueChange = onAccountChange,
-                        label = AppStrings.accountLabel,
-                        placeholder = AppStrings.accountPlaceholder,
+                        label = AppStringsProduct.accountLabel,
+                        placeholder = AppStringsProduct.accountPlaceholder,
                         keyboardType = KeyboardType.Text,
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !state.isLoading,
@@ -117,8 +118,8 @@ fun LoginScreen(
 
                     AppInput(
                         value = state.password, onValueChange = onPasswordChange,
-                        label = AppStrings.passwordLabel,
-                        placeholder = AppStrings.passwordPlaceholder,
+                        label = AppStringsProduct.passwordLabel,
+                        placeholder = AppStringsProduct.passwordPlaceholder,
                         isPassword = true,
                         keyboardType = KeyboardType.Password,
                         modifier = Modifier.fillMaxWidth(),
@@ -134,19 +135,19 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !state.isLoading,
                         label = if (state.isLoading) AppStrings.loading
-                        else if (state.isRegisterMode) AppStrings.register else AppStrings.login,
+                        else if (state.isRegisterMode) AppStringsProduct.register else AppStringsProduct.login,
                     )
                     Spacer(Modifier.height(spacing.xs))
 
                     AppButton(
                         variant = ButtonVariant.Ghost,
                         onClick = onToggleMode,
-                        label = if (state.isRegisterMode) AppStrings.toLogin else AppStrings.toRegister,
+                        label = if (state.isRegisterMode) AppStringsProduct.toLogin else AppStringsProduct.toRegister,
                     )
                 }
             }
             Spacer(Modifier.height(spacing.xl))
-            Text(AppStrings.loginOptional, style = typography.labelSmall, color = c.textTertiary)
+            Text(AppStringsProduct.loginOptional, style = typography.labelSmall, color = c.textTertiary)
             Spacer(Modifier.height(spacing.md))
         }
     }

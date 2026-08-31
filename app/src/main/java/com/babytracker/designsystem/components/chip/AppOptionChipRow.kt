@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.babytracker.designsystem.theme.LocalAppSpacing
+import com.babytracker.ui.i18n.AppStringsProduct
 
 /**
  * 表单类型选择 chip 行 — 表单族通用组件（G4 收敛）。
@@ -18,7 +19,7 @@ import com.babytracker.designsystem.theme.LocalAppSpacing
  *
  * 用法：
  *   AppOptionChipRow(
- *       options = listOf("wet" to AppStrings.diaperOptionWet, ...),
+ *       options = listOf("wet" to AppStringsProduct.diaperOptionWet, ...),
  *       selectedKey = selectedType,
  *       onSelect = { selectedType = it },
  *       modifier = Modifier.padding(bottom = spacing.md),

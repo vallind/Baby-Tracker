@@ -11,6 +11,7 @@ import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.ui.patterns.settings.AppSettingItem
 import com.babytracker.designsystem.components.scaffold.SubPageScaffold
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppSpacing
 
 /**
@@ -55,7 +56,7 @@ fun DataSettingsScreen(
                 emoji = "🔐",
                 label = "隐私设置",
                 subtitle = "管理数据与隐私选项",
-                trailing = { AppChip(label = AppStrings.comingSoon) },
+                trailing = { AppChip(label = AppStringsProduct.comingSoon) },
             )
         }
         Spacer(Modifier.height(spacing.md))

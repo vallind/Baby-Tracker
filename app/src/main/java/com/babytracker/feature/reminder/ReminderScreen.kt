@@ -41,6 +41,7 @@ import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.selection.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -77,7 +78,7 @@ fun ReminderScreen(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = AppStrings.reminderCenter,
+                title = AppStringsProduct.reminderCenter,
                 onBack = onBack,
             )
         },
@@ -85,8 +86,8 @@ fun ReminderScreen(
         if (baby == null) {
             EmptyState(
                 emoji = "\uD83C\uDF7C",
-                title = AppStrings.noBabyTitle,
-                subtitle = AppStrings.reminderNoBabySubtitle,
+                title = AppStringsProduct.noBabyTitle,
+                subtitle = AppStringsProduct.reminderNoBabySubtitle,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold
@@ -106,11 +107,11 @@ fun ReminderScreen(
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = if (tab == ReminderTab.PENDING) "\uD83D\uDD14" else "\uD83D\uDCDC",
-                        title = if (tab == ReminderTab.PENDING) AppStrings.reminderNoPending else AppStrings.reminderNoHistory,
+                        title = if (tab == ReminderTab.PENDING) AppStringsProduct.reminderNoPending else AppStringsProduct.reminderNoHistory,
                         subtitle = if (tab == ReminderTab.PENDING)
-                            AppStrings.reminderNoPendingSubtitle
+                            AppStringsProduct.reminderNoPendingSubtitle
                         else
-                            AppStrings.reminderNoHistorySubtitle,
+                            AppStringsProduct.reminderNoHistorySubtitle,
                     )
                 }
             } else {
@@ -129,7 +130,7 @@ fun ReminderScreen(
                                     onDelete(reminder)
                                     scope.launch {
                                         appSnackbar.showUndo(
-                                            message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
+                                            message = String.format(Locale.US, AppStringsProduct.reminderDeleted, reminder.title),
                                         ) { onRestore(reminder) }
                                     }
                                 },
@@ -202,7 +203,7 @@ fun ReminderScreen(
                                         ) {
                                             Icon(
                                                 Icons.Default.Check,
-                                                contentDescription = AppStrings.reminderMarkDone,
+                                                contentDescription = AppStringsProduct.reminderMarkDone,
                                                 tint = c.success,
                                                 modifier = Modifier.size(20.dp),
                                             )
@@ -213,14 +214,14 @@ fun ReminderScreen(
                         } else {
                             // 历史提醒行：柔底 + 完成时间 + 对勾（G3 收编为调用点内联组合）
                             val (emoji, typeColor) = reminder.type.toVisual(c)
-                            val doneText = reminder.doneDate?.let { String.format(Locale.US, AppStrings.reminderDoneAt, DateUtils.formatDate(it)) }
-                                ?: AppStrings.reminderDone
+                            val doneText = reminder.doneDate?.let { String.format(Locale.US, AppStringsProduct.reminderDoneAt, DateUtils.formatDate(it)) }
+                                ?: AppStringsProduct.reminderDone
                             RecordCard(
                                 onDelete = {
                                     onDelete(reminder)
                                     scope.launch {
                                         appSnackbar.showUndo(
-                                            message = String.format(Locale.US, AppStrings.reminderDeleted, reminder.title),
+                                            message = String.format(Locale.US, AppStringsProduct.reminderDeleted, reminder.title),
                                         ) { onRestore(reminder) }
                                     }
                                 },
@@ -260,7 +261,7 @@ private fun ReminderTabBar(tab: ReminderTab, onSwitch: (ReminderTab) -> Unit) {
             .padding(horizontal = spacing.md, vertical = spacing.sm),
     ) {
         SegmentedControl(
-            labels = listOf(AppStrings.reminderPending, AppStrings.reminderHistory),
+            labels = listOf(AppStringsProduct.reminderPending, AppStringsProduct.reminderHistory),
             selectedIndex = if (tab == ReminderTab.PENDING) 0 else 1,
             onSelect = { idx -> onSwitch(if (idx == 0) ReminderTab.PENDING else ReminderTab.HISTORY) },
             modifier = Modifier.fillMaxWidth(),
@@ -285,8 +286,8 @@ private fun Reminder.countdownText(): String {
     val today = LocalDate.now()
     val days = ChronoUnit.DAYS.between(today, dueDate.toLocalDate())
     return when {
-        days > 0 -> String.format(Locale.US, AppStrings.reminderDaysLeft, days)
+        days > 0 -> String.format(Locale.US, AppStringsProduct.reminderDaysLeft, days)
         days == 0L -> AppStrings.today
-        else -> String.format(Locale.US, AppStrings.reminderOverdueDays, -days)
+        else -> String.format(Locale.US, AppStringsProduct.reminderOverdueDays, -days)
     }
 }

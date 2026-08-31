@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 
 /**
  * 错误状态枚举：驱动默认文案与图标（PResult 形态，status 给默认、参数留逃生口）。
@@ -28,7 +29,7 @@ enum class ErrorStatus(val emoji: String) {
  * 用法：
  *   AppErrorState(message = state.errorMessage, onRetry = onRetry)
  *   AppErrorState(status = ErrorStatus.NotFound)
- *   AppErrorState(title = AppStrings.errorStatsTitle, message = msg, retryLabel = AppStrings.reload, onRetry = onRetry)
+ *   AppErrorState(title = AppStringsProduct.errorStatsTitle, message = msg, retryLabel = AppStrings.reload, onRetry = onRetry)
  */
 @Composable
 fun AppErrorState(

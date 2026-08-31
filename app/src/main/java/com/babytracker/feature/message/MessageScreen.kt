@@ -40,6 +40,7 @@ import com.babytracker.core.domain.model.MessageType
 import com.babytracker.designsystem.components.feedback.EmptyState
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -57,9 +58,9 @@ private data class CategoryOverview(
 private fun categoryOverviews(): List<CategoryOverview> {
     val c = LocalAppColors.current
     return listOf(
-        CategoryOverview(MessageType.INTERACTION, AppStrings.messageCategoryInteraction, "\uD83D\uDCAC", c.primary, c.onPrimary),
-        CategoryOverview(MessageType.SYSTEM, AppStrings.messageCategorySystem, "\uD83D\uDD14", c.primary, c.onPrimary),
-        CategoryOverview(MessageType.SERVICE, AppStrings.messageCategoryService, "\u2B50", c.secondary, c.onSecondary),
+        CategoryOverview(MessageType.INTERACTION, AppStringsProduct.messageCategoryInteraction, "\uD83D\uDCAC", c.primary, c.onPrimary),
+        CategoryOverview(MessageType.SYSTEM, AppStringsProduct.messageCategorySystem, "\uD83D\uDD14", c.primary, c.onPrimary),
+        CategoryOverview(MessageType.SERVICE, AppStringsProduct.messageCategoryService, "\u2B50", c.secondary, c.onSecondary),
     )
 }
 
@@ -89,11 +90,11 @@ fun MessageScreen(
         modifier = modifier,
         topBar = {
             AppTopBar(
-                title = AppStrings.messageCenter,
+                title = AppStringsProduct.messageCenter,
                 actions = {
                     val canMarkAll = state.totalUnread > 0
                     Text(
-                        AppStrings.markAllRead,
+                        AppStringsProduct.markAllRead,
                         style = LocalAppTypography.current.bodyLarge,
                         fontWeight = FontWeight.Medium,
                         color = if (canMarkAll) c.primary else c.textTertiary,
@@ -131,8 +132,8 @@ fun MessageScreen(
                 ) {
                     EmptyState(
                         emoji = "\uD83D\uDCED",
-                        title = AppStrings.messageNoData,
-                        subtitle = if (filterType != null) AppStrings.messageEmptyFiltered else AppStrings.messageEmptyAll,
+                        title = AppStringsProduct.messageNoData,
+                        subtitle = if (filterType != null) AppStringsProduct.messageEmptyFiltered else AppStringsProduct.messageEmptyAll,
                     )
                 }
             } else {
@@ -201,7 +202,7 @@ fun MessageScreen(
                                             .background(c.danger),
                                     )
                                 } else {
-                                    Text(AppStrings.messageRead, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
+                                    Text(AppStringsProduct.messageRead, style = LocalAppTypography.current.labelMedium, color = c.textTertiary)
                                 }
                             }
                         }

@@ -51,6 +51,7 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.ui.patterns.dashboard.AppSummaryCard
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
 import kotlinx.coroutines.launch
@@ -112,7 +113,7 @@ fun SleepListScreen(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = AppStrings.sleepRecords,
+                title = AppStringsProduct.sleepRecords,
                 onBack = onBack,
                 actions = {
                     AppIconButton(
@@ -146,9 +147,9 @@ fun SleepListScreen(
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "\uD83D\uDE34",
-                        title = AppStrings.emptySleepTitle,
-                        subtitle = AppStrings.emptySleepSubtitle,
-                        actionText = AppStrings.recordSleep,
+                        title = AppStringsProduct.emptySleepTitle,
+                        subtitle = AppStringsProduct.emptySleepSubtitle,
+                        actionText = AppStringsProduct.recordSleep,
                         onAction = {
                             editingSleep = null
                             showForm = true
@@ -178,7 +179,7 @@ fun SleepListScreen(
                         gradient = Gradients.sleepHeader(c),
                         contentColor = nightContentColor,
                         emoji = "\uD83C\uDF19",
-                        title = AppStrings.nightSleep,
+                        title = AppStringsProduct.nightSleep,
                     ) {
                         Text(
                             DateUtils.durationFullText(durSec),
@@ -194,8 +195,8 @@ fun SleepListScreen(
                         )
                         Spacer(Modifier.height(spacing.lg))
                         Row(Modifier.fillMaxWidth()) {
-                            QuickStatPill(value = nightStart.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.fallAsleepTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
-                            QuickStatPill(value = nightEnd.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStrings.wakeUpTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
+                            QuickStatPill(value = nightStart.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStringsProduct.fallAsleepTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
+                            QuickStatPill(value = nightEnd.format(DateTimeFormatter.ofPattern("HH:mm")), label = AppStringsProduct.wakeUpTime, contentColor = nightContentColor, modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -203,7 +204,7 @@ fun SleepListScreen(
                 // —— 小睡记录 ——
                 if (naps.isNotEmpty()) {
                     Text(
-                        AppStrings.napRecords,
+                        AppStringsProduct.napRecords,
                         style = LocalAppTypography.current.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = c.textPrimary,
@@ -233,7 +234,7 @@ fun SleepListScreen(
                                 onDelete = {
                                     scope.launch {
                                         onDelete(nap)
-                                        appSnackbar.showUndo(message = AppStrings.deletedNap) { onUndoDelete() }
+                                        appSnackbar.showUndo(message = AppStringsProduct.deletedNap) { onUndoDelete() }
                                     }
                                 },
                                 onClick = { detailSleep = nap },
@@ -270,7 +271,7 @@ fun SleepListScreen(
 
             // —— 底部主操作条（DS 统一件） ——
             AppActionBar(
-                label = AppStrings.recordSleep,
+                label = AppStringsProduct.recordSleep,
                 icon = Icons.Default.Add,
                 onClick = {
                     editingSleep = null
@@ -284,7 +285,7 @@ fun SleepListScreen(
     detailSleep?.let { s ->
         RecordDetailSheet(
             show = true,
-            title = if (s.type == SleepType.NIGHT) AppStrings.nightSleep else AppStrings.nap,
+            title = if (s.type == SleepType.NIGHT) AppStringsProduct.nightSleep else AppStringsProduct.nap,
             emoji = if (s.type == SleepType.NIGHT) "🌙" else "☀️",
             tint = if (s.type == SleepType.NIGHT) c.secondary else c.tertiary,
             fields = sleepDetailFields(s),
@@ -296,7 +297,7 @@ fun SleepListScreen(
             onDelete = {
                 scope.launch {
                     onDelete(s)
-                    appSnackbar.showUndo(message = AppStrings.deletedSleep) { onUndoDelete() }
+                    appSnackbar.showUndo(message = AppStringsProduct.deletedSleep) { onUndoDelete() }
                 }
             },
             onDismiss = { detailSleep = null },
@@ -342,13 +343,13 @@ private fun sleepDetailFields(s: Sleep): List<Pair<String, String>> {
             .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { v }
     val list = mutableListOf<Pair<String, String>>()
-    list += AppStrings.detailStart to fmt(s.startTime)
-    list += AppStrings.detailEnd to fmt(s.endTime)
+    list += AppStringsProduct.detailStart to fmt(s.startTime)
+    list += AppStringsProduct.detailEnd to fmt(s.endTime)
     val durSec = DateUtils.durationToTotalSeconds(
         java.time.LocalDateTime.parse(s.startTime, java.time.format.DateTimeFormatter.ISO_DATE_TIME),
         java.time.LocalDateTime.parse(s.endTime, java.time.format.DateTimeFormatter.ISO_DATE_TIME),
     )
-    list += AppStrings.detailDuration to DateUtils.durationFullText(durSec)
-    s.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
+    list += AppStringsProduct.detailDuration to DateUtils.durationFullText(durSec)
+    s.note?.takeIf { it.isNotBlank() }?.let { list += AppStringsProduct.detailNote to it }
     return list
 }

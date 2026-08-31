@@ -51,6 +51,7 @@ import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.components.snackbar.AppSnackbar
 import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.feature.common.feedingTone
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.theme.tintContainer
@@ -102,7 +103,7 @@ fun FeedingListScreen(
         snackbarHost = { AppSnackbarHost(snackbarHostState) },
         topBar = {
             AppTopBar(
-                title = AppStrings.feedingRecords,
+                title = AppStringsProduct.feedingRecords,
                 onBack = onBack,
                 actions = {
                     AppIconButton(
@@ -136,9 +137,9 @@ fun FeedingListScreen(
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "\uD83C\uDF7C",
-                        title = AppStrings.emptyFeedingTitle,
-                        subtitle = AppStrings.emptyFeedingSubtitle,
-                        actionText = AppStrings.recordFeeding,
+                        title = AppStringsProduct.emptyFeedingTitle,
+                        subtitle = AppStringsProduct.emptyFeedingSubtitle,
+                        actionText = AppStringsProduct.recordFeeding,
                         onAction = {
                             editingFeeding = null
                             showForm = true
@@ -154,7 +155,7 @@ fun FeedingListScreen(
                     onDelete = { f ->
                         scope.launch {
                             onDelete(f)
-                            appSnackbar.showUndo(message = AppStrings.deletedFeeding) { onUndoDelete() }
+                            appSnackbar.showUndo(message = AppStringsProduct.deletedFeeding) { onUndoDelete() }
                         }
                     },
                     onEdit = { f ->
@@ -167,7 +168,7 @@ fun FeedingListScreen(
 
             // —— 底部主操作条（DS 统一件） ——
             AppActionBar(
-                label = AppStrings.recordFeeding,
+                label = AppStringsProduct.recordFeeding,
                 icon = Icons.Default.Add,
                 onClick = {
                     editingFeeding = null
@@ -193,7 +194,7 @@ fun FeedingListScreen(
             onDelete = {
                 scope.launch {
                     onDelete(d)
-                    appSnackbar.showUndo(message = AppStrings.deletedFeeding) { onUndoDelete() }
+                    appSnackbar.showUndo(message = AppStringsProduct.deletedFeeding) { onUndoDelete() }
                 }
             },
             onDismiss = { detailFeeding = null },
@@ -247,10 +248,10 @@ private fun feedingEmoji(type: FeedingType): String = when (type) {
 /** 喂养记录摘要文本 */
 private fun feedingSummary(f: Feeding): String = when (f.type) {
     FeedingType.BREAST -> {
-        val side = f.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: AppStrings.breastSideBoth
-        val mlPart = f.amountMl?.let { "${it}${AppStrings.feedingAmountMl}" } ?: ""
-        if (mlPart.isNotEmpty()) "$mlPart, $side \u00B7 ${String.format(Locale.US, AppStrings.minutesCompactFormat, f.durationMin)}"
-        else "$side \u00B7 ${String.format(Locale.US, AppStrings.minutesCompactFormat, f.durationMin)}"
+        val side = f.breastSide?.let { com.babytracker.core.domain.model.BreastSide.raw(it) } ?: AppStringsProduct.breastSideBoth
+        val mlPart = f.amountMl?.let { "${it}${AppStringsProduct.feedingAmountMl}" } ?: ""
+        if (mlPart.isNotEmpty()) "$mlPart, $side \u00B7 ${String.format(Locale.US, AppStringsProduct.minutesCompactFormat, f.durationMin)}"
+        else "$side \u00B7 ${String.format(Locale.US, AppStringsProduct.minutesCompactFormat, f.durationMin)}"
     }
     FeedingType.FORMULA -> {
         "${f.amountMl}ml${if (!f.brand.isNullOrBlank()) " \u00B7 ${f.brand}" else ""}"
@@ -338,24 +339,24 @@ private fun feedingDetailFields(f: Feeding): List<Pair<String, String>> {
         java.time.LocalDateTime.parse(f.timestamp, DateTimeFormatter.ISO_DATE_TIME)
             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
     } catch (_: Exception) { f.timestamp }
-    list += AppStrings.detailTime to time
-    list += AppStrings.detailType to DateUtils.feedingTypeLabel(FeedingType.raw(f.type))
+    list += AppStringsProduct.detailTime to time
+    list += AppStringsProduct.detailType to DateUtils.feedingTypeLabel(FeedingType.raw(f.type))
     when (f.type) {
         FeedingType.BREAST -> {
-            f.durationMin?.let { list += AppStrings.detailDuration to "${String.format(Locale.US, AppStrings.minutesFormat, it)}" }
-            f.amountMl?.let { list += AppStrings.detailAmount to "${it} ml" }
-            com.babytracker.core.domain.model.BreastSide.raw(f.breastSide)?.let { list += AppStrings.detailSide to it }
+            f.durationMin?.let { list += AppStringsProduct.detailDuration to "${String.format(Locale.US, AppStringsProduct.minutesFormat, it)}" }
+            f.amountMl?.let { list += AppStringsProduct.detailAmount to "${it} ml" }
+            com.babytracker.core.domain.model.BreastSide.raw(f.breastSide)?.let { list += AppStringsProduct.detailSide to it }
         }
         FeedingType.FORMULA -> {
-            f.amountMl?.let { list += AppStrings.detailAmount to "${it} ml" }
-            f.brand?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailBrand to it }
+            f.amountMl?.let { list += AppStringsProduct.detailAmount to "${it} ml" }
+            f.brand?.takeIf { it.isNotBlank() }?.let { list += AppStringsProduct.detailBrand to it }
         }
         FeedingType.FOOD -> {
-            f.foodName?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailFood to it }
-            f.amountG?.let { list += AppStrings.detailPortion to "${it} g" }
+            f.foodName?.takeIf { it.isNotBlank() }?.let { list += AppStringsProduct.detailFood to it }
+            f.amountG?.let { list += AppStringsProduct.detailPortion to "${it} g" }
         }
-        FeedingType.WATER -> f.amountMl?.let { list += AppStrings.detailWaterAmount to "${it} ml" }
+        FeedingType.WATER -> f.amountMl?.let { list += AppStringsProduct.detailWaterAmount to "${it} ml" }
     }
-    f.note?.takeIf { it.isNotBlank() }?.let { list += AppStrings.detailNote to it }
+    f.note?.takeIf { it.isNotBlank() }?.let { list += AppStringsProduct.detailNote to it }
     return list
 }

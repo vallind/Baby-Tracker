@@ -40,6 +40,7 @@ import com.babytracker.designsystem.components.snackbar.AppSnackbarHost
 import com.babytracker.ui.patterns.records.AppDateTimeField
 import com.babytracker.ui.patterns.records.RecordDetailSheet
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
@@ -121,8 +122,8 @@ fun HealthScreen(
         if (state.babyId == 0) {
             EmptyState(
                 emoji = "❤️",
-                title = AppStrings.noBabyTitle,
-                subtitle = AppStrings.noBabySubtitle,
+                title = AppStringsProduct.noBabyTitle,
+                subtitle = AppStringsProduct.noBabySubtitle,
                 modifier = Modifier.padding(padding),
             )
             return@AppScaffold

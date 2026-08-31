@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babytracker.core.auth.AuthService
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,11 +47,11 @@ class LoginViewModel(
     fun submit() {
         val state = _uiState.value
         if (state.account.isBlank() || state.password.isBlank()) {
-            _uiState.update { it.copy(errorMessage = AppStrings.loginRequiredError) }
+            _uiState.update { it.copy(errorMessage = AppStringsProduct.loginRequiredError) }
             return
         }
         if (state.password.length < 6) {
-            _uiState.update { it.copy(errorMessage = AppStrings.passwordTooShortError) }
+            _uiState.update { it.copy(errorMessage = AppStringsProduct.passwordTooShortError) }
             return
         }
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -63,7 +64,7 @@ class LoginViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: AppStrings.registerFailed,
+                                errorMessage = e.message ?: AppStringsProduct.registerFailed,
                             )
                         }
                     }
@@ -74,7 +75,7 @@ class LoginViewModel(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                errorMessage = e.message ?: AppStrings.loginFailed,
+                                errorMessage = e.message ?: AppStringsProduct.loginFailed,
                             )
                         }
                     }

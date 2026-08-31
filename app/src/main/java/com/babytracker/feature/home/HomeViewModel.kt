@@ -6,6 +6,7 @@ import com.babytracker.core.domain.model.*
 import com.babytracker.core.data.repository.*
 import com.babytracker.core.util.BabyController
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -82,7 +83,7 @@ class HomeViewModel(
                         breastFeedCount = todayFeedings.count { it.type == FeedingType.BREAST },
                         formulaCount = todayFeedings.count { it.type == FeedingType.FORMULA },
                         formulaTotalMl = todayFeedings.filter { it.type == FeedingType.FORMULA }.sumOf { it.amountMl ?: 0 },
-                        sleepHours = if (nightSleepMin > 0) "${String.format(Locale.US, AppStrings.hoursMinutesFormat, nightSleepMin / 60, nightSleepMin % 60)}" else "--",
+                        sleepHours = if (nightSleepMin > 0) "${String.format(Locale.US, AppStringsProduct.hoursMinutesFormat, nightSleepMin / 60, nightSleepMin % 60)}" else "--",
                         diaperCount = todayDiapers.size,
                         recentItems = allItems,
                         loading = false,

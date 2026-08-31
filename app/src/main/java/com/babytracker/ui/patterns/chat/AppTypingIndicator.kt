@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography
@@ -26,12 +27,12 @@ import com.babytracker.designsystem.theme.LocalAppTypography
  * 视觉与动效与原实现一致：surfaceMuted 胶囊、primary 转圈、textSecondary 正文；
  * 转圈动画由 [AppCircularProgress] 内部承担（时长走 LocalAppMotion），本组件不含字面量毫秒。
  *
- * @param label 提示文案，默认沿用既有 [AppStrings.aiAnswering]
+ * @param label 提示文案，默认沿用既有 [AppStringsProduct.aiAnswering]
  */
 @Composable
 fun AppTypingIndicator(
     modifier: Modifier = Modifier,
-    label: String = AppStrings.aiAnswering,
+    label: String = AppStringsProduct.aiAnswering,
 ) {
     val colors = LocalAppColors.current
     val spacing = LocalAppSpacing.current

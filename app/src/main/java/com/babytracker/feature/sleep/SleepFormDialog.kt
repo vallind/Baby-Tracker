@@ -23,6 +23,7 @@ import com.babytracker.ui.patterns.records.AppTimerRow
 import com.babytracker.ui.patterns.records.TimerTickEffect
 import com.babytracker.ui.patterns.records.rememberTimerState
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import org.koin.compose.koinInject
 import java.time.Duration
@@ -118,13 +119,13 @@ fun SleepFormDialog(
     }
 
     AppFormSheet(
-        title = if (isEdit) AppStrings.editSleep else AppStrings.recordSleep,
+        title = if (isEdit) AppStringsProduct.editSleep else AppStringsProduct.recordSleep,
         onDismiss = onDismiss,
         onSave = { onSave(buildEntity()) },
-        saveText = if (isEdit) AppStrings.updateLabel else AppStrings.save,
+        saveText = if (isEdit) AppStringsProduct.updateLabel else AppStrings.save,
     ) {
         AppOptionChipRow(
-            options = listOf("night" to AppStrings.sleepOptionNight, "nap" to AppStrings.sleepOptionNap),
+            options = listOf("night" to AppStringsProduct.sleepOptionNight, "nap" to AppStringsProduct.sleepOptionNap),
             selectedKey = selectedType,
             onSelect = { selectedType = it },
         )
@@ -155,19 +156,19 @@ fun SleepFormDialog(
         Spacer(Modifier.height(spacing.xs))
         // 双时间字段各自持有字段级弹窗（原为共享一个级联 + pickerTarget 分发，行为等价）
         AppDateTimeField(
-            label = AppStrings.startTimeLabel,
+            label = AppStringsProduct.startTimeLabel,
             value = startTime,
             onPick = { startTime = it },
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(12.dp))
         AppDateTimeField(
-            label = AppStrings.endTimeLabel,
+            label = AppStringsProduct.endTimeLabel,
             value = endTime,
             onPick = { endTime = it },
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(12.dp))
-        AppInput(value = note, onValueChange = { note = it }, label = AppStrings.detailNote, modifier = Modifier.fillMaxWidth())
+        AppInput(value = note, onValueChange = { note = it }, label = AppStringsProduct.detailNote, modifier = Modifier.fillMaxWidth())
     }
 }

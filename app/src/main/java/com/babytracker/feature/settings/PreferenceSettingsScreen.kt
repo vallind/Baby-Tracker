@@ -15,6 +15,7 @@ import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.SubPageScaffold
 import com.babytracker.ui.patterns.settings.AppSettingItem
 import com.babytracker.designsystem.i18n.AppStrings
+import com.babytracker.ui.i18n.AppStringsProduct
 import com.babytracker.designsystem.theme.LocalAppSpacing
 
 /**
@@ -50,14 +51,14 @@ fun PreferenceSettingsScreen(
             AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "📐",
-                label = AppStrings.densityLabel,
+                label = AppStringsProduct.densityLabel,
                 subtitle = densityLabel,
                 onClick = { showDensityPicker = true },
             )
             AppDivider(horizontalInset = spacing.md)
             AppSettingItem(
                 emoji = "✨",
-                label = AppStrings.aiSettings,
+                label = AppStringsProduct.aiSettings,
                 subtitle = "模型、宝宝数据与回答偏好",
                 onClick = onOpenAiSettings,
             )
