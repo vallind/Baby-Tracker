@@ -28,10 +28,6 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import com.babytracker.designsystem.components.iconbutton.AppIconButton
 import com.babytracker.designsystem.components.input.InputDefaults as AppInputDefaults
 import com.babytracker.designsystem.components.menu.AppMenu
@@ -47,6 +43,21 @@ enum class AppInputStyle {
 
     /** 搜索样式：胶囊外形 + 前置搜索图标 + 内容清空钮 + IME Search */
     Search,
+}
+
+/**
+ * 输入框尺寸轴（四层 API 契约：几何一律走语义轴，禁止消费者传裸 token 参数）。
+ * 三档分别映射 InputTokens 的 height/fontSize/iconSize 分档（Medium 保持历史默认）。
+ */
+enum class AppInputSize {
+    /** 紧凑输入（48dp 高度，小字号小图标） */
+    Small,
+
+    /** 标准输入（56dp 高度，历史默认形态） */
+    Medium,
+
+    /** 宽松输入（64dp 高度，大字号大图标） */
+    Large,
 }
 
 /**
@@ -98,12 +109,7 @@ fun AppInput(
     singleLine: Boolean = true,
     minLines: Int = 1,
     maxLines: Int = if (singleLine) 1 else Int.MAX_VALUE,
-    height: Dp = AppInputDefaults.height(),
-    cornerRadius: Dp = AppInputDefaults.cornerRadius(),
-    fontSize: TextUnit = AppInputDefaults.fontSize(),
-    borderWidth: Dp = AppInputDefaults.borderWidth(),
-    borderWidthFocus: Dp = AppInputDefaults.borderWidthFocus(),
-    iconSize: Dp = AppInputDefaults.iconSize(),
+    size: AppInputSize = AppInputSize.Medium,
     style: AppInputStyle = AppInputStyle.Default,
     suggestions: List<String> = emptyList(),
     onSuggestionSelected: ((String) -> Unit)? = null,
@@ -112,12 +118,16 @@ fun AppInput(
     val colors = LocalAppColors.current
     val shapes = LocalAppShapes.current
     val isSearch = style == AppInputStyle.Search
+    // Size 轴：几何一律经 InputDefaults 从 InputTokens 分档取（禁止裸 token 参数）
+    val height = AppInputDefaults.height(size)
+    val fontSize = AppInputDefaults.fontSize(size)
+    val iconSize = AppInputDefaults.iconSize(size)
 
     // Style 轴：搜索样式为胶囊外形（shapes.full 走圆角缩放令牌）
     val effectiveShape: Shape = if (isSearch) {
         RoundedCornerShape(shapes.scaled(shapes.full))
     } else {
-        RoundedCornerShape(cornerRadius)
+        RoundedCornerShape(AppInputDefaults.cornerRadius())
     }
 
     // Focus 轴：suggestions 展开跟随焦点；点击候选或面板外收起

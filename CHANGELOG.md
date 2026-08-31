@@ -132,6 +132,13 @@
 - **AppStrings 分区规则**（§八）：designsystem 仅保留通用文案（58 常量集合）；产品域文案 → `app/ui/i18n/AppStringsProduct`（Phase 5）；**通用组件业务默认文案债清单**登记 6 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow/AppHeroStatCard/AppDateTimeField），Phase 5 修复
 - AGENTS.md §3/§4 同步：依赖红线 `feature → ui → designsystem`、红线 ⑥ `app/ui` 与 DS 同边界、组件准入三问、文案分区纪律
 
+**五阶段收敛波次 · Phase 2/3（API 收敛样板 + Token 三层化）**
+
+- **`AppInput` 签名收敛**（四层 API 契约首批落地）：删除 6 个裸 token 几何参数（`height`/`cornerRadius`/`fontSize`/`borderWidth`/`borderWidthFocus`/`iconSize`），新增语义轴 `size: AppInputSize`（Small 48dp / Medium 56dp 历史默认 / Large 64dp）；`InputTokens` 增三档分档字段（height/fontSize/iconSize × Small/Large，Medium 复用历史字段，全站观感不变）；`InputDefaults` 增分档工厂（L3 唯一消费点）；顺带清理 Input.kt 两处存量 unused import
+- **守门规则⑧ `AppInputApiAuditTest`**（新）：库自身签名禁裸 token 参数 + feature/navigation/core 禁给 `AppInput(` 传裸 token 参数（AppButtonApiAuditTest 同模式）
+- **Token 三层架构文档**：新增 `docs/designsystem/token-architecture.md`——Primitive（AppColorScale/SoftPalettes 十档色阶 + Spacing 8 级/Elevation 6 级/Opacity 7 级/Motion/Shapes 10 级/Typography 12 级/Control 三档）→ Semantic（AppColors/ApASemanticScales/AppDensity）→ Component（AppComponentTokens 52 组）三张映射表 + 换主题操作清单 + 守门验收口径
+- 验证：`testDebugUnitTest` 全绿（含新增审计测试）
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

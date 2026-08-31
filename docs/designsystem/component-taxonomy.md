@@ -1,7 +1,8 @@
 # 设计系统组件收敛蓝图
 
 > 本文件取代原《组件库分类与规模规划》中的**数量目标**与**变体拆分式组件清单**。
-> 配套文档：《组件差距分析》`component-gap-analysis.md`（现状盘点与 P0/P1/P2 路线）。
+> 配套文档：《组件差距分析》`component-gap-analysis.md`（现状盘点与 P0/P1/P2 路线）、
+> 《Token 三层架构》`token-architecture.md`（Phase 3：Primitive/Semantic/Component 映射表）。
 > 版本基线：designsystem v2.4.0 现状。
 >
 > **v2 修订（组件库五阶段收敛 · Phase 1 蓝图）**：新增第四级 Patterns 层并外移至
