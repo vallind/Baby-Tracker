@@ -124,6 +124,14 @@
 - **`AppPullToRefresh`**：material3 1.4 `PullToRefreshBox` 封装，物理与动效走 M3 内置，指示器色经主题桥接不二次暴露（避免 Token 泄漏）
 - 新组件目录 detekt 零违规；P1 波次每批 testDebugUnitTest + themeTokenAudit 全绿独立提交
 
+**五阶段收敛波次 · Phase 1（蓝图修订 v2）**
+
+- **蓝图 v2 修订**（`docs/designsystem/component-taxonomy.md`，取代"物理结构维持现状"裁定）：新增第四级 **Patterns 层**——业务形态组件（settings/records/dashboard/chat/avatar）外移至 `app/ui/patterns/`，与 DesignSystem 同边界（禁 core/feature/navigation/koin）、禁回流 designsystem；`composites/` 随收编废弃；components **渐进子目录化**（feedback/、selection/ 等域目录，横切工具保留根目录）；Foundation 维持薄层裁定（AppBox/AppSpacer/AppOverlay 明确不设）
+- **四层 API 契约**（§六）：Design（全默认即好看）/ Customization（variant·size·style·预设工厂·colors 逃生口）/ Token（仅库内）三层；组件签名禁止字面量几何参数；`AppInput` 外露 height/cornerRadius/fontSize/borderWidth 列存量债待 Phase 2 收编为 size 轴
+- **Hooks 归属边界**（§七）：`designsystem/hooks` 只留 UI behavior（useDebounce/useState/useLatestState/ButtonLogic/触觉）；`FormLogic`/`TableLogic` → `app/ui/framework/`（Phase 5）；`TimerState` 随 records patterns 外移（Phase 4）
+- **AppStrings 分区规则**（§八）：designsystem 仅保留通用文案（58 常量集合）；产品域文案 → `app/ui/i18n/AppStringsProduct`（Phase 5）；**通用组件业务默认文案债清单**登记 6 处（AppFormSheet/AppOptionPickerSheet/Select/AppOptionChipRow/AppHeroStatCard/AppDateTimeField），Phase 5 修复
+- AGENTS.md §3/§4 同步：依赖红线 `feature → ui → designsystem`、红线 ⑥ `app/ui` 与 DS 同边界、组件准入三问、文案分区纪律
+
 ### [2.3.1] — 2026-08-24
 
 **修复：MIGRATION_8_9 孤儿记录导致真机升级启动闪退 + 云端孤儿行导致 pull 卡死**

@@ -3,6 +3,10 @@
 > 本文件取代原《组件库分类与规模规划》中的**数量目标**与**变体拆分式组件清单**。
 > 配套文档：《组件差距分析》`component-gap-analysis.md`（现状盘点与 P0/P1/P2 路线）。
 > 版本基线：designsystem v2.4.0 现状。
+>
+> **v2 修订（组件库五阶段收敛 · Phase 1 蓝图）**：新增第四级 Patterns 层并外移至
+> `app/ui/patterns/`（settings/records/dashboard/chat/avatar），确立四层 API 契约、
+> Hooks 归属边界与 AppStrings 分区规则，components 渐进子目录化。详见 §〇.4、§六～§八。
 
 ---
 
@@ -15,8 +19,15 @@
 2. **删除全部数量指标。**
    原规划的"建议数量 8~15 / 15~25"、"150~220 能力"、"100~150 核心 Composable"等数字目标全部作废。组件数量是能力覆盖的**结果**，不是目标。衡量标准改为每类一张**能力核对单**：页面需要的交互能力是否有一个组件能承接、是否有完整的状态轴——够了就停，不为凑数造组件。
 
-3. **分类保留，交叉合法。**
-   原 14 个类别作为**逻辑标签**继续使用（便于检索与规划对账），但不要求物理目录一一对应，也不要求每个组件唯一归属（Chip 同时属于 Selection 与 Display、Tooltip 同时属于 Overlay 与 Feedback 都是合法的）。物理结构维持现状：`theme / components/<域>/ / composites/ / foundation/ / hooks/ / i18n/`。
+3. **分类保留，交叉合法（逻辑标签）。**
+   原 14 个类别作为**逻辑标签**继续使用（便于检索与规划对账），但不要求物理目录一一对应，也不要求每个组件唯一归属（Chip 同时属于 Selection 与 Display 都是合法的）。**逻辑标签 ≠ 物理目录**。
+
+4. **四层物理结构（v2 修订，取代旧"物理结构维持现状"裁定）：** `AppTheme/Tokens → Foundation → Components → Patterns`。
+   - `designsystem/theme/`：令牌与主题（52 组组件令牌，现状不增不减；换主题不得改组件代码）。
+   - `designsystem/foundation/`：纯布局原语（AppRow/AppColumn/BorderContainer/CenterVerticallyRow）。`AppBox`/`AppSpacer`/`AppOverlay`/`AppContainer` 等 Compose 原生语言能力**明确不设**（⛔ 见第二节对照表）。
+   - `designsystem/components/`：Core API——通用基础控件与通用容器。**渐进子目录化**：散件归入域目录（`feedback/`、`selection/`、`badge/` …）；横切工具（`Animations.kt`/`HapticExtensions.kt`/`AppComponents.kt` 索引）允许保留根目录。
+   - `app/ui/patterns/`：**业务形态模式层（Patterns），物理上位于设计系统包之外**。settings/records/dashboard/chat/avatar 等由通用组件组合而成、承载产品形态语义的组件一律外移；Patterns 与 DesignSystem 同边界（禁止 import core/feature/navigation/koin，`DesignSystemBoundaryAuditTest` 语义扩展守门），通过公开组件与 `LocalAppComponentTokens` 消费库能力，**禁止回流 designsystem**。
+   - `composites/` 目录随外移收编完毕后废弃（渐进搬迁，不做一次性大改）。
 
 ---
 
@@ -160,3 +171,41 @@ AppRate ✅ · AppScoreSelector ✅ · AppColorDots ✅ · AppDateTimeField 级�
 - 待建优先级与业务受益方见《组件差距分析》第七节路线图（P0：Menu → DataTable → Stepper → Pagination → Select；P1：Search 输入轴、Timeline、PullToRefresh、PinInput；P2：其余）。
 - 存量收编（🧩 项）一律走"加预设/加别名/扩枚举"的兼容路径，不做一次性破坏性重命名；命名前缀债务清单见差距分析 6.1 节。
 - 本蓝图与差距分析冲突时，以差距分析的现状盘点为准；两者共同作为 AGENTS.md 第 4 节设计系统约定的补充细则。
+- **v2 执行波次（五阶段收敛）**：Phase 1 蓝图（本文档）→ Phase 2 API 收敛样板（AppInput size 轴、AppDataTable 拆 state）→ Phase 3 Token 三层化文档 → Phase 4 Patterns 外移（`app/ui/patterns/`）+ components 子目录化 → Phase 5 hooks 与 AppStrings 分区。每阶段独立 commit，`testDebugUnitTest` + `themeTokenAudit` + `detekt` 全绿。
+
+---
+
+## 六、四层 API 契约
+
+每个 Core 组件对外只暴露三层，禁止把令牌参数直接铺给普通消费者：
+
+| 层级 | 入口 | 谁可以用 |
+|---|---|---|
+| **Design API（L1）** | `AppButton(...)` / `AppInput(...)` / `AppCard(...)` —— 全默认即好看 | 任何 feature / patterns 代码 |
+| **Customization API（L2）** | 语义轴与预设：`variant` / `size` / `style` / `selected` / `loading`；`AppXxxDefaults.danger()` 等预设工厂；必要时 `colors = …` 逃生口 | 任何 feature / patterns 代码 |
+| **Token API（L3）** | `LocalAppComponentTokens` / `LocalAppColors` / `LocalAppShapes` … | **仅 designsystem 内部与 theme 桥接层**；patterns 通过 `*Defaults` 工厂消费，不直读令牌 |
+
+**守门约定**（新增代码审计目标）：
+- 新组件参数缺省值一律来自 `*Defaults` 工厂（L3），不得在组件签名里写死 `14.dp`/`16.sp` 等字面量（既有 `AppInput` 的 height/cornerRadius/fontSize 外露参数属存量债，Phase 2 收编为 `size` 轴 + `AppInputDefaults.style()` 预设）。
+- 例外逃生口：`colors: CardColors = AppCardDefaults.colors(variant)` 模式允许（覆盖整组颜色），单个几何尺寸参数不允许。
+
+## 七、Hooks 归属边界
+
+`designsystem/hooks/` 只保留 **UI behavior**（组件自持交互状态）；状态管理/表单/表格逻辑按归属外移：
+
+| Hook / 逻辑 | 归属 | 现状 |
+|---|---|---|
+| `useDebounce` / `useState` / `useLatestState` | designsystem/hooks（UI behavior） | ✅ 保留 |
+| `rememberHaptic` / `Modifier.longPressDeletable` | designsystem（触觉基础能力） | ✅ 保留（HapticExtensions） |
+| `ButtonLogic`（`rememberButtonLogic`） | designsystem/hooks（按钮 loading 状态机，即 `rememberButtonState` 雏形） | ✅ 保留 |
+| `FormLogic`（`rememberFormLogic`） | `app/ui/framework/`（app 层 UI 框架） | 🔄 Phase 5 外移 |
+| `TableLogic`（`rememberTableLogic`） | `app/ui/framework/`（app 层 UI 框架；`AppDataTable` 通过 `rememberTableState()` 独立接线） | 🔄 Phase 5 外移 |
+| `TimerState`（`rememberTimerState`/`TimerTickEffect`） | `app/ui/patterns/records/`（计时器行模式自带状态） | 🔄 Phase 4 随 records 外移 |
+| `BabyRecordLogic`/`FeedingLogic` 等 | feature 层职责，禁止定义在 designsystem | 禁止新增 |
+
+## 八、AppStrings 分区规则
+
+- `designsystem/i18n/AppStrings.kt`：**仅保留设计系统通用文案**——被 `designsystem/` 内组件引用的 58 个常量集合（通用操作、四态、错误、步骤/排序、日期导航、进度…），外加"全库通用但无组件引用"的键（save/cancel/delete/…）。库内组件禁止引用产品域文案。
+- `app/ui/i18n/AppStringsProduct.kt`：产品域文案（AI 助手、喂养/睡眠/尿布/记录表单、消息中心、提醒、账户…）。feature 与 patterns 消费此处，禁止回流 `AppStrings`。
+- **通用组件业务默认文案债（Phase 5 修复清单）**：`AppFormSheet`（editFeeding/recordFeeding/updateLabel）、`AppOptionPickerSheet`（pickerOptionFeeding/pickRecordType）、`Select`（female/gender）、`AppOptionChipRow`（diaperOptionWet）、`AppHeroStatCard`（diaperToday）、`AppDateTimeField`（detailTime）——通用组件一律改为调用方传入或通用默认，业务默认值随对应 patterns 外移。
+- 禁止硬编码中/英文字符串的既有纪律不变，扩展到 `app/ui/` 全层。

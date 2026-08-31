@@ -35,7 +35,9 @@ Android 原生宝宝护理记录 App。单 module（`:app`）+ 自定义 detekt 
 
 ```
 app/src/main/java/com/babytracker/
-├── designsystem/   # 纯 UI 层：theme 令牌 / components / composites / i18n(AppStrings) / hooks
+├── designsystem/   # 纯 UI 层：theme 令牌 / components / foundation / hooks / i18n(AppStrings 通用区)
+├── ui/             # app 层 UI 框架：patterns/（业务形态模式：settings records dashboard chat avatar）
+│                   #   framework/（FormLogic/TableLogic）· i18n/（AppStringsProduct 产品域文案）
 ├── core/           # 基础设施：ai / auth / backup / database / data(repository) / di / domain /
 │                   #   settings(DataStore) / sync / util
 ├── feature/        # 业务模块 ×16：home feeding sleep diaper growth vaccination health stats
@@ -43,19 +45,22 @@ app/src/main/java/com/babytracker/
 └── navigation/     # AppNavigation.kt：类型安全路由集中定义
 ```
 
-依赖方向只允许 `feature → core`、`feature → designsystem`、`core → designsystem`（如需）。以下红线由静态审计测试自动守门：
+依赖方向只允许 `feature → core`、`feature → designsystem`、`feature → ui`、`ui → designsystem`、`core → designsystem`（如需）。以下红线由静态审计测试自动守门：
 
 1. **designsystem 是纯 UI 层**：禁止 import `core` / `feature` / `navigation` / `androidx.navigation` / `org.koin`（`DesignSystemBoundaryAuditTest`）。UI 长什么样它负责；业务、数据、导航、DI 一概不知。
 2. **Screen 只做展示**：`feature/**/*Screen.kt` 禁止 import navigation / koin / Repository / 各 Controller（`ScreenBoundaryAuditTest`）。Screen 只收 `viewModel + state + 回调`；DI 与导航放在同名 `*Route.kt`。
 3. **feature 层禁止新定义通用卡片容器**（`*Card` 命名的 Composable，审计规则 `FeatureLayerGenericCard`）：一律消费设计系统的 `AppCard` 三轴模型。
 4. **动画时长必须走令牌**：禁止 `tween(<字面量毫秒>)`，时长一律读 `LocalAppMotion`（审计规则 `MotionHardcodedDuration`）。
 5. **业务代码禁止直用原生 M3 组件与令牌**：不直接 import material3 控件、不读 `MaterialTheme.colorScheme/typography/shapes`；使用 `App*` 组件与 AppTokens 体系。theme 桥接层豁免。
+6. **`app/ui` 与 DesignSystem 同边界**（四层架构 Patterns 层，见 `docs/designsystem/component-taxonomy.md` §〇.4）：`ui/patterns/` 与 `ui/framework/` 禁止 import `core` / `feature` / `navigation` / `androidx.navigation` / `org.koin`，且**禁止回流 designsystem**（只消费公开组件与 `*Defaults` 工厂，不直读 `LocalAppComponentTokens` 等 L3 令牌——Patterns 层新增代码按此守门）。
 
 ## 4. 设计系统约定
 
 - 核心语义令牌在 `designsystem/theme/AppTokens.kt`（`AppColors.light()/dark()`、`LocalAppSpacing`、`LocalAppShapes`、`LocalAppMotion`）；组件级颜色组集中在 `AppComponentTokens.kt`，新组件的颜色字段必须在其中注册（否则触发 `ComponentTokensMissingRegistration` 审计违规）。
 - 新组件用脚手架生成：`./scripts/generate-component.sh <Name>`，产出组件本体 + `*Defaults.kt` + `*Logic.kt`，并手动在 `AppComponentTokens.kt` 追加令牌入口。Defaults 文件禁止直读核心令牌或硬编码颜色（审计规则 `DefaultsMissingLocalAppComponentTokens` / `DefaultsHardcodedColor` / `DefaultsImportsLocalAppColors`）。
-- 所有用户可见文案走 `designsystem/i18n/AppStrings.kt`，禁止硬编码中文/英文字符串。
+- **组件准入三问**（四层架构，见 taxonomy §〇.4/§六）：新增 UI 前先问 ①能否用现有 Foundation+Core 组合解决？②它是否承载产品形态语义（设置行/记录卡/仪表卡/聊天）→ 应进 `app/ui/patterns/<域>/` 而非 designsystem？③是否是"某变体的专用组件"→ 收进参数轴或 `*Defaults` 预设，禁止变体即组件。
+- **四层 API**：组件只暴露 Design（全默认）/ Customization（variant·size·style·预设工厂·colors 逃生口）两层；Token API（`LocalAppComponentTokens` 等）仅 designsystem 内部可用。组件签名禁止字面量几何参数（`14.dp`/`16.sp`），一律默认到 `*Defaults` 工厂。
+- 用户可见文案分区：通用文案走 `designsystem/i18n/AppStrings.kt`（仅 design system 组件引用集合）；产品域文案（AI/记录/消息/提醒/账户…）走 `app/ui/i18n/AppStringsProduct`——禁止新增产品文案进 `AppStrings`，通用组件禁止硬编码业务默认文案。全层禁止硬编码中文/英文字符串。
 - 内容状态四态：Loading → Skeleton / `loading` 态；Empty → `EmptyState`；Error → `AppErrorState(status=…)`；Success 不包装。禁止新增私有 `*LoadingState` / `*ErrorState`。
 
 ## 5. 数据库与同步
