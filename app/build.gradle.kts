@@ -168,5 +168,7 @@ tasks.register<JavaExec>("themeTokenAudit") {
         "com/babytracker/designsystem/theme",
         "com/babytracker/designsystem/components",
         project.file("src/main/java/com/babytracker/designsystem/theme/AppComponentTokens.kt").absolutePath,
+        // 四层架构 Patterns 层（app/ui/patterns）：Defaults 工厂与库内同规则守门
+        "com/babytracker/ui/patterns",
     )
 }

@@ -30,8 +30,8 @@ import com.babytracker.designsystem.theme.CategoryStripAccentColors
 import com.babytracker.designsystem.theme.tintContainer
 import com.babytracker.designsystem.theme.accentContent
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
-import com.babytracker.designsystem.components.categorystrip.AppCategoryStrip
-import com.babytracker.designsystem.components.categorystrip.AppCategoryTab
+import com.babytracker.ui.patterns.message.AppCategoryStrip
+import com.babytracker.ui.patterns.message.AppCategoryTab
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog

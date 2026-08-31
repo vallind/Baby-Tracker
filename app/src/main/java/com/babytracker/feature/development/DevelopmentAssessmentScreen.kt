@@ -31,7 +31,7 @@ import com.babytracker.designsystem.theme.LocalAppTypography
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppShapes
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
-import com.babytracker.designsystem.components.scoreselector.AppScoreSelector
+import com.babytracker.ui.patterns.assessment.AppScoreSelector
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.sheet.AppBottomSheet

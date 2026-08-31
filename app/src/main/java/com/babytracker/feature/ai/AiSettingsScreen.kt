@@ -40,10 +40,10 @@ import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.input.AppInput
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.settingitem.AppSettingChoiceItem
-import com.babytracker.designsystem.components.settingitem.AppSettingGroupTitle
-import com.babytracker.designsystem.components.settingitem.AppSettingItem
-import com.babytracker.designsystem.components.settingitem.AppSettingSwitchItem
+import com.babytracker.ui.patterns.settings.AppSettingChoiceItem
+import com.babytracker.ui.patterns.settings.AppSettingGroupTitle
+import com.babytracker.ui.patterns.settings.AppSettingItem
+import com.babytracker.ui.patterns.settings.AppSettingSwitchItem
 import com.babytracker.designsystem.components.slider.AppSlider
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.i18n.AppStrings

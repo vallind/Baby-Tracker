@@ -14,6 +14,7 @@ data class AuditViolation(val file: String, val rule: String, val detail: String
  * @param themeRelDir theme 包相对路径（如 com/babytracker/designsystem/theme，M3 桥接豁免）
  * @param componentsRelDir components 包相对路径（如 com/babytracker/designsystem/components，Defaults 扫描范围）
  * @param componentTokensFile AppComponentTokens.kt 文件（注册字段校验）
+ * @param extraDefaultsRelDirs 附加 Defaults 扫描目录（如 com/babytracker/ui/patterns——四层架构 Patterns 层外移后守门随行）
  */
 object TokenAuditChecker {
 
@@ -61,12 +62,23 @@ object TokenAuditChecker {
         themeRelDir: String,
         componentsRelDir: String,
         componentTokensFile: File,
+        extraDefaultsRelDirs: List<String> = emptyList(),
     ): List<AuditViolation> {
         val violations = mutableListOf<AuditViolation>()
         val componentsDir = File(kotlinRoot, componentsRelDir.replace('.', '/'))
-        val defaultsFiles = if (componentsDir.exists()) {
-            componentsDir.walkTopDown().filter { it.name.endsWith("Defaults.kt") }.toList()
-        } else emptyList()
+        val defaultsFiles = mutableListOf<File>()
+        if (componentsDir.exists()) {
+            defaultsFiles.addAll(componentsDir.walkTopDown().filter { it.name.endsWith("Defaults.kt") })
+        }
+        // 四层架构（taxonomy §〇.4）：Patterns 层外移至 app/ui/patterns 后，其 Defaults 工厂
+        // 与库内同规则守门（禁止直读核心令牌/硬编码色/直 import LocalAppColors）
+        val extraDefaultsFiles = extraDefaultsRelDirs.flatMap { relDir ->
+            val dir = File(kotlinRoot, relDir.replace('.', '/'))
+            if (dir.exists()) {
+                dir.walkTopDown().filter { it.name.endsWith("Defaults.kt") }.toList()
+            } else emptyList()
+        }
+        defaultsFiles.addAll(extraDefaultsFiles)
         // 防呆（lessons #14）：扫描为空必须报错，禁止静默假绿
         if (defaultsFiles.isEmpty()) {
             violations.add(AuditViolation(componentsDir.path, "ScanEmpty", "Defaults 扫描为空，路径可能漂移"))
@@ -154,13 +166,13 @@ object TokenAuditChecker {
 
 /**
  * Gradle JavaExec 入口（mainClass = TokenAuditCheckerKt），与 JUnit 测试共用 audit 逻辑。
- * 参数按序：kotlinRoot、themeRelDir、componentsRelDir、componentTokensFile。
+ * 参数按序：kotlinRoot、themeRelDir、componentsRelDir、componentTokensFile、extraPatternsRelDir。
  * 违规时逐条打印 `文件: 规则 — 详情` 并 exitProcess(1)；参数数量不符打印用法并 exit 2。
  */
 fun main(args: Array<String>) {
-    if (args.size != 4) {
+    if (args.size != 5) {
         System.err.println(
-            "用法: themeTokenAudit <kotlinRoot> <themeRelDir> <componentsRelDir> <componentTokensFile>\n" +
+            "用法: themeTokenAudit <kotlinRoot> <themeRelDir> <componentsRelDir> <componentTokensFile> <patternsRelDir>\n" +
                 "示例: ./gradlew themeTokenAudit",
         )
         exitProcess(2)
@@ -170,6 +182,7 @@ fun main(args: Array<String>) {
         themeRelDir = args[1],
         componentsRelDir = args[2],
         componentTokensFile = File(args[3]),
+        extraDefaultsRelDirs = listOf(args[4]),
     )
     if (violations.isEmpty()) {
         println("themeTokenAudit: 未发现违规")

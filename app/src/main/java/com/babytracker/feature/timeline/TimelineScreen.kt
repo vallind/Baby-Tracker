@@ -26,9 +26,9 @@ import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.chip.AppFilterChip
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.divider.AppDivider
-import com.babytracker.designsystem.components.recorddetail.RecordDetailSheet
+import com.babytracker.ui.patterns.records.RecordDetailSheet
 import com.babytracker.designsystem.components.fab.AppFAB
-import com.babytracker.designsystem.components.recordcard.RecordCard
+import com.babytracker.ui.patterns.records.RecordCard
 import com.babytracker.designsystem.components.badge.AppEmojiBadge
 import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.topbar.AppTopBar

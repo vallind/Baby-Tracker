@@ -14,13 +14,13 @@ import com.babytracker.designsystem.components.SegmentedControl
 import com.babytracker.designsystem.components.EmptyState
 import com.babytracker.designsystem.components.chart.MiniBarChart
 import com.babytracker.designsystem.components.chart.MiniLineChart
-import com.babytracker.designsystem.components.datenav.DateNavCapsule
+import com.babytracker.ui.patterns.records.DateNavCapsule
 import com.babytracker.designsystem.components.errorstate.AppErrorState
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.components.progress.AppCircularProgress
 import com.babytracker.designsystem.components.topbar.AppTopBar
-import com.babytracker.designsystem.composites.metriccard.AppMetricCard
-import com.babytracker.designsystem.composites.metriccard.MetricTrendLabel
+import com.babytracker.ui.patterns.dashboard.AppMetricCard
+import com.babytracker.ui.patterns.dashboard.MetricTrendLabel
 import com.babytracker.designsystem.theme.LocalAppColors
 import com.babytracker.designsystem.theme.LocalAppSpacing
 import com.babytracker.designsystem.theme.LocalAppTypography

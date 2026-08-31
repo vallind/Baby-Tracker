@@ -29,6 +29,8 @@ class ThemeTokenizationStaticAuditTest {
             themeRelDir = "com/babytracker/designsystem/theme",
             componentsRelDir = "com/babytracker/designsystem/components",
             componentTokensFile = File("src/main/java/com/babytracker/designsystem/theme/AppComponentTokens.kt"),
+            // 四层架构 Patterns 层（app/ui/patterns）：Defaults 工厂与库内同规则守门
+            extraDefaultsRelDirs = listOf("com/babytracker/ui/patterns"),
         )
     }
 

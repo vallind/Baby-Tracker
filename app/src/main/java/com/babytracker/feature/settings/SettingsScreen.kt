@@ -38,8 +38,8 @@ import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.dialog.AppConfirmDialog
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.settingitem.AppSettingGroupTitle
-import com.babytracker.designsystem.components.settingitem.AppSettingItem
+import com.babytracker.ui.patterns.settings.AppSettingGroupTitle
+import com.babytracker.ui.patterns.settings.AppSettingItem
 import com.babytracker.designsystem.components.topbar.AppTopBar
 import com.babytracker.designsystem.theme.Gradients
 import com.babytracker.designsystem.theme.LocalAppColors

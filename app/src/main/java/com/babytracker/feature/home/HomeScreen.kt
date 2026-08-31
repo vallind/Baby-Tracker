@@ -44,11 +44,11 @@ import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.button.ButtonVariant
 import com.babytracker.designsystem.components.card.AppCard
 import com.babytracker.designsystem.components.quickstat.QuickStatPill
-import com.babytracker.designsystem.components.recordcard.AppRecordRow
+import com.babytracker.ui.patterns.records.AppRecordRow
 import com.babytracker.designsystem.components.scaffold.AppScaffold
 import com.babytracker.designsystem.components.tilegrid.AppTileGrid
 import com.babytracker.designsystem.components.tilegrid.AppTileSpec
-import com.babytracker.designsystem.composites.herostat.AppHeroStatCard
+import com.babytracker.ui.patterns.dashboard.AppHeroStatCard
 import com.babytracker.designsystem.i18n.AppStrings
 import com.babytracker.designsystem.theme.AppColors
 import com.babytracker.designsystem.theme.Gradients

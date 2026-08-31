@@ -7,6 +7,10 @@ package com.babytracker.designsystem.components
 //
 //  所有公共 Composable 组件、Hooks、Foundation 的索引入口。
 //  使用者只需 import com.babytracker.designsystem.components.*
+//
+//  四层架构（taxonomy §〇.4）：业务形态组件已外移至
+//  app/ui/patterns/（settings / records / dashboard / chat / assessment / message / avatar），
+//  本清单只索引 Core（designsystem/components）与 Foundation。
 // ═══════════════════════════════════════════════════════════
 
 // —— 基础层 ——
@@ -43,35 +47,32 @@ package com.babytracker.designsystem.components
 // AppLabeledSlider   带标签滑块             (slider/)
 // AppRate            星级评分               (rate/)
 
-// —— 设置行家族 ——
-// AppSettingItem          设置行（emoji 徽章+标题+尾部）   (settingitem/)
-// AppSettingSwitchItem    开关设置行                       (settingitem/)
-// AppSettingChoiceItem    胶囊单选设置行                   (settingitem/)
-// AppSettingGroupTitle    设置分组标题                     (settingitem/)
-// SettingItemDefaults     设置行令牌读取
-// AppColorDots       颜色圆点组（选中描边环）(colordots/)
+// —— 设置行家族（已外移 → app/ui/patterns/settings）——
+// AppSettingItem / AppSettingSwitchItem / AppSettingChoiceItem /
+// AppSettingGroupTitle / SettingItemDefaults 均移入 patterns/settings
+// AppColorDots       颜色圆点组（选中描边环）(colordots/)  ← 仍在 Core
 
 // —— G4 收编批次 ——
 // MiniBarChart          迷你柱状图（指标卡内嵌）      (chart/)
 // MiniLineChart         迷你折线图                    (chart/)
 // AppKeyValueRow        键值行（label/value/caption）  (keyvaluerow/)
 // AppOptionChipRow      key→label 单选胶囊行          (chip/)
-// AppDateTimeField      只读时间字段+级联弹窗          (datetimecascade/)
+// AppDateTimeField → 已外移 patterns/records（datetimecascade 整簇随迁）
 // AppOptionPickerSheet  单选底部弹层                  (dialog/)
-// AppTimerRow           计时器行                       (timer/)
+// AppTimerRow → 已外移 patterns/records（timer 整簇随迁）
 
 // —— 专用组件 ——
-// BabyIllustration   宝宝头像
-// BadgeIcon          角标
+// BabyIllustration → 已外移 patterns/avatar
+// BadgeIcon          角标              (badge/)
 // AppNavigationBar   底部导航（纯 UI）      (navigation/)
 // AppNavigationItem  底部导航 Tab 数据
-// CountdownChip      倒计时标签
-// EmptyState         空状态
+// CountdownChip → 已外移 patterns/records（疫苗倒计时）
+// EmptyState         空状态   (feedback/)
 // EmptyStateDefaults 空状态令牌读取（TT-036）
 // SkeletonLoader     骨架屏               (skeleton/)
 
 // —— 交互组件 ——
-// RecordCard         记录卡片（滑动删除+点击编辑）        (recordcard/)
+// RecordCard → 已外移 patterns/records（记录卡片：滑动删除+点击编辑）
 
 // —— 动画 ——
 // AnimatedListItem   列表项入场动画

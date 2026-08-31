@@ -17,7 +17,7 @@ import com.babytracker.designsystem.components.cardgroup.AppCardGroup
 import com.babytracker.designsystem.components.button.AppButton
 import com.babytracker.designsystem.components.divider.AppDivider
 import com.babytracker.designsystem.components.scaffold.AppScaffold
-import com.babytracker.designsystem.components.settingitem.AppSettingItem
+import com.babytracker.ui.patterns.settings.AppSettingItem
 import com.babytracker.designsystem.components.sheet.AppBottomSheet
 import com.babytracker.designsystem.components.switchcontrol.AppRadioButton
 import com.babytracker.designsystem.components.switchcontrol.AppSwitch
